@@ -1,0 +1,2 @@
+# XStudio
+open source IDE
