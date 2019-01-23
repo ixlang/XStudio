@@ -1,0 +1,323 @@
+class QXCore : QXNative{ 
+    static const int OPACITY = 0;
+    static const int VISIBLE = 1;
+    static const int MAXIMIZED = 2;
+    static const int MINIMIZED = 3;
+    static const int ENABLED = 4;
+    static const int MINIMUMHEIGHT = 5;
+    static const int ACTIVED = 6;
+    static const int MAXIMUMHEIGHT = 7;
+    static const int MINIMUMWIDTH = 8;
+    static const int MAXIMUMWIDTH = 9;
+    static const int WIDTH = 10;
+    static const int HEIGHT = 11;
+    static const int FULLSCREEN = 12;
+    static const int HIDDEN = 13;
+    static const int MODAL = 14;
+    static const int WINDOW = 15;
+    static const int RESIZE = 16;
+    static const int SCROLL = 17;
+    static const int FIXEDHEIGHT = 18;
+    static const int FIXEDSIZE = 19;
+    static const int FIXEDWIDTH = 20;
+    static const int PALETTE = 21;
+    static const int STYLE = 22;
+    static const int CLOSE = 23;
+    static const int HIDE = 24;
+    static const int LOWER = 25;
+    static const int RAISE = 26;
+    static const int UPDATE = 27;
+    static const int WINDOWTITLE = 28;
+    static const int SHOW = 29;
+    static const int SHOWFULLSCREEN = 30;
+    static const int SHOWMAX = 31;
+    static const int SHOWMIN = 32;
+    static const int SHOWNORMAL = 33;
+    static const int FLATING = 34;
+    static const int TITLEBAR = 35;
+    static const int DOCKWIDGETFEATURE = 36;
+    static const int REPAINT = 37;
+    static const int SCICMD = 38;
+    static const int SCIFONT = 39;
+    static const int FONTSETFAMILY = 40;
+    static const int FONTPTSIZE = 41;
+    static const int FONTPXSIZE = 42;
+    static const int FONTCTOR = 43;
+    static const int MENUBAR = 44;
+    static const int ADDACTION = 45;
+    static const int ADDMENU = 46;
+    static const int ADDSEP = 47;
+    static const int INSSEP = 48;
+    static const int INSMENU = 49;
+    static const int MENUBAR_CLR = 50;
+    static const int ISDEFUP = 51;
+    static const int ISNAMBR = 52;
+    static const int SETMENU = 53;
+    static const int SETSEP = 54;
+    static const int ISSEP = 55;
+    static const int SETSHRCUT = 56;
+    static const int SETTEXT = 57;
+    static const int GETTEXT = 58;
+    static const int GETMENU = 59;
+    static const int PARENTWIDGET = 60;
+    static const int TRIGGER = 61;
+    static const int CHECKED = 62;
+    static const int ADDACT = 63;
+    static const int MDIMODE = 64;
+    static const int X_POS = 65;
+    static const int Y_POS = 66;
+    static const int MOVE = 67;
+    static const int SETWIDGET = 68;
+    static const int GETWIDGET = 69;
+    static const int SUBSETWIDGET = 70;
+    static const int SUBGETWIDGET = 71;
+    static const int MDISETSCROLLH = 72;
+    static const int MDISETSCROLLV = 73;
+    static const int CENTRALWIDGET = 74;
+    static const int TREEWIDGETADD = 75;
+    static const int TREEWIDGETINST = 76;
+    static const int TREEWIDGETGETSEL = 77;
+    static const int OPEN = 78;
+    static const int SAVE = 79;
+    static const int SETITEMTEXT = 80;
+    static const int SETITEMCOLOR = 81;
+    static const int SETBACKCOLOR = 82;
+    static const int SETCOLUMNS = 83;
+    static const int TREEWIDGETCLEAR = 84;
+    static const int SETCOLUMBWIDTH = 85;
+    static const int SETTAG = 86;
+    static const int GETTAG = 87;
+    static const int XNOTIFY = 88;
+    static const int NATIVEFINALIZE = 89;
+    static const int FOLDER = 90;
+    static const int LINEEDITSETTEXT = 91;
+    static const int LINEEDITGETTEXT = 92;
+    static const int QSCIGETTEXT = 93;
+    static const int QSCIGETSELTXT = 94;
+    static const int REMSUBWIN = 95;
+    static const int ADDSUBWIN = 96;
+    static const int MESSAGEBOXWAR = 97;
+	static const int MESSAGEBOXERR = 98;
+	static const int MESSAGEBOXINF = 99;
+	static const int MESSAGEBOXABT = 100;
+	static const int MESSAGEBOXQUE = 101;
+    static const int CURRENTSUBWIN = 102;
+    static const int WINDOWFLAG = 103;
+    static const int SETWINDOWFLAG = 104;
+    static const int CASCADESUBWIN = 105;
+    static const int TILESUBWIN = 106;
+    static const int SETACTSUBWIN = 107;
+    static const int SCIFINDFIRST = 108;
+    static const int COMBOGETTEXT = 109;
+    static const int COMBOSETTEXT = 110;
+    static const int SCIFINDNEXT = 111;
+    static const int PROPADDPROPERTY = 112;
+    static const int ADDPROPERTY = 113;
+    static const int SETMGRFACTORY = 114;
+    static const int SPWVM = 115;
+    static const int SRID = 116;
+    static const int ADDSUBPROPERTY = 117;
+    static const int PROPSETENUM = 118;
+    static const int PEORENUMVALUE = 119;
+    static const int PROPSETARRT = 120;
+    static const int PROPSETARRTSZMAX = 121;
+    static const int PROPSETARRTSZMIN = 122;
+    static const int PROPSETARRTPTMAX = 123;
+    static const int PROPSETARRTPTMIN = 124;
+    static const int PROPSETARRTRC = 125;
+    static const int PROPSETVALUEPT = 126;
+    static const int PROPSETVALUESZ = 127;
+    static const int PROPSETVALUERC = 128;
+    static const int PROPATTRCONST = 129;
+    static const int PROPATTRSSTEP = 130;
+    static const int PROPATTRDECIM = 131;
+    static const int PROPATTRENUMI = 132;
+    static const int PROPATTRENUMN = 133;
+    static const int PROPATTRFLAGN = 134;
+    static const int PROPATTRMAXIM = 135;
+    static const int PROPATTRMINIM = 136;
+    static const int PROPATTRREGEX = 137;
+    static const int PROPATTRECHOM = 138;
+    static const int PROPSETVALUE = 139;
+    static const int PROPADDPROPERTYGROUP = 140;
+    static const int PROPADDPROPERTYENUM = 141;
+    static const int PROPADDPROPERTYFLAG = 142;
+    static const int TREEPROPCLEAR = 143;
+    static const int PROPGETVALUE = 144;
+    static const int COMBOBOXADD = 145;
+    static const int COMBOBOXSETID = 146;
+    static const int COMBOBOXGETID = 147;
+    static const int SETFOCUS = 148;
+	static const int TRGETITEMTEXT = 149;
+	static const int QSCIGETRANGE = 150;
+	static const int LBLSETTEXT = 151;
+	static const int LBLGETTEXT = 152;
+	
+	static const int CHKSETCHECK = 153;
+	static const int CHKGETCHECK = 154;
+	static const int GETVIEWPORT = 155;
+	static const int ADDDEFACTION = 156;
+	static const int SETCONTEXTMENUPOLICY = 157;
+	static const int ACTSETTEXT = 158;
+	static const int ACTGETTEXT = 159;
+	static const int ACTENABLED = 160;
+	static const int TREEWIDGETREM = 161;
+	static const int WINDOWICON = 162;
+	static const int ADDWIDGET = 163;
+	static const int INSERTWIDGET = 164;
+	static const int ADDPERWIDGET = 165;
+	static const int INSERTPERWIDGET = 166;
+	static const int REMOVEWIDGET = 167;
+	static const int SIZEGRIPENABLED = 168;
+	static const int CURRENTMESSAGE = 169;
+	static const int STATUSBAR = 170;
+	static const int SHOWMESSAGE = 171,
+		QPMININUM = 172,
+		QPMAXINUM = 173,
+		QPVALUE = 174,
+		QPTEXT	=	175,
+		QPVISIBLE = 176,
+		QPALIGN = 177,
+		QPORIENTATION = 178,
+		QPINVERTAPPEAR = 179,
+		QPTEXTDIR = 180,
+		QPFORMAT = 181,
+		QPRESET = 182,
+		QPRANGE = 183,
+		STYLESHEET = 184,
+		PALETTECOLOR = 185,
+		TRCOLUMNSHOW = 186,
+		TRSELECTMODE = 187,
+		TRAUTORESIZE = 188,
+		TRHEADERWIDTH = 189,
+		TRSORTENABLE = 190,
+		TRELIDMODE = 191,
+		TREESETCURITEM = 192,
+		TREEGETCURROW = 193,
+		TREEGETCURCOL = 194,
+		TREESETCURROW = 195,
+		TREESETCURCOL = 196,
+		TREEGETCOUNT = 197,
+		TREEGETSELITEM = 198,
+        TREEITEMFLAG = 199,
+        TREEITEMGETFLAG = 200,
+        TREEITEMPARENT = 201,
+        DELLOCBUFFER = 202,
+        BUFFERSETDATA = 203,
+        OPENBUFFER = 204,
+        DELLOCICON = 205,
+        DELLOCBYTEARRAY = 206,
+        SAVESTATE = 207,
+        LOADSTATE = 208,
+        TRSCROLLBOTTOM = 209,
+        TRIEMCLEARCHILD = 210,
+        TRIEMSETEXPAND = 211,
+        TRIEMSETHIDDEN = 212,
+        MAPPOINT = 213,
+        TRITEMSETCHECK = 214,
+		TRITEMGETCHECK = 215,
+        TREEGETCHILDREN = 216,
+        SETITEMICON = 217,
+        SETPEN	=	218, 
+        SETBRUSH = 219,
+        QXPAINTDRAWLINE = 220,
+        SETBKBRUSH = 221,
+        QXPAINTOPACITY = 222,
+        QXPAINTBGMMODE = 223,
+        IMGLOAD = 224,
+        DELETEIMAGE = 225,
+        DRAWIMAGE = 226,
+        IMGWIDTH = 227,
+        IMGHEIGHT = 228,
+        IMGFORMAT = 229,
+        IMGGETDATA = 230,
+        QXPAINTDRAWRECT = 231,
+        FILLRECT = 232,
+        DRAWTEXT = 233,
+        PAINTERSETFONT = 234,
+        LOADFONT = 235,
+        SETAPPFONT = 236,
+        MATRIXDTOR = 237,		
+        PAINTERSAVE = 238,
+		PAINTERRESTORE = 239,
+		PAINTRESETMATRIX = 240,
+		PAINTRESETTRANSFORM = 241,
+        MATRIXMAPPOINT = 242,
+        MATRIXTRANSLATE = 243,
+		MATRIXSCALE = 244,
+		MATRIXSHEAR = 245,
+		MATRIXROTATE = 246,
+		MATRIXMUL = 247,
+        PAINTERGETMATRIX = 248,
+        PAINTSETMATRIX = 249,
+        COMBOXCLR = 250,
+        BUTTONSETTEXT = 251,
+        ROUNDRECT = 252,
+        ROUNDEDRECT = 253,
+        SETATTRIBUTE = 254,
+        SETRENDERHINT = 255,
+        MEASURETEXT = 256,
+        PAINTERGETFCONT = 257,
+        PAINTERFROMIMG = 258,
+        DELLOCPAINTER = 259,
+        DRAWELLIPSE = 260,
+        SCREENPOSITION = 261,
+        SCREENSIZE	= 262,
+        SCREENCOUNT = 263,
+        CURRENTSCREEN = 264,
+        DELETEWIDGET = 265,
+        TOOLBARADDWIDGET = 266,
+        TOOLBARINSWIDGET = 267,
+        OPENURL		=	268,
+        SETSTYLESHEET = 269,
+        SETCOMPOSITIONMODE = 270,
+        GETSTYLESHEEY = 271,
+        FSWADDFILE = 272,
+		FSWREMFILE = 273,
+        SETCURSOR = 274,
+        LOADTRANSLATE = 275,
+        OPENLOCAL = 276,
+        HASFOCUS = 277;
+        
+        
+    QXCore(){
+    }
+    QXCore(int type){
+        nativehandle = createQObject(type, this, 0);
+        if (nativehandle == 0){
+            throw new IllegalArgumentException("can't new Object");
+        }
+    }
+    QXCore(int type, QXNative parent){
+        if (parent == nilptr){
+            throw new IllegalArgumentException("parent is null");
+        }
+        nativehandle = createQObject(QType.qtWidget, this, parent.nativehandle);
+        if (nativehandle == 0){
+            throw new IllegalArgumentException("can't new Object");
+        }
+    }
+    
+    QXCore(long handle){
+        super(handle);
+    }
+    
+    Object subClass(QXCore object){
+        if (core_sub_class(nativehandle, this, object)){
+            object.nativehandle = nativehandle;
+            nativehandle = 0;
+            return object;
+        }
+        return nilptr;
+    }
+    
+    static bool openUrl(String url){
+        return 0 != long_string2(0, OPENURL, url, nilptr);
+    }
+    static bool openLocal(String url){
+		return 0 != long_string2(0, OPENLOCAL, url, nilptr);
+    }
+    void Notify(long eventid){
+        widget_set_native_value(nativehandle, XNOTIFY, eventid);
+    }
+};

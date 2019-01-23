@@ -1,0 +1,114 @@
+//xlang Source, Name:XDebugPort.xcsm 
+//Date: Thu Sep 12:47:45 2018 
+
+class XDebugPipe : Stream{
+	int debugport;
+	long readfd;
+	long writefd;
+
+	Object readlock = new Object();
+    Object writelock = new Object();
+    
+	XDebugPipe(){
+		readfd = writefd = debugport = 0;
+	}
+	XDebugPipe(int port){
+		readfd = writefd = 0;
+		debugport = port;
+	}
+    
+    bool prepareForPipe(){
+    	String readport = String.format("XDEBUG_WRITE_%d", debugport);
+		String writeport = String.format("XDEBUG_READ_%d", debugport);
+        
+        readfd = _system_.createPipe(readport, false);
+        if (readfd != 0){
+			writefd = _system_.createPipe(writeport, false);
+            if (writefd == 0){
+				_system_.closePipe(readfd);
+                return false;
+            }else{
+				return true;
+            }
+        }
+        return false;
+    }
+    
+	bool createstream(){
+		synchronized(readlock){
+			synchronized(writelock){
+				if (readfd != 0 && writefd != 0){
+					if (_system_.openPipe(writefd, false) == false){
+						return false;
+					}                
+					if (_system_.openPipe(readfd, true) == false){
+						return false;
+					}
+				}else{
+					return false;
+				}
+			}
+        }
+		return true;
+	}
+
+	int read(byte[] buffer,int pos, int countOfByte)override{
+		int rd = -1;
+		synchronized(readlock){
+			if (readfd != 0){
+				rd = _system_.readPipe(readfd, buffer, pos, countOfByte);
+            }else{
+				return -1;
+            }
+		}
+        if (rd < 0){
+			close();
+        }
+        return rd;
+	}
+
+	int write(byte[] buffer, int pos, int countOfByte) override{
+		int rd = 0;
+		synchronized(writelock){
+			if (readfd != 0){
+				rd = _system_.writePipe(writefd, buffer, pos, countOfByte);
+            }else{
+				return -1;
+            }
+		}
+        if (rd < 0){
+			close();
+        }
+        return rd;
+	}
+
+	final void close() override{
+		synchronized(readlock){
+			if (readfd != 0){
+				_system_.closePipe(readfd);
+                readfd = 0;
+			}
+        }
+        synchronized(writelock){
+			if (writefd != 0){
+				_system_.closePipe(writefd);
+                writefd = 0;
+			}
+		}
+	}
+    
+    long seek(int ,long)override{
+		return 0;
+    }
+    
+    long getPosition()override{
+		return 0;
+    }
+    
+    long length()override{return 0;}
+    long available(bool)override{return 0;}
+    
+    void finalize(){
+		close();
+    }
+};

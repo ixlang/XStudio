@@ -1,0 +1,36 @@
+class QXCheckBox : QXWidget{
+    QXCheckBox(){
+    }
+    
+    QXCheckBox(long handle){
+        super(handle);
+    }
+    
+    bool create(){
+        nativehandle = createQObject(QType.qtCheckBox, this, 0);
+        if (nativehandle == 0){
+            return false;
+        }
+        return true;
+    }
+    
+    bool create(QXWidget parent){
+        nativehandle = createQObject(QType.qtCheckBox, this, parent.nativehandle);
+        if (nativehandle == 0){
+            return false;
+        }
+        return true;
+    }
+    
+	void setCheck(bool bc){
+		widget_set_bool_value(nativehandle, CHKSETCHECK, bc);
+	}
+    
+	bool getCheck(){
+		return widget_get_bool_value(nativehandle, CHKGETCHECK);
+	}
+    
+    void setText(String text){
+		widget_slot_string(nativehandle, BUTTONSETTEXT, text);
+    }
+};

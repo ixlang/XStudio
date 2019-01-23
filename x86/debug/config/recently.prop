@@ -1,0 +1,43 @@
+{
+	"projects":	[{
+			"name":	"ZipBrowser",
+			"path":	"E:\\Developments\\Cadaqs\\caNamespace\\castudio\\xcross\\xlang\\xide\\example\\ZipBrowser\\ZipBrowser.xprj",
+			"date":	"Tue Oct 22:46:36 2018"
+		}, {
+			"name":	"xide",
+			"path":	"E:\\Developments\\Cadaqs\\caNamespace\\castudio\\xcross\\xlang\\xide\\example\\xide\\xide.xprj",
+			"date":	"Wed Oct 00:04:49 2018"
+		}, {
+			"name":	"xide",
+			"path":	"E:/Developments/Cadaqs/caNamespace/castudio/xcross/xlang/xlang/example/xide/XIde.xprj",
+			"date":	"Wed Oct 00:44:45 2018"
+		}, {
+			"name":	"XPlayer",
+			"path":	"E:\\Developments\\Cadaqs\\caNamespace\\castudio\\xcross\\xlang\\xide\\example\\audio_player\\XPlayer.xprj",
+			"date":	"Wed Oct 00:47:04 2018"
+		}, {
+			"name":	"XPlayer",
+			"path":	"E:/Developments/Cadaqs/caNamespace/castudio/xcross/xlang/xlang/example/audio_player/XPlayer.xprj",
+			"date":	"Wed Oct 00:48:07 2018"
+		}, {
+			"name":	"SimpleGameServer",
+			"path":	"E:/Developments/Cadaqs/caNamespace/castudio/xcross/xlang/xlang/example/SimpleGameServer/SimpleGameServer.xprj",
+			"date":	"Wed Oct 00:51:47 2018"
+		}, {
+			"name":	"xide",
+			"path":	"E:/Developments/Cadaqs/caNamespace/castudio/xcross/xlang/xlang/example/xide/xide.xprj",
+			"date":	"Wed Oct 01:52:27 2018"
+		}, {
+			"name":	"SimpleGameServer",
+			"path":	"D:\\Cadaqs\\Desktop\\qq received\\xlang_v6.0_beta_windows_x86\\example\\SimpleGameServer\\SimpleGameServer.xprj",
+			"date":	"Wed Oct 10:49:01 2018"
+		}, {
+			"name":	"chess",
+			"path":	"E:/Developments/Cadaqs/caNamespace/castudio/xcross/xlang/xlang/example/chess/chess.xprj",
+			"date":	"Wed Oct 11:08:24 2018"
+		}, {
+			"name":	"chess",
+			"path":	"D:/Cadaqs/Desktop/qq received(收到的文件)/xlang_v6.0_beta_windows_x86/example/chess/chess.xprj",
+			"date":	"Wed Oct 15:37:48 2018"
+		}]
+}

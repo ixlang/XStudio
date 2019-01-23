@@ -1,0 +1,84 @@
+class QXApplication : QXObject{
+    QXApplication(){
+    }
+    
+    bool createQXApplication(){
+        nativehandle = createQxApplication(this);
+        return nativehandle != 0;
+    }
+    void run(){
+        ApplicationRun(nativehandle);
+    }
+    
+    bool onNotify(QXObject object ,String objectName, String objectClass, long event, int eventId){
+        //_system_.consoleWrite(objectName + "class:" + objectClass + "Event:" + eventId + "\n");
+        return true;
+    }
+    
+	void setStyleSheet(String file){
+		widget_slot_string(nativehandle, STYLESHEET, file);
+	}
+	void setPaletteColor(String file){
+		widget_slot_string(nativehandle, PALETTECOLOR, file);
+	}
+    void setFont(QXFont font){
+        widget_set_native_value(nativehandle, SETAPPFONT, font.nativehandle);
+    }
+    
+    void loadTranslator(String file){
+		widget_slot_string(nativehandle, LOADTRANSLATE, file);
+    }
+    
+    Object onCreateXObject(long object, String objectClass){
+        //_system_.consoleWrite("QXApplication request class :" + objectClass + "\n");
+        if (objectClass.equals("QMdiArea")){
+            return new QXMdiArea(object);
+        }
+        if (objectClass.equals("QWidget")){
+            return new QXWidget(object);
+        }
+        if (objectClass.equals("QPushButton")){
+            return new QXWidget(object);
+        }
+        if (objectClass.equals("QLineEdit")){
+            return new QXLineEdit(object);
+        }
+        if (objectClass.equals("QDockWidget")){
+            return new QXDockWidget(object);
+        }
+        if (objectClass.equals("QMenuBar")){
+            return new QXMenuBar(object);
+        }
+        if (objectClass.equals("QAction")){
+            return new QXAction(object);
+        }
+        if (objectClass.equals("QMenu")){
+            return new QXMenu(object);
+        }
+        if (objectClass.equals("QDialog")){
+            return new QXDialog(object);
+        }
+        if (objectClass.equals("QPushButton")){
+            return new QXPushButton(object);
+        }
+        if (objectClass.equals("QComboBox")){
+            return new QXComboBox(object);
+        }
+		if (objectClass.equals("QLabel")){
+            return new QXLabel(object);
+        }
+		if (objectClass.equals("QCheckBox")){
+            return new QXCheckBox(object);
+        }
+		if (objectClass.equals("QStatusBar")){
+            return new QXStatusBar(object);
+        }
+		if (objectClass.equals("QToolBar")){
+            return new QXToolBar(object);
+        }
+		if (objectClass.equals("QFileSystemWatcher")){
+            return new QXFileSystemWatcher(object);
+        }
+        return nilptr;
+    }
+};

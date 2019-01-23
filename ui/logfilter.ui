@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>511</width>
+    <height>275</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>20</y>
+     <width>71</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>过滤器名称:</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="filterName">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>20</y>
+     <width>171</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnAdd">
+   <property name="geometry">
+    <rect>
+     <x>310</x>
+     <y>240</y>
+     <width>80</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>添加</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="benCancel">
+   <property name="geometry">
+    <rect>
+     <x>410</x>
+     <y>240</y>
+     <width>80</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>取消</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>240</y>
+     <width>261</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>提示:过滤内容为正则表达式</string>
+   </property>
+  </widget>
+  <widget class="QGroupBox" name="groupBox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>50</y>
+     <width>471</width>
+     <height>181</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>过滤条件</string>
+   </property>
+   <widget class="QCheckBox" name="chkDebug">
+    <property name="geometry">
+     <rect>
+      <x>353</x>
+      <y>150</y>
+      <width>91</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>LOG_DEBUG</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="chkNotice">
+    <property name="geometry">
+     <rect>
+      <x>126</x>
+      <y>150</y>
+      <width>91</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>LOG_NOTICE</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="chkErr">
+    <property name="geometry">
+     <rect>
+      <x>353</x>
+      <y>120</y>
+      <width>101</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>LOG_ERR</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="chkMsg">
+    <property name="geometry">
+     <rect>
+      <x>11</x>
+      <y>89</y>
+      <width>73</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>消息</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="chkAlert">
+    <property name="geometry">
+     <rect>
+      <x>126</x>
+      <y>120</y>
+      <width>81</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>LOG_ALERT</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="chkThread">
+    <property name="geometry">
+     <rect>
+      <x>11</x>
+      <y>29</y>
+      <width>73</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>线程:</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="editTag">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>71</x>
+      <y>59</y>
+      <width>391</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="chkEmerg">
+    <property name="geometry">
+     <rect>
+      <x>12</x>
+      <y>120</y>
+      <width>91</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>LOG_EMERG</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="editThread">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>71</x>
+      <y>29</y>
+      <width>391</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="chkCrit">
+    <property name="geometry">
+     <rect>
+      <x>240</x>
+      <y>120</y>
+      <width>81</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>LOG_CRIT</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="chkTag">
+    <property name="geometry">
+     <rect>
+      <x>11</x>
+      <y>59</y>
+      <width>73</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>标签</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="editMsg">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>71</x>
+      <y>89</y>
+      <width>391</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="chkInfo">
+    <property name="geometry">
+     <rect>
+      <x>240</x>
+      <y>150</y>
+      <width>81</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>LOG_INFO</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="chkWarning">
+    <property name="geometry">
+     <rect>
+      <x>12</x>
+      <y>150</y>
+      <width>91</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>LOG_WARNING</string>
+    </property>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

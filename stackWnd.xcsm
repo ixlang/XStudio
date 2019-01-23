@@ -1,0 +1,292 @@
+//xlang Source, Name:stackWnd.xcsm 
+//Date: Tue Sep 15:46:31 2018 
+
+class XStackInfor : QXDockWidget{
+
+    static const int XDBG_STATE_UPDATE	=	0;	//状态更新
+	static const int XDBG_STATE_CREATE	=	1;	//线程创建
+	static const int XDBG_STATE_EXIT		=	2;	//线程退出
+	static const int XDBG_STATE_EXCEPTION = 	4;	//捕获异常
+    static const int XDBG_STATE_REIGGEBP 	= 	8;	//触发断点
+    
+    QXTreeView _listview;
+    
+    JsonObject root;
+    Object rootLock = new Object();
+    static XStackInfor stackWnd;
+    
+    static class BreakPosition{
+		BreakPosition(String f, int l, int r, bool a){
+			file = f;
+			line = l;
+            row = r;
+            active = a;
+		}
+        
+		String file;
+        int line;
+        int row;
+        bool active;
+    };
+        
+    static class ThreadInfo{
+		long item;
+        int serial;
+        bool bInterrupt;
+    };  
+    
+    onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
+        void onItemClicked(QXTreeView tree,long item, int column)override{
+			queryAuto(item, column);
+        }
+    };
+    
+
+	void queryAuto(long item, int column){
+		long parent_item = _listview.getParentItem(item);
+        if (parent_item != 0){
+			String tid = _listview.getItemText(parent_item, 1);
+			String fid = _listview.getItemText(item, 1);
+            
+            if (tid.length() > 0 && fid.length() > 0){
+				int threadId = tid.parseInt();
+                int frameId = fid.parseInt();
+                
+                ThreadManager.setCurrentThread(threadId, frameId);
+                                
+                String filepath = _listview.getItemText(item, 3);
+                String lr = _listview.getItemText(item, 2);
+                String []lrs = lr.split(',');
+                
+                if (lrs.length == 2){
+					XSourceEditor.openForFileInfo(XWorkspace.workspace, filepath, lrs[0].parseInt() + 1, lrs[1].parseInt(), nilptr);
+                }
+            }
+        }else{
+			String tid = _listview.getItemText(item, 1);
+            if (tid.length() > 0){
+				int threadId = tid.parseInt();
+                if (threadId != 0){
+					ThreadManager.setCurrentThread(threadId, 0);
+                }
+            }
+        }
+    }
+    
+    void onAttach(){
+        _listview = (QXTreeView)attachByName(new QXTreeView(), "stacklist");
+       
+        /*setOnLayoutEventListener(new onLayoutEventListener(){
+                void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+                    if (_listview != nilptr){
+                        _listview.resize(w, h - 20);
+                    }
+                }
+        });*/
+        
+        String [] columns = {"名称", "ID", "状态", "堆栈"};
+        
+        _listview.setColumns(columns);
+        _listview.setColumnWidth(0, 100);
+        _listview.setColumnWidth(1, 50);
+        _listview.setColumnWidth(2, 50);
+        _listview.setColumnWidth(3, 700);
+		_listview.setOnTreeViewItemEvent(listlistener);
+        
+        stackWnd = this;
+    }
+    
+	static void updateThread(int tid, int action){
+		long nmsg = tid;
+        nmsg = (nmsg << 32) |action;
+        stackWnd.Notify(nmsg);
+    }
+    
+    
+    Map<int,long> threadlist = new Map<int,long>();
+    Map<int, BreakPosition> breakList = new Map<int, BreakPosition>();
+    
+    void updateToItem(long item, ThreadManager.ThreadObject to, bool bLocate){
+		_listview.setItemText(item, 0, to.name);
+        _listview.setItemText(item, 1, "" + to.id);
+        
+		if (to.bInterrupt){
+			
+			_listview.setItemIcon(item, 0, "res/toolbar/break.png");
+            _listview.setItemText(item, 2, "中断");
+            
+            if (to.frames != nilptr){
+				for (int i = 0; i < to.frames.length; i++){
+					ThreadManager.StackFrame sf = to.frames[i];
+					
+					String ip = String.format("0x%08X", sf.ip);
+					
+					long fitem = _listview.insertItem(item, nilptr, "#frame:" + i);
+					_listview.setItemText(fitem, 1, "" + i);
+					
+					
+					if (sf.source == nilptr){
+						_listview.setItemText(fitem, 3, ip + "<无调试信息>");
+					}else{
+						_listview.setItemText(fitem, 2, "" + sf.line + "," + sf.row);
+						_listview.setItemText(fitem, 3, sf.source);
+						
+						if (i == 0){
+						
+							BreakPosition bp = new BreakPosition(sf.source, sf.line, sf.row, bLocate);
+						
+							Map.Iterator<int, BreakPosition> iter = breakList.find(to.id);
+							if (iter != nilptr){
+								BreakPosition old_bp = iter.getValue();
+								
+								if (old_bp.file.equals(sf.source) && old_bp.line == sf.line && old_bp.row == sf.row){
+									continue ;
+								}else{
+									XSourceEditor.removeBreak(iter.getValue());
+								}
+								
+								iter.setValue(bp);
+							}else{
+								breakList.put(to.id ,bp);
+							}
+							
+							XSourceEditor.setBreak(bp);
+							ThreadManager.setCurrentThread(to.id, 0);
+						}
+					}
+				}
+            }
+        }else{
+			_listview.setItemIcon(item, 0, "res/toolbar/run.png");
+            _listview.setItemText(item, 2, "运行");
+        }
+    
+    }
+    
+    
+    void update(int tid, bool bLocate){
+		long item = 0;
+		Map.Iterator<int,long> iter = threadlist.find(tid);
+		if (iter == nilptr){
+			item = _listview.addItem(nilptr, "");
+			threadlist.put(tid, item);
+		}else{
+			item = iter.getValue();
+			_listview.removeAllchild(item);
+		}
+		
+		ThreadManager.ThreadObject to = ThreadManager.getThread(tid);
+		
+		if (to != nilptr){
+			updateToItem(item, to, bLocate);
+		}
+    }
+    
+    void createThread(int tid){
+
+		long item = _listview.addItem(nilptr, "");
+		
+		threadlist.put(tid, item);
+
+		ThreadManager.ThreadObject to = ThreadManager.getThread(tid);
+		
+		if (to != nilptr){
+			updateToItem(item, to, false);
+		}
+        
+    }
+    
+    void exitThread(int tid){
+		Map.Iterator<int,long> iter = threadlist.find(tid);
+		if (iter != nilptr){
+			_listview.removeItem(iter.getValue());
+			threadlist.remove(iter);
+            breakList.remove(tid);
+		}
+    }
+    
+    void onException(int tid){
+		String msgInfo = nilptr;
+
+		long item = 0;
+		Map.Iterator<int,long> iter = threadlist.find(tid);
+		if (iter == nilptr){
+			item = _listview.addItem(nilptr, "");
+			threadlist.put(tid, item);
+		}else{
+			item = iter.getValue();
+			_listview.removeAllchild(item);
+		}
+		
+		ThreadManager.ThreadObject to = ThreadManager.getThread(tid);
+		
+		if (to != nilptr){
+			updateToItem(item, to, true);
+			
+			msgInfo = "调试器捕获了一个未处理的异常[" +  to.except_name + "]在地址:" + to.except_addr + "产生的中断,该异常将使程序停止运行.<br /><br />" + 
+			"详细信息:<br />" + 
+			"<strong style=\"color:#ff0000\">异常:" + to.except_name +"</strong><br />" + 
+			"<strong style=\"color:#80b0f0\">消息:" + to.except_msg + "</strong><br />" + 
+			"<strong style=\"color:#bde0ac\">地址:" + to.except_addr + "</strong><br />";
+		}
+        
+		XWorkspace.Caution();
+        
+		raise();
+        
+        if (msgInfo != nilptr){
+			QXMessageBox.Warning("异常中断", msgInfo, QXMessageBox.Ok, QXMessageBox.Ok);
+        }
+    }
+        
+    void onNotification(long id){
+		synchronized(threadlist){
+			int tid = (id >> 32) & 0xffffffff;
+			int action = id & 0xffffffff;
+			
+			
+			switch(action){
+				case XDBG_STATE_REIGGEBP:
+				case XDBG_STATE_UPDATE:
+					update(tid, true);
+				break;
+				case XDBG_STATE_CREATE:
+					createThread(tid);
+				break;
+				case XDBG_STATE_EXIT:
+					exitThread(tid);
+				break;
+				case XDBG_STATE_EXCEPTION:
+					onException(tid);
+				break;
+			}
+		}
+    }
+    
+    static void clearBreak(int tid){
+		stackWnd.removeBreak(tid);
+    }
+    
+    void removeBreak(int tid){
+		Map.Iterator<int, BreakPosition> iter = breakList.find(tid);
+        if (iter != nilptr){
+			XSourceEditor.removeBreak(iter.getValue());
+            breakList.remove(iter);
+        }
+    }
+    
+    /*static void resetBreakPoint(){
+		XSourceEditor.clearBreakInfo(stackWnd.breakList);
+		stackWnd.breakList.clear();
+		stackWnd.threadlist.clear();
+    }*/
+            
+    static void reset(){
+		synchronized(stackWnd.threadlist){
+			stackWnd.threadlist.clear();
+			stackWnd._listview.clear();
+			XSourceEditor.clearBreakInfo(stackWnd.breakList);
+			stackWnd.breakList.clear();
+		}
+    }
+};

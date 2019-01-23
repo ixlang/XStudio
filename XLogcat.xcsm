@@ -1,0 +1,438 @@
+//xlang Source, Name:XLogcat.xcsm 
+//Date: Fri Sep 11:41:18 2018 
+
+// log 由于使用了QTreeWidget 所以能处理的数据非常有限 10万行就卡的不行
+
+class XLogcatWnd : QXDockWidget{
+    QXTreeView filterlist;
+    QXTreeView logcatlist;
+    QXPushButton btnFilter, btnClear;
+    XWorkspace _mdi_area;
+    ContextMenu _contextMenu = new ContextMenu();
+    static XLogcatWnd logcatWnd;
+    static const int LOGCAT_INFO_NOTIFY = 2;
+    QXCheckBox chkAutoScroll;
+    Filter currentFilter;
+    long allRoot;
+    String [] logLevel = {
+		"LOG_EMERG", 
+		"LOG_ALERT", 
+		"LOG_CRIT", 
+		"LOG_ERR", 
+		"LOG_WARNING", 
+		"LOG_NOTICE", 
+		"LOG_INFO", 
+		"LOG_DEBUG"
+    };
+    
+    onTreeViewItemEvent filterlistener = new onTreeViewItemEvent(){
+        void onItemClicked(QXTreeView tree,long item, int column)override{
+			onFilterItemClicked(tree, item, column);
+        }
+        void onItemDoubleClicked(QXTreeView tree,long item, int column){
+			onFilterItemDBClicked(tree, item, column);
+        }
+    };
+    
+    onTreeViewItemEvent logcatlistener = new onTreeViewItemEvent(){
+        void onItemDoubleClicked(QXTreeView tree,long item, int column){
+			TextDetail td = new TextDetail();
+			String text = tree.getItemText(item, column);
+			td.create("logcat", text.escape());
+        }
+    };
+    
+    static class Logcat{
+		Logcat(String t, String thr, String g, String m, int l){
+			time = t;
+            thread = thr;
+            tag = g;
+            msg = m;
+            level = l;
+            
+            msg = msg.replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t").replace("\b", "\\b");
+        }
+		String time, thread, tag, msg;
+        int level;
+    };
+    
+    static class Filter{
+		int type;
+
+        String [] key;
+        String name;
+        int level;
+        long item;
+        static const int FILTER_THREAD = 1,
+			FILTER_TAG = 2,
+            FILTER_MSG = 4,
+            FILTER_LEVEL = 8;
+            
+        Vector<Logcat> logcats = new Vector<Logcat>();
+        
+        bool filter(Logcat log){
+			if (type == 0){
+				return false;
+            }
+            if ((type & FILTER_LEVEL) == FILTER_LEVEL){
+				if ((level & log.level) == 0){
+					return false;
+				}
+            }
+			if ((type & FILTER_THREAD) == FILTER_THREAD){
+				if (Pattern.test(log.thread, key[0], 0, false) == false){
+					return false;
+                }
+            }
+            
+			if ((type & FILTER_TAG) == FILTER_TAG){
+				if (Pattern.test(log.tag, key[1], 0, false) == false){
+					return false;
+                }
+            }
+            
+			if ((type & FILTER_MSG) == FILTER_MSG){
+				if (Pattern.test(log.msg, key[2], 0, false) == false){
+					return false;
+                }
+            }
+            
+            logcats.add(log);
+
+            return true;
+        }
+        
+        Vector<Logcat> getLogs(){
+			return logcats;
+        }
+        
+        void clear(){
+			logcats.clear();
+        }
+    };
+    
+    Vector<Logcat> logcat_list = new Vector<Logcat>();
+    Vector<Logcat> prepare_list = new Vector<Logcat>();
+    
+    Map<String, Filter> filter_list = new Map<String, Filter>();
+    
+	void onFilterItemClicked(QXTreeView tree,long item, int column){
+		setCurrentFilter(tree.getItemText(item, 0));
+    }
+    
+    void onFilterItemDBClicked(QXTreeView tree,long item, int column){
+		updateFilter(tree.getItemText(item, 0));
+	}
+    
+    void updateFilter(String name){
+		synchronized(prepare_list){
+			if (name.equals("All")){
+				currentFilter = nilptr;
+				loadLogcat(logcat_list);
+			}else{
+				try{
+					Filter filter = filter_list.get(name);
+					
+					QXDialog newDlg = new QXDialog();
+					if (newDlg.load("ui/logfilter.ui") == false){
+						return ;
+					}
+					FilterEdit filterEditor = new FilterEdit(filter);
+					filterEditor.attach(newDlg);
+				}catch(Exception e){
+						
+				}
+			}
+		}
+    }
+    
+    bool addFilter(){
+        QXDialog newDlg = new QXDialog();
+        if (newDlg.load("ui/logfilter.ui") == false){
+            return false;
+        }
+        FilterEdit filterEditor = new FilterEdit();
+        filterEditor.attach(newDlg);
+        return true;
+    }
+    
+    static bool addFilter(Filter filter){
+		if (filter.name.equals("All")){
+			return false;
+		}
+		if (logcatWnd.filter_list.containsKey(filter.name)){
+			return false;
+        }else{
+			logcatWnd.filter_list.put(filter.name, filter);
+            logcatWnd.updateFilterList();
+            return true;
+        }
+    }
+
+    static void sendLogcat(JsonObject json){
+		XLogcatWnd.Logcat log = new XLogcatWnd.Logcat(json.getString("time"), json.getString("thread"), json.getString("tag"), json.getString("content"), json.getInt("level"));
+        synchronized(logcatWnd.prepare_list){
+
+			logcatWnd.prepare_list.add(log);
+
+        }
+        logcatWnd.Notify(LOGCAT_INFO_NOTIFY);
+    }
+    
+    void updateFilter(Logcat log){
+		Map.Iterator<String, Filter> iter = filter_list.iterator();
+        while (iter.hasNext()){
+			Filter filter = iter.getValue();
+			if (filter.filter(log)){
+				if (filter.item != 0){
+					filterlist.setItemText(filter.item , 1 , "" + filter.logcats.size());
+				}
+				if (filter == currentFilter){
+					addToList(log);
+                }
+			}
+			iter.next();
+        }
+    }
+    
+    void onNotification(long id){
+		 synchronized(prepare_list){
+			int c = prepare_list.size();
+            
+			for (int i = 0; i < c; i++){
+				Logcat log = prepare_list.get(i);
+                
+                logcat_list.add(log);
+                updateFilter(log);
+                
+				if (allRoot != 0){
+					filterlist.setItemText(allRoot , 1 , "" + logcat_list.size());
+				}
+                if (currentFilter == nilptr){
+					addToList(log);
+                }
+            }
+            
+            prepare_list.clear();
+
+		 }
+	}
+    
+    String getLevel(int n){
+		for (int i =0; i < 8; i ++){
+			if (n == (1<<i)){
+				return logLevel[i];
+			}
+        }
+        return "UNKNOW";
+    }
+    void addToList(Logcat log){
+		long item = logcatlist.addItem(nilptr, log.time);
+        logcatlist.setItemText(item, 3, getLevel(log.level));
+        logcatlist.setItemText(item, 2, log.thread);
+        logcatlist.setItemText(item, 1, "-");
+        logcatlist.setItemText(item, 4, log.tag);
+        logcatlist.setItemText(item, 5, log.msg);
+        
+        if (chkAutoScroll.getCheck()){
+			logcatlist.scrollToBottom();
+        }
+    }
+    
+    void onAttach(){
+		chkAutoScroll = (QXCheckBox)attachByName(new QXCheckBox(), "chkAutoScroll");
+		btnClear = (QXPushButton)attachByName(new QXPushButton(), "btnClear");
+		btnFilter = (QXPushButton)attachByName(new QXPushButton(), "btnFilter");
+        filterlist = (QXTreeView)attachByName(new QXTreeView(), "filterlist");
+        logcatlist = (QXTreeView)attachByName(new QXTreeView(), "logList");
+       
+        /*setOnLayoutEventListener(new onLayoutEventListener(){
+                void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+                    if (filterlist != nilptr){
+                        filterlist.resize(160, h - 80);
+                    }
+                    if (logcatlist != nilptr){
+						logcatlist.move(165, 0);
+                        logcatlist.resize(w - 165, h - 25);
+                    }
+                    if (btnFilter != nilptr){
+						btnFilter.move(0, h - 76);
+                    }
+                    if (btnClear != nilptr){
+						btnClear.move(80, h - 76);
+                    }
+                    if (chkAutoScroll != nilptr){
+						chkAutoScroll.move(5, h - 46);
+                    }
+                }
+        });*/
+        
+        String [] fcolumns = {"过滤器", "数量"};
+        filterlist.setColumns(fcolumns);
+        int []fwidths = {100, 60};
+        
+		for (int i = 0; i < fwidths.length; i++){
+			filterlist.setColumnWidth(i, fwidths[i]);
+		}
+        
+        String [] columns = {"时间", "进程", "线程", "类型", "标签", "消息"};
+        logcatlist.setColumns(columns);
+        
+        int []widths = {150, 50, 30, 80, 60, 500};
+        
+		for (int i = 0; i < widths.length; i++){
+			logcatlist.setColumnWidth(i, widths[i]);
+		}
+		
+		filterlist.setOnTreeViewItemEvent(filterlistener);
+        logcatlist.setOnTreeViewItemEvent(logcatlistener);
+        updateFilterList();
+        
+        btnFilter.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+                addFilter();
+            }
+        });
+        
+        btnClear.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+                clearList();
+            }
+        });
+        createContextMenu();
+        logcatWnd = this;
+    }
+    
+    void clearList(){
+        logcatlist.clear();
+        synchronized(prepare_list){
+			if (currentFilter != nilptr){
+				currentFilter.clear();
+			}else{
+				logcat_list.clear();
+			}
+            updateFilterList();
+        }
+    }
+
+    void setCurrentFilter(String name){
+		synchronized(prepare_list){
+			if (name.equals("All")){
+				currentFilter = nilptr;
+				loadLogcat(logcat_list);
+				updateFilterList();
+			}else{
+				try{
+					Filter filter = filter_list.get(name);
+					
+					loadLogcat(filter.getLogs());
+					
+					currentFilter = filter;
+					
+					updateFilterList();
+				}catch(Exception e){
+						
+				}
+			}
+		}
+    }
+    
+    void loadLogcat(Vector<Logcat> logcats){
+		logcatlist.clear();
+		for (int i = 0; i < logcats.size(); i++){
+			addToList(logcats.get(i));
+		}
+    }
+    
+    void updateFilterList(){
+		filterlist.clear();
+        allRoot = filterlist.addItem("res/toolbar/filter.png" , "All");
+        filterlist.setItemText(allRoot, 1, "" + logcat_list.size());
+		if (nilptr == currentFilter){
+			filterlist.setItemBackColor(allRoot, 0, 0xff666666);
+		}
+        Map.Iterator<String, Filter> iter = filter_list.iterator();
+        
+        while (iter.hasNext()){
+			Filter f = iter.getValue();
+			f.item = filterlist.addItem(nilptr, f.name);
+            filterlist.setItemText(f.item, 1, "" + f.logcats.size());
+            if (f == currentFilter){
+				filterlist.setItemBackColor(f.item, 0, 0xff666666);
+            }
+            iter.next();
+        }
+    }
+    
+    static void reset(){
+		synchronized(logcatWnd.prepare_list){
+		    logcatWnd.filterlist.clear();
+			logcatWnd.logcatlist.clear();
+            logcatWnd.logcat_list.clear();
+            logcatWnd.prepare_list.clear();
+		}
+    }
+    
+    
+    static class ContextMenu{
+		QXMenu contextMenu = new QXMenu();
+		QXAction [] actions;
+		
+		void create(QXWidget parent, String [] acts, onEventListener listener){
+			if (contextMenu.create(parent)){
+				actions = new QXAction[acts.length];
+				for (int i = 0; i < acts.length; i ++){
+					QXAction action = new QXAction();
+					if (action.create(contextMenu)){
+						
+						if (acts[i].equals("-")){
+							action.setSeparator(true);
+						}else{
+							action.setEnable(false);	
+							action.setText(acts[i]);
+							action.setOnEventListener(listener);
+						}
+					}
+					actions[i] = action;
+				}
+				parent.setContextMenuPolicy(ActionsContextMenu);
+				parent.addActions(actions);
+			}
+		}
+	};
+    
+    void createContextMenu(){
+    
+		onEventListener menuListener = new onEventListener(){
+		   void onTrigger(QXObject obj) override{
+				if (obj == _contextMenu.actions[0]){
+					addFilter();
+                }else
+				if (obj == _contextMenu.actions[1]){
+					long [] items = filterlist.getSelectedItems();      
+                    for (int i = 0; i < items.length; i++){
+						String label = filterlist.getItemText(items[i], 0);
+                        if (label != nilptr){
+							Map.Iterator<String, Filter> iter = filter_list.find(label);
+							if (iter != nilptr){
+								if (iter.getValue() == currentFilter){
+									currentFilter = nilptr;
+								}
+								filterlist.removeItem(items[i]);
+                                filter_list.remove(iter);
+                                updateFilterList();
+							}
+                        }
+                    }
+                }
+		   }
+		};
+
+		String []acts = {"新建过滤器","删除过滤器"};
+		_contextMenu.create(filterlist, acts, menuListener);
+        _contextMenu.actions[0].setEnable(true);
+        _contextMenu.actions[1].setEnable(true);
+	}
+};

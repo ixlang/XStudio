@@ -1,0 +1,180 @@
+//xlang Source, Name:FilterEdit.xcsm 
+//Date: Fri Sep 12:25:16 2018 
+class FilterEdit : QXDialog {
+
+	FilterEdit(){
+    
+    }
+    FilterEdit(XLogcatWnd.Filter filter){
+		modifyFilter = filter;
+    }
+    
+    QXPushButton btnAdd;
+    QXPushButton benCancel;
+    QXLineEdit filterName, editThread, editTag, editMsg;
+    QXCheckBox chkThread, chkTag, chkMsg;
+    XLogcatWnd.Filter modifyFilter;
+    
+    QXCheckBox []chkLevel = new QXCheckBox[8];
+    
+    String [] chkLvlNames = {"chkEmerg", "chkAlert", "chkCrit", "chkErr", "chkWarning", "chkNotice", "chkInfo", "chkDebug"};
+    
+    void onAttach(){ 
+    
+        setWindowFlags(CustomizeWindowHint | WindowCloseButtonHint );
+        
+        setFixedSize(width(), height());
+        
+        btnAdd = (QXPushButton)attachByName(new QXPushButton(), "btnAdd");
+        benCancel = (QXPushButton)attachByName(new QXPushButton(), "benCancel");
+        filterName = (QXLineEdit)attachByName(new QXLineEdit(), "filterName");
+        editThread = (QXLineEdit)attachByName(new QXLineEdit(), "editThread");
+        editTag = (QXLineEdit)attachByName(new QXLineEdit(), "editTag");
+        editMsg = (QXLineEdit)attachByName(new QXLineEdit(), "editMsg");
+        chkThread = (QXCheckBox)attachByName(new QXCheckBox(), "chkThread");
+        chkTag = (QXCheckBox)attachByName(new QXCheckBox(), "chkTag");
+        chkMsg = (QXCheckBox)attachByName(new QXCheckBox(), "chkMsg");
+        
+        for (int i = 0; i < chkLvlNames.length; i++){
+			chkLevel[i] = (QXCheckBox)attachByName(new QXCheckBox(), chkLvlNames[i]);
+            
+            if (modifyFilter != nilptr){
+				int flags = 1 << i;
+				if ((modifyFilter.level & flags) == flags){
+					chkLevel[i].setCheck(true);
+                }
+            }else{
+				chkLevel[i].setCheck(true);
+            }
+        }
+        
+        if (modifyFilter != nilptr){
+			filterName.setEnabled(false);
+            filterName.setText(modifyFilter.name);
+        }
+        
+        chkThread.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+				editThread.setEnabled(checked);
+            }
+        });
+        chkTag.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+				editTag.setEnabled(checked);
+            }
+        });
+        chkMsg.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+				editMsg.setEnabled(checked);
+            }
+        });
+        
+        if (modifyFilter != nilptr){
+			if ((modifyFilter.type & XLogcatWnd.Filter.FILTER_THREAD) == XLogcatWnd.Filter.FILTER_THREAD){
+				editThread.setEnabled(true);
+                chkThread.setCheck(true);
+                editThread.setText(modifyFilter.key[0]);
+            }
+            
+			if ((modifyFilter.type & XLogcatWnd.Filter.FILTER_TAG) == XLogcatWnd.Filter.FILTER_TAG){
+				editTag.setEnabled(true);
+                chkTag.setCheck(true);
+                editTag.setText(modifyFilter.key[1]);
+            }
+            
+			if ((modifyFilter.type & XLogcatWnd.Filter.FILTER_MSG) == XLogcatWnd.Filter.FILTER_MSG){
+				editMsg.setEnabled(true);
+                chkMsg.setCheck(true);
+                editMsg.setText(modifyFilter.key[2]);
+            }
+        }
+        btnAdd.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+                complete();
+            }
+        });
+        
+        benCancel.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+				close();
+            }
+        });
+        
+        if (modifyFilter != nilptr){
+			setWindowTitle("编辑过滤器");
+        }else{
+			setWindowTitle("新建过滤器");
+        }
+        
+        setModal(true);
+        show();
+    }
+    
+    void complete(){
+		String []key = new String[3];
+        
+		int type = 0;
+        if (chkThread.getCheck()){
+			type |= XLogcatWnd.Filter.FILTER_THREAD;
+            key[0] = editThread.getText();
+            if (key[0].length() == 0){
+				QXMessageBox.Critical("提示", "无效的过滤器表达式", QXMessageBox.Ok, QXMessageBox.Ok);
+				return ;
+            }
+        }
+        if (chkTag.getCheck()){
+			type |= XLogcatWnd.Filter.FILTER_TAG;
+            key[1] = editTag.getText();
+            if (key[0].length() == 0){
+				QXMessageBox.Critical("提示", "无效的过滤器表达式", QXMessageBox.Ok, QXMessageBox.Ok);
+				return ;
+            }
+        }
+        if (chkMsg.getCheck()){
+			type |= XLogcatWnd.Filter.FILTER_MSG;
+            key[2] = editMsg.getText();
+            if (key[2].length() == 0){
+				QXMessageBox.Critical("提示", "无效的过滤器表达式", QXMessageBox.Ok, QXMessageBox.Ok);
+				return ;
+            }
+        }
+        
+        if (type == 0){
+			QXMessageBox.Critical("提示", "无效过滤器, 至少需要设置一个过滤条件", QXMessageBox.Ok, QXMessageBox.Ok);
+            return ;
+        }
+        
+        XLogcatWnd.Filter filter = modifyFilter;
+        if (filter == nilptr){
+			filter = new XLogcatWnd.Filter ();
+        }
+        filter.type = type;
+        filter.key = key;
+        filter.level = 0;
+        
+         for (int i = 0; i < chkLvlNames.length; i++){
+			if (chkLevel[i].getCheck()){
+				filter.level |= (1 << i);
+            }
+        }
+        
+        if (modifyFilter == nilptr){
+			filter.name = filterName.getText();
+            if (filter.name.length() == 0){
+				QXMessageBox.Critical("提示", "无效的过滤器名称", QXMessageBox.Ok, QXMessageBox.Ok);
+				return ;
+            }
+			if (XLogcatWnd.addFilter(filter) == false){
+				QXMessageBox.Critical("提示", "过滤器已经存在", QXMessageBox.Ok, QXMessageBox.Ok);
+				return ;
+			}
+        }
+        
+        close();
+    }
+};

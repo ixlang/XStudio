@@ -1,0 +1,198 @@
+//xlang Source, Name:XIndex.xcsm 
+//Date: Wed Sep 21:21:54 2018 
+
+class XIndexWindow : QXMdiSubWindow{
+	
+	QXWidget indexPage;
+    QXLabel [] labels = new QXLabel[10];
+	QXLabel lblnew , lblopen, verslabel;
+    QXLabel lblhelp , lblrule, lblexamples;
+    QXLabel []label_simples = new QXLabel[5];
+    
+    Object state;
+    Recently.RecentlyObject [] objects = new Recently.RecentlyObject[10];
+	bool create(QXWidget parent){
+		if (super.create(parent)){
+			indexPage = new QXWidget();
+			if (indexPage.load("ui/index.ui") == false){
+				return false;
+			}
+
+			if (_system_.getPlatformId() == 2){
+				//qt在macos下有widget背景和别的平台不一致的情况，所以这里手动设置一下风格 
+				String wqss = "#Form{background-color:#3e3e42;}";
+				if (Setting.isDarkStyle() == false){
+					wqss = "#Form{background-color:#f0f0f0;}";
+				}
+				indexPage.setStyleSheet(wqss);
+            }
+			setWidget(indexPage);
+			indexPage.show();
+			setMaximized(true);   
+            verslabel = (QXLabel)indexPage.findByName("label");
+            label_simples[0] = (QXLabel)indexPage.findByName("label_24");
+            label_simples[1] = (QXLabel)indexPage.findByName("label_25");
+            label_simples[2] = (QXLabel)indexPage.findByName("label_21");
+            label_simples[3] = (QXLabel)indexPage.findByName("label_27");
+            label_simples[4] = (QXLabel)indexPage.findByName("label_20");
+            
+            lblrule = (QXLabel)indexPage.findByName("label_22");
+            lblhelp = (QXLabel)indexPage.findByName("label_17");
+            lblexamples = (QXLabel)indexPage.findByName("label_18");
+            
+            lblnew = (QXLabel)indexPage.findByName("lblnew");
+            lblopen = (QXLabel)indexPage.findByName("lblopen");
+            
+            verslabel.setText("XStudio " + Utils.getAppMarjonVersion());
+            for (int i =0; i < 10; i ++){
+				labels[i] = (QXLabel)indexPage.findByName("rl" + i);
+                labels[i].setOnMouseEventListener(recentlistener);
+            }
+            
+            for (int i =0; i < 5; i ++){
+				label_simples[i].setOnMouseEventListener(simpleListener);
+            }
+            loadRecent();
+            state = XWorkspace.hideDocks();
+            lblexamples.setOnMouseEventListener(new onMouseEventListener(){
+				void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source){
+					if (Button == 1){
+						QXCore.openUrl("http://xlang.vsylab.com/examples");
+					}
+				}
+			});
+            
+            lblhelp.setOnMouseEventListener(new onMouseEventListener(){
+				void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source){
+					if (Button == 1){
+						String url = _system_.getAppPath().findVolumePath().appendPath("./document/html/index.html");
+						QXCore.openLocal(String.formatPath(url, false));
+					}
+				}
+			});
+            
+            lblrule.setOnMouseEventListener(new onMouseEventListener(){
+				void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source){
+					if (Button == 1){
+						String url = _system_.getAppPath().findVolumePath().appendPath("./document/xrule.html");
+						QXCore.openLocal(String.formatPath(url, false));
+					}
+				}
+			});
+            
+            lblnew.setOnMouseEventListener(new onMouseEventListener(){
+				void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source){
+					if (Button == 1){
+						XWorkspace.workspace.createProject();
+					}
+				}
+			});
+            
+            lblopen.setOnMouseEventListener(new onMouseEventListener(){
+				void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source){
+					if (Button == 1){
+						XWorkspace.workspace.doOpen();
+					}
+				}
+			});
+            
+			return true;
+        }
+        return false;
+	}
+    
+    
+    
+    onMouseEventListener recentlistener =  new onMouseEventListener(){
+        void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source){
+			if (Button == 1){
+				for (int i = 0; i < 10; i ++){
+					if (labels[i] == obj){
+						XWorkspace.workspace.loadProject(objects[i].path);
+						break;
+					}
+				}
+            }
+        }
+    };
+    
+
+	int getSimpleId(QXObject obj){
+		for (int i =0; i < 5; i ++){
+			if (label_simples[i] == obj){
+				return i;
+			}
+		}
+		return -1;
+    }
+    
+    onMouseEventListener simpleListener =  new onMouseEventListener(){
+        void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source){
+			if (Button == 1){
+				String simple_path = nilptr; 
+                
+                int sid = getSimpleId(obj);
+                
+                switch(sid){
+					case 0:
+						simple_path = "examples/XStudio/XStudio.xprj";
+                    break;
+                    case 1:
+						simple_path = "examples/SimpleGameServer/SimpleGameServer.xprj";
+                    break;
+                    case 2:
+						simple_path = "examples/chess/chess.xprj";
+                    break;
+                    case 3:
+						simple_path = "examples/ZipBrowser/ZipBrowser.xprj";
+                    break;
+                    case 4:
+						simple_path = "examples/audio_player/XPlayer.xprj";
+                    break;
+                }
+                
+				if (simple_path != nilptr){
+					simple_path = String.formatPath(XPlatform.getAppDirectory().appendPath(simple_path), false);
+                    if (XPlatform.existsSystemFile(simple_path)){
+						XWorkspace.workspace.loadProject(simple_path);
+                    }else{	
+						QXMessageBox.Critical("提示", "未安装此示例代码, 请下载相关示例项目并安装到软件目录下的 example 文件夹.", QXMessageBox.Ok, QXMessageBox.Ok);
+                    }
+                    return ;
+                }
+
+            }
+        }
+    };
+    
+    
+	bool onClose()override{
+		XWorkspace.workspace.indexPage = nilptr;
+		restore();
+        
+        return true;
+	}
+    
+    void restore(){
+        if (state != nilptr){
+			XWorkspace.showDocks(state);
+        }
+    }
+    
+    void loadRecent(){
+		int c = Recently.count();
+        int rl = 0;
+        if (c > 10){
+			c = 10;
+        }
+        for (int i = c - 1; i >= 0; i --){
+            objects[rl] = Recently.getItem(i);
+            labels[rl].setText("<a style=\"color:#1684fb\">" + objects[rl].name + "</a> <small><em style=\"color:#fb8416\">" + objects[rl].date + "</small></em> <br /><a style=\" font-size:11px;text-overflow: ellipsis;overflow: hidden;\">" + objects[rl].path + "</a>");
+            rl++;
+        }
+        
+        while (rl < 10){
+			labels[rl++].hide();
+        }
+    }
+};

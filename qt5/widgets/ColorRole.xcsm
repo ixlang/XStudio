@@ -1,0 +1,25 @@
+class ColorRole{
+    static const int WindowText = 0;
+    static const int Button = 1;
+    static const int Light = 2;
+    static const int Midlight = 3;
+    static const int Dark = 4;
+    static const int Mid = 5;
+    static const int Text = 6;
+    static const int BrightText = 7;
+    static const int ButtonText = 8;
+    static const int Base = 9;
+    static const int Window = 10;
+    static const int Shadow = 11;
+    static const int Highlight = 12;
+    static const int HighlightedText = 13;
+    static const int Link = 14;
+    static const int LinkVisited = 15;
+    static const int AlternateBase = 16;
+    static const int NoRole = 17;
+    static const int ToolTipBase = 18;
+    static const int ToolTipText = 19;
+    static const int NColorRoles = ToolTipText + 1;
+    static const int Foreground = WindowText;
+    static const int Background = Window;
+};

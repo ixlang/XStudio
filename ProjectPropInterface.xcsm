@@ -1,0 +1,16 @@
+
+interface WizardLoader{
+	void loadProject(String file);
+	void openTextFile(String file);
+};
+
+interface ProjectPropInterface{
+    bool setValue(Project object, Configure configure, String key, String value);
+    String getValue(Project object, Configure configure,  String key);
+    void build(IBuilder builder, Project object, Configure configure, Object param);
+    void cleanup(IBuilder builder, Project object, Configure configure);
+    void debugRun(IBuilder builder, Project proj, Configure conf);
+    void Run(IBuilder builder, Project proj, Configure conf); 
+	void stopRun();
+	bool create(WizardLoader loader, String projectName, String projectDir, String uuid, Project object, bool isAddToProject, String userType);
+};

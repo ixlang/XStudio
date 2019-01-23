@@ -1,0 +1,58 @@
+class QXFont : QXCore{
+    QXFont(String fontName){
+        nativehandle = createNObject(QType.qtFont, 0);
+        widget_slot_string(nativehandle, FONTSETFAMILY, fontName);
+    }
+    
+    static QXFont loadFromFile(String file, String subName){
+		long h = long_string2(0, LOADFONT, file, subName);
+        if (h != 0){
+			return new QXFont(h);
+        }
+        
+        return nilptr;
+    }
+     
+    QXFont(String fontName, int size, bool ptsize){
+        nativehandle = createNObject(QType.qtFont, 0);
+        widget_slot_string(nativehandle, FONTSETFAMILY, fontName);
+        if (ptsize){
+            widget_set_vint_value(nativehandle, FONTPTSIZE, size);
+        }else{
+            widget_set_vint_value(nativehandle, FONTPXSIZE, size);
+        }
+    }
+    
+    QXFont(long handle){
+		nativehandle = handle; 
+    }
+    
+    QXFont(){
+        nativehandle = createNObject(QType.qtFont, 0);
+    }
+    
+    void setFont(String fontName){
+        widget_slot_string(nativehandle, FONTSETFAMILY, fontName);
+    }
+    
+    void setPointSize(int ptSize){
+        widget_set_vint_value(nativehandle, FONTPTSIZE, ptSize);
+    }
+    
+    void setPixelSize(int pxSize){
+        widget_set_vint_value(nativehandle, FONTPXSIZE, pxSize);
+    }
+    
+    void finalize(){
+        widget_slot(nativehandle, FONTCTOR);
+    }
+    
+    QXRect measure(String text){
+		QXRect qr = new QXRect();
+		long v = long_longstring(nativehandle, MEASURETEXT, 0, text);
+        qr.left = qr.top = 0;
+        qr.right = (v >> 32) & 0xffffffff;
+        qr.bottom = v & 0xffffffff;
+        return qr;
+    }
+};

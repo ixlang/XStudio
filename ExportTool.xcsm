@@ -1,0 +1,393 @@
+//xlang Source, Name:ExportTool.xcsm 
+//Date: Fri Dec 14:16:12 2018 
+
+class ExportTool : QXDialog{
+
+	QXLineEdit edtStaticLib ,nativefile, destfile, edtName, edtVersion, lelDescr, lblAuthor;
+    QXComboBox cbbNative, cbbOs;
+    QXPushButton stBrowser, nativeBrowser, btnEmpty, btnAdd , brwExport, btnExport, btnReadme, btnIcon;
+    QXTreeView  structView;
+    QXProgressBar	prgExport;
+    
+    
+    class FilePackage{
+		int id;
+		Vector<String> files = new Vector<String>();
+        
+        FilePackage(int i){
+			id = i;
+        }
+        
+        void preview(QXTreeView tree, long item){
+        
+			String [] oss = {"Windows", "Linux", "Macos", "其他"};
+			long hroot = tree.insertItem(item, "res/toolbar/winoverlap.png", oss[id]);
+            
+            for (int i =0; i < files.size(); i++){
+				tree.insertItem(hroot, "res/toolbar/source.png", files.get(i));
+            }
+            
+        }
+        
+        bool build(ZipArchive zs, String path){
+			String myPath = path.appendPath("" + id);
+			//zs.createEntry(new ZipFile(myPath, nilptr, true, _system_.currentTimeMillis()));
+            
+            for (int i =0; i < files.size(); i++){
+				String filename = files.get(i);
+                
+				if (false == zs.createEntry(new ZipFile(myPath.appendPath(filename.findFilenameAndExtension()), new FileInputStream(filename), false, _system_.currentTimeMillis()))){
+					QXMessageBox.Critical("错误", "添加文件 " + filename + " 时发生错误", QXMessageBox.Ok, QXMessageBox.Ok);
+					return false;
+                }
+            }
+            return true;
+        }
+    };
+    
+    class Arch{
+		int id;
+        Map<int, FilePackage> osFile = new Map<int, FilePackage>();
+        
+        Arch(int ai){
+			id = ai;
+            for (int i =0; i < 4; i ++){
+				osFile.put(i,new FilePackage(i));
+            }
+        }
+        
+        void preview(QXTreeView tree, long item){
+			String [] options = {"default", "x86", "x86_64", "arm", "arm64", "mips"};
+			long hroot = tree.insertItem(item, "res/toolbar/console.png", options[id]);
+            Map.Iterator<int, FilePackage> iters = osFile.iterator();
+            
+            while (iters.hasNext()){
+				iters.getValue().preview(tree, hroot);
+				iters.next();
+            }            
+        }
+        
+        bool build(ZipArchive zs, String path){
+			String myPath = path.appendPath("" + id);
+			//zs.createEntry(new ZipFile(myPath, nilptr, true, _system_.currentTimeMillis()));
+            
+            Map.Iterator<int, FilePackage> iters = osFile.iterator();
+            
+            while (iters.hasNext()){
+				if (iters.getValue().build(zs, myPath) == false){
+					return false;
+                }
+				
+                prgExport.setValue((id + 1) * 20 + (iters.getValue().id * 5));
+                iters.next();
+            }     
+            return true;
+        }
+    };
+    
+    class Package{
+		String lixpath = "";
+        String readme = "";
+        String icon = "";
+		Map<int, Arch> archs = new Map<int, Arch>();
+        
+        Package(){
+			for (int i =0; i < 5; i++){
+				archs.put(i , new Arch(i));
+            }
+        }
+        void preview(QXTreeView tree, long item){
+			long hroot = tree.insertItem(item, "res/toolbar/staticfunction.png", lixpath);
+            tree.insertItem(hroot, "res/toolbar/source.png", readme);
+            
+            Map.Iterator<int, Arch> iters = archs.iterator();
+            
+            while (iters.hasNext()){
+				iters.getValue().preview(tree, hroot);
+				iters.next();
+            }
+        }
+        
+        bool build(ZipArchive zs){
+            if (lixpath.length() > 0){
+				if (false == zs.createEntry(new ZipFile("major.lix", new FileInputStream(lixpath), false, _system_.currentTimeMillis()))){
+					QXMessageBox.Critical("错误", "添加文件 " + lixpath + " 时发生错误", QXMessageBox.Ok, QXMessageBox.Ok);
+					return false;
+                }
+            }
+            
+            if (readme.length() > 0){
+				if (false == zs.createEntry(new ZipFile("readme.md", new FileInputStream(readme), false, _system_.currentTimeMillis()))){
+					QXMessageBox.Critical("错误", "添加文件 " + readme + " 时发生错误", QXMessageBox.Ok, QXMessageBox.Ok);
+					return false;
+                }
+            }
+            
+            if (icon.length() > 0){
+				if (false == zs.createEntry(new ZipFile("icon.png", new FileInputStream(icon), false, _system_.currentTimeMillis()))){
+					QXMessageBox.Critical("错误", "添加文件 " + icon + " 时发生错误", QXMessageBox.Ok, QXMessageBox.Ok);
+					return false;
+                }
+            }
+            
+            Map.Iterator<int, Arch> iters = archs.iterator();
+            
+
+            while (iters.hasNext()){
+				if (false == iters.getValue().build(zs, "")){
+					return false;
+                }
+                prgExport.setValue((iters.getValue().id + 1) * 20);
+				iters.next();
+            } 
+            return true;
+        }
+    };
+    
+    Package currentPackage = new Package();
+    
+    class BrowserListener: onClickListener{
+		QXLineEdit edit;
+        String filter , title;
+        bool save;
+        
+		BrowserListener(QXLineEdit _edit, bool _save, String _title, String _filter){
+			edit = _edit;
+            save = _save;
+            filter = _filter;
+            title = _title;
+        }
+        
+		void onClick(QXObject,  bool checked)override{
+			String file ;
+			if (save == false){
+				file = QXFileDialog.getOpenFileName(title, nilptr,  filter, ExportTool.this);
+			}else{
+				file = QXFileDialog.getSaveFileName(title, nilptr,  filter, ExportTool.this);
+            }
+            
+			if (file != nilptr && file.length() > 0){
+				edit.setText(file);
+			}
+		}
+    };
+    
+	void onAttach()override{
+    
+		setFixedSize(width(), height());
+        
+		edtStaticLib = (QXLineEdit)attachByName(new QXLineEdit(), "edtStaticLib");
+        nativefile = (QXLineEdit)attachByName(new QXLineEdit(), "nativefile");
+        destfile = (QXLineEdit)attachByName(new QXLineEdit(), "destfile");
+        
+        edtName = (QXLineEdit)attachByName(new QXLineEdit(), "edtName");
+        edtVersion = (QXLineEdit)attachByName(new QXLineEdit(), "edtVersion");
+        lelDescr = (QXLineEdit)attachByName(new QXLineEdit(), "lelDescr");
+        lblAuthor = (QXLineEdit)attachByName(new QXLineEdit(), "lblAuthor");
+        
+        cbbNative = (QXComboBox)attachByName(new QXComboBox(), "cbbNative");
+        cbbOs = (QXComboBox)attachByName(new QXComboBox(), "cbbOs");
+        
+        btnIcon = (QXPushButton)attachByName(new QXPushButton(), "btnIcon");
+        stBrowser = (QXPushButton)attachByName(new QXPushButton(), "stBrowser");
+        nativeBrowser = (QXPushButton)attachByName(new QXPushButton(), "nativeBrowser");
+        btnEmpty = (QXPushButton)attachByName(new QXPushButton(), "btnEmpty");
+        btnAdd = (QXPushButton)attachByName(new QXPushButton(), "btnAdd");
+        brwExport = (QXPushButton)attachByName(new QXPushButton(), "brwExport");
+        btnExport = (QXPushButton)attachByName(new QXPushButton(), "btnExport");
+        btnReadme = (QXPushButton)attachByName(new QXPushButton(), "btnReadme");
+        structView = (QXTreeView)attachByName(new QXTreeView(), "structView");
+        
+        prgExport = (QXProgressBar)attachByName(new QXProgressBar(), "prgExport");
+        
+        stBrowser.setOnClickListener(new BrowserListener(edtStaticLib, false, "选择静态库", "X 静态链接库 (*.lix)"));
+        nativeBrowser.setOnClickListener(new BrowserListener(nativefile, false, "选择Native文件", "所有文件 (*.*)"));
+        
+		brwExport.setOnClickListener(new onClickListener(){
+			void onClick(QXObject obj, bool checked)override{
+				String file = QXFileDialog.getSaveFileName("导出文件", nilptr,  "X 包 (*.xp)", ExportTool.this);
+				if (file != nilptr && file.length() > 0){
+					String ext = file.findExtension();
+                    
+					if (ext == nilptr || (ext.equalsIgnoreCase(".xp") == false)){
+						file = file + ".xp";
+					}
+					
+					destfile.setText(file);
+				}
+            }                
+        });
+
+
+        
+        btnIcon.setOnClickListener(new onClickListener(){
+			void onClick(QXObject obj, bool checked)override{
+				String file = QXFileDialog.getOpenFileName("添加图标", nilptr,  "PNG图像 (*.png)", ExportTool.this);
+				if (file != nilptr && file.length() > 0){
+					currentPackage.icon = file;
+                    btnIcon.setStyleSheet("#btnIcon{border-image:url(\"" + file + "\");}");
+				}
+            }
+        });
+        
+        btnReadme.setOnClickListener(new onClickListener(){
+			void onClick(QXObject obj, bool checked)override{
+				String file = QXFileDialog.getOpenFileName("添加注释", nilptr,  "文本文件 (*.*)", ExportTool.this);
+				if (file != nilptr && file.length() > 0){
+					currentPackage.readme = file;
+				}
+            }
+        });
+        
+        String [] options = {"x86", "x86_64", "arm", "arm64", "mips"};
+        cbbNative.addItems(options);
+        
+        String [] oss = {"Windows", "Linux", "Macos", "其他"};
+        cbbOs.addItems(oss);
+        
+        btnAdd.setOnClickListener(new onClickListener(){
+			void onClick(QXObject obj, bool checked)override{
+				String add_path = nativefile.getText();
+                if (add_path.length() == 0){
+					QXMessageBox.Critical("错误", "没有选择一个文件", QXMessageBox.Ok, QXMessageBox.Ok);
+                    return ;
+                }
+				int arch = cbbNative.getCurrentIndex() + 1;
+                int os = cbbOs.getCurrentIndex();
+                
+                try{
+					Vector<String > file = currentPackage.archs.get(arch).osFile.get(os).files;
+                    
+                    for (int i =0; i <file.size(); i++){
+						if (file.get(i).equals(add_path)){
+							return ;
+                        }
+                    }
+					file.add(nativefile.getText());
+                    updatepreview();
+                }catch(Exception e){
+					QXMessageBox.Critical("错误", "添加文件时发生错误", QXMessageBox.Ok, QXMessageBox.Ok);
+                }
+            }
+        });
+        
+        btnEmpty.setOnClickListener(new onClickListener(){
+			void onClick(QXObject obj, bool checked)override{
+				int arch = cbbNative.getCurrentIndex();
+                int os = cbbOs.getCurrentIndex();
+                
+                try{
+					currentPackage.archs.get(arch).osFile.get(os).files.clear();
+                    updatepreview();
+                }catch(Exception e){
+					QXMessageBox.Critical("错误", "添加文件时发生错误", QXMessageBox.Ok, QXMessageBox.Ok);
+                }
+            }
+        });
+        
+        
+        btnExport.setOnClickListener(new onClickListener(){
+			void onClick(QXObject obj, bool checked)override{
+				onBuild();
+            }
+        });
+        
+        prgExport.setValue(0);
+        
+        String []columns = {"包内容"};
+        structView.setColumns(columns);
+        
+        structView.setColumnWidth(0, 300);
+    }
+
+	void updatepreview(){
+		structView.clear();
+        
+        long root = structView.addItem("res/toolbar/package.png", "Package");
+        currentPackage.lixpath = edtStaticLib.getText();
+        currentPackage.preview(structView, root);
+    }
+    
+    
+    void onBuild(){
+		String outpath = destfile.getText();
+        String descrtxt = lelDescr.getText();
+        String author = lblAuthor.getText();
+        
+        currentPackage.lixpath = edtStaticLib.getText();
+        
+        String libname = edtName.getText();
+        
+        if (descrtxt.length() == 0){
+			QXMessageBox.Critical("错误", "没有填写简要描述", QXMessageBox.Ok, QXMessageBox.Ok);
+			return ;
+        }
+        
+        if (libname.length() == 0){
+			QXMessageBox.Critical("错误", "没有填写包名", QXMessageBox.Ok, QXMessageBox.Ok);
+			return ;
+        }
+        
+        if (Pattern.test(libname, "^[A-Za-z0-9_\.]+$", Pattern.NOTEMPTY, true) == false){
+			QXMessageBox.Critical("错误", "包名不合法", QXMessageBox.Ok, QXMessageBox.Ok);
+			return ;
+		}
+        
+        String version = edtVersion.getText();
+                                    
+        if (currentPackage.lixpath.length() == 0){
+			QXMessageBox.Critical("注意", "没有选择静态库文件", 	QXMessageBox.Ok, QXMessageBox.Ok);
+            return ;
+        }
+        
+
+        if (outpath.length() == 0){
+			QXMessageBox.Critical("注意", "没有选择输出文件", 	QXMessageBox.Ok, QXMessageBox.Ok);
+            return ;
+        }
+        
+        try{
+			FileOutputStream fos = new FileOutputStream(outpath);
+			
+			ZipArchive xp = new ZipArchive();
+			
+            JsonObject root = new JsonObject();
+            
+            root.put("package", libname);
+            root.put("version", version);
+            root.put("descr", descrtxt);
+            root.put("author", author);
+            
+            xp.setComment(root.toString(true));
+			if (xp.create(fos)){
+				if (currentPackage.build(xp)){
+					xp.close();
+					QXMessageBox.Information("成功", "已成功导出:" + outpath, 	QXMessageBox.Ok, QXMessageBox.Ok);
+                    close();
+				}else{
+					xp.close();
+                    QXMessageBox.Critical("错误", "导出文件时发生错误", QXMessageBox.Ok, QXMessageBox.Ok);
+                }
+               
+			}
+        }catch(Exception e){
+			QXMessageBox.Critical("注意", "未能导出", 	QXMessageBox.Ok, QXMessageBox.Ok);
+		}
+    }
+    
+	static bool Show(){
+    
+        QXDialog newDlg = new QXDialog();
+        
+        if (newDlg.load("ui/exportxp.ui") == false){
+            return false;
+        }
+        
+        ExportTool exportTool = new ExportTool();
+        
+        exportTool.attach(newDlg);
+        exportTool.setModal(true);
+        exportTool.show();
+        return true;
+    }
+};

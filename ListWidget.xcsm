@@ -1,0 +1,80 @@
+//xlang Source, Name:ListWidget.xcsm 
+//Date: Tue Sep 17:03:43 2018 
+
+class ListDockWidget : QXDockWidget{
+    QXTreeView _listview;
+    
+    XWorkspace _mdi_area;
+     
+    static const int STACK_INFO_NOTIFY = 2;
+    
+    onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
+        void onItemClicked(QXTreeView tree,long item, int column)override{
+			onListItemClicked(tree, item, column);
+        }
+        void onItemChanged(QXTreeView tree,long item, int column)override{
+			onListItemChanged(tree, item, column);
+        }
+		void onItemExpanded(QXTreeView tree,long item)override{
+			onListItemExpanded(tree, item);
+		}
+        void onItemPressed(QXTreeView tree, long item, int column)override{
+			onListItemPressed(tree, item, column);
+        }
+        void onItemDoubleClicked(QXTreeView tree,long item, int column)override{
+			onListItemDoubleClicked(tree, item, column);
+        }
+    };
+	void onListItemDoubleClicked(QXTreeView,long item, int column){
+	}
+	void onListItemClicked(QXTreeView tree,long item, int column);
+    void onListItemPressed(QXTreeView tree,long item, int column){
+    
+    }
+    void onListItemExpanded(QXTreeView,long item){
+
+	}
+    void onListItemChanged(QXTreeView tree,long item, int column){
+    
+    }
+    String getListName();
+    String [] getColumn();
+    int [] getColumnWidths();
+
+    void onAttach(){
+        _listview = (QXTreeView)attachByName(new QXTreeView(), getListName());
+       
+        /*setOnLayoutEventListener(new onLayoutEventListener(){
+                void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+                    if (_listview != nilptr){
+                        _listview.resize(w, h - 20);
+                    }
+                }
+        });*/
+        
+        String [] columns = getColumn();
+        _listview.setColumns(columns);
+        
+        int []widths = getColumnWidths();
+        
+        if(widths != nilptr){
+			for (int i = 0; i < widths.length; i++){
+				_listview.setColumnWidth(i, widths[i]);
+			}
+		}
+		_listview.setOnTreeViewItemEvent(listlistener);
+        onCreate();
+    }
+    
+    void onCreate(){
+    
+    }
+    
+    void clearList(){
+        _listview.clear();
+    }
+    
+    QXTreeView getList(){
+		return _listview;
+    }
+};

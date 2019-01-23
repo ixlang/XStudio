@@ -1,0 +1,328 @@
+class Configure{
+    String name;
+    JsonObject root;
+    bool bModified = false;
+    
+    Configure(){
+    }
+    
+    Configure(String _name, JsonObject _root){
+        name = _name;
+        root = _root;
+    }
+    
+    void setOption(String key, String text){
+        root.remove(key);
+        root.put(key, text);
+        bModified = true;
+    }
+    
+    void save(){
+		bModified = false;
+    }
+    
+    bool isModified(){
+		return bModified;
+    }
+    
+    Configure clone(String newName){
+		String txt = root.toString(false);
+        JsonObject newobj = new JsonObject(txt);
+        newobj.remove("name");
+        newobj.put("name", newName);
+        return new Configure(newName, newobj);
+    }
+    //----------------------------------------
+    void setLibs(String text){
+		String [] paths = text.split(';');
+        JsonArray libpath = new JsonArray();
+        for (int i = 0; i < paths.length; i++){
+			if (paths[i].length() > 0){
+				libpath.put(paths[i]);
+            }
+        }
+        root.remove("libs");
+        root.put("libs", libpath);
+		bModified = true;
+    }
+    
+    String getLibs(){        
+        JsonArray libpath = (JsonArray)root.get("libs");
+        if (libpath == nilptr){
+			return "";
+        }
+        
+        String out = "";
+        for (int i = 0; i < libpath.length(); i++){
+			String path = libpath.getString(i);
+            if (path != nilptr && path.length() > 0){
+				if (out.length() > 0){
+					out = out + ";";
+                }
+				out = out + path;
+            }
+        }
+        
+        return out;
+    }
+    
+    //-------------------------------------------------------------------- 
+    void setLibsPath(String text){
+		String [] paths = text.split(';');
+        JsonArray libpath = new JsonArray();
+        
+        for (int i = 0; i < paths.length; i++){
+			if (paths[i].length() > 0){
+				libpath.put(paths[i]);
+            }
+        }
+        
+        JsonObject pathObj = (JsonObject)root.get("path");
+        if (pathObj == nilptr){
+			pathObj = new JsonObject();
+            root.put("path", pathObj);
+        }
+        pathObj.remove("libpath");
+        pathObj.put("libpath", libpath);
+        bModified = true;
+    }
+    
+    bool addLib(String lib){
+		bool isHas = false;
+    
+        JsonArray libs = (JsonArray)root.get("libs");
+        
+        if (libs == nilptr){
+			libs = new JsonArray();
+            root.put("libs", libs);
+        }else{
+			for (int i = 0; i < libs.length(); i++){
+				String path = libs.getString(i);
+				if (path != nilptr && path.length() > 0){
+					if (path.equals(lib)){
+						isHas = true;
+						break;
+					}
+				}
+			}
+        }
+        
+        if (isHas == false){
+			libs.put(lib);
+            bModified = true;
+            return true;
+        }
+        return false;
+    }
+    
+    bool addPathToLibpath(String path){
+		JsonObject pathObj = (JsonObject)root.get("path");
+        
+        if (pathObj == nilptr){
+			pathObj = new JsonObject();
+            pathObj.put("path", path);
+        }
+        
+        JsonArray libpath = (JsonArray)pathObj.get("libpath");
+        if (libpath == nilptr){
+			libpath = new JsonArray();
+            pathObj.put("libpath", libpath);
+        }
+        
+        bool isHas = false;
+        for (int i = 0; i < libpath.length(); i++){
+			if (libpath.getString(i).equals(path)){
+				isHas = true;
+                break;
+            }
+        }
+        if (isHas == false){
+			libpath.put(path);
+            bModified = true;
+            return true;
+        }
+        return false;
+    }
+    
+    int getArchId(){
+		String [] archs = {"", "-arch:x86", "-arch:x86_64", "-arch:arm", "-arch:arm64", "-arch:mips"};
+		String arch = getOption("wtype");
+        
+        int archid = _system_.getArchId();
+        
+        if (arch.length() > 0){
+			for (int i = 0; i < archs.length; i++){
+				if (archs[i].equals(arch)){
+					archid = i;
+					break;
+				}
+			}
+        }
+        return archid;
+    }
+    
+    String getLibsPath(){
+		
+		JsonObject pathObj = (JsonObject)root.get("path");
+        if (pathObj == nilptr){
+			return "";
+        }
+        
+        JsonArray libpath = (JsonArray)pathObj.get("libpath");
+        if (libpath == nilptr){
+			return "";
+        }
+        
+        String out = "";
+        for (int i = 0; i < libpath.length(); i++){
+			String path = libpath.getString(i);
+            if (path != nilptr && path.length() > 0){
+				if (out.length() > 0){
+					out = out + ";";
+                }
+				out = out + path;
+            }
+        }
+        
+        return out;
+    }
+    
+    String getIncsPath(){
+		JsonObject pathObj = (JsonObject)root.get("path");
+        if (pathObj == nilptr){
+			return "";
+        }
+        
+        JsonArray libpath = (JsonArray)pathObj.get("incpath");
+        if (libpath == nilptr){
+			return "";
+        }
+        
+        String out = "";
+        for (int i = 0; i < libpath.length(); i++){
+			String path = libpath.getString(i);
+            if (path != nilptr && path.length() > 0){
+				if (out.length() > 0){
+					out = out + ";";
+                }
+				out = out + path;
+            }
+        }
+        
+        return out;
+    }
+        
+    void setIncsPath(String text){
+		String [] paths = text.split(';');
+        JsonArray incpath = new JsonArray();
+        for (int i = 0; i < paths.length; i++){
+			if (paths[i].length() > 0){
+				incpath.put(paths[i]);
+			}
+        }
+        
+        JsonObject pathObj = (JsonObject)root.get("path");
+        if (pathObj == nilptr){
+			pathObj = new JsonObject();
+            root.put("path", pathObj);
+        }
+        pathObj.remove("incpath");
+        pathObj.put("incpath", incpath);
+        bModified = true;
+    }
+    
+    String getOption(String key){
+		String value = root.getString(key);
+        if (value == nilptr){
+			return "";
+        }
+        return value;
+    }
+    
+    String getName(){
+        return name;
+    }
+    
+    bool createConfigure(String projName,JsonObject project, String configName){
+        root = new JsonObject();
+    
+        name = configName;
+        JsonObject paths = new JsonObject();
+        paths.put("incpath", new JsonArray());
+        paths.put("libpath", new JsonArray());
+        root.put("paths", paths);
+        
+        //root.put("source", new JsonArray());
+        root.put("libs", new JsonArray());
+        root.put("options", "");
+        root.put("command", "-cr");
+        root.put("outpath", "/out");
+        root.put("outname", projName + ".exe");
+        
+        project.put(name, root);
+        
+        return true;
+    }
+    
+     bool importPkg(Project project, PackageManager.PackageInfo pi, ZipArchive zs, String lixname){
+		if (addPathToLibpath("libs")){
+			if (project.intelliSense != nilptr){
+				project.intelliSense.appendLibpath("libs");
+            }
+        }
+        
+		if (addLib(lixname)){
+			if (project.intelliSense != nilptr){
+				project.intelliSense.appendLib(lixname);
+            }
+        }
+        
+        bool rt = false;
+        
+        XWndOutput.Output("为 " + this.name + " 配置引用...\n");
+        
+		int c = zs.getEntriesCount();
+		
+		String out_path = getOption("outpath");
+		out_path = String.formatPath(XlangProjectProp.map_variable(project, this , out_path), false);
+		
+		String match = String.formatPath("" + getArchId() + "/" + _system_.getPlatformId(), false);
+		
+        XWndOutput.Output("为 " + this.name + " 部署运行时文件...\n");
+        
+		for (int i = 0; i < c; i ++){
+			ZipEntry entry = zs.getEntry(i);
+			String name =  String.formatPath(entry.getName(), false);
+			if (name.startWith(match)){
+				ZipFile zf = entry.getFile();
+                if (zf != nilptr && zf.open()){
+                
+					String newpath = String.formatPath(out_path.appendPath(name.substring(3, name.length())), false);
+                    XWndOutput.Output(newpath + "...");
+                    XlangProjectProp.mkdirs(newpath.findVolumePath());
+                    
+                    FileOutputStream fos ;
+                    try{
+						fos = new FileOutputStream(newpath);
+						int rd = 0;
+						byte [] data = new byte[1024];
+						while ((rd = zf.read(data, 0, 1024)) > 0){
+							fos.write(data, 0, rd);
+						}
+                        XWndOutput.Output("成功.\n");
+                        rt = true;
+                    }catch(Exception e){
+                    
+                    }finally{
+						if (fos != nilptr){
+							fos.close();
+                        }
+                    }
+                    zf.close();
+                }
+			}
+		}
+        XWndOutput.Output("\n");
+        return rt;
+     }
+};

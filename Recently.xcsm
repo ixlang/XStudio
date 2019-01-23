@@ -1,0 +1,173 @@
+//xlang Source, Name:Recently.xcsm 
+//Date: Wed Sep 21:41:38 2018 
+
+class Recently{
+
+	static Recently recent = new Recently();
+    
+	static class RecentlyObject {
+		String name;
+        String path;
+        String date;
+    };
+    
+	Recently(){
+		loadRecently();
+    }
+    
+	JsonObject recently; 
+    
+	String getRecentlyPath(){
+		String file = XPlatform.getAppDirectory();
+		return String.formatPath(file.appendPath("config").appendPath("recently.prop"), false);
+	}
+    
+	void loadRecently(){
+
+		String file = getRecentlyPath();
+		
+		FileInputStream fis = nilptr;
+		try{
+			fis = new FileInputStream(file);
+		}catch(Exception e){
+			_system_.consoleWrite("canot read file " + file);
+		}
+		
+		if (fis != nilptr){
+			byte []data = fis.read();
+			String content = new String(data);
+			
+			try{
+				recently = new JsonObject(content);
+			}catch(Exception e){
+				
+			}
+		}
+	
+		if (recently == nilptr){
+			recently = new JsonObject();
+		}
+	}
+        
+	int getCount(){
+		try{
+			JsonArray  node = (JsonArray)recently.get("projects");
+            return node.length();
+        }catch(Exception e){
+        
+        }
+		return 0;
+    }
+    
+    RecentlyObject get(int i){
+		try{
+			JsonNode node = recently.get("projects");
+			if (node != nilptr){
+				JsonArray rootnode = (JsonArray)node;
+				
+				JsonObject project = (JsonObject)rootnode.get(i);
+				
+				RecentlyObject ro = new RecentlyObject();
+				ro.name = project.getString("name");
+				ro.path = project.getString("path");
+				ro.date = project.getString("date");
+				return ro;
+			}
+        }catch(Exception e){
+        
+        }
+        return nilptr;
+    }
+    
+    void checktoArray(JsonArray node, String name , String path){
+		try{
+			for (int i = 0, c = node.length(); i < c; i++){
+				JsonObject obj = (JsonObject )node.get(i);
+				if (obj != nilptr){
+					String ename = obj.getString("name");
+					String epath = obj.getString("path");
+					if (ename != nilptr && epath != nilptr){
+						if (ename.equals(name ) && epath.equals(path)){
+							node.remove(i);
+							break;
+						}
+					}
+				}
+			}
+		}catch(Exception e){
+		}
+    }
+    
+    void put(String name , String path){
+		String date = String.formatDate("%Y年 %m月 %d日 %H时 %M分"/*"%c"*/, _system_.currentTimeMillis());
+        JsonObject pnode = new JsonObject();
+        pnode.put("name", name);
+        pnode.put("path", path);
+        pnode.put("date", date); 
+        
+        JsonArray node = nilptr;
+        try{
+			node = (JsonArray)recently.get("projects");
+            if (node == nilptr){
+				node = new JsonArray();
+                recently.put("projects", node);
+            }
+        }catch(Exception e){
+			node = new JsonArray();
+            recently.put("projects", node);
+        }finally{
+			checktoArray(node, name, path);
+			node.put(pnode);
+        }
+        
+        while (node.length() > 10){
+			node.remove(0);
+        }
+        
+        save();
+    }
+    
+        
+	void save(){
+		String file = getRecentlyPath();
+		
+		FileOutputStream fos = nilptr;
+		try{
+			fos = new FileOutputStream(file); 
+		}catch(Exception e){
+			_system_.consoleWrite("canot write file " + file);
+		}
+		
+		if (fos != nilptr){
+			String content = recently.toString(true);
+			byte []data = content.getBytes();
+			try{
+				fos.write(data);
+			}catch(Exception e){
+				
+			}
+			fos.close();
+		}
+	}
+    
+    static void putRecent(String name , String path){
+		recent.put(name, path);
+    }
+    
+    static int count(){
+		return recent.getCount();
+    }
+    
+    static RecentlyObject getItem(int i){
+		return recent.get(i);
+    }
+    
+    static bool isFirstRun(){
+		return false == XPlatform.existsSystemFile(recent.getRecentlyPath());
+    }
+    
+    static void mkFirstFile(){
+		long fp = XPlatform.openSystemFile(recent.getRecentlyPath(), "w");
+        _system_.closeFile(fp);
+    }
+};

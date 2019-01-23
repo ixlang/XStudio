@@ -1,0 +1,322 @@
+//xlang Source, Name:Setting.xcsm 
+//Date: Wed Sep 16:29:18 2018 
+
+class Setting : QXDialog {
+
+	static class Preference{
+		JsonObject root;
+
+		Preference(){
+			loadPreference();
+        }
+        
+		String getSetting(String [] options,String key){
+			String val = root.getString(key);
+            if (val == nilptr){
+				val = "";
+            }
+            if (options != nilptr){
+				for (int i = 0; i < options.length; i++){
+					if (options[i].equals(val)){
+						val = "" + i;
+                        break;
+                    }
+                }
+            }
+            return val;
+		}
+		
+		bool setSetting(String key, String val){
+			root.remove(key);
+			root.put(key, val);
+			return true;
+		}
+        
+        
+        String getPreferencePath(){
+			String file = XPlatform.getAppDirectory();
+			return file.appendPath("config").appendPath("preference.prop");
+        }
+        void loadPreference(){
+
+            String file = getPreferencePath();
+            
+            FileInputStream fis = nilptr;
+			try{
+				fis = new FileInputStream(file);
+			}catch(Exception e){
+				_system_.consoleWrite("canot read file " + file);
+			}
+			
+			if (fis != nilptr){
+				byte []data = fis.read();
+				String content = new String(data);
+                
+                try{
+					root = new JsonObject(content);
+                }catch(Exception e){
+					
+                }
+			}
+        
+			if (root == nilptr){
+				root = new JsonObject();
+            }
+        }
+        
+        void save(){
+            String file = getPreferencePath();
+            
+            FileOutputStream fos = nilptr;
+			try{
+				fos = new FileOutputStream(file);
+			}catch(Exception e){
+				_system_.consoleWrite("canot read file " + file);
+			}
+			
+			if (fos != nilptr){
+				
+				String content = root.toString(true);
+                byte []data = content.getBytes();
+                try{
+					fos.write(data);
+                }catch(Exception e){
+					
+                }
+                
+                fos.close();
+			}
+        }
+    };
+    
+    
+    static Preference preference = new Preference();
+    
+    QXPushButton btnClose;
+    
+    QXTreeView _listview;
+    
+    QXPropertyBrowser _propTable = new QXPropertyBrowser();
+    Vector<JsonObject> _propItems = new Vector<JsonObject>();
+    
+    Map<String, QXPropertyBrowser.QtVariantProperty> currentProps = new Map<String, QXPropertyBrowser.QtVariantProperty>();
+
+    onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
+        void onItemClicked(QXTreeView list,long item, int column)override{
+            long i = list.getItemTag(item, 0);
+            saveSetting();
+            _propTable.clear();
+            currentProps.clear();
+            loadFeature((JsonObject)_propItems.get(i).child());
+        }
+    };
+    
+
+    
+    String readSlnPropFile(String file){
+        FileInputStream fis = nilptr;
+        try{
+            fis = new FileInputStream(file);
+        }catch(Exception e){
+            _system_.consoleWrite("canot read file " + file);
+        }
+        
+        if (fis != nilptr){
+            byte []data = fis.read();
+            return new String(data);
+        }
+        
+        return nilptr;
+    }
+
+    
+    bool loadSetting(){
+		String file = XPlatform.getAppDirectory();
+		file = file.appendPath("config").appendPath("setting.prop");
+		String content = readSlnPropFile(file);
+		if (content != nilptr){
+			JsonObject _root = new JsonObject(content);
+			loadProperites((JsonObject)_root.child());
+			return true;
+		}
+        return false;
+    }
+    
+    void onAttach(){
+        //setWindowFlags(CustomizeWindowHint | WindowMinMaxButtonsHint | WindowCloseButtonHint  | Tool);
+        _listview = (QXTreeView)attachByName(new QXTreeView(), "listProp");
+        
+        _propTable.create(this);
+        _propTable.move(170, 40);
+        _propTable.resize(500, 410);
+        
+        
+        String [] columns = {"选项"};
+        _listview.setColumns(columns);
+        _listview.setOnTreeViewItemEvent(listlistener);
+   
+        if (loadSetting() == false){
+            close();
+            return ;
+        }
+        
+		btnClose = (QXPushButton)attachByName(new QXPushButton(), "btnClose");
+
+        btnClose.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+                saveSetting();
+                QxApp.statusBar.statusBar.showMessage("部分设置需要在XStudio重新开启后生效.");
+                close();
+            }
+        });
+        
+        setOnLayoutEventListener(new onLayoutEventListener(){
+                void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+					_listview.resize(141, h - 50);
+					btnClose.move(w - 100, h - 40);
+					//_propTable.move(170, 40);
+					_propTable.resize(w - 200, h - 90);
+                }
+        });
+		
+        setWindowTitle("设置");
+        setModal(true);
+        show();
+    }
+    
+    void loadFeature(JsonObject confi){
+        if (confi != nilptr ){
+            QXPropertyBrowser.QtVariantPropertyManager variantManager = new QXPropertyBrowser.QtVariantPropertyManager();
+            
+            while(confi != nilptr){
+                String cfgName = confi.getName();
+                String type = confi.getString("type");
+                if (type.equals("string")){
+                    loadString(variantManager, cfgName, confi);
+                }else
+                if (type.equals("stringlist")){
+                    loadStringList(variantManager, cfgName, confi);
+                }
+				confi = (JsonObject)confi.next();
+            }
+            _propTable.setFactoryForManager(variantManager, new QXPropertyBrowser.QtVariantEditorFactory());
+            _propTable.setPropertiesWithoutValueMarked(true);
+            _propTable.setRootIsDecorated(false);
+        }
+    }
+    
+    void loadProperites(JsonObject root){
+        bool loaded = false;
+        
+		while(root != nilptr){
+			String featName = root.getName();
+			
+			JsonObject confi = (JsonObject)root.child();
+			long litem = _listview.addItem(nilptr, featName);
+			_listview.setItemTag(litem, 0, _propItems.size());
+			_propItems.add((JsonObject)root.clone());
+			if (loaded == false){
+				loadFeature((JsonObject)confi);
+				loaded = true;
+			}
+			root = (JsonObject)root.next();
+		}
+    }
+  
+    void loadString(QXPropertyBrowser.QtVariantPropertyManager manager, String name, JsonObject root){
+        String [] kv = name.split(':');
+        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addProperty(new QXPropertyBrowser.QtVariantProperty(),QXVariant.String, kv[0]);
+        _propTable.addProperty(item);
+        item.setValue(getSetting(nilptr, kv[1]));
+        currentProps.put(kv[1], item);
+    }
+    
+    
+    void loadStringList(QXPropertyBrowser.QtVariantPropertyManager manager, String name, JsonObject root){
+        String [] kv = name.split(':');
+        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
+        JsonArray list = root.getArray("list");
+        String [] options = new String[list.length()];
+        for (int i = 0;i < options.length; i++){
+            options[i] = list.getString(i);
+        }
+        item.setAttributeEnumNames(options);
+        item.setValue(getSetting(options, kv[1]));
+        _propTable.addProperty(item);
+        currentProps.put(kv[1], item);
+    }
+    
+    void saveSetting(){
+        Map.Iterator<String, QXPropertyBrowser.QtVariantProperty> iter = currentProps.iterator();
+        for (; iter.hasNext(); iter.next()){
+            if (false == setSetting(iter.getKey(), iter.getValue().getValue())){
+                QXMessageBox.Critical("错误", iter.getKey() + "字段更改失败.", QXMessageBox.Ok, QXMessageBox.Ok);
+            }
+        }
+        preference.save();
+    }
+    
+    String getSetting(String [] options, String key){
+		return preference.getSetting(options, key);
+    }
+    
+    static bool setSetting(String key, String val){
+		return preference.setSetting(key, val);
+    }
+    
+    static String get(String key){
+		return preference.getSetting(nilptr, key);
+    }
+    
+    static bool isDarkStyle(){
+		return get("style").equals("深色");
+    }
+    
+    static bool isIntellisense(){
+		return get("intelsence").equals("开启");
+    }
+    
+    static bool isAutoSave(){
+		return get("autosave").equals("开启");
+    }
+    
+    static bool isSwitchToInfo(){
+		return get("switchinfo").equals("开启");
+    }
+    
+    static bool isMatchBrace(){
+		return get("brace").equals("开启");
+    }
+    
+    static bool isAutoIdent(){
+		return get("ident").equals("开启");
+    }
+    
+    static String getEditorFont(){
+		String font = get("editorfont");
+		if (font.length() == 0){
+			bool bmac = (_system_.getPlatformId() == 2);
+			font = bmac ? "Monaco" : "Consolas";
+        }
+        return font;
+    }
+    
+    static int getEditorFontSize(){
+		int font_size = get("fontsize").parseDouble() * 100;
+        
+		if (font_size == 0){
+			if (_system_.getPlatformId() == 2){
+				font_size = 1150;
+            }else{
+				font_size = 1000;
+            }
+        }
+      
+        return font_size;
+    }
+    
+    static void save(){
+		preference.save();
+    }
+};

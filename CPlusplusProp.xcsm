@@ -1,0 +1,125 @@
+//xlang Source, Name:CPlusplusProp.xcsm 
+//Date: Thu Nov 08:57:52 2018 
+
+class CPlusplusProp : ProjectPropInterface{
+
+   void makefile(IBuilder builder, String projectDir){
+		String [] margs = {"make"};
+		Process _mprocess = new Process("/usr/bin/make", margs);
+        _mprocess.setWorkDirectory(projectDir);
+        
+        String statusoutput = "/usr/bin/make";
+            
+        builder.OutputText(statusoutput + "\n");
+        
+        try{
+			if (_mprocess.create(false, true, false, false)){
+				Utils.readForProcess(builder, _mprocess);
+				_mprocess.waitFor(-1);
+			}else{
+				builder.OutputText("\nmakefile失败.\n");
+			}
+
+        }catch(Exception e){
+			String str = e.getMessage();
+			builder.OutputText("\n错误:" + str + "\n");
+        }
+    }
+    
+	void Run(IBuilder builder, Project proj, Configure conf) override {
+
+	}
+
+	void build(IBuilder builder, Project object, Configure configure, Object param) override {
+
+	}
+   
+    void cleanup(IBuilder builder, Project object, Configure configure) override {
+
+	}
+    
+	bool createNormalFileToProject(WizardLoader loader,String projectName, String projectDir, String uuid, Project ownProject, bool addToProject, String ext){
+		XPlatform.mkdir(projectDir);
+		try{
+			String extsion = projectName.findExtension();
+			String filename ;
+            
+			if (extsion != nilptr){
+				filename = projectName;
+			}else{
+				filename = projectName + ext;
+			}
+				
+            String date = String.formatDate("%c", _system_.currentTimeMillis()); 
+            
+            String preContent = "";
+            
+			if (uuid.equals("c480d6ff-10ba-483a-8a76-927ea81a2403")){
+				preContent = "// " + projectName + ".cpp created by xstudio \n//" + date;
+			}
+			if (uuid.equals("1ea14692-4c49-4b95-9cdb-97f49e068497")){
+				preContent = "// " + projectName + ".c created by xstudio \n//" + date;
+			}
+			if (uuid.equals("c4279b52-c866-4c90-bdd1-5780e721dbc7")){
+				String appdir = String.formatPath(_system_.getAppDirectory().appendPath("xnl"), false);
+                
+				preContent = ".SUFFIXES:.c .o\n\nCC=gcc\n\n" 
+                + "CPPFLAGS=-I " + appdir + "\n" +
+                "SRCS=<add sourcefiles here>\n\nOBJS=$(SRCS:.c=.o)\n\nEXEC=<type target here>\n\n" + 
+                "start: $(OBJS)\n\t$(CC) $(CPPFLAGS) -shared -o $(EXEC) $(OBJS) -fPIC\n\n.c.o:\n\t$(CC) -fPIC -Wall -o $@ -c $<\n\nclean:\n\trm -rf $(EXEC) $(OBJS)\n";
+			}
+            
+			String destProj = String.formatPath(projectDir.appendPath(filename), false);
+			
+            if (XPlatform.existsSystemFile(destProj)){
+				if (QXMessageBox.Question("注意", destProj + " 该文件已经存在, <a style=\"color:#ffff0000\">继续建立新文件将改写原有文件?</a>", QXMessageBox.Ok | QXMessageBox.No, QXMessageBox.Ok) == QXMessageBox.No){
+					return false;
+                }
+            }
+            
+			FileOutputStream fos = new FileOutputStream(destProj);
+
+			fos.write(preContent.getBytes());
+			fos.close();
+			loader.openTextFile(destProj);
+			if (addToProject){
+				return ownProject.addSource(destProj);
+			}
+			return true;
+		}catch(Exception e){
+			
+		}
+		return false;
+	}
+    
+	bool create(WizardLoader loader, String projectName, String projectDir, String uuid, Project ownProject, bool isAddToProject, String userType) override {
+		if (uuid.equals("c480d6ff-10ba-483a-8a76-927ea81a2403")){
+			return createNormalFileToProject(loader, projectName, projectDir, uuid, ownProject, isAddToProject, ".cpp");
+		}
+		if (uuid.equals("1ea14692-4c49-4b95-9cdb-97f49e068497")){
+			return createNormalFileToProject(loader, projectName, projectDir, uuid, ownProject, isAddToProject, ".c");
+		}
+		if (uuid.equals("c4279b52-c866-4c90-bdd1-5780e721dbc7")){
+			return createNormalFileToProject(loader, projectName, projectDir, uuid, ownProject, isAddToProject, "");
+		}
+        return false;
+	}
+
+	void stopRun() override {
+
+	}
+
+	void debugRun(IBuilder builder, Project proj, Configure conf) override {
+
+	}
+
+	String getValue(Project object, Configure configure, String key) override {
+		return "";
+	}
+
+	bool setValue(Project object, Configure configure, String key, String value) override {
+		return false;
+	}
+
+
+};

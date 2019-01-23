@@ -1,0 +1,255 @@
+
+class XWndClass : QXDockWidget{
+
+    QXTreeView _treeview;
+	XWorkspace workspace;
+	JsonArray sources;
+    
+	static class ItemLoader{
+		long loaditem;
+		JsonArray object;
+		ItemLoader(long i, JsonArray o){
+			loaditem = i;
+			object = o;
+		}
+	};
+    
+	static class Position{
+		Position(int s,int l ,int r, bool b){
+			source = s;
+			line = l;
+			row = r;
+            lib = b;
+		}
+		int source, line, row;
+        bool lib = false;
+	};
+    
+	Map<long, ItemLoader> expand_data = new Map<long, ItemLoader>();
+	Map<long, Position> position_info = new Map<long, Position>();
+    
+	static XWndClass wndClass;
+    
+    void onAttach(){
+        _treeview = (QXTreeView)attachByName(new QXTreeView(), "tree_class");
+        wndClass = this;
+        /*
+        改成layout之后就不需要resize了
+        setOnLayoutEventListener(new onLayoutEventListener(){
+                void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+                    if (_treeview != nilptr){
+                        _treeview.resize(w, h - 25);
+                    }
+                }
+        });*/
+		_treeview.setOnTreeViewItemEvent(new onTreeViewItemEvent(){
+			void onItemExpanded(QXTreeView,long item)override{
+				XWndClass.this.expandLoad(item);
+			}
+			void onItemClicked(QXTreeView,long item, int column)override{
+				XWndClass.this.clickItem(item);
+			}
+		});
+    }
+    
+    static void prepare(Project project){
+		wndClass._treeview.addItem("res/toolbar/project.png", project.getName() + "(正在生成类视图...)");
+    }
+    
+	void clickItem(long item){
+		Position pos = nilptr;
+        
+		try{
+			pos = position_info.get(item);
+        }catch(Exception e){
+        
+        }
+        
+		if (pos != nilptr){
+			//_system_.consoleWrite("" + pos.source + ": " + pos.line + "." + pos.row + "\n");
+			String source = sources.getString(pos.source);
+			
+			if (workspace.currentProject != nilptr){
+				source = workspace.currentProject.getFullPath(source);
+			}
+			if (XPlatform.existsSystemFile(source) == false){
+				if (pos.lib == false){
+					QXMessageBox.Critical("文件不存在", "找不到文件:" + sources.getString(pos.source) + "该位置的文件已不存在.", QXMessageBox.Ok, QXMessageBox.Ok);
+				}
+			}else{
+				workspace.openTextFileInfo(source,  pos.line + 1, pos.row + 1);
+			}
+		}
+	}
+	void expandLoad(long item){
+		ItemLoader loader = nilptr; 
+        
+        try{
+			loader = expand_data.get(item);
+        }catch(Exception e){
+        
+        }
+        
+		if (loader != nilptr){
+			int count = loader.object.length();
+			if (count > 0){
+				_treeview.setItemText(loader.loaditem, 0, String.format("%d个", count));
+			}else{
+				_treeview.setItemText(loader.loaditem, 0, "无");
+			}
+			expand_data.remove(item);
+			loadObject(item, nilptr, loader.object);
+		}
+	}
+    
+	static void postNotify(int id){
+		wndClass.Notify(id);
+	}
+	void clear(){
+		_treeview.clear();
+		expand_data.clear();
+		position_info.clear();
+		sources = nilptr;
+	}
+    void onNotification(long eventid){        
+		if (workspace.currentProject != nilptr){
+			loadProject(workspace.currentProject);
+		}
+		if (Setting.isIntellisense()){
+			QxApp.statusBar.statusBar.showMessage("XIntelliSense 结束.");
+        }else{
+			QxApp.statusBar.statusBar.showMessage("XIntelliSense 未启用.");
+        }
+    }
+	/*static void load(Project project){
+		wndClass.loadProject(project);
+	}*/
+    
+    long [] loadLibs(Configure configure){
+		long [] hlibs;
+		if (configure != nilptr){		
+			JsonArray libs = (JsonArray)configure.root.get("libs");
+			if (libs != nilptr){
+				hlibs = new long[libs.length()];
+                long libroot = 0;
+                if (libs.length() > 0){
+					libroot = _treeview.addItem("res/toolbar/sources.png", "外部库");
+                }
+				for (int i = 0; i < libs.length(); i++){
+					String var = libs.getString(i);
+					if (var != nilptr){
+                        hlibs[i] = _treeview.insertItem(libroot, "res/toolbar/static.png", var.findFilenameAndExtension());
+					}
+				}
+			}
+		}   
+        return hlibs; 
+    }
+	void loadProject(Project project){
+		clear();
+		long root = _treeview.addItem("res/toolbar/project.png", project.getName());
+        
+        
+        long []libs = loadLibs(project.currentConfig);
+        
+		if (project.xintelliSenseMap != nilptr){
+			sources = (JsonArray)project.xintelliSenseMap.get("sources");
+			JsonArray template_class = (JsonArray)project.xintelliSenseMap.get("template_class");
+			JsonArray template_instance = (JsonArray)project.xintelliSenseMap.get("template_instance");
+			JsonArray heap = (JsonArray)project.xintelliSenseMap.get("heap");
+			loadObject(root, libs, template_class);
+			loadObject(root, libs, template_instance);
+			loadObject(root, libs, heap);
+			_treeview.setExpand(root, true);
+        }
+	}
+	long insertLoad(long item){
+		return _treeview.insertItem(item, nilptr, "加载中...");
+	}
+	void loadObject(long hroot, long []libs, JsonArray objs){
+		if (objs == nilptr){
+			return ;
+        }
+        
+        
+		for (int i =0, c = objs.length(); i < c; i++){
+			long root = hroot;
+			JsonObject obj = (JsonObject)objs.get(i);
+			int type = obj.getInt("type");
+            int libid = obj.getInt("lib");
+            bool blib = obj.has("lib");
+            if (blib && libs != nilptr){
+				if (libid < libs.length){
+					root = libs[libid];
+                }else{
+					continue;
+                }
+            }
+			long item = 0;
+			if (type == 34){
+				item = _treeview.insertItem(root, "res/toolbar/template.png", obj.getString("name"));
+			}else
+			if (type == 31){
+				if (obj.has("template")){
+					item = _treeview.insertItem(root, "res/toolbar/tempinstance.png", obj.getString("name"));
+					long temp = _treeview.insertItem(item, "res/toolbar/tempinstance.png", "模板");
+					_treeview.insertItem(temp, "res/toolbar/template.png", obj.getString("template"));
+				}else
+				if (obj.has("interface")){
+					item = _treeview.insertItem(root, "res/toolbar/interface.png", obj.getString("name"));
+				}else{
+					item = _treeview.insertItem(root, "res/toolbar/class.png", obj.getString("name"));
+				}
+				if (obj.has("base")){
+					long temp = _treeview.insertItem(item, "res/toolbar/class.png", "基类");
+					_treeview.insertItem(temp, "res/toolbar/class.png", obj.getString("base"));
+				}
+		
+				long prop = _treeview.insertItem(item, "res/toolbar/member.png", "成员");
+				long static_prop = _treeview.insertItem(item, "res/toolbar/static.png", "静态成员");
+				long method = _treeview.insertItem(item, "res/toolbar/function.png", "方法");
+				long static_method = _treeview.insertItem(item, "res/toolbar/staticfunction.png", "静态方法");
+				expand_data.put(prop,new ItemLoader(insertLoad(prop), (JsonArray)obj.get("properites")));
+				expand_data.put(static_prop,new ItemLoader(insertLoad(static_prop),   (JsonArray)obj.get("static_properites")));
+				expand_data.put(method, new ItemLoader(insertLoad(method),  (JsonArray)obj.get("method")));
+				expand_data.put(static_method,new ItemLoader( insertLoad(static_method),  (JsonArray)obj.get("static_method")));
+				/*loadObject(prop, (JsonArray)obj.get("properites"));
+				loadObject(static_prop, (JsonArray)obj.get("static_properites"));
+				loadObject(method, (JsonArray)obj.get("method"));
+				loadObject(static_method, (JsonArray)obj.get("static_method"));*/
+			}else
+			if (type == 23){
+				if (obj.has("interface")){
+					item = _treeview.insertItem(root, "res/toolbar/interfacefun.png", obj.getString("name"));
+				}else{
+					item = _treeview.insertItem(root, "res/toolbar/function.png", obj.getString("name"));
+				}
+                
+				if (obj.has("typeobj")){
+					long temp = _treeview.insertItem(item, "res/toolbar/class.png", "类型");
+					_treeview.insertItem(temp, nilptr, obj.getString("typeobj"));
+				}
+		
+				long params = _treeview.insertItem(item, "res/toolbar/params.png", "参数列表");
+				
+				JsonArray param = (JsonArray)obj.get("params");
+				for (int x = 0, y = param.length(); x < y; x++){
+					 JsonObject jo = (JsonObject)param.get(x);
+					long pitem = _treeview.insertItem(params, "res/toolbar/static.png", jo.getString("name"));
+					long temp = _treeview.insertItem(pitem, "res/toolbar/class.png", "类型");
+					_treeview.insertItem(temp, nilptr, jo.getString("type"));
+				}
+			}else
+			if (type == 18){
+				item = _treeview.insertItem(root, "res/toolbar/static.png", obj.getString("name"));
+				if (obj.has("typeobj")){
+					long temp = _treeview.insertItem(item, "res/toolbar/class.png", "类型");
+					_treeview.insertItem(temp, nilptr, obj.getString("typeobj"));
+				}
+			}
+			if (item != 0){
+				position_info.put(item, new Position(obj.getInt("source"), obj.getInt("line"), obj.getInt("row"), blib));
+			}
+		}
+	}
+};

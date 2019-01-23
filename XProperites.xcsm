@@ -1,0 +1,260 @@
+
+class XProperites : QXDialog {
+    QXPushButton btnClose, btnCfg;
+    Project _project;
+    Configure _curconfig;
+    QXTreeView _listview;
+    ProjectPropInterface _prop;
+    QXPropertyBrowser _propTable = new QXPropertyBrowser();
+    Vector<JsonObject> _propItems = new Vector<JsonObject>();
+    Map<String, QXPropertyBrowser.QtVariantProperty> currentProps = new Map<String, QXPropertyBrowser.QtVariantProperty>();
+    QXComboBox listConfigures ;
+    XProperites(Project pr){
+        _project = pr;
+    }
+     
+    onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
+        void onItemClicked(QXTreeView list,long item, int column)override{
+            long i = list.getItemTag(item, 0);
+            XProperites.this.saveProp();
+            XProperites.this._propTable.clear();
+            currentProps.clear();
+            XProperites.this.loadFeature((JsonObject)XProperites.this._propItems.get(i).child());
+        }
+    };
+    
+    String getLanguage(){
+        return _project.getLanguage();
+    }
+    
+    String readSlnPropFile(String file){
+        FileInputStream fis = nilptr;
+        try{
+            fis = new FileInputStream(file);
+        }catch(Exception e){
+            _system_.consoleWrite("canot read file " + file);
+        }
+        
+        if (fis != nilptr){
+            byte []data = fis.read();
+            return new String(data);
+        }
+        
+        return nilptr;
+    }
+    
+    bool showAllConfigures(){
+        QXDialog newDlg = new QXDialog();
+        
+        if (newDlg.load("ui/configure.ui") == false){
+            return false;
+        }
+        
+        ConfigMgr cfglist = new ConfigMgr();
+        cfglist.proWnd = this;
+		cfglist._curproject = _project;
+        cfglist.attach(newDlg);
+		
+        return true;
+    }
+    
+    void refreshConfigures(){
+		int i = 0;
+		String []configName = new String[_project.configures.size()];
+        for (Map.Iterator<String, Configure> iter = _project.configures.iterator();iter.hasNext();iter.next()){
+            configName[i++]  = iter.getKey();
+        }
+        listConfigures.clear();
+        listConfigures.addItems(configName);
+    }
+    
+    void loadConfigure(){
+        String []configName = new String[_project.configures.size()];
+        int i = 0;
+        
+        _curconfig = _project.currentConfig;
+        
+        for (Map.Iterator<String, Configure> iter = _project.configures.iterator();iter.hasNext();iter.next()){
+            configName[i++]  = iter.getKey();
+            if (_curconfig == nilptr){
+                _curconfig = iter.getValue();
+            }
+        }
+        
+        listConfigures.addItems(configName);
+        listConfigures.setText(_curconfig.getName());
+        
+        listConfigures.setOnComboBoxEventListener(
+			new onComboBoxEventListener(){
+				void onItemSelected(QXObject obj, int id){
+                    if (_project != nilptr){
+						String cname = listConfigures.getCurrentText();
+                        if (cname.length() > 0){
+							Configure cfg_ = _project.getConfigure(listConfigures.getCurrentText());
+							if (cfg_ != nilptr){
+								updateProp(cfg_);
+							}else{
+								QXMessageBox.Critical("错误", "找不到此配置", QXMessageBox.Ok, QXMessageBox.Ok);
+							}
+                        }
+                    }
+				}
+			}
+        );
+    }
+    
+    bool loadProperites(){
+        _prop = ProjectPropManager.getForProject(getLanguage());
+        
+        if (_prop != nilptr){
+            String file = XPlatform.getAppDirectory();
+            file = file.appendPath("config").appendPath(getLanguage() + ".prop");
+            String content = readSlnPropFile(file);
+            if (content != nilptr){
+                JsonObject _root = new JsonObject(content);
+                loadProperites((JsonObject)_root.child());
+                return true;
+            }
+        }else{
+            QXMessageBox.Critical("错误", "不支持的项目类型.\n请注意: 没有为该类型项目提供配置文件.", QXMessageBox.Ok, QXMessageBox.Ok);
+        }
+        return false;
+    }
+    
+    void onAttach(){
+        //setWindowFlags(CustomizeWindowHint | WindowMinMaxButtonsHint | WindowCloseButtonHint  | Tool);
+        _listview = (QXTreeView)attachByName(new QXTreeView(), "listProp");
+        listConfigures = (QXComboBox)attachByName(new QXComboBox(), "configures");
+        
+        _propTable.create(this);
+        _propTable.move(170, 40);
+        _propTable.resize(500, 410);
+        
+        
+        String [] columns = {"选项"};
+        _listview.setColumns(columns);
+        _listview.setOnTreeViewItemEvent(listlistener);
+        loadConfigure();
+        if (loadProperites() == false){
+            close();
+            return ;
+        }
+        
+		btnClose = (QXPushButton)attachByName(new QXPushButton(), "btnClose");
+		btnCfg = (QXPushButton)attachByName(new QXPushButton(), "btnCfg");
+        btnCfg.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+                showAllConfigures();
+            }
+        });
+        
+        btnClose.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+                XProperites.this.saveProp();
+                XProperites.this.close();
+            }
+        });
+        
+		QXLabel labTips = (QXLabel)attachByName(new QXLabel(), "labTips");
+
+        setOnLayoutEventListener(new onLayoutEventListener(){
+                void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+					_listview.resize(141, h - 50);
+					btnClose.move(w - 100, h - 40);
+					labTips.move(170, h - 40);
+					//_propTable.move(170, 40);
+					_propTable.resize(w - 200, h - 90);
+                }
+        });
+
+        setWindowTitle(_project.getName() + " - 属性");
+        setModal(true);
+        show();
+    }
+    
+    bool onClose(){
+		_project = nilptr;
+        return true;
+    }
+    
+    void loadFeature(JsonObject confi){
+        if (confi != nilptr ){
+            QXPropertyBrowser.QtVariantPropertyManager variantManager = new QXPropertyBrowser.QtVariantPropertyManager();
+            while(confi != nilptr){
+                String cfgName = confi.getName();
+                String type = confi.getString("type");
+                if (type.equals("string")){
+                    loadString(variantManager, cfgName, confi);
+                }else
+                if (type.equals("stringlist")){
+                    loadStringList(variantManager, cfgName, confi);
+                }
+				confi = (JsonObject)confi.next();
+            }
+            _propTable.setFactoryForManager(variantManager, new QXPropertyBrowser.QtVariantEditorFactory());
+            _propTable.setPropertiesWithoutValueMarked(true);
+            _propTable.setRootIsDecorated(false);
+        }
+    }
+    
+    void loadProperites(JsonObject root){
+        bool loaded = false;
+        
+		while(root != nilptr){
+			String featName = root.getName();
+			
+			JsonObject confi = (JsonObject)root.child();
+			long litem = _listview.addItem(nilptr, featName);
+			_listview.setItemTag(litem, 0, _propItems.size());
+			_propItems.add((JsonObject)root.clone());
+			if (loaded == false){
+				loadFeature((JsonObject)confi);
+				loaded = true;
+			}
+			root = (JsonObject)root.next();
+		}
+    }
+  
+    void loadString(QXPropertyBrowser.QtVariantPropertyManager manager, String name, JsonObject root){
+        String [] kv = name.split(':');
+        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addProperty(new QXPropertyBrowser.QtVariantProperty(),QXVariant.String, kv[0]);
+        _propTable.addProperty(item);
+        item.setValue(_prop.getValue(_project, _curconfig, kv[1]));
+        currentProps.put(kv[1], item);
+    }
+    
+    void loadStringList(QXPropertyBrowser.QtVariantPropertyManager manager, String name, JsonObject root){
+        String [] kv = name.split(':');
+        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
+        JsonArray list = root.getArray("list");
+        String [] options = new String[list.length()];
+        for (int i = 0;i < options.length; i++){
+            options[i] = list.getString(i);
+        }
+        item.setAttributeEnumNames(options);
+        item.setValue(_prop.getValue(_project, _curconfig, kv[1]));
+        _propTable.addProperty(item);
+        currentProps.put(kv[1], item);
+    }
+    
+    void saveProp(){
+        Map.Iterator<String, QXPropertyBrowser.QtVariantProperty> iter = currentProps.iterator();
+        for (; iter.hasNext(); iter.next()){
+            if (false == _prop.setValue(_project, _curconfig, iter.getKey(), iter.getValue().getValue())){
+                QXMessageBox.Critical("错误", iter.getKey() + "字段更改失败.", QXMessageBox.Ok, QXMessageBox.Ok);
+            }
+        }
+    }
+    
+    void updateProp(Configure _cfg){
+		long item = _listview.getSelItem();
+		long i = _listview.getItemTag(item, 0);
+		saveProp();
+		_propTable.clear();
+		currentProps.clear();
+        _curconfig = _cfg;
+		loadFeature((JsonObject)XProperites.this._propItems.get(i).child());
+    }
+};

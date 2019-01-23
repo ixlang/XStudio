@@ -1,0 +1,206 @@
+
+class QxApp : QXApplication{
+    QXMainWindow mainWindow;
+    XWndClass wndclass ;
+    XWndSln wndsln;
+    XStackInfor wndStack;
+    XWndOutput wndOutput;
+    XWndInfor wndInfor;
+    XFindresWnd findWnd;
+    AutoWnd autoWndInfo;
+    WatchWnd watchWndInfo;
+    BreakPointWnd bpWndInfo;
+    XMemoryWnd memoryWnd;
+    XLogcatWnd logcatWnd;
+    XWndObjectDump xDumpWnd;
+    static String [] _appargs;
+    static QxApp _theApp;
+    static String lastTask = nilptr;
+    static StatusBarMgr statusBar = new StatusBarMgr();
+    XWorkspace _mdispace;
+    XMenuManager menuMgr = new XMenuManager();
+
+    void finalize()override{
+		super.finalize();
+    }
+    
+    Object onCreateXObject(long object, String objectClass){
+        if (objectClass.equals("QMdiArea")){
+            return new XWorkspace(object);
+        }
+        return super.onCreateXObject(object, objectClass);
+    }
+    
+    //创建面板
+    void createDocks(){
+        wndclass = (XWndClass)mainWindow.attachByName(new XWndClass(), "wnd_classview");
+        wndsln = (XWndSln)mainWindow.attachByName(new XWndSln(), "wnd_slnview");
+        wndOutput = (XWndOutput)mainWindow.attachByName(new XWndOutput(), "wnd_output");
+        wndInfor = (XWndInfor)mainWindow.attachByName(new XWndInfor(), "wnd_info");
+		wndStack = (XStackInfor)mainWindow.attachByName(new XStackInfor(), "stackinfo");
+        autoWndInfo = (AutoWnd)mainWindow.attachByName(new AutoWnd(), "autoinfo");
+        watchWndInfo = (WatchWnd)mainWindow.attachByName(new WatchWnd(), "watchinfo");
+		bpWndInfo = (BreakPointWnd)mainWindow.attachByName(new BreakPointWnd(), "bpinfo");
+        findWnd=  (XFindresWnd)mainWindow.attachByName(new XFindresWnd(), "findinfo");
+        memoryWnd =  (XMemoryWnd)mainWindow.attachByName(new XMemoryWnd(), "memoryinfo");
+        logcatWnd =  (XLogcatWnd)mainWindow.attachByName(new XLogcatWnd(), "wnd_log");
+        xDumpWnd  =  (XWndObjectDump)mainWindow.attachByName(new XWndObjectDump(), "gcinfo");
+    }
+    
+	void loadConfig(){
+        if (Setting.isDarkStyle()){
+			setStyleSheet("res/qss/black.qss");
+        }
+	}
+
+
+	void processArgs(){
+		if (_appargs.length > 1){
+			if (_appargs[1].equals("uacdebug")){
+				if (_mdispace.loadProject(_appargs[2])){
+					_mdispace.debugRun();
+                }
+            }else{
+				_mdispace.openFile( _appargs[1]);
+            }
+        }
+    }
+    
+    bool createWorkspace(){
+		mainWindow = new QXMainWindow();
+        /*Resource.getData(Resource.RES_MAINWINDOW)*/
+		if (mainWindow.load("ui/mainwindow.ui") == false){
+			return false;
+		}
+		
+		loadConfig();
+        
+		//setPaletteColor("#F0F0F0");
+		/*mainWindow.setOnActivateListener(new onActivateListener(){
+			void onWindowActivate(QXObject obj){
+				((QXWidget)obj).setOpacity(1.0);
+			}
+			void onWindowDeactivate(QXObject obj){
+				((QXWidget)obj).setOpacity(0.8);
+			}
+		});*/
+		
+		menuMgr.init(this);
+		createDocks();
+		
+		_mdispace = (XWorkspace)mainWindow.findByName("mdiArea");
+		_mdispace.setMainWindow(mainWindow);
+		_mdispace.setSlnView(wndsln);
+		_mdispace.setStackView(wndStack);
+		wndclass.workspace = _mdispace;
+       
+		/*mainWindow.getCentralWindow().setOnLayoutEventListener(new onLayoutEventListener(){
+				void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+					if (_mdispace != nilptr){
+						_mdispace.resize(w, h);
+					}
+				}
+		}); */
+		
+		//mainWindow.resize(800, 600);
+		ProjectPropManager.registryAllProp();
+		statusBar.create(mainWindow);
+		mainWindow.show();
+        
+		Utils.chechUpdate(0);
+        
+		mainWindow.setWindowTitle("XStudio");
+		mainWindow.setOnStatusListener(new onStatusListener(){
+			bool onClose(QXObject obj){
+				if (XSourceEditor.closeAllWindows()){
+					if (_mdispace.requestQuit()){
+						_mdispace.closeIndexPage(); 
+						String statefile = XPlatform.getAppDirectory().appendPath("x.save");
+						try{
+							byte [] state = mainWindow.saveState();
+							if (state != nilptr){
+								FileOutputStream fos = new FileOutputStream(statefile);
+								fos.write(state);
+								fos.close();
+							}
+						}catch(Exception e){
+						
+						}
+						if (QxApp.lastTask != nilptr){
+							if (false == openLocal(QxApp.lastTask)){
+								QXMessageBox.Critical("失败", "未能以提升的权限运行, 请重试或者确认操作无误.", QXMessageBox.Ok, QXMessageBox.Ok);
+                                return false;
+                            }
+						}
+						return true;
+					}
+				}
+				return false;
+			}
+		});
+
+
+		wndInfor._mdi_area = _mdispace;
+		Builder.output = wndOutput;
+		Builder.infownd = wndInfor;
+		XMenuManager.setProjectLoaded(false);
+		XMenuManager.setDocumentOpened(false);
+		
+		String statefile = XPlatform.getAppDirectory().appendPath("x.save");
+		try{
+			FileInputStream fis = new FileInputStream(statefile);
+			byte []data = fis.read();
+			if (data != nilptr){
+				mainWindow.loadState(data);
+			}
+			fis.close();
+		}catch(Exception e){
+		 
+		}
+		   
+		_mdispace.openIndexPage();
+        processArgs();
+        return true;  
+    }
+ 
+ 
+	bool preprocessArgs(){
+		if (_appargs.length > 1){
+			if (_appargs[1].equals("-installpkg")){
+				loadConfig();
+				PackageViewer.Install(_appargs[2]);
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    bool create(){ 
+        if (super.createQXApplication()){
+			loadTranslator("translator/qt_zh_CN.qm");
+            
+			_theApp = this;
+            if (Recently.isFirstRun()){
+				return FirstPrepare.showFirstRun(this);
+            }else{    
+                if (preprocessArgs()){
+					return true;
+                }
+				return createWorkspace();
+            } 
+        } 
+        return false;
+    }  
+};
+    
+       
+int main(String [] args){  
+    _system_.chdir( _system_.getAppDirectory());
+    QxApp app = new QxApp();
+	QxApp._appargs = args;
+    if (app.create()){
+        app.run();
+    }
+    app = nilptr; 
+    return 0;
+}

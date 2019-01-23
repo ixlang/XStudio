@@ -1,0 +1,12 @@
+
+class QXFileDialog : QXNative{
+    static String getOpenFileName(String caption, String defaultPath, String pattern, QXWidget parent){
+        return openfile_dlg_string3_obj(QXCore.OPEN, caption, defaultPath,  pattern, parent.nativehandle);
+    }
+    static String getSaveFileName(String caption, String defaultPath, String pattern, QXWidget parent){
+        return openfile_dlg_string3_obj(QXCore.SAVE, caption, defaultPath,  pattern, parent.nativehandle);
+    }
+    static String getFolderPath(String caption, String defaultPath, String optionNum, QXWidget parent){
+        return openfile_dlg_string3_obj(QXCore.FOLDER, caption, defaultPath, optionNum, parent.nativehandle);
+    }
+};

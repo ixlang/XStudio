@@ -1,0 +1,240 @@
+//xlang Source, Name:PackageViewer.xcsm 
+//Date: Fri Dec 22:58:50 2018 
+
+class PackageViewer : QXDialog{
+	QXTreeView pcklist;
+    QXPushButton btnInstall, btnDelete, btnAdd, btnExport;
+    
+    PackageManager pm = new PackageManager();
+    
+	void onAttach() override {
+		//setFixedSize(width(), height());
+		pcklist = (QXTreeView)attachByName(new QXTreeView(), "pcklist");
+        btnInstall = (QXPushButton)attachByName(new QXPushButton(), "btnInstall");
+        btnDelete = (QXPushButton)attachByName(new QXPushButton(), "btnDelete");
+        btnAdd = (QXPushButton)attachByName(new QXPushButton(), "btnAdd");
+		btnExport = (QXPushButton)attachByName(new QXPushButton(), "btnExport");
+        
+		String [] columns = {"名称", "版本", "描述", "发布者"};
+        
+        pcklist.setColumns(columns);
+        pcklist.setColumnWidth(0,120);
+        pcklist.setColumnWidth(1,80);
+        pcklist.setColumnWidth(2,550);
+        pcklist.setColumnWidth(3,150);
+        
+        pcklist.setOnTreeViewItemEvent( new onTreeViewItemEvent(){
+			void onItemClicked(QXTreeView tree,long item, int column){
+				if (column == 3){
+					String txt = tree.getItemText(item, column);
+                    if (txt.upper().startWith("HTTP")){
+						if (QXMessageBox.Question("提示","是否转到发布者网站: <b>" + txt + "</b> ?",QXMessageBox.Ok | QXMessageBox.No,QXMessageBox.Ok) == QXMessageBox.Ok){
+							openUrl(txt);
+                        }
+                    }
+                }
+			}
+        });
+		if (pm.load() == false){
+			QXMessageBox.Critical("错误", "加载包时出现故障", QXMessageBox.Ok, QXMessageBox.Ok);
+        }else{
+			loadList();
+        }
+        
+        if (XWorkspace.workspace != nilptr){
+			btnAdd.setEnabled(XWorkspace.workspace.isCurrentProjectEmpty() == false);
+        }else{
+			btnAdd.setEnabled(false);
+        }
+        
+        btnInstall.setOnClickListener(new onClickListener(){
+			void onClick(QXObject obj, bool checked)override{
+				String file = QXFileDialog.getOpenFileName("添加包", nilptr,  "X 包 (*.xp)", PackageViewer.this);
+				if (file != nilptr && file.length() > 0){
+					install(file);
+				}	
+            }
+        });
+        
+        btnAdd.setOnClickListener(new onClickListener(){
+			void onClick(QXObject obj, bool checked)override{
+				importToProject();
+            }
+        });
+        
+        btnDelete.setOnClickListener( new onClickListener(){
+			void onClick(QXObject obj,bool checked)override{
+				deletePackage();
+            }
+        
+        });
+        
+        btnExport.setOnClickListener( new onClickListener(){
+			void onClick(QXObject obj,bool checked)override{
+				exportPackage();
+            }
+        
+        });
+	}
+
+	void exportPackage(){
+		long []items = pcklist.getSelectedItems();
+        
+        if (items.length > 0){
+			int count = 0;
+			for (int i = 0; i < items.length; i++){
+				int id = pcklist.getItemTag(items[i], 0);
+				PackageManager.PackageInfo pi = pm.get(id);
+                if (pi != nilptr){
+					String floder = QXFileDialog.getFolderPath("选择导出目录","" ,"", this);
+                    if (floder != nilptr && floder.length() > 0){
+						floder = String.formatPath(floder.appendPath(pi.name + pi.version + ".xp"), false);
+						PackageManager.copyFile(floder, pi.filepath);
+                    }
+                }
+            }
+        }
+    }
+    
+	void deletePackage(){
+		long []items = pcklist.getSelectedItems();
+        
+        String tips = "将删除包:\n";
+        if (items.length > 0){
+			int count = 0;
+			for (int i = 0; i < items.length; i++){
+				int id = pcklist.getItemTag(items[i], 0);
+				PackageManager.PackageInfo pi = pm.get(id);
+                if (pi != nilptr){
+					tips = tips + "\t" + pi.name + " " + pi.version;
+                    count++;
+                }
+            }
+            
+            if (count > 0){
+				int r = QXMessageBox.Question("注意",tips,QXMessageBox.Ok | QXMessageBox.Cancel	,QXMessageBox.Ok  );
+                if (r == QXMessageBox.Ok ){
+					for (int i = 0; i < items.length; i++){
+						int id = pcklist.getItemTag(items[items.length - (i + 1)], 0);
+						PackageManager.PackageInfo pi = pm.get(id);
+						if (pi != nilptr){
+							pm.deletePackage(pi);
+						}
+					}
+                }
+            }
+            pm.save();
+            loadList();
+        }
+    }
+
+	void install(String file){
+		PackageManager.PackageInfo pi = pm.previewPackage(file);
+		if (pi != nilptr){
+			if (QXMessageBox.Information("提示", "将安装包 " + pi.name + " " + pi.version + "?", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Ok) == QXMessageBox.Ok){
+				if (pm.installPackage(pi)){
+					loadList();
+				}else{
+					QXMessageBox.Critical("提示", "安装包 " + pi.name + " " + pi.version + "失败!", QXMessageBox.Ok, QXMessageBox.Ok);
+				}
+			}
+		}else{
+			QXMessageBox.Critical("错误", file + " 不是一个有效的X包.", QXMessageBox.Ok, QXMessageBox.Ok);
+		}
+    }
+    
+    void importToProject(){
+    
+		ProgressView pv = ProgressView.showWait(-1);
+        pv.setTitleText("正在导入...");
+        pv.EnableProgress(true , 0);
+        pv.centerScreen();
+		long []items = pcklist.getSelectedItems();
+        
+        if (items.length > 0){
+			PackageManager.PackageInfo [] pis = new PackageManager.PackageInfo[items.length];
+			for (int i = 0; i < items.length; i++){
+				int id = pcklist.getItemTag(items[i], 0);
+				pis[i] = pm.get(id);
+			}
+        
+        
+			btnAdd.setEnabled(false);
+			new Thread(){
+				void run()override{
+					for (int i = 0; i < pis.length; i++){
+						pv.setTitleText("正在导入 " + (i + 1) + "/" + pis.length);
+						
+						PackageManager.PackageInfo pi = pis[i];
+						if (pi != nilptr){
+							XWndOutput.Output("\n导入 " + pi.name + " 版本:" + pi.version  + " ....\n");
+							XWorkspace.workspace.currentProject.importPkg(pi);
+						}else{
+							XWndOutput.Output("\n第 " + (i + 1) + " 是无效的包.\n");
+						}
+						pv.EnableProgress(true,  (double)i + 1 / (double)items.length);
+					}
+					pv.EnableProgress(true,  1.f);
+					pv.showResult(true, true);
+					pv.setTitleText("已导入");
+					pv.dismissAfter(2000);
+					XWndOutput.Output("\n已全部导入完毕\n");
+                    
+                    runOnUi(new Runnable(){
+						void run()override{
+							btnAdd.setEnabled(true);
+                            XWorkspace.workspace.XIntelliSense();
+                        }
+                    });
+				}
+			}.start();
+        }
+    }
+    
+	void loadList(){
+		pcklist.clear();
+		int c = pm.getCount();
+		for (int i =0; i < c; i++){
+			PackageManager.PackageInfo pi = pm.get(i);
+            long item = pcklist.addItem(pi.iconFile, pi.name);
+            pcklist.modifyItemFlags(item, QXTreeView.ItemIsUserCheckable, 0);
+            pcklist.setItemText(item, 1, pi.version);
+            pcklist.setItemText(item, 2, pi.descr);
+            pcklist.setItemText(item, 3, pi.author);
+            pcklist.setItemTag(item, 0, i);
+        }
+    }
+    
+	static bool Show(){
+    
+        QXDialog newDlg = new QXDialog();
+        
+        if (newDlg.load("ui/packagemgr.ui") == false){
+            return false;
+        }
+        
+        PackageViewer viewer = new PackageViewer();
+        
+        viewer.attach(newDlg);
+        viewer.setModal(true);
+        viewer.show();
+        return true;
+    }
+    
+	static bool Install(String file){
+    
+        QXDialog newDlg = new QXDialog();
+        
+        if (newDlg.load("ui/packagemgr.ui") == false){
+            return false;
+        }
+        
+        PackageViewer viewer = new PackageViewer();
+        
+        viewer.attach(newDlg);
+        viewer.setModal(true);
+        viewer.show();
+        viewer.install(file);
+        return true;
+    }
+};

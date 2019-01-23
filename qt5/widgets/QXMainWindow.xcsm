@@ -1,0 +1,49 @@
+
+class QXMainWindow : QXWidget{
+    QXMainWindow(){
+    }
+    
+    bool create(){
+        nativehandle = createQObject(QType.qtMainWindow, this, 0);
+        if (nativehandle == 0){
+            return false;
+        }
+        return true;
+    }
+    
+    bool create(QXWidget parent){
+        nativehandle = createQObject(QType.qtMainWindow, this, parent.nativehandle);
+        if (nativehandle == 0){
+            return false;
+        }
+        return true;
+    }    
+    
+    QXWidget getWindow(){
+        return (QXWidget)widget_get_object(nativehandle, QXCore.WINDOW);
+    }
+    
+    QXWidget getCentralWindow(){
+        return (QXWidget)widget_get_object(nativehandle, QXCore.CENTRALWIDGET);
+    }
+    
+    QXMainWindow(long handle){
+    
+    }
+    
+    byte [] saveState(){
+		return (byte[])widget_get_object(nativehandle, QXCore.SAVESTATE);
+    }
+    
+    void loadState(byte [] data){
+		widget_set_object_value(nativehandle, QXCore.LOADSTATE, data);
+    }
+    
+    QXMenuBar getMenuBar(){
+        return (QXMenuBar)widget_get_object(nativehandle, QXCore.MENUBAR);
+    }
+    
+	QXStatusBar getStatusBar(){
+		return (QXStatusBar)widget_get_object(nativehandle, QXCore.STATUSBAR);
+	}
+};

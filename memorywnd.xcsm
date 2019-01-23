@@ -1,0 +1,200 @@
+//xlang Source, Name:memorywnd.xcsm 
+//Date: Thu Sep 17:49:58 2018 
+
+class XMemoryWnd : QXDockWidget{
+    QXTreeView _listview;
+    QXPushButton btnGc, btnRefresh;
+
+    JsonObject meminfo;
+    Object memLock = new Object();
+    static XMemoryWnd memoryWnd;
+    
+    static const int COMPILE_INFO_NOTIFY = 2;
+    
+    onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
+
+    };
+    
+    void onAttach(){
+        _listview = (QXTreeView)attachByName(new QXTreeView(), "memlist");
+        
+        btnGc = (QXPushButton)attachByName(new QXPushButton(), "btnGc");
+        btnRefresh = (QXPushButton)attachByName(new QXPushButton(), "btnRefresh");
+        /*setOnLayoutEventListener(new onLayoutEventListener(){
+                void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+                    if (_listview != nilptr){
+                        _listview.resize(w, h - 60);
+                        btnGc.move(0, h - 55);
+                        btnRefresh.move(80, h - 55);
+                    }else{
+                        _system_.consoleWrite("XMemoryWnd listview no prepared");
+                    }
+                }
+        });*/
+        
+        btnGc.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+                XWorkspace.workspace.debuggee.requestGc();
+            }
+        });
+        
+        btnRefresh.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+                XWorkspace.workspace.debuggee.queryMemory();
+            }
+        });
+        
+        String [] columns = {"项目", "计数", "内存"};
+        _listview.setColumns(columns);
+        
+        _listview.setColumnWidth(0, 100);
+        _listview.setColumnWidth(1, 50);
+        _listview.setColumnWidth(2, 200);
+		_listview.setOnTreeViewItemEvent(listlistener);
+        
+        memoryWnd = this;
+        
+        new Timer().schedule(
+			new TimerTask(){
+				void run(){
+					if (XWorkspace.workspace != nilptr){
+						XWorkspace.workspace.debuggee.queryMemory();
+                    }
+				}
+			}, 1000, -1);
+    }
+    
+
+    void showInfo(JsonObject infos){
+		synchronized(memLock){
+			meminfo = infos;
+			this.Notify(COMPILE_INFO_NOTIFY);
+		}
+    }
+    
+    static String formatByte(long bytes){
+		if (bytes < 1024){
+			return "" + bytes + " Byte(s)";
+        }
+		if (bytes >= 1024 && bytes < (1024 * 512)){
+			return String.format("%.4f Kb", (bytes / 1024.f));
+        }
+        if (bytes >= (1024 * 512) && bytes < 1024 * 1024 * 1024){
+			return String.format("%.4f Mb", (bytes / 1048576.f));
+        }
+        
+        return String.format("%.4f Gb", (bytes / (1048576.f * 1024.f)));
+    }
+    
+    void onNotification(long id){
+		synchronized(memLock){
+        
+			_listview.clear();
+            
+			if (meminfo != nilptr){
+				long lc = meminfo.getInt("lc");
+                long ls = meminfo.getInt("ls");
+                long dc = meminfo.getInt("dc");
+                long ds = meminfo.getInt("ds");
+				long ac = meminfo.getInt("ac");
+                long as = meminfo.getInt("as");
+                long bc = meminfo.getInt("bc");
+                long bs = meminfo.getInt("bs");
+                long cc = meminfo.getInt("cc");
+                long cs = meminfo.getInt("cs");
+                long sc = meminfo.getInt("sc");
+                long ss = meminfo.getInt("ss");
+                long cxc = meminfo.getInt("cxc");
+                long cxs = meminfo.getInt("cxs");
+                long oc = meminfo.getInt("oc");
+                long os = meminfo.getInt("os");
+                long au = meminfo.getInt("au");
+                long js = meminfo.getInt("js");
+                long ts = meminfo.getInt("ts");
+                long tc = meminfo.getInt("tc");
+                long heap = 0;
+                long uheap = 0;
+                
+				try{
+					heap = meminfo.getString("heap").parseLong();
+					uheap = meminfo.getString("uheap").parseLong();
+				}catch(Exception e){
+				
+				}
+                
+                long item = _listview.addItem(nilptr, "数组对象");
+                _listview.setItemText(item, 1, "" + ac);
+                _listview.setItemText(item, 2, formatByte(ac * as));
+                
+                item = _listview.addItem(nilptr, "数组数据");
+                _listview.setItemText(item, 1, "" + au);
+                _listview.setItemText(item, 2, formatByte(au));
+                
+                item = _listview.addItem(nilptr, "Json数据");
+                _listview.setItemText(item, 1, "" + js);
+                _listview.setItemText(item, 2, formatByte(js));
+                
+                item = _listview.addItem(nilptr, "类实例");
+                _listview.setItemText(item, 1, "" + bc);
+                _listview.setItemText(item, 2, formatByte(bc * bs));
+                
+                item = _listview.addItem(nilptr, "类对象");
+                _listview.setItemText(item, 1, "" + cc);
+                _listview.setItemText(item, 2, formatByte(cc * cs));    
+                
+                item = _listview.addItem(nilptr, "栈");
+                _listview.setItemText(item, 1, "" + sc);
+                _listview.setItemText(item, 2, formatByte(sc * ss));        
+                
+                item = _listview.addItem(nilptr, "线程");
+                _listview.setItemText(item, 1, "" + cxc);
+                _listview.setItemText(item, 2, formatByte(cxc * cxs));       
+                
+                item = _listview.addItem(nilptr, "用户对象");
+                _listview.setItemText(item, 1, "" + oc);
+                _listview.setItemText(item, 2, formatByte(oc * os));    
+                
+                item = _listview.addItem(nilptr, "读写锁");
+                _listview.setItemText(item, 1, "" + lc);
+                _listview.setItemText(item, 2, formatByte(lc * ls));       
+                
+                item = _listview.addItem(nilptr, "锁(条件变量)");
+                _listview.setItemText(item, 1, "" + dc);
+                _listview.setItemText(item, 2, formatByte(dc * ds));    
+                
+                item = _listview.addItem(nilptr, "字符串");
+                _listview.setItemText(item, 1, "" + tc);
+                _listview.setItemText(item, 2, formatByte(ts));       
+
+				item = _listview.addItem(nilptr, "堆(已使用)");
+				_listview.setItemText(item, 1, "" + heap);
+				_listview.setItemText(item, 2, formatByte(heap)); 
+	 
+ 
+                if (_system_.getPlatformId() == 0){
+					item = _listview.addItem(nilptr, "堆(空闲)");
+					_listview.setItemText(item, 1, "" + uheap);
+					_listview.setItemText(item, 2, formatByte(uheap));
+                }else{
+					item = _listview.addItem(nilptr, "堆空闲(未监控)");
+                }
+                
+                int pooltotal = ac * as + bc * bs + cc * cs + sc * ss + cxc * cxs + oc * os + lc * ls + dc * ds;
+                
+                item = _listview.addItem(nilptr, "池");
+                _listview.setItemText(item, 1, "" + (int)pooltotal);
+                _listview.setItemText(item, 2, formatByte(pooltotal));
+                
+                item = _listview.addItem(nilptr, "总计(已使用)");
+                _listview.setItemText(item, 1, "" + (long)(pooltotal + heap));
+                _listview.setItemText(item, 2, formatByte(pooltotal + heap));
+                
+                item = _listview.addItem(nilptr, "全部");
+                _listview.setItemText(item, 1, "" + (long)(pooltotal + heap + uheap));
+                _listview.setItemText(item, 2, formatByte(pooltotal + heap + uheap));
+			}
+		}
+    }
+};

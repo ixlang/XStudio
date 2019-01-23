@@ -1,0 +1,166 @@
+class QXTreeView : QXWidget{
+    
+    static const int 
+        NoItemFlags = 0,
+        ItemIsSelectable = 1,
+        ItemIsEditable = 2,
+        ItemIsDragEnabled = 4,
+        ItemIsDropEnabled = 8,
+        ItemIsUserCheckable = 16,
+        ItemIsEnabled = 32,
+        ItemIsAutoTristate = 64,
+        ItemIsTristate = ItemIsAutoTristate,
+        ItemNeverHasChildren = 128,
+        ItemIsUserTristate = 256;
+        
+    bool create(){
+        nativehandle = createQObject(QType.qtTreeView, this, 0);
+        if (nativehandle == 0){
+            return false;
+        }
+        return true;
+    }
+    
+    bool create(QXWidget parent){
+        nativehandle = createQObject(QType.qtTreeView, this, parent.nativehandle);
+        if (nativehandle == 0){
+            return false;
+        }
+        return true;
+    }
+    
+    long addItem(String icon, String Text){
+        return long_string2(nativehandle, TREEWIDGETADD, icon, Text);
+    }
+    long addItemWithIcon(QXIcon icon, String Text){
+        return long_longstring(nativehandle, TREEWIDGETADD, icon.nativehandle, Text);
+    }
+    long insertItem(long parent, String icon, String Text){
+        return long_long_string2(nativehandle, TREEWIDGETINST, parent, icon, Text);
+    }
+	void removeItem(long item){
+		widget_set_native_value(nativehandle, TREEWIDGETREM, item);
+	}
+    void setCurrentItem(long item){
+		widget_set_native_value(nativehandle, TREESETCURITEM, item);
+	}
+    void setItemText(long item, int row ,String text){
+        widget_set_intlongstring_value(nativehandle, SETITEMTEXT, item, row, text);
+    }
+    void setItemIcon(long item, int row ,String file){
+        widget_set_intlongstring_value(nativehandle, SETITEMICON, item, row, file);
+    }
+    void setItemColor(long item, int row ,int color){
+        widget_set_intlongint_value(nativehandle, SETITEMCOLOR, item, row, color);
+    }
+    
+    void setItemBackColor(long item, int row ,int color){
+        widget_set_intlongint_value(nativehandle, SETBACKCOLOR, item, row, color);
+    }
+    
+    void setColumns(String [] columns){
+        widget_set_object_value(nativehandle, SETCOLUMNS, columns);
+    }
+    
+    void setItemTag(long item, int row, long tag){
+        object_set_long_int_long(nativehandle, SETTAG, item, row, tag);
+    }
+    
+    long getItemTag(long item ,int row){
+        return object_get_long_int(nativehandle, GETTAG, item ,row);
+    }
+    void setColumnWidth(int column, int width){
+        widget_set_v2int_value(nativehandle, SETCOLUMBWIDTH, column, width);
+    }
+	String getItemText(long item , int row){
+			return core_getStringlongint(nativehandle, TRGETITEMTEXT, item, row);
+	}
+    long getSelItem(){
+        return long_get(nativehandle, TREEWIDGETGETSEL);
+    }
+    
+    void clear(){
+        widget_get_bool_value(nativehandle, TREEWIDGETCLEAR);
+    }
+	QXWidget viewPort(){
+		return (QXWidget)widget_get_object(nativehandle, GETVIEWPORT);
+	}
+	void setHeaderVisible(bool b){
+		widget_set_bool_value(nativehandle, TRCOLUMNSHOW, b);
+	}
+    void scrollToBottom(){
+		widget_slot(nativehandle, TRSCROLLBOTTOM);
+    }
+	void setSortEnable(bool b){
+		widget_set_bool_value(nativehandle, TRSORTENABLE, b);
+	}
+	void setFullRowSelection(bool b){
+		widget_set_bool_value(nativehandle, TRSELECTMODE, b);
+	}
+	int getHeaderWidth(){
+		return widget_get_int_value(nativehandle,TRHEADERWIDTH);
+	}
+	void setColumnAutoResize(bool b){
+		widget_set_bool_value(nativehandle, TRAUTORESIZE, b);
+	}
+	void setTextElidMode(int mode){
+		widget_set_vint_value(nativehandle, TRELIDMODE, mode);
+	}
+	int getCurrentRow(){
+		return widget_get_int_value(nativehandle, TREEGETCURROW);
+	}
+	int getCurrentColumn(){
+		return widget_get_int_value(nativehandle, TREEGETCURCOL);
+	}
+	void setCurrentIndex(int row, int column){
+		widget_set_v2int_value(nativehandle, TREESETCURROW, row, column);
+	}
+	void setCurrentRow(int row){
+		widget_set_vint_value(nativehandle, TREESETCURROW, row);
+	}
+    
+	void setCurrentComuln(int column){
+		widget_set_vint_value(nativehandle, TREESETCURCOL, column);
+	}
+    
+    void removeAllchild(long item){
+		widget_slot(item, TRIEMCLEARCHILD);
+    }
+    void setExpand(long item, bool bExp){
+		widget_set_bool_value(item, TRIEMSETEXPAND, bExp);
+    }
+    void setItemVisible(long item, bool bHidden){
+		widget_set_bool_value(item, TRIEMSETHIDDEN, bHidden);
+    }
+	int getTopLevelCount(){
+		return widget_get_int_value(nativehandle, TREEGETCOUNT);
+	}
+    
+	long[] getSelectedItems(){
+		return (long[])widget_get_object(nativehandle, TREEGETSELITEM);
+	}
+    
+    long[] getItemChildren(long item){
+		return (long[])widget_get_object(item, TREEGETCHILDREN);
+    }
+    
+    void modifyItemFlags(long item, int add, int remove){
+		widget_set_v2int_value(item, TREEITEMFLAG, add, remove);
+    }
+    
+    int getItemFlags(long item){
+		return widget_get_int_value(item, TREEITEMGETFLAG);
+    }
+    
+    long getParentItem(long item){
+		return long_get(item, TREEITEMPARENT);
+    }
+    
+    void setItemCheck(long item ,int column, bool checked){
+		widget_set_int_bool_value(item,TRITEMSETCHECK, column, checked);
+    }
+    
+    bool isItemCheck(long item ,int column){
+		return widget_get_int_bool(item,TRITEMGETCHECK, column);
+    }
+};

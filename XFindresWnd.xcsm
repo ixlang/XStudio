@@ -1,0 +1,110 @@
+//xlang Source, Name:XFindresWnd.xcsm 
+//Date: Mon Sep 13:31:01 2018 
+
+
+class XFindresWnd : ListDockWidget{
+	static XFindresWnd findWnd;
+    static int current_click_item = 0;
+    XFinder.FindResult _find_result;
+    Object findlock = new Object();
+	void onListItemClicked(QXTreeView tree,long item, int column)override{
+		locateFind(tree, item);
+    }
+        
+    void locateFind(QXTreeView tree,long item){
+		String file = tree.getItemText(item, 0);
+        String posinfo = tree.getItemText(item, 1);
+        
+        int position = -1, line = -1,  row = -1;
+        
+        int cm = posinfo.indexOf(",");
+        if (cm == -1){
+			position = posinfo.parseInt();
+        }else{
+			line = posinfo.substring(0, cm).parseInt();
+            row = posinfo.substring(cm + 1, posinfo.length()).parseInt();
+        }
+		
+		int len = tree.getItemText(item, 2).parseInt();
+		XFindDlg.bFindAll = true;
+        
+        if (position != -1){
+			XSourceEditor.locateForPosition(XWorkspace.workspace, file, position, len);
+        }else{
+			XSourceEditor.locateForLineRow(XWorkspace.workspace, file, line, row, len);
+        }
+    }
+    void onCreate(){
+		findWnd = this;
+    }
+    
+    String getListName()override{
+		return "findlist";
+    }
+    
+    String [] getColumn()override{
+		String [] columns = {"文件", "位置", "长度", "源/类型"};
+        return columns;
+    }
+    
+    int [] getColumnWidths()override{
+		int [] ws = {300, 50, 50, 50};
+        return ws;
+    }
+    
+    
+    void nextFind(){
+		synchronized(findlock){
+			QXTreeView tree = getList();
+            tree.setCurrentIndex(current_click_item, 0);
+			if (current_click_item < _find_result.size()){
+				XFinder.FindItem item = _find_result.get(current_click_item++);
+                
+                if (item.method == 0){
+					XSourceEditor.locateForPosition(XWorkspace.workspace, item.file, item.position, item.findlen);
+                }else{
+					XSourceEditor.locateForLineRow(XWorkspace.workspace, item.file, item.line, item.row, item.findlen);
+                }
+			}else{
+				current_click_item = 0;
+            }
+		}
+    }
+    
+	void onNotification(long id){
+
+	}
+    
+    void showResult(XFinder.FindResult result){
+		if (result == nilptr){
+			return ;
+        }
+        
+		synchronized(findlock){
+			_find_result = result;
+			
+			QXTreeView tree = getList();
+			
+			tree.clear();
+					
+			for (int i = 0; i < result.size();i ++){
+				XFinder.FindItem val = result.get(i);
+				long item = tree.addItem(nilptr, val.file);
+                
+                if (val.method == 0){
+					tree.setItemText(item, 1, "" + val.position);
+                }else{
+					tree.setItemText(item, 1, "" + val.line + "," + val.row);
+                }
+                
+				tree.setItemText(item, 2, "" + val.findlen);
+				tree.setItemText(item, 3, val.findres);
+			}
+		}
+        raise();
+    }
+    
+	static void ShowResult(XFinder.FindResult result){
+		findWnd.showResult(result);
+    }
+};

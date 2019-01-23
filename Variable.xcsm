@@ -1,0 +1,39 @@
+class Variables 
+    : Map<String, String>{
+    static Variables _appVariable = new Variables();
+    
+    void reset(){
+        super.clear();
+    }
+    
+    void setVariable(String key, String value){
+        super.put(key, value);
+    }
+    
+    void setSystemVariable(String key, String value){
+        _appVariable.setVariable(key, value);
+    }
+    
+    String getVariable(String key){
+        if (containsKey(key)){
+            return get(key);
+        }
+        try{
+			return _appVariable.get(key);
+        }catch(Exception e){
+			
+        }
+        return "";
+    }
+    
+    String map_variable(String text){
+        for (Map.Iterator<String, String> iter = iterator(); iter.hasNext(); iter.next()){
+            text = text.replace(iter.getKey(), iter.getValue());
+        }
+        
+        if (this != _appVariable){
+            return _appVariable.map_variable(text);
+        }
+        return text;
+    }
+};

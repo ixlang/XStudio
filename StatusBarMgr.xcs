@@ -1,0 +1,26 @@
+//xlang Source, Name:StatusBarMgr.xcs 
+//Date: Sat Aug 11:30:44 2018 
+class StatusBarMgr{
+	QXMainWindow mainWindow;
+	QXStatusBar statusBar;
+    static StatusBarMgr statusmgr;
+	//QXProgressBar progressBar = new QXProgressBar();
+	//QXLabel []status = new QXLabel[3];
+	bool create(QXMainWindow win){  
+		mainWindow = win; 
+		statusBar = mainWindow.getStatusBar();
+        statusmgr = this;
+		/*progressBar.create();
+		statusBar.addPermanentWidget(progressBar, 0);
+		for (int i =0; i < 3; i ++){
+			status[i] = new QXLabel();
+			status[i].create();
+			statusBar.addPermanentWidget(status[i], 0);
+		}*/
+		return false;
+	}
+    
+    static void showStatusMessage(String text){
+		statusmgr.statusBar.showMessage(text);
+    }
+};

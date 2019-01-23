@@ -1,0 +1,404 @@
+//xlang Source, Name:AddObject.xcsm 
+//Date: Sat Sep 02:51:03 2018 
+
+//xlang Source, Name:gotoline.xcsm 
+//Date: Sun Sep 19:06:03 2018 
+
+class AddObjectDlg : QXDialog {
+
+	int addType = 0;
+    QXPushButton btnOk, btnCancel;
+    QXLineEdit edtName, edtFile;
+	QXCheckBox chkCls, chkInterface, chkPackage;
+    QXTreeView _treeview;
+    Project currentProject;
+    
+    long root_item;
+    
+    String prefix = "";
+    
+    static class ItemLoader{
+		long loaditem;
+		JsonArray object;
+		ItemLoader(long i, JsonArray o){
+			loaditem = i;
+			object = o;
+		}
+	};
+    
+    Map<long, ItemLoader> expand_data = new Map<long, ItemLoader>();
+    
+    onClickListener checkListener = new onClickListener(){
+        void onClick(QXObject obj, bool checked)override{
+        
+				prefix = "";
+        
+				if (checked){
+					bool bcs = obj == chkCls;
+                    bool bit = obj == chkInterface;
+                    bool bpg = obj == chkPackage;
+                    
+                    if (bcs){
+						prefix = "class";
+                    }
+                    if (bit){
+						prefix = "interface";
+                    }
+                    if (bpg){
+						prefix = "package";
+                    }
+                    
+					chkCls.setCheck(bcs);
+                    chkInterface.setCheck(bit);
+                    chkPackage.setCheck(bpg);
+                    
+                    if (obj == chkPackage){
+						setChildrenUnChecked(root_item);
+                    }
+                    
+                    _treeview.setEnabled(obj != chkPackage);
+				}
+            }
+        };
+        
+    void onAttach()override{ 
+    
+        setWindowFlags(CustomizeWindowHint | WindowCloseButtonHint);
+        
+        //setFixedSize(width(), height());
+        
+        btnOk = (QXPushButton)attachByName(new QXPushButton(), "btnOk");
+        btnCancel = (QXPushButton)attachByName(new QXPushButton(), "btnCancel");
+        
+        edtName = (QXLineEdit)attachByName(new QXLineEdit(), "edtName");
+        edtFile = (QXLineEdit)attachByName(new QXLineEdit(), "edtFile");
+        
+        chkCls = (QXCheckBox)attachByName(new QXCheckBox(), "chkCls");
+        chkInterface = (QXCheckBox)attachByName(new QXCheckBox(), "chkInterface");
+        chkPackage = (QXCheckBox)attachByName(new QXCheckBox(), "chkPackage");
+        
+        chkCls.setOnClickListener(checkListener);
+        chkInterface.setOnClickListener(checkListener);
+        chkPackage.setOnClickListener(checkListener);
+        //checkListener
+        _treeview = (QXTreeView)attachByName(new QXTreeView(), "baseTree");
+        
+        if (currentProject == nilptr){
+			close();
+			QXMessageBox.Critical("注意", "当前没有载入项目", QXMessageBox.Ok, QXMessageBox.Ok);
+            return ;
+        }
+        btnOk.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+				if (prefix.length() == 0){
+					QXMessageBox.Critical("注意", "没有选择创建的类型", QXMessageBox.Ok, QXMessageBox.Ok);
+                    return ;
+                }
+				String name = edtName.getText();
+                if (name == nilptr){
+					QXMessageBox.Critical("注意", "输入了不正确的类名", QXMessageBox.Ok, QXMessageBox.Ok);
+                    return ;
+                }
+                if (Pattern.test(name, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true) == false){
+					QXMessageBox.Critical("注意", "输入了不正确的类名", QXMessageBox.Ok, QXMessageBox.Ok);
+                    return ;
+				}
+                
+				String sourceFile = currentProject.generateFullPath(edtFile.getText());
+                if (XPlatform.existsSystemFile(sourceFile)){
+ 					QXMessageBox.Critical("注意", "文件已存在", QXMessageBox.Ok, QXMessageBox.Ok);
+                    return ;
+                }
+                
+                
+                
+                byte [] data = nilptr;
+                try{
+					String content = generateChildren(root_item, nilptr);
+					if (content != nilptr){
+						data = content.getBytes();
+                    }
+                }catch(Exception E){
+                    return ;
+                }
+                
+                FileOutputStream fos = nilptr;
+                
+                try{
+					fos = new FileOutputStream(sourceFile);
+
+                    String date = String.formatDate("%c", _system_.currentTimeMillis()); 
+					fos.write(("//xlang Source, Name:" + edtFile.getText() + " \n" + "//Date: " + date + " \n\n").getBytes());
+                    if (data == nilptr){
+						data = (prefix + " " + name + "{\n\n};").getBytes();
+                    }
+                    
+					fos.write(data);
+                    
+                    fos.close();
+                    
+                    if (currentProject.addSource(sourceFile)){
+						XWorkspace.workspace.openTextFile(sourceFile);
+                    }
+                }catch(Exception E){
+					fos.close();
+                    XPlatform.deleteFile(sourceFile);
+                 	QXMessageBox.Critical("注意", "无法建立文件:" + sourceFile, QXMessageBox.Ok, QXMessageBox.Ok);
+                    return ;
+                }
+                
+                close();
+            }
+        });
+        
+        btnCancel.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+				close();
+            }
+        });
+         
+		setWindowTitle("添加对象");
+
+        setModal(true);
+        
+        show();
+        
+        edtName.setFocus();
+        
+		JsonArray template_class = (JsonArray)currentProject.xintelliSenseMap.get("template_class");
+		JsonArray template_instance = (JsonArray)currentProject.xintelliSenseMap.get("template_instance");
+		JsonArray heap = (JsonArray)currentProject.xintelliSenseMap.get("heap");
+        
+        root_item = _treeview.addItem(nilptr, "基类型");
+        loadObject(root_item, template_class);
+        loadObject(root_item, template_instance);
+        loadObject(root_item, heap);
+        
+        edtName.setOnEditEventListener(new onEditEventListener(){
+            void onTextChanged(QXObject, String text)override{
+				edtFile.setText(text + ".xcsm");
+            }
+        });
+        
+		_treeview.setOnTreeViewItemEvent(new onTreeViewItemEvent(){
+			void onItemExpanded(QXTreeView,long iitem)override{
+				expandLoad(iitem);
+			}
+            
+            void onItemChanged(QXTreeView, long item,int column)override{
+				long parentitem = _treeview.getParentItem(item);
+                bool checked = _treeview.isItemCheck(item, 0);
+                if (checked){
+
+					if (parentitem == root_item){
+						checkCheck(item);
+					}
+                        
+					while(parentitem != 0){
+						_treeview.setItemCheck(parentitem, 0, checked);
+
+						long parent = _treeview.getParentItem(parentitem);
+						if (parent == root_item){
+							checkCheck(parentitem);
+						}
+						parentitem = parent;
+					}
+
+                }else{
+					setChildrenUnChecked(item);
+                }
+            }
+		});
+        
+        
+         /*setOnLayoutEventListener(new onLayoutEventListener(){
+			void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+				_treeview.resize(w - 40, h-  210);
+                
+                edtName.resize(w - 90, 20);
+                edtFile.resize(w - 90, 20);
+                
+				btnOk.move(w - 190, h - 35);
+				btnCancel.move(w - 100, h - 35);
+			}
+        });*/
+        
+    }
+    
+    void setChildrenUnChecked(long item){
+		_treeview.setItemCheck(item, 0, false);
+		long []children = _treeview.getItemChildren(item);
+        for (int i =0; i < children.length; i++){
+			setChildrenUnChecked(children[i]);
+        }
+    }
+    
+    void checkCheck(long item){
+		long []children = _treeview.getItemChildren(root_item);
+        for (int i =0; i < children.length; i++){
+			if (children[i] != item){
+				setChildrenUnChecked(children[i]);
+            }
+        }
+    }
+    
+    void expandLoad(long item){
+		ItemLoader loader = nilptr; 
+        
+        try{
+			loader = expand_data.get(item);
+        }catch(Exception e){
+        
+        }
+        
+		if (loader != nilptr){
+			int count = loader.object.length();
+            if (count > 0){
+				long parentItem = _treeview.getParentItem(loader.loaditem);
+				loadObject(parentItem, loader.object);
+            }
+            expand_data.remove(item);
+            _treeview.removeItem(loader.loaditem);
+		}
+	}
+    
+    long insertLoad(long item){
+		return _treeview.insertItem(item, nilptr, "加载中...");
+	}
+    
+    void loadObject(long root, JsonArray objs){
+		for (int i =0, c = objs.length(); i < c; i++){
+			JsonObject obj = (JsonObject)objs.get(i);
+            
+			int type = obj.getInt("type");
+            
+			long item = 0;
+            
+			if (type == 34){
+				item = _treeview.insertItem(root, "res/toolbar/template.png", obj.getString("name"));
+			}else
+			if (type == 31){
+				if (obj.has("template")){
+					item = _treeview.insertItem(root, "res/toolbar/tempinstance.png", obj.getString("name"));
+				}else
+				if (obj.has("interface")){
+					item = _treeview.insertItem(root, "res/toolbar/interface.png", obj.getString("name"));
+                    _treeview.setItemTag(item, 0, 3);
+				}else{
+					item = _treeview.insertItem(root, "res/toolbar/class.png", obj.getString("name"));
+				}
+                
+                JsonArray dynamic_method = (JsonArray)obj.get("method");
+                
+                if (dynamic_method != nilptr && dynamic_method.length() > 0){
+					long method = _treeview.insertItem(item, "res/toolbar/function.png", "可重载方法");
+                    _treeview.setItemTag(method, 0, 1);
+					expand_data.put(method, new ItemLoader(insertLoad(method),  dynamic_method));
+                }
+                
+                JsonArray static_sub_class = (JsonArray)obj.get("static_properites");
+                if (static_sub_class != nilptr && static_sub_class.length() > 0){
+					long static_prop = _treeview.insertItem(item, "res/toolbar/static.png", "可继承成员类");
+                    _treeview.setItemTag(static_prop, 0, 2);
+					expand_data.put(static_prop,new ItemLoader(insertLoad(static_prop),   static_sub_class));
+                }
+			}else
+			if (type == 23){
+				if (obj.has("interface")){
+					item = _treeview.insertItem(root, "res/toolbar/interfacefun.png", obj.getString("name"));
+				}else
+                if (root != root_item){
+					item = _treeview.insertItem(root, "res/toolbar/function.png", obj.getString("name"));
+				}
+			}
+            if (item != 0){
+				_treeview.modifyItemFlags(item, QXTreeView.ItemIsUserCheckable, 0);
+                _treeview.setItemCheck(item, 0, false);
+            }
+		}
+	}
+    
+    static void requestAddObject(Project project, int type){
+		QXDialog newDlg = new QXDialog();
+        if (newDlg.load("ui/addobj.ui") == false){
+            return ;
+        }
+        AddObjectDlg wizard = new AddObjectDlg();	
+        wizard.addType = type;
+        wizard.currentProject = project;
+        
+        wizard.attach(newDlg);
+    }
+        
+    String generateChildren(long item, String parentClass){
+		String text = nilptr;
+        int tag = _treeview.getItemTag(item, 0);
+        if (tag == 0 || tag > 2){
+			if (item != root_item){
+				text = _treeview.getItemText(item, 0);
+				if (parentClass != nilptr){
+					text = parentClass + "." + text;
+				}
+			}
+        }else{
+			text = parentClass;
+        }
+        
+        long []children = _treeview.getItemChildren(item);
+        for (int i =0; i < children.length; i++){
+			bool checked = _treeview.isItemCheck(children[i], 0);
+			if (checked){
+				tag = _treeview.getItemTag(children[i], 0);
+                if (tag == 1){
+					String headStr = prefix + " " + edtName.getText() ;
+                    if (text != nilptr){
+						headStr = headStr + " : " + text + "{\n";
+                    }else{
+						headStr = headStr + "{\n";
+                    }
+                    if (prefix.equals("interface") == false){
+						String className = _treeview.getItemText(item, 0);
+						String szbody = generateOverride(children[i], className);
+						headStr = headStr + szbody + "\n};";
+                    }else{
+						headStr = headStr + "\n\n\n};";
+                    }
+                    return headStr;
+                }else{
+					if (prefix.equals("interface") && tag != 3){
+						QXMessageBox.Critical("注意", "接口只能继承接口", QXMessageBox.Ok, QXMessageBox.Ok);
+                        throw new Exception("接口只能继承接口");
+                        return nilptr;
+                    }
+       
+					return generateChildren(children[i], text);
+                }
+            }
+        }
+        
+        return nilptr;
+    }
+    
+    String generateOverride(long item, String parentName){
+		String bodyStr = "";
+		String destName = edtName.getText() ;
+        long []children = _treeview.getItemChildren(item);
+        for (int i =0; i < children.length; i++){
+			bool checked = _treeview.isItemCheck(children[i], 0);
+			if (checked){
+				String text = _treeview.getItemText(children[i], 0);
+                if (text.startWith(parentName + "(")){
+					text = destName + text.substring(parentName.length(), text.length());
+                    text = "	" + text + " {//构造\n		//TODO:	\n	\n	}\n\n";
+                }else{
+					text = "	" + text + " override {\n		//TODO:	\n	\n	}\n\n";
+                }
+                bodyStr = bodyStr + text;
+            }
+        }
+        
+        return bodyStr;
+    }
+};

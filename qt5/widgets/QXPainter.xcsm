@@ -1,0 +1,362 @@
+//xlang Source, Name:QXPainter.xcsm 
+//Date: Mon Oct 21:05:42 2018 
+
+class QXPainter{
+
+	long hpaint;
+    bool bneed_delloc = false;
+    
+    static class RenderHint{
+		static const int 
+			Antialiasing = 0x01,
+			TextAntialiasing = 0x02,
+			SmoothPixmapTransform = 0x04,
+			HighQualityAntialiasing = 0x08,
+			NonCosmeticDefaultPen = 0x10,
+			Qt4CompatiblePainting = 0x20;
+    };
+    
+    static class CompositionMode {
+		static const int 
+			CompositionMode_SourceOver = 0,
+			CompositionMode_DestinationOver = 1,
+			CompositionMode_Clear = 2,
+			CompositionMode_Source = 3,
+			CompositionMode_Destination = 4,
+			CompositionMode_SourceIn =5,
+			CompositionMode_DestinationIn = 6,
+			CompositionMode_SourceOut = 7,
+			CompositionMode_DestinationOut = 8,
+			CompositionMode_SourceAtop = 9,
+			CompositionMode_DestinationAtop = 10,
+			CompositionMode_Xor = 11,
+
+			//svg 1.2 blend modes
+			CompositionMode_Plus = 12,
+			CompositionMode_Multiply = 13,
+			CompositionMode_Screen = 14,
+			CompositionMode_Overlay = 15,
+			CompositionMode_Darken = 16,
+			CompositionMode_Lighten = 17,
+			CompositionMode_ColorDodge = 18,
+			CompositionMode_ColorBurn = 19,
+			CompositionMode_HardLight = 20,
+			CompositionMode_SoftLight = 21,
+			CompositionMode_Difference = 22,
+			CompositionMode_Exclusion = 23,
+
+			// ROPs
+			RasterOp_SourceOrDestination = 24,
+			RasterOp_SourceAndDestination = 25,
+			RasterOp_SourceXorDestination = 26,
+			RasterOp_NotSourceAndNotDestination = 27,
+			RasterOp_NotSourceOrNotDestination = 28,
+			RasterOp_NotSourceXorDestination = 29,
+			RasterOp_NotSource = 30,
+			RasterOp_NotSourceAndDestination = 31,
+			RasterOp_SourceAndNotDestination = 32,
+			RasterOp_NotSourceOrDestination = 33,
+			RasterOp_SourceOrNotDestination = 34,
+			RasterOp_ClearDestination = 35,
+			RasterOp_SetDestination = 36,
+			RasterOp_NotDestination = 37;
+    };
+    
+    static class Paint{
+		static const int 
+			FILL = 2,
+			STROKE = 1,
+            FILL_AND_STROKE = 3;
+		int style;
+		int color;
+        double width;
+        double textSize;
+        
+        void setColor(int c){
+			color = c;
+        }
+        
+        void setTextSize(double ts){
+			textSize = ts;
+        }
+        
+        void setAlpha(int a){
+			color = ((a & 0xff) << 24) | (color & 0x00ffffff);
+        }
+        
+        void setStrokeWidth(double sw){
+			width = sw;
+        }
+        
+        void setStyle(int s){
+			style = s;
+        }
+    };
+    
+    static class PenStyle{
+		static const int       
+		/** @pen style
+        
+        */
+		NoPen = 0,
+        SolidLine = 1,
+        DashLine = 2,
+        DotLine = 3,
+        DashDotLine = 4,
+        DashDotDotLine = 5,
+        CustomDashLine = 6,
+        MPenStyle = 7;
+    }; 
+        /** @bgm mode
+        
+        */
+     static class BackgroundMode{
+        static const int    
+        TransparentMode = 0,
+        OpaqueMode = 1;
+     };
+		/** @brush style
+        */
+     static class BrushStyle{
+		static const int 
+        NoBrush = 0,
+        SolidPattern = 1,
+        Dense1Pattern = 2,
+        Dense2Pattern = 3,
+        Dense3Pattern = 4,
+        Dense4Pattern = 5,
+        Dense5Pattern = 6,
+        Dense6Pattern = 7,
+        Dense7Pattern = 8,
+        HorPattern = 9,
+        VerPattern = 10,
+        CrossPattern = 11,
+        BDiagPattern = 12,
+        FDiagPattern = 13,
+        DiagCrossPattern = 14,
+        LinearGradientPattern = 15,
+        RadialGradientPattern = 16,
+        ConicalGradientPattern = 17,
+        TexturePattern = 24;
+     };
+        
+        /** @ImageConversionFlag
+        */
+     static class ImageConversionFlag{
+     
+        static const int  
+		ColorMode_Mask          = 0x00000003,
+        AutoColor               = 0x00000000,
+        ColorOnly               = 0x00000003,
+        MonoOnly                = 0x00000002,
+        // Reserved             = 0x00000001,
+
+        AlphaDither_Mask        = 0x0000000c,
+        ThresholdAlphaDither    = 0x00000000,
+        OrderedAlphaDither      = 0x00000004,
+        DiffuseAlphaDither      = 0x00000008,
+        NoAlpha                 = 0x0000000c, // Not supported
+
+        Dither_Mask             = 0x00000030,
+        DiffuseDither           = 0x00000000,
+        OrderedDither           = 0x00000010,
+        ThresholdDither         = 0x00000020,
+        // ReservedDither       = 0x00000030,
+
+        DitherMode_Mask         = 0x000000c0,
+        AutoDither              = 0x00000000,
+        PreferDither            = 0x00000040,
+        AvoidDither             = 0x00000080,
+
+        NoOpaqueDetection       = 0x00000100,
+        NoFormatConversion      = 0x00000200;
+    };
+    
+	QXPainter(long handle){
+		hpaint = handle;
+    }
+
+	QXPainter(QXImage img){
+		hpaint = QXNative.long_get(img.himage, QXCore.PAINTERFROMIMG);
+        if (hpaint == 0){
+			throw new IllegalArgumentException("paint is null");
+        }
+        bneed_delloc = true;
+    }
+    
+    void setPaint(Paint p){
+		if ((p.style & Paint.FILL) != 0){
+			setBrush(p.color, BrushStyle.SolidPattern);
+        }
+        
+        if ((p.style & Paint.STROKE) != 0){
+			setPen(p.color, PenStyle.SolidLine, p.width);
+        }
+    }
+    void setPen(int color, int penStyle, double width){
+		QXNative.widget_set_v2int_double_value(hpaint, QXCore.SETPEN, color, width, penStyle);
+    }
+    
+    void setBrush(int color, int brushStyle){
+		QXNative.widget_set_v2int_value(hpaint, QXCore.SETBRUSH, color, brushStyle);
+    }
+    
+    void drawLine(int start_x, int start_y, int end_x, int end_y){
+		QXNative.native_int4(hpaint, QXCore.QXPAINTDRAWLINE, start_x, start_y, end_x, end_y);
+    }
+    
+    void drawRect(int x, int y, int w, int h){
+		QXNative.native_int4(hpaint, QXCore.QXPAINTDRAWRECT, x, y, w, h);
+    }
+    
+    void drawRect(QXRect r){
+		QXNative.native_int4(hpaint, QXCore.QXPAINTDRAWRECT, r.left, r.top, r.width(), r.height());
+    }
+    
+    void fillRect(int x,int y, int w,int h, int color, int brushStyle){
+		QXNative.long_long_int9(hpaint, QXCore.FILLRECT, 0, x, y, w, h, color, brushStyle, 0, 0, 0);
+    }
+    
+    void save(){
+		QXNative.widget_slot(hpaint, QXCore.PAINTERSAVE);
+    }
+    
+    void restore(){
+		QXNative.widget_slot(hpaint, QXCore.PAINTERRESTORE);
+    }
+    
+    void resetMatrix(){
+		QXNative.widget_slot(hpaint, QXCore.PAINTRESETMATRIX);
+    }
+    
+    QXMatrix getMatrix(){
+		return new QXMatrix(QXNative.long_get(hpaint, QXCore.PAINTERGETMATRIX));
+    }
+    
+    void setMatrix(QXMatrix m){
+		QXNative.widget_set_native_value(hpaint, QXCore.PAINTSETMATRIX, m.nativehandle);
+    }
+    
+    void resetTransform(){
+		QXNative.widget_slot(hpaint, QXCore.PAINTRESETTRANSFORM);
+    }
+    
+    void drawText(String text, int x,int y){
+		QXNative.widget_set_intintstring_value(hpaint, QXCore.DRAWTEXT, x, y ,text);
+    }
+    
+    void drawText(String text, int x,int y, Paint p){
+		if (p != nilptr){
+			setPen(p.color, PenStyle.SolidLine, p.width);
+		}
+		QXNative.widget_set_intintstring_value(hpaint, QXCore.DRAWTEXT, x, y ,text);
+    }
+    
+    void fillRect(QXRect r, int color, int brushStyle){
+		QXNative.long_long_int9(hpaint, QXCore.FILLRECT, 0, r.left, r.top, r.width(), r.height(), color, brushStyle, 0, 0, 0);
+    }
+    
+    void drawLines(int [] points){
+		if ((points.length & 1) == 1 || points.length < 4){
+			throw new IllegalArgumentException("points length must be Even numbers");
+        }
+		QXNative.array_int2(hpaint, QXCore.QXPAINTDRAWLINE, points, 0, 0);
+    }
+    
+    void setBackgroundBrush(int color, int brushStyle){
+		QXNative.widget_set_v2int_value(hpaint, QXCore.SETBKBRUSH, color, brushStyle);
+    }
+    
+    void setOpacity(double fopacity){
+		QXNative.widget_set_double_value(hpaint, QXCore.QXPAINTOPACITY, fopacity);
+    }
+    
+    void setBackMode(int mode){
+		QXNative.widget_set_vint_value(hpaint, QXCore.QXPAINTBGMMODE, mode);
+    }
+    
+    void drawImage(QXImage image, QXRect dest, QXRect source, int converFlags){
+		QXNative.long_long_int9(hpaint, QXCore.DRAWIMAGE, image.himage, 
+			dest.left, dest.top, dest.right, dest.bottom, 
+			source.left, source.top, source.right, source.bottom,  
+			converFlags);
+    }
+    
+    void drawImage(QXImage image, int x,int y){
+		QXNative.widget_set_intlongint_value(hpaint, QXCore.DRAWIMAGE, image.himage,x, y);
+    }
+    
+    void drawRoundRect(int x,int y, int w,int h, int rx, int ry, Paint p){
+		if (p != nilptr){
+			setPaint(p);
+        }
+		QXNative.long_long_int9(hpaint, QXCore.ROUNDRECT, 0, x, y, w, h, rx, ry, 0, 0, 0);
+    }
+    
+    void drawRoundedRect(int x,int y, int w,int h, int rx, int ry, Paint p){
+    	if (p != nilptr){
+			setPaint(p);
+        }
+		QXNative.long_long_int9(hpaint, QXCore.ROUNDEDRECT, 0, x, y, w, h, rx, ry, 0, 0, 0);
+    }
+    
+    void drawRoundRect(QXRect r, int rx, int ry, Paint p){
+    	if (p != nilptr){
+			setPaint(p);
+        }
+		QXNative.long_long_int9(hpaint, QXCore.ROUNDRECT, 0, r.left, r.top, r.width(), r.height(), rx, ry, 0, 0, 0);
+    }
+    
+    void drawRoundedRect(QXRect r, int rx, int ry, Paint p){
+    	if (p != nilptr){
+			setPaint(p);
+        }
+		QXNative.long_long_int9(hpaint, QXCore.ROUNDEDRECT, 0, r.left, r.top, r.width(), r.height(), rx, ry, 0, 0, 0);
+    }
+    
+    void rotate(double r, double cx, double cy){
+		QXMatrix m = getMatrix();
+        m.translate(cx, cy);
+        m.rotate(r);
+        m.translate(-cx, -cy);
+        setMatrix(m);
+    }
+    
+    void translate(double cx, double cy){
+		QXMatrix m = getMatrix();
+        m.translate(cx, cy);
+        setMatrix(m);
+    }
+    
+    void setCompositionMode(int flag){
+		QXNative.widget_set_int_bool_value(hpaint, QXCore.SETCOMPOSITIONMODE, flag, false);
+    }
+    
+    void setRenderHint(int flag, bool on){
+		QXNative.widget_set_int_bool_value(hpaint, QXCore.SETRENDERHINT, flag, on);
+    }
+    
+    QXFont getFont(){
+		return new QXFont(QXNative.long_get(hpaint, QXCore.PAINTERGETFCONT));
+    }
+    
+    void setFont(QXFont f){
+		QXNative.widget_set_native_value(hpaint, QXCore.PAINTERSETFONT, f.nativehandle);
+    }
+    
+    
+    void drawCircle(int x,int y,int r, Paint p){
+		if (p != nilptr){
+			setPaint(p);
+        }
+        
+        QXNative.native_int4(hpaint, QXCore.DRAWELLIPSE, x - r, y - r, r *2, r * 2);
+    }
+    
+    void finalize(){
+		if (bneed_delloc){
+			QXNative.widget_slot(hpaint, QXCore.DELLOCPAINTER);
+            bneed_delloc = false;
+        }
+    }
+};

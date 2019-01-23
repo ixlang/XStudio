@@ -1,0 +1,475 @@
+//xlang Source, Name:WatchWnd.xcsm 
+//Date: Tue Sep 17:10:01 2018 
+
+class WatchWnd : ListDockWidget{
+
+	Map<String, long> watchs = new Map<String, long>();
+    
+    static const int REFRESH_WATCH = 1, QUERYOBJECT = 2;
+    
+    Vector<JsonObject> queriedObjects = new Vector<JsonObject>();
+    
+	long add_item = 0;
+    static WatchWnd watchesWnd;
+    JsonObject root;
+    Object rootLock = new Object();
+    ContextMenu _contextMenu = new ContextMenu();
+	int serial = 0;
+    
+    Object serlock = new Object();
+    
+	void onListItemClicked(QXTreeView tree,long item, int column)override{
+    
+    }
+
+	void onListItemPressed(QXTreeView tree,long item, int column)override{
+		_contextMenu.actions[0].setEnable(item != add_item);
+	}
+	void onListItemDoubleClicked(QXTreeView tree,long item, int column)override{
+		if (column == 2){
+			TextDetail td = new TextDetail();
+			String text = tree.getItemText(item, 2);
+            String caption = tree.getItemText(item, 0);
+			td.create(caption, text.escape());
+        }
+	}
+    void onListItemExpanded(QXTreeView tree,long item)override{
+		long objectId = tree.getItemTag(item, 0);
+        if (objectId != 0){
+			tree.setItemTag(item, 0, 0);
+            synchronized(serlock){// UI线程使用
+            	long start = tree.getItemTag(item, 2);
+                long end = tree.getItemTag(item, 3);
+				XWorkspace.workspace.debuggee.queryObject("" + item, "" + objectId, "watch" + serial, start, end);
+            }
+            
+            /*tree.removeItem(tree.getItemTag(item, 1));
+            try{
+				JsonObject object = objectsMap.get(objectId);
+				if (object != nilptr){
+					displayValue(tree, item, object);
+				}
+            }catch(Exception e){
+            
+            }*/
+        }
+	}
+    
+    void onListItemChanged(QXTreeView tree,long item, int column){
+		if (item == add_item){
+			add_item = 0;
+            long new_add_item = 0;
+            
+			if (column == 0){
+				String name = tree.getItemText(item, 0);
+                if (name.equals("") || name.equals("<添加监视>")){
+					tree.setItemText(item, 0, "<添加监视>");
+                    new_add_item = item;
+                }else{
+					if (watchs.containsKey(name)){
+						QXMessageBox.Critical("提示", "该对象已在监视列表中", QXMessageBox.Ok, QXMessageBox.Ok);
+						tree.setItemText(item, 0, "<添加监视>");
+						new_add_item = item;
+                        return ;
+                    }
+					watchs.put(name, item);
+                    tree.modifyItemFlags(item, 0, QXTreeView.ItemIsEditable);
+                    new_add_item = tree.addItem(nilptr, "<添加监视>");
+                    if (new_add_item != 0){
+						tree.modifyItemFlags(new_add_item, QXTreeView.ItemIsEditable, 0);
+                    }
+                    
+					updateWatch();
+                }
+            }else{
+				tree.setItemText(item, column, "");
+                new_add_item = add_item;
+            }
+            
+            add_item = new_add_item;
+        }
+    }
+    
+    static void UpdateWatch(){
+		watchesWnd.updateWatch();
+    }
+    void updateWatch(){
+		Map.Iterator<String, long> iter = watchs.iterator();
+        JsonArray array = new JsonArray();
+        while (iter.hasNext()){
+			array.put(iter.getKey());
+            iter.next();
+        }
+		XWorkspace.workspace.debuggee.updateWatch(array, ThreadManager.currentThreadId,ThreadManager.currentFrameId, false);
+    }
+    
+    String getListName()override{
+		return "watchlist";
+    }
+    
+    void onQueryObject(JsonObject object){
+		synchronized(queriedObjects){
+			queriedObjects.add(object);
+            Notify(QUERYOBJECT);
+        }
+    }
+    
+    void showInfo(JsonObject infos){
+		synchronized(rootLock){
+			root = infos;
+			this.Notify(REFRESH_WATCH);
+        }
+    }
+    
+	void onNotification(long id){
+		if (id == REFRESH_WATCH){
+			JsonObject infos;
+			synchronized(rootLock){
+				infos = root;
+				root = nilptr;
+			}
+			if (infos != nilptr){
+				parseWatchInfo(infos);
+			}
+        }else
+		if (id == QUERYOBJECT){
+			synchronized(queriedObjects){
+				for (int i =0; i < queriedObjects.size(); i++){
+					loadObject(queriedObjects.get(i));
+				}
+				queriedObjects.clear();
+			}
+        }
+	}
+    
+    void loadObject(JsonObject json){
+		//UI线程使用
+		synchronized(serlock){
+			QXTreeView list = getList();
+			
+			long id = json.getString("id").parseLong();
+			long item = json.getString("queryid").parseLong();
+            if (item != 0){
+				String param = json.getString("param");
+				long seri = param.substring(5, param.length()).parseLong();
+				String szType  = json.getString("type");
+				if (seri == serial){
+				
+					String values = json.getString("value"); 
+					long loaditem = list.getItemTag(item, 1);
+					
+					if (loaditem != 0){
+						list.removeItem(loaditem);
+						list.setItemTag(item, 1, 0);
+					}
+					
+					if (values != nilptr && values.length() > 0){
+						try{
+						
+							JsonObject valueroot = new JsonObject(values);
+                            if (szType != nilptr){
+								list.setItemText(0, 1, szType);
+                            }
+							displayValue(list, item, valueroot);
+						}catch(Exception e){
+							//_system_.consoleWrite("parse error:[" + values + "]\n");
+						}
+					}else{
+						list.setItemText(item, 2, "<找不到调试数据>");
+					}
+				}
+            }
+        }
+    }
+    
+    /*static void clear(){
+		synchronized(watchesWnd.serial){
+			watchesWnd.serial++;
+			synchronized(watchesWnd.root){
+				watchesWnd.listReset();
+				watchesWnd.root = nilptr;
+			}
+		}
+    }*/
+    
+    void parseWatchInfo(JsonObject json){
+    
+		//_system_.consoleWrite(json.toString(false));        
+		parseWatchInfoCore(json);
+    }
+    
+    void parseWatchInfoCore(JsonObject json){
+            
+        JsonArray watches;
+        try{
+			watches = (JsonArray)json.get("watch");
+        }catch(Exception e){
+        
+        }
+        
+        
+		if (watches != nilptr){
+			QXTreeView list = getList();
+            
+			for (int i = 0; i < watches.length(); i++){
+				JsonObject obj = (JsonObject)watches.get(i);
+				if (obj != nilptr){
+					long item = 0;
+                    String name = obj.getString("name");
+                    int error = obj.getInt("error");
+					try{
+						item = watchs.get(name);
+						if (item != 0){
+							list.removeAllchild(item);
+                            if (error == 0){
+								list.setItemText(item, 2, "");
+								list.setExpand(item, false);
+								String stype = obj.getString("type");
+								if (stype != nilptr){
+									list.setItemText(item, 1, stype);                
+								}
+								String values = obj.getString("value"); 
+								
+								if (values != nilptr && values.length() > 0){
+									try{
+										JsonObject valueroot = new JsonObject(values);
+										
+								 
+										displayValue(list, item, valueroot);
+										
+									}catch(Exception e){
+										//_system_.consoleWrite("error:" + e.getMessage());
+									}
+								}else{
+									list.setItemText(item, 2, "<找不到调试数据>");
+								}
+                            }else{
+								list.setItemText(item, 2, "<找不到调试数据>");
+                            }
+						}
+                    }catch(Exception e){
+                    
+                    }
+				}
+			}
+        }
+    }
+    
+    long getSplit(long length){
+		long i = 100;
+        while (i < length){
+			i *= 10;
+        }
+        return i / 10;
+    }
+    
+    void splitArray(QXTreeView list, long item , long object,long start, long length, int unit){
+		
+        long newitem = list.insertItem(item, nilptr, String.format("[%d~%d]", start, start + length - 1));
+        if (unit >= 100){
+			int c = length / unit;
+            long pos = start;
+			for (int i =0; i < c; i ++){
+				splitArray(list, newitem, object, pos, unit, unit / 10);
+                pos += unit;
+			}
+            if (pos != start + length){
+				splitArray(list, newitem, object, pos, start + length - pos, unit / 10);
+            }
+        }else{
+			list.setItemText(newitem, 3, "" + object);
+        
+			long iditem = list.insertItem(newitem, nilptr, "array");
+			list.setItemText(iditem, 2, "loading");
+            
+			list.setItemTag(newitem, 0, object);
+			list.setItemTag(newitem, 1, iditem);
+            list.setItemTag(newitem, 2, start);
+            list.setItemTag(newitem, 3, start + length);
+        }
+        
+    }
+    
+    void displayValue(QXTreeView list, long item ,JsonObject valueroot){
+		if (valueroot.has("object_id")){
+			String objectId = valueroot.getString("object_id");
+            
+        	if (valueroot.has("length")){
+				String slength = valueroot.getString("length");
+                
+				long lenitem = list.insertItem(item, nilptr, "length");
+				list.setItemText(lenitem, 1, "int");
+				list.setItemText(lenitem, 2, slength);
+        
+				
+                long length = slength.parseLong();
+                splitArray(list, item, objectId.parseLong(), 0,  length, getSplit(length));
+            }else{
+				long iditem = list.insertItem(item, nilptr, "id");
+				list.setItemText(item, 3, objectId);
+				list.setItemText(iditem, 2, "loading");
+				list.setItemTag(item, 0, objectId.parseLong());
+				list.setItemTag(item, 1, iditem);
+            }
+			return ;
+		}
+        
+		int valueType = valueroot.getInt("valuetype");
+		String values = valueroot.getString("value"); 
+        
+        if (values == nilptr){
+			values = "nilptr";
+        }else{
+			values = values.replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t").replace("\b", "\\b");
+        }
+		switch(valueType){
+		case 0:
+			list.setItemText(item, 2, values);
+		break;
+        
+		case 1:
+			parseMember(list, item, valueroot);
+		break;
+        
+		case 2:
+			parseArrayValue(list, item, valueroot);
+		break;
+		
+		}
+    }
+    
+	void parseArrayValue(QXTreeView list, long item ,JsonObject valueroot){
+        long dataitem = list.insertItem(item, nilptr, "data");
+
+        JsonArray valarr = (JsonArray)valueroot.get("value");
+        if (valarr != nilptr){
+			for (int i =0; i < valarr.length(); i++ ){
+				JsonObject valroot = (JsonObject)valarr.get(i);
+                if (valroot != nilptr){
+					long datitem = list.insertItem(dataitem, nilptr, "[" + valroot.getString("index") + "]");
+                    String stype = valroot.getString("type");
+                    if (stype != nilptr){
+						list.setItemText(datitem, 1, stype);                
+                    }
+					displayValue(list, datitem, valroot);
+                }
+            }
+        }
+        
+    }
+    
+    void parseMember(QXTreeView list, long item ,JsonObject valueroot){
+        JsonArray valarr = (JsonArray)valueroot.get("value");
+        if (valarr != nilptr){
+			for (int i =0; i < valarr.length(); i++ ){
+				JsonObject valroot = (JsonObject)valarr.get(i);
+                if (valroot != nilptr){
+					long datitem = list.insertItem(item, nilptr, ((JsonObject)valarr.get(i)).getString("name"));
+                    String stype = valroot.getString("type");
+                    if (stype != nilptr){
+						list.setItemText(datitem, 1, stype);                
+                    }
+					displayValue(list, datitem, valroot);
+                }
+            }
+        } 
+    }
+    
+    String [] getColumn()override{
+		String [] columns = {"名称", "类型", "值", "地址"};
+        return columns;
+    }
+    
+    int [] getColumnWidths()override{ 
+		int [] ws = {150, 150, 200, 100};
+        return ws;
+    }
+    
+    
+    void listReset(){
+		QXTreeView list = getList();
+        //UI线程使用
+		synchronized(serlock){
+			serial++;
+			list.clear();
+            watchs.clear();
+		}
+        add_item = list.addItem(nilptr, "<添加监视>");
+        list.modifyItemFlags(add_item, QXTreeView.ItemIsEditable, 0);
+    }
+    
+    void onCreate(){
+		listReset();
+        
+        createContextMenu();
+        watchesWnd = this;
+    }
+    
+    
+    static class ContextMenu{
+		QXMenu contextMenu = new QXMenu();
+		QXAction [] actions;
+		
+		void create(QXWidget parent, String [] acts, onEventListener listener){
+			if (contextMenu.create(parent)){
+				actions = new QXAction[acts.length];
+				for (int i = 0; i < acts.length; i ++){
+					QXAction action = new QXAction();
+					if (action.create(contextMenu)){
+						
+						if (acts[i].equals("-")){
+							action.setSeparator(true);
+						}else{
+							action.setEnable(false);	
+							action.setText(acts[i]);
+							action.setOnEventListener(listener);
+						}
+					}
+					actions[i] = action;
+				}
+				parent.setContextMenuPolicy(ActionsContextMenu);
+				parent.addActions(actions);
+			}
+		}
+	};
+    
+    void createContextMenu(){
+		QXTreeView list = getList();
+        
+		onEventListener menuListener = new onEventListener(){
+		   void onTrigger(QXObject obj) override{
+				if (obj == _contextMenu.actions[0]){
+                
+					synchronized(serlock){//UI线程使用
+						long [] items = list.getSelectedItems();
+						
+						JsonArray array = new JsonArray();
+						
+						for (int i = 0; i < items.length; i++){
+							String label = list.getItemText(items[i], 0);
+							if (label != nilptr){
+							
+								Map.Iterator<String, long> iter = watchs.find(label);
+								if (iter != nilptr){
+									list.removeItem(items[i]);
+									watchs.remove(iter);
+								}
+								
+								array.put(label);
+							}
+						}
+						
+						XWorkspace.workspace.debuggee.updateWatch(array,ThreadManager.currentThreadId,ThreadManager.currentFrameId, true);
+                        
+                        serial++;
+                    }
+                }
+		   }
+		};
+        
+		
+		
+		String []acts = {"删除"};
+		_contextMenu.create(list, acts, menuListener);
+	}
+};

@@ -1,0 +1,22 @@
+
+class ICompileInfo{
+    static const int TIPS = 0;
+    static const int WARNING = 1;
+    static const int ERROR = 2;
+    
+    int getType();
+    String getFile();
+    int getLine();
+    int getRow();
+    String getTips();
+};
+ 
+class IBuilder{
+    String build(String compilerPath, String []args, String workDir);
+    void setCompileInfor(Vector<ICompileInfo> infos);
+    void OutputText(String text);
+}; 
+ 
+class BuildListener{
+	void onBuild(bool success);
+};

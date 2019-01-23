@@ -1,0 +1,35 @@
+//xlang Source, Name:QXBuffer.xcsm 
+//Date: Thu Sep 22:15:52 2018 
+class QXBuffer : QXCore{
+	static const int 
+        NotOpen = 0x0000,
+        ReadOnly = 0x0001,
+        WriteOnly = 0x0002,
+        ReadWrite = ReadOnly | WriteOnly,
+        Append = 0x0004,
+        Truncate = 0x0008,
+        Text = 0x0010,
+        Unbuffered = 0x0020;
+        
+    QXBuffer(){
+		nativehandle = createNObject(QType.qtBuffer, 0);
+        if (nativehandle == 0){
+			throw new Exception("can not create buffer");
+        }
+    }
+	bool open(int openFlags){
+		return 0 != widget_set_bint_value(nativehandle, OPENBUFFER, openFlags);
+    }
+    
+    void setBuffer(byte [] data, int position, int length){
+		array_int2(nativehandle, BUFFERSETDATA, data, position, length);
+    }
+    void setBuffer(QXByteArray array){
+		long_intlong(nativehandle, BUFFERSETDATA, array.nativehandle);
+    }
+    void finalize(){
+		if (nativehandle != 0){
+			widget_slot(nativehandle, DELLOCBUFFER);
+        }
+    }
+};

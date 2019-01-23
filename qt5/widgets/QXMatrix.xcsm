@@ -1,0 +1,54 @@
+//xlang Source, Name:QXMatrix.xcsm 
+//Date: Mon Oct 23:07:48 2018 
+
+class QXMatrix : QXCore{
+    QXMatrix(){
+        nativehandle = createNObject(QType.qtMatrix, 0);
+    }
+    
+    QXMatrix(long h){
+        nativehandle = h;
+    }
+    
+    QXPoint mapPoint(QXPoint p){
+		long v = object_get_long_int(nativehandle, MATRIXMAPPOINT, p.x, p.y);
+        return new QXPoint((v >> 32) & 0xffffffff, v & 0xffffffff);
+    }
+    
+    QXRect mapRect(QXRect r){
+		long lt = object_get_long_int(nativehandle, MATRIXMAPPOINT, r.left, r.top);
+        long rb = object_get_long_int(nativehandle, MATRIXMAPPOINT, r.right, r.bottom);
+        QXRect ret = new QXRect();
+        ret.left = (lt >> 32) & 0xffffffff;
+        ret.top = lt & 0xffffffff;
+        ret.right = (rb >> 32) & 0xffffffff;
+        ret.bottom = rb & 0xffffffff;
+        return ret;
+    }
+    
+    QXMatrix translate(double x, double y){
+		return new QXMatrix(long_double2(nativehandle, MATRIXTRANSLATE, x, y));
+    }
+    
+    QXMatrix scale(double sx, double sy){
+		return new QXMatrix(long_double2(nativehandle, MATRIXSCALE, sx, sy));
+    }
+
+    QXMatrix shear(double sh, double sv){
+		return new QXMatrix(long_double2(nativehandle, MATRIXSHEAR, sh, sv));
+    }
+    
+    QXMatrix rotate(double a){
+		return new QXMatrix(long_double2(nativehandle, MATRIXROTATE, a, 0));
+    }
+    
+    QXMatrix operator *(QXMatrix m){
+		return new QXMatrix(object_get_long_int(nativehandle, MATRIXMUL, m.nativehandle, 0));
+    }
+    
+    void finalize(){
+		if (nativehandle != 0){
+			widget_slot(nativehandle, MATRIXDTOR);
+        }
+    }
+};

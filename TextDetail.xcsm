@@ -1,0 +1,156 @@
+//xlang Source, Name:TextDetail.xcsm 
+//Date: Sun Sep 01:45:35 2018 
+
+class TextDetail : QXDialog {
+
+	String title = "详细信息";
+	String text;
+    QXSci _sci;
+    
+    interface closeListener{
+		void onCreate();
+		void onClose(String text);
+    };
+    
+    closeListener cl_lis ;
+    
+	TextDetail(closeListener l){
+		cl_lis = l;
+    }
+    
+	TextDetail(){
+    
+    }
+
+    void syntaxForOutput(){
+		if (Setting.isDarkStyle()){
+			syntaxForOutputDark();
+            return ;
+		}
+        _sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);
+        _sci.setWrap(true);
+        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_DEFAULT, 0xffffffff);
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_DEFAULT, 0xff222827);
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, 75, 0xff222827);
+        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
+        //_sci.sendEditor(QXSci.STYLE_LINENUMBER, 1, 0);
+        _sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,Setting.getEditorFont()); 
+        _sci.sendEditor(QXSci.SCI_STYLESETSIZEFRACTIONAL, QXSci.STYLE_DEFAULT,Setting.getEditorFontSize()); 
+        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0); 
+        _sci.sendEditor(QXSci.SCI_SETEOLMODE, 1, 0); 
+        
+        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, 0, QXSci.SC_MARGIN_NUMBER); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 0, 40); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 1, 10); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 2, 0); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 3, 0); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 4, 0); 
+
+        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_LINENUMBER, 0xffefefef);
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_LINENUMBER, 0xffaf912b);
+        _sci.sendEditor(QXSci.SCI_SETMARGINLEFT, 0, 0);
+        
+        _sci.sendEditor(QXSci.SCI_SETCARETFORE,0xff000000,0);
+        
+        _sci.sendEditor(QXSci.SCI_SETCARETLINEVISIBLE, 1); 
+        _sci.sendEditor(QXSci.SCI_SETCARETLINEBACK, 0xffefefef); 
+
+        _sci.sendEditor(QXSci.SCI_SETTABWIDTH, 4); 
+    }
+    
+    void syntaxForOutputDark(){
+        _sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);
+        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_DEFAULT, 0xff262525);
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_DEFAULT, 0xffefefef);
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, 75, 0xffefefef);
+        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
+        //_sci.sendEditor(QXSci.STYLE_LINENUMBER, 1, 0);
+        _sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,Setting.getEditorFont()); 
+        _sci.sendEditor(QXSci.SCI_STYLESETSIZEFRACTIONAL, QXSci.STYLE_DEFAULT,Setting.getEditorFontSize()); 
+        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0); 
+        //_sci.sendEditor(QXSci.SCI_SETREADONLY, 1);
+        //C++语法解析 
+        //_sci.sendEditor(QXSci.SCI_SETLEXER, QXSci.SCLEX_CPP, 0); 
+        //_sci.sendEditor(QXSci.SCI_SETKEYWORDS, 0, szKeywords1);//设置关键字 
+        //_sci.sendEditor(QXSci.SCI_SETKEYWORDS, 1, szKeywords2);//设置关键字 
+        // 下面设置各种语法元素风格 
+        _sci.sendEditor(QXSci.SCI_SETEOLMODE, 1, 0); 
+        
+        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, 0, QXSci.SC_MARGIN_NUMBER); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 0, 40); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 1, 10); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 2, 0); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 3, 0); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 4, 0); 
+        
+        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_LINENUMBER, 0xff262525);
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_LINENUMBER, 0xff666666);
+        _sci.sendEditor(QXSci.SCI_SETMARGINLEFT, 0, 0);
+        
+        _sci.sendEditor(QXSci.SCI_SETCARETFORE,0xffffffff,0);
+        
+        _sci.sendEditor(QXSci.SCI_SETCARETLINEVISIBLE, 1); 
+        _sci.sendEditor(QXSci.SCI_SETCARETLINEBACK, 0xff202020); 
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENT, 0xff666666);
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTLINE, 0xff666666);
+        
+    }
+    
+    bool onClose(){
+		if (cl_lis != nilptr){
+			String update_txt = _sci.getText();
+			if (text.equals(update_txt) == false){
+				cl_lis.onClose(update_txt);
+            }
+        }
+        return true;
+    }
+    
+    bool create(String caption, String str){
+		title = caption;
+		text = str;
+		if (super.create(XWorkspace.workspace)){
+			_sci = new QXSci();
+			if (_sci.create(this)){
+				syntaxForOutput();
+				setOnLayoutEventListener(new onLayoutEventListener(){
+						void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+							if (_sci != nilptr){
+								_sci.resize(w, h );
+							}
+						}
+				});
+			
+				//setWindowFlags(CustomizeWindowHint | WindowMinMaxButtonsHint | WindowCloseButtonHint);
+                setWindowFlags(CustomizeWindowHint | WindowCloseButtonHint  | Dialog  | WindowTitleHint);
+				setWindowTitle(title);
+				_sci.setText(str);
+                
+
+				
+				resize(400, 300);
+				
+                
+                if (cl_lis == nilptr){
+					_sci.setReadOnly(true);
+                }else{
+					cl_lis.onCreate();
+                }
+                
+                show();
+                
+                setOnActivateListener(new onActivateListener(){
+					void onWindowActivate(QXObject obj){
+						((QXWidget)obj).setOpacity(1.0);
+					}
+					void onWindowDeactivate(QXObject obj){
+						((QXWidget)obj).setOpacity(0.6);
+					}
+				});
+				return true;
+            }
+        }
+        return false;
+    }
+    
+};

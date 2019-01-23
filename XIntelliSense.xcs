@@ -1,0 +1,198 @@
+//xlang Source, Name:XIntelliSense.xcs 
+//Date: Sun Aug 21:33:35 2018 
+class XIntelliSense{
+	long handle;
+	Project project;
+	static class XIntelliResult{
+		String name;
+		String type;
+		String prop;
+		XIntelliResult _class;
+		XIntelliResult[] params;
+        String source;
+        int line;
+        int row;
+	};
+	
+	const int XIS_NAME = 0,
+				XIS_TYPE  = 1,
+				XIS_CLAS = 2,
+				XIS_PROP = 3,
+                XIS_BACL = 4,
+                XIS_SRC = 5,
+                XIS_LINE = 6,
+                XIS_ROW = 7;
+                
+                                
+	XIntelliSense(Project proj, Configure configure){
+    
+		if (Setting.isIntellisense()){
+			project = proj;
+			handle = createXProject(proj.getProjectDir());
+			
+			if (handle != 0){
+				int c = project.getSourceFileCount();
+				
+				if (configure != nilptr){
+					JsonObject paths = (JsonObject)configure.root.get("path");
+					
+					if (paths != nilptr){
+						JsonArray libpath = (JsonArray)paths.get("libpath");
+						if (libpath != nilptr){
+							for (int i = 0; i < libpath.length(); i++){
+								String var = libpath.getString(i);
+								if (var != nilptr){
+									addLibPath(handle, XPlatform.converToPlatformCharSet(var));
+								}
+							}
+						}
+					}
+					
+					JsonArray libs = (JsonArray)configure.root.get("libs");
+					if (libs != nilptr){
+						for (int i = 0; i < libs.length(); i++){
+							String var = libs.getString(i);
+							if (var != nilptr){
+								addLib(handle, XPlatform.converToPlatformCharSet(var));
+							}
+						}
+					}
+				}
+				for (int i =0; i < c; i++){ 
+					String source = project.getSourcePath(i);
+					String ext = source.findExtension();
+					
+					if (ext != nilptr && (ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm") )){
+						addFile(handle, XPlatform.converToPlatformCharSet(source));
+					}
+				}
+				
+			}
+        }
+	}
+    
+    void appendLibpath(String path){
+		addLibPath(handle, XPlatform.converToPlatformCharSet(path));
+    }
+    
+    void appendLib(String path){
+		addLib(handle, XPlatform.converToPlatformCharSet(path));
+    }
+    
+    void addSource(String source){
+		if (Setting.isIntellisense()){
+			addFile(handle, XPlatform.converToPlatformCharSet(source));
+        }
+    }
+    
+
+	XIntelliResult [] getIntelliSenseL(String source,int line){
+		if (Setting.isIntellisense()){
+			IntelliSenseL(handle, XPlatform.converToPlatformCharSet(source), line);
+        }
+		return getResult();
+	}
+    
+    XIntelliResult [] getIntelliSenseObject(String source,int line, String name){
+		if (Setting.isIntellisense()){
+			XISQueryObject(handle, XPlatform.converToPlatformCharSet(source), line, name);
+        }
+		return getResult();
+	}
+      
+	XIntelliResult [] getIntelliSense(String source,String content, long pos){
+		if (Setting.isIntellisense()){
+			IntelliSense(handle, XPlatform.converToPlatformCharSet(source), content, pos);
+		}
+		return getResult();
+	}
+	
+	String getIntelliSenseMap(){
+		if (Setting.isIntellisense()){
+			genIntelliSense(handle);
+			return XgetStructMap(handle);
+		}
+        return nilptr;
+	}
+	void update(String sourcePath, String content){
+		if (Setting.isIntellisense()){
+			updateFile(handle, XPlatform.converToPlatformCharSet(sourcePath), content);
+		}
+	}
+    void updateSource(String sourcePath, String newFile){
+		if (Setting.isIntellisense()){
+			updateSource(handle, XPlatform.converToPlatformCharSet(sourcePath), XPlatform.converToPlatformCharSet(newFile));
+        }
+    }
+	XIntelliResult [] getResult(){
+		if (Setting.isIntellisense() == false){
+			return nilptr;
+		}
+		int count = getXIntelliSenseCount(handle);
+		if (count == 0){
+			return nilptr;
+		}	
+		XIntelliResult []  result = new XIntelliResult[count];
+		
+		for (int i = 0; i < count; i ++){
+			result[i] = new XIntelliResult();
+			result[i].name = getIntelliSenseItemInfo(handle, i, XIS_NAME);
+			result[i].type = getIntelliSenseItemInfo(handle, i, XIS_TYPE);
+			result[i].prop = getIntelliSenseItemInfo(handle, i, XIS_PROP);
+            result[i].source = getIntelliSenseItemInfo(handle, i, XIS_SRC);
+            result[i].line = getIntelliSenseItemInfo(handle, i, XIS_LINE).parseInt();
+            result[i].row = getIntelliSenseItemInfo(handle, i, XIS_ROW).parseInt();
+            
+			result[i]._class = new XIntelliResult();
+			result[i]._class.name = getIntelliSenseItemInfo(handle, i, XIS_CLAS);
+			result[i]._class.type = "31";
+
+			if (result[i].type.equals("23")){
+				int pc = getIntelliSenseFunctionParamCount(handle, i);
+				result[i].params = new XIntelliResult[pc];
+				for (int x =0; x < pc; x ++){
+					result[i].params[x] = new XIntelliResult();
+					result[i].params[x].name = getIntelliSenseFunctionParamInfo(handle, i, x, XIS_NAME);
+					result[i].params[x].type = getIntelliSenseFunctionParamInfo(handle, i, x, XIS_TYPE);
+					result[i].params[x].source = getIntelliSenseFunctionParamInfo(handle, i, x,XIS_SRC);
+					result[i].params[x].line = getIntelliSenseFunctionParamInfo(handle, i, x,XIS_LINE).parseInt();
+					result[i].params[x].row = getIntelliSenseFunctionParamInfo(handle, i, x,XIS_ROW).parseInt();
+            
+					result[i].params[x]._class = new XIntelliResult();
+					result[i].params[x]._class.name = getIntelliSenseFunctionParamInfo(handle, i, x, XIS_CLAS);
+					result[i].params[x]._class.type = "31";
+				}
+			}
+		}
+		return result;
+	}
+    
+    void close(){
+		if (handle != 0){
+			destroyXProject(handle);
+			project = nilptr;
+        }
+    }
+
+	import "libXIntelliSense"{
+		//long cdecl getMemoryInfo(int id); 
+		long cdecl createXProject(String workdir); 
+        void cdecl destroyXProject(long handle);
+		bool cdecl addFile(long h, String file); 
+		bool cdecl updateFile(long h, String file, String content); 
+        bool cdecl updateSource(long h, String file, String content); 
+		bool cdecl IntelliSense(long h, String file, String content, long position); 
+        bool cdecl XISQueryObject(long _sc, String sourceFile, int line, String name);
+        bool cdecl IntelliSenseL(long h, String file, int line); 
+		int cdecl getXIntelliSenseCount(long h); 
+		String cdecl getIntelliSenseItemInfo(long h, int id, int prop);
+		int cdecl getIntelliSenseFunctionParamCount(long h, int id);
+		String cdecl getIntelliSenseFunctionParamInfo(long h, int id, int param, int prop);
+		bool cdecl addIncPath(long h, String path);
+		bool cdecl addLibPath(long h, String path);
+		bool cdecl addLib(long h, String path);
+		String cdecl XgetStructMap(long h);
+		void cdecl genIntelliSense(long h);
+        //void cdecl test(long h);
+	};
+};

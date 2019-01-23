@@ -1,0 +1,67 @@
+class FileOutputStream : Stream{
+	long filehandler;
+
+	FileOutputStream(String path){
+		filehandler = XPlatform.openSystemFile(path, "w");
+        if (filehandler == 0){
+            throw new IllegalArgumentException("file " + path + " can not open");
+        }
+	}
+
+	bool attach(String path){
+		if (filehandler != 0){
+			_system_.closeFile(filehandler);
+			filehandler = 0;
+		}
+		filehandler = XPlatform.openSystemFile(path, "w");
+        return filehandler != 0;
+	}
+    void checkValid(){
+        if (filehandler == 0){
+            throw new IllegalArgumentException("The Stream is not ready");
+        }
+    }
+	long available(bool bwait){
+		return 1;
+    }
+	long seek(int type, long pos){
+		return 0;
+    }
+    
+    long getPosition(){
+		return 0;
+    }
+    
+	long length(){
+        checkValid();
+		return 0;
+	}
+
+	byte[] read(){
+		return nilptr;
+	}
+
+	int read(byte [] data , int position, int length)override{
+		return 0;
+	}
+    
+	long write(byte [] data){
+        checkValid();
+		return _system_.writeFile(filehandler, data, 0, data.length);
+	}
+    
+	int write(byte [] data , int position, int length)override{
+        checkValid();
+		return _system_.writeFile(filehandler, data, position, length);
+    }
+    
+    void close(){
+		if (filehandler != 0){
+			_system_.closeFile(filehandler);
+			filehandler = 0;
+		}
+    }
+	void finalize(){
+		close();
+	}
+};

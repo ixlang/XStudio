@@ -1,0 +1,289 @@
+//xlang Source, Name:Utils.xcsm 
+//Date: Thu Nov 09:02:46 2018 
+
+class Utils{
+	static const int X_STUDIO_VERSION = 181214;
+    
+    static void readForProcess(IBuilder builder, Process _process){
+		try{
+			int rd = 0;
+			byte [] buffer = new byte[1024];
+			
+			int pos = 0;
+			while ((rd = _process.read(buffer, pos, buffer.length - pos)) > 0){
+				try{
+					pos += rd;
+					String oustr = "";
+					if (_system_.getPlatformId() == 0){
+						oustr = new String(buffer, 0, pos, "CP936");
+					}else{
+						oustr = new String(buffer, 0, pos);
+					}
+					pos = 0;
+					builder.OutputText(oustr);
+				}catch(Exception e){
+					byte [] newbuf = new byte[buffer.length + 1024];
+					_system_.arrayCopy(buffer, 0, newbuf, 0, pos);
+					buffer = newbuf;
+				}
+			}
+		}catch(Exception e){
+		
+		}    
+    }
+     
+    static void chechUpdate(int opid){
+		String fburl = String.format("http://112.124.120.113:8080/dcbinterface/api/checkupdate?osid=%d&version=%d&opid=%d&arch=%d", _system_.getPlatformId(), X_STUDIO_VERSION , opid, _system_.getOSBit());
+		 
+		new Thread(){
+			void run()override{
+				HttpRequest req = new HttpRequest();
+				if (req.get(fburl, 10000, false)){
+					byte [] data = new byte[1024];
+					String content = "";
+
+					if (req.getResponseCode() >= 200){
+						while (req.available(true) > 0){
+							int len = req.readData(data, 0, 1024);
+							String _txt = new String(data, 0, len);
+							content = content + _txt;
+						}
+						parseUpdate(content);
+					}
+                }
+			}
+		}.start();
+    }
+    
+    static void parseUpdate(String text){
+		try{
+			JsonObject root = new JsonObject(text);
+            String err = root.getString("error");
+            if (err != nilptr){
+				if (err.equals("0")){
+					JsonArray data = (JsonArray)root.get("data");
+                    if (data != nilptr && data.length() > 0){
+						JsonObject verObj = (JsonObject)data.get(0);
+                        if (verObj != nilptr ){
+							String newverstr = verObj.getString("version");
+                            if (newverstr != nilptr ){
+								if (newverstr.parseInt() > X_STUDIO_VERSION){
+									XWorkspace.workspace.runOnUi(new Runnable(){
+										void run(){
+											showNewVersion(verObj.getString("version"), verObj.getString("url"), verObj.getString("detailurl"), verObj.getString("descr"), verObj.getString("size").parseLong());
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+		}catch(Exception e){
+        
+        }
+    }
+    
+    static void showError(String errinfo){
+		XWorkspace.workspace.runOnUi(new Runnable(){
+			void run(){
+				QXMessageBox.Critical("错误", errinfo, QXMessageBox.Ok , QXMessageBox.Ok);
+			}
+		});
+    }
+    
+    static void showNewVersion(String version, String url, String detailUrl, String descr, long packsize){
+    
+		if (packsize > 0){
+			int res = QXMessageBox.Question("新版本" + version, 
+				"<Strong>可用于 XStudio 的更新版本" + version + " 已发布</Strong><br /><br />" + 
+				descr + "<br />" + 
+				 "<a href=\"" + detailUrl + "\">详情点击</a><br />" + 
+				"<a href=\"" + url + "\">手动下载更新</a><br />" + 
+				"是否立即进行自动更新?", QXMessageBox.Yes | QXMessageBox.No, QXMessageBox.Yes);
+				
+			if (res == QXMessageBox.Yes){
+				update(version, url, packsize);
+			}
+        }
+	}    
+    
+    
+    static void update(String ver, String url, long size){
+		String appdir = _system_.getAppDirectory().appendPath("update");
+        
+        _system_.mkdir(appdir);
+        appdir = appdir.appendPath(ver + ".zip");
+        ProgressView pv = ProgressView.showWait(-1);
+        pv.centerScreen();
+        pv.setTitleText("正在下载...");
+        
+        try{
+			if (XPlatform.existsSystemFile(appdir) && XPlatform.SystemFileSize(appdir) == size){
+            
+            	new Thread(){
+					void run()override{
+						applyUpdate(appdir, url, ver);
+                    }
+                }.start();
+                
+                pv.setTitleText("准备安装更新...");
+                pv.dismissAfter(1000);
+            }else{
+				FileOutputStream fos = new FileOutputStream(appdir);
+				
+				new Thread(){
+					void run()override{
+						HttpRequest req = new HttpRequest();
+                        _system_.output("download url:" + url + "\n");
+						if (req.get(url, 10000, false)){
+							byte [] data = new byte[1024];
+
+							long downloadSize = 0;
+							pv.EnableProgress(true, 0);
+							if (req.getResponseCode() >= 200){
+								while (req.available(true) > 0){
+									int len = req.readData(data, 0, 1024);
+									downloadSize += len;
+									double fp = Math.min(1.f, (double)downloadSize / (double)size);
+									pv.EnableProgress(true, fp);
+									pv.setTitleText("正在下载..." + String.format("%.1f%%", fp * 100));
+									fos.write(data, 0 ,len);
+								}
+								fos.close();
+								
+								if (size == downloadSize){
+									applyUpdate(appdir, url, ver);
+								}else{
+									_system_.deleteFile(appdir);
+									showError("下载更新失败, 数据校验错误, 请尝试<a href=\"" + url + "\">手动下载</a>.");
+									pv.showResult(true, false);
+									pv.dismissAfter(1000);
+									return ;
+								}
+							}
+						}
+						
+						pv.setTitleText("准备安装更新...");
+						pv.dismissAfter(1000);
+					}
+				}.start();
+            }
+        }catch(Exception e){
+			pv.showResult(true, false);
+            pv.dismissAfter(1000);
+			_system_.deleteFile(appdir);
+            
+			showError("下载更新失败,无法打开文件 " +appdir + "请尝试<a href=\"" + url + "\">手动下载</a>.");
+        }
+    }
+    
+    static void applyUpdate(String zipFile, String url, String version){
+    
+		FileInputStream fis ;
+    
+		try{
+			fis = new FileInputStream(zipFile);
+		}catch(Exception e){
+			_system_.deleteFile(zipFile);
+			showError("下载更新失败,无法打开文件" + zipFile + "请尝试<a href=\"" + url + "\">手动下载</a>.");
+			return ;
+		}
+		
+		ZipArchive zs = new ZipArchive();
+        
+        bool applyer_setupd = false;
+
+		if (zs.open(fis)){
+			int c = zs.getEntriesCount();
+			 for (int i = 0; i < c; i ++){
+				ZipEntry entry = zs.getEntry(i);
+				if (entry.isDirectory() == false){                                        
+                    String apply_exe;
+                    
+					if (entry.getName().startWith("xupdate_apply")){
+
+                        apply_exe = _system_.getAppDirectory().appendPath(entry.getName());
+
+						ZipFile file = entry.getFile();
+                        
+                        byte []buf = new byte[1024];
+                        
+                        if (file.open()){                            
+                            try{
+								FileOutputStream fos = new FileOutputStream(apply_exe);
+								int rd = 0;
+                                
+								while ((rd = file.read(buf, 0, 1024)) != 0){
+									fos.write(buf, 0, rd);
+								}
+                                
+								fos.close();
+                                
+								XPlatform.chmodSystemFile(apply_exe, 0777);
+                                applyer_setupd = true;
+                            }catch(Exception e){
+                            
+                            }
+                            file.close();
+                        }
+                    }
+                }
+             }
+             
+             zs.close();
+        }
+        
+        fis.close();
+        
+		 if (applyer_setupd){
+			//启动安装器
+            String ext ="";
+            if (_system_.getPlatformId() == 0){
+				ext = ".exe";
+            }
+			runUpdate(_system_.getAppDirectory().appendPath("xupdate_apply" + ext), zipFile, version);
+		 }else{
+			_system_.deleteFile(zipFile);
+			showError("下载更新失败,请尝试<a href=\"" + url + "\">手动下载</a>.");
+			return ;
+		}
+    }
+    
+    static void runUpdate(String updater, String updatefile, String version){
+        String []args = new String[2];
+        args[0] = updater;
+		args[1] = version;
+        
+		Process designer = new Process(updater, args);
+        if (designer.create(true, false, false, false) == false){
+            showError("无法应用更新,请尝试手动解压 " + updatefile + ", 覆盖旧版本文件");
+			return ;
+        }
+    }
+    
+    
+    static String getAppVersion(){
+		long vv = _system_.getAppVersion();
+		String vs = "v";
+		for (int i = 0; i < 4; i ++){
+			vs = vs + ((vv >> ((4 - (i + 1)) << 4)) & 0xffff);
+			if (i != 3){
+				vs = vs + ".";
+			}
+		}    
+        return vs;
+    }
+    
+    static String getAppMarjonVersion(){
+		long vv = _system_.getAppVersion();
+		String vs = "v";
+		for (int i = 0; i < 2; i ++){
+			vs = vs + ((vv >> ((4 - (i + 1)) << 4)) & 0xffff);
+			if (i != 1){
+				vs = vs + ".";
+			}
+		}    
+        return vs;
+    }
+};

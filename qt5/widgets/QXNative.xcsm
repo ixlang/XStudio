@@ -1,0 +1,94 @@
+
+class QXNative{
+    long nativehandle;
+    
+    QXNative(){
+    }
+    
+    QXNative(long h){
+        nativehandle = h;
+    }
+    
+    static int getScreenCount(){
+		return widget_get_int_value(0, QXCore.SCREENCOUNT);
+    }
+    
+    import "libQXLibrary"{
+        void cdecl widget_set_vint_value(long h, int proid, int value);
+        void cdecl widget_set_object_value(long h, int proid, Object value);
+        void cdecl widget_set_long_object_value(long h, int proid,long i, Object value);
+		void cdecl widget_set_int2_object_value(long h, int proid,int i,int iv, Object value);
+        bool cdecl widget_get_bool_value(long h, int proid);
+        Object cdecl widget_get_object(long h, int proid);
+        
+        long cdecl locaUiData(long data, Object _this, long parent);
+        long cdecl locaUiFile(String uifile, Object _this, long parent);
+        void cdecl ShowUi(long h);
+        double cdecl widget_get_double_value(long h, int proid);
+        void cdecl widget_set_double_value(long h, int proid, double v);
+        void cdecl widget_set_bool_value(long h, int proid, bool v);
+        void cdecl widget_set_int_bool_value(long h, int proid,int v, bool v1);
+        bool cdecl widget_get_int_bool(long h, int proid,int v);
+        void cdecl widget_set_bkrl(long h, int r);
+        int cdecl widget_get_int_value(long h, int proid);
+        int cdecl widget_set_v2int_value(long h, int proid, int xv, int yv);
+        int cdecl widget_set_v2int_double_value(long h, int proid, int xv, double w, int yv);
+        void cdecl widget_set_native_value(long h, int proid, long value);
+        void cdecl widget_slot_string(long h, int proid, String value);
+        void cdecl widget_slot(long h, int proid);
+        long cdecl createQxApplication(Object obj);
+        void cdecl ApplicationRun(long g);
+        bool cdecl core_sub_class(long h, Object pthis, Object subclass);
+        Object cdecl findControl(long h, String name);
+        String cdecl core_getName(long h);
+        String cdecl core_getClassName(long h);
+        Object cdecl core_getParent(long h);
+        String cdecl core_getString(long h, int proid);
+		String cdecl core_getStringlongint(long h, int proid, long v1, int v2);
+        int cdecl core_getintlong(long h, int proid, long v);
+        long cdecl createQObject(int type, Object xobj, long parent);
+        int cdecl widget_set_intstring_value(long h, int proid, int xv, String yv);
+        long cdecl createNObject(int type, long param);
+        int cdecl widget_set_v3int_value(long h, int proid, int xv, int yv, int zv);
+        int cdecl widget_set_intintstring_value(long h, int proid, int xv, int yv, String zv);
+        void cdecl widget_set_intlongstring_value(long h, int proid, long xv, int yv, String zv);
+        void cdecl widget_set_intlongint_value(long h, int proid, long xv, int yv, int zv);
+        Object cdecl object_get_string(long h, int proid, String name);
+        Object cdecl object_get_handle_string(long h, int proid,long handle, String name);
+        Object cdecl object_get_string2(long h, int proid,String v1, String v2);
+        Object cdecl object_get_handle(long h, int proid, long h1);
+        Object cdecl object_get_handle2(long h, int proid, long hv, long h1);
+        void cdecl object_set_long_int_long(long h, int proid, long hv,int iv, long h1);
+        long cdecl object_get_long_int(long h, int proid, long hv,int iv);
+        Object cdecl object_get_string_handle_string2(long h, int proid,String text, long handle, String v1, String v2);
+        Object cdecl object_get_string_handle_string_int(long h, int proid,String text, long handle, String v1, int v2);
+        Object cdecl object_get_string2_handle_string2(long h, int proid,String h1,String text, long handle, String v1, String v2);
+        Object cdecl object_get_string2_handle_string_int(long h, int proid,String h1,String text, long handle, String v1, int v2);
+        long cdecl attachControl(long handle, Object _this, String name);
+        
+        String cdecl openfile_dlg_string3_obj(int proid,String caption,String defaultPath, String pattern, long parent);
+        long cdecl long_string2(long handle,int proid, String v1, String v2);
+        long cdecl long_object_string(long handle,int proid, Object v1, String v2);
+        long cdecl long_longstring(long handle,int proid, long v1, String v2);
+        long cdecl long_long_string2(long handle,int proid, long l1, String v1, String v2);
+        long cdecl long_get(long handle,int proid);
+        long cdecl core_attach(long h, Object x);
+        int cdecl long_string2_int2(long handle, int proid, String v1, String v2, int flags, int v3);
+        
+        bool cdecl string_bool5_int2_bool2(long handle,int proid,String text, bool regex, bool bCase, bool bWholeWord, bool warp, bool forward, int startLine, int startIndex,bool show, bool posix);
+        long cdecl long_intstring(long handle,int proid,int type, String v1);
+        long cdecl long_intlong(long handle,int proid, long value);
+        long cdecl long_intlong2(long handle,int proid, long value, long v1);
+        void cdecl void_long2(long handle,int proid, long value1, long v2);
+        void cdecl native_double2(long h ,int proid,double v1, double v2);
+        void cdecl native_double4(double v1, double v2, double v3, double v4,long h ,int proid);
+        void cdecl native_int4(long h ,int proid,int v1, int v2, int v3, int v4);
+		int cdecl int_long_int_long_int_int(long h, int proid, long h1, int v1, int v2);
+        bool cdecl array_int2(long h,int proid, Object, int, int);
+        int cdecl widget_set_bint_value(long h, int proid, int value);
+        long cdecl create_array_int2(long h, int proid, Object obj, int pos, int len);
+        long  cdecl createSObject(int type, String param);
+        void cdecl long_long_int9(long h, int proid, long v1, int x1, int x2, int x3, int x4, int y1, int y2, int y3, int y4, int z1);
+        long cdecl long_double2(long h ,int proid,double v1, double v2);
+    };
+};

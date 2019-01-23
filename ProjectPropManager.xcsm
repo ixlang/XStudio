@@ -1,0 +1,22 @@
+
+class ProjectPropManager{
+     
+    static Map<String, ProjectPropInterface> _props = new Map<String, ProjectPropInterface>();
+        
+    static bool registryAllProp(){
+        _props.put("xlang", new XlangProjectProp());
+        
+        CPlusplusProp cppp = new CPlusplusProp();
+        _props.put("C/C++", cppp);
+        _props.put("C", cppp);
+        return true;
+    }
+     
+    static ProjectPropInterface getForProject(String projLnaguageConf){
+		try{
+			return _props.get(projLnaguageConf);
+		}catch(Exception e){
+		}
+        return nilptr;
+    }
+};

@@ -1,0 +1,129 @@
+//xlang Source, Name:XWndObjectDump.xcsm 
+//Date: Sun Sep 14:59:59 2018 
+
+class XWndObjectDump : QXDockWidget{
+
+	long []root_items = new long[10];
+    
+    QXTreeView _listview;
+    
+    QXPushButton btnUpdate;
+    
+    static XWndObjectDump XWndoDump;
+    
+	void onAttach() override {
+
+        _listview = (QXTreeView)attachByName(new QXTreeView(), "objslist");
+        
+        btnUpdate = (QXPushButton)attachByName(new QXPushButton(), "btnUpdate");
+        
+        
+        /*setOnLayoutEventListener(new onLayoutEventListener(){
+                void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+                    if (_listview != nilptr){
+                        _listview.resize(w, h - 60);
+                        btnUpdate.move(0, h - 55);
+                    }
+                }
+        });*/
+        
+        btnUpdate.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+				XWorkspace.workspace.debuggee.dumpObjects();
+            }
+        });
+        
+
+        String [] columns = {"项目", "计数"};
+        _listview.setColumns(columns);
+        
+        _listview.setColumnWidth(0, 100);
+        _listview.setColumnWidth(1, 200);
+        
+        XWndoDump = this;
+	}
+
+	JsonObject root;
+    Object lock = new Object();
+    
+    
+    static void sendInfo(JsonObject infos){
+		XWndoDump.showInfo(infos);
+    }
+    
+    void showInfo(JsonObject infos){
+		synchronized(lock){
+			root = infos;
+			this.Notify(2);
+		}
+    }
+    
+     void onNotification(long id){
+		synchronized(lock){
+			loadRoot();
+		}
+    }
+    
+    long additem(long parent, String name, int count){
+		long item = 0;
+        
+        if (parent == 0){
+			item = _listview.addItem(nilptr , name);
+        }else{
+			item = _listview.insertItem(parent, nilptr, name);
+        }
+        
+        _listview.setItemText(item, 1, "" + count);
+        return item;
+    }
+    
+    void updateItem(int id, String name, int count){
+		if (root_items[id] != 0){
+			_listview.setItemText(root_items[id], 1, "" + count);
+        }else{
+			root_items[id] = additem(0, name, count);
+        }
+    }
+    
+    void loadRoot(){
+		int object_count = root.getInt("oc");
+        int thread_count = root.getInt("cc");
+        int class_count = root.getInt("sc");
+        int instance_count = root.getInt("ic");
+        int array_count = root.getInt("ac");
+        int closure_count = root.getInt("lc");
+        
+        int yg , sg, og, fg;
+        
+        yg = root.getInt("yg");
+        sg = root.getInt("sg");
+        og = root.getInt("og");
+        fg = root.getInt("fg");
+        
+        updateItem(0, "Object", object_count);
+        updateItem(1, "Thread", thread_count);
+        updateItem(2, "Class", class_count);
+        updateItem(3, "Instance", instance_count);
+        updateItem(4, "Array", array_count);
+        updateItem(5, "Closure", closure_count);
+        
+        updateItem(6, "新生代", yg);
+        updateItem(7, "中生代", sg);
+        updateItem(8, "古生代", og);
+        updateItem(9, "永久代", fg);
+        
+        _listview.removeAllchild(root_items[2]);
+        
+        JsonArray classes = (JsonArray)root.get("classes");
+        
+        int count = classes.length();
+        
+        for (int i = 0; i < count; i ++){
+			JsonObject classObj = (JsonObject)classes.get(i);
+            if (classObj != nilptr){
+				additem(root_items[2], classObj.getString("type"), classObj.getInt("count"));
+            }
+        }
+    }
+};

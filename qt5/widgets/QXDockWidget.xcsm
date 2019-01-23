@@ -1,0 +1,40 @@
+
+class QXDockWidget : QXWidget{
+    static const int DockWidgetClosable    = 0x01;
+    static const int DockWidgetMovable     = 0x02;
+    static const int DockWidgetFloatable   = 0x04;
+    static const int DockWidgetVerticalTitleBar = 0x08;
+    static const int DockWidgetFeatureMask = 0x0f;
+    static const int AllDockWidgetFeatures = DockWidgetClosable|DockWidgetMovable|DockWidgetFloatable; // ### Qt 6: remove
+    static const int NoDockWidgetFeatures  = 0x00;
+    static const int Reserved              = 0xff;
+    QXDockWidget(){
+    }
+    
+    QXDockWidget(long handle){
+        super(handle);
+    }
+    bool isFlating(){
+        return widget_get_bool_value(nativehandle, QXCore.FLATING);
+    }
+    
+    void setFlating(bool b){
+        widget_set_bool_value(nativehandle, QXCore.FLATING, b);
+    }
+    
+    QXWidget getTitalBar(){
+        return (QXWidget)widget_get_object(nativehandle, QXCore.TITLEBAR);
+    }
+    
+    void 
+    setFeatures(int features){
+        widget_set_vint_value(nativehandle, QXCore.DOCKWIDGETFEATURE, features);
+    }
+    void setWidget(QXWidget w){
+        widget_set_native_value(nativehandle, QXCore.SETWIDGET, w.nativehandle);
+    }
+    
+    QXWidget getWidget(){
+        return (QXWidget)widget_get_object(nativehandle, GETWIDGET);
+    }
+};

@@ -1,0 +1,137 @@
+//xlang Source, Name:FirstPrepare.xcsm 
+//Date: Tue Nov 16:55:36 2018 
+
+class FirstPrepare : QXDialog{
+	QxApp app;
+    
+	FirstPrepare(QxApp _app){
+		app = _app;
+    }
+    
+    QXPushButton btnClose;
+    QXWidget imagefrt, imagebck;
+    Switche dark = new Switche();
+    
+    void onAttach(){
+    
+        setWindowFlags(CustomizeWindowHint | WindowCloseButtonHint);
+        
+        imagefrt = (QXWidget)attachByName(new QXWidget(), "imagefrt");
+        imagebck = (QXWidget)attachByName(new QXWidget(), "imagebck");
+                
+        btnClose = (QXPushButton)attachByName(new QXPushButton(), "btnClose");
+        
+        btnClose.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+                FirstPrepare.this.close();
+                
+                if (dark.getChecked()){
+					Setting.setSetting("style", "深色");
+                }else{
+					Setting.setSetting("style", "操作系统默认");
+                }
+                
+                QXMessageBox.Information("提示", "如需再次更改外观请至菜单 <a style=\"color:#ffff0000\">[工具] ->[选项]</a> 进行操作.", QXMessageBox.Ok, QXMessageBox.Ok);
+                
+                Setting.save();
+                ProgressView pv = ProgressView.showWait(-1);
+                pv.centerScreen();
+                pv.setTitleText("正在进行首次设置...");
+                pv.setOnDismissListener(new ProgressView.OnDismissListener(){
+					void onDismissListener(ProgressView v)override{
+							runOnUi(new Runnable(){
+								void run()override{
+									Recently.mkFirstFile();
+									app.createWorkspace();
+                                }
+                            });
+                    }
+                });
+                pv.dismissAfter(2000);
+            }
+        });
+        
+        //image.setStyleSheet("#image{image: url(res/light.png);}");
+        dark.create(this);
+        dark.setChecked(false, false);
+        dark.configColor(0xff333333, 0);
+        dark.move(310, 515);
+        dark.show();
+        
+        imagebck.setStyleSheet("#imagebck{image: url(res/dark_vague.png);}");
+        imagefrt.setStyleSheet("#imagefrt{image: url(res/light.png);}");
+        
+        dark.setOnSwitchListener(new Switche.OnSwitchListener(){
+			void onSwitch(Switche view,bool __bOn){
+				switchStyle(__bOn);
+            }
+        });
+        
+        setWindowTitle("XStudio 首次运行 - 选择外观");
+        this.centerScreen();
+        setModal(true);
+        show();
+    }
+    
+    void switchStyle(bool bdark){
+		Timer t = new Timer();
+        t.schedule(new TimerTask(){
+			int st = 1;
+            bool revert = false;
+            bool stop = false;
+            double dist_total = 600;
+            
+			void run(){
+            
+				runOnUi(new Runnable(){
+					void run(){
+					
+							if (stop == false){
+								if (revert == false){
+
+									if (st == 15){
+										imagebck.setStyleSheet(bdark ? "#imagebck{image: url(res/light_vague.png);}" : "#imagebck{image: url(res/dark_vague.png);}");
+										imagefrt.setStyleSheet(bdark ? "#imagefrt{image: url(res/dark.png);}" : "#imagefrt{image: url(res/light.png);}");
+										
+										imagefrt.move(10 + st, 10 + st);
+										imagebck.move(40 + (dist_total * st / 15.f), 40 + (15 * st / 15.f));
+										st = 0;
+										revert = true;
+									}else{
+										imagebck.move(10 + st, 10 + st);
+										imagefrt.move(40 + (dist_total * st / 15.f), 40 + (15 * st / 15.f));
+										st++;
+                                    }
+								}else{
+									int rt = 15 - st;
+									imagefrt.move(25 + st, 25 + st);
+									imagebck.move(10 + (dist_total * rt / 15.f), 10 + (15 * rt / 15.f));
+									st++;
+									if (st == 16){
+										st = 0;
+										stop = true;
+										t.cancel();
+									}
+								}
+							}
+						
+                    }
+                });
+
+            }
+        }, 10, -1);
+    }
+
+	static bool showFirstRun(QxApp app){
+   
+		QXDialog newDlg = new QXDialog();
+		if (newDlg.load("ui/first.ui") == false){
+			return false;
+		}
+        
+		FirstPrepare wizard = new FirstPrepare(app);
+		wizard.attach(newDlg);
+        return true;
+    }
+};

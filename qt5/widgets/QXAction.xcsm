@@ -1,0 +1,70 @@
+class QXAction : QXObject{
+	QXAction(){
+	}
+    bool create(){
+        nativehandle = createQObject(QType.qtAction, this, 0);
+        if (nativehandle == 0){
+            return false;
+        }
+        return true;
+    }
+    
+    bool create(QXWidget parent){
+        nativehandle = createQObject(QType.qtAction, this, parent.nativehandle);
+        if (nativehandle == 0){
+            return false;
+        }
+        return true;
+    }
+    
+    QXAction(long handle){
+        super(handle);
+    }
+    
+    void setMenu(QXMenu menu){
+        widget_set_native_value(nativehandle, SETMENU, menu.nativehandle);
+    }
+    
+    void setSeparator(bool b){
+        widget_set_bool_value(nativehandle, SETSEP, b);
+    }
+    
+    bool isSeparator(){
+        return widget_get_bool_value(nativehandle, ISSEP);
+    }
+    
+    void setShortcut(String shortcutKey){
+        widget_slot_string(nativehandle, SETSHRCUT, shortcutKey);
+    }
+    
+    void setShortcut(int StandardKey){
+        widget_set_vint_value(nativehandle, SETSHRCUT, StandardKey);
+    }
+    
+    void setText(String text){
+        widget_slot_string(nativehandle, ACTSETTEXT, text);
+    }
+    
+    String getText(){
+        return core_getString(nativehandle, ACTGETTEXT);
+    }
+    
+	void setEnable(bool b){
+		widget_set_bool_value(nativehandle, ACTENABLED, b);
+	}
+    QXMenu getMenu(){
+        return (QXMenu)widget_get_object(nativehandle, GETMENU);
+    }
+    
+    QXWidget parentWidget(){
+        return (QXWidget)widget_get_object(nativehandle, PARENTWIDGET);
+    }
+    
+    void trigger(){
+        widget_slot(nativehandle, TRIGGER);
+    }
+    
+    void setChecked(bool b){
+        widget_set_bool_value(nativehandle, CHECKED, b);
+    }
+};

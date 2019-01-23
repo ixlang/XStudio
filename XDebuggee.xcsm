@@ -1,0 +1,620 @@
+//xlang Source, Name:XDebuggee.xcsm 
+//Date: Mon Aug 16:07:23 2018 
+
+
+class XDebuggee{
+	
+	 static const int 
+		TSTATUS_RUN = 0,
+		TSTATUS_BREAK = 1;
+     
+     static const int 	
+		Unknow = 0,
+		Interrupt = 1,
+		Continue = 2,
+		StepIn = 3,
+		StepOver = 4,
+		StepOut = 5,
+		SetBreakPoint = 6,
+		SetMemoryBreakPoint = 7,
+		SetFunctionBreakPoint = 8,
+		QueryStackStruct = 9,
+		QueryStackObject = 10,
+		QueryStackObjectDetails = 11,
+		QueryHeapStruct = 12,
+		QueryHeapObject = 13,
+		QueryHeapObjectDetails = 14,
+		QueryThreadCount = 15,
+		QueryStackFrame = 16,
+		SwitchThread = 17,
+		QueryFrame = 18,
+		QueryMemoryInfo = 19,
+		GC = 20,
+        Log = 21,
+        TriggeBreakPoint = 22,
+        WatchObject = 23,
+        Active = 24,
+        ExceptionInterrput = 25,
+        Debug = 26,
+        QueryObject = 27,
+        GcDump = 28,
+        QueryByName = 29;
+           
+    bool isDebugging = false;
+     
+    const byte[] debug_helo = "XDEBUGGEE_V1 HELO\n".getBytes();
+    Object pipeLock = new Object();
+    Stream _pipe;
+    XWorkspace _workspace;
+
+    Map<int,bool> threadStatus = new Map<int,bool>();
+    XDebugPipe local_debugstream;
+	XDebuggee(XWorkspace workspace){
+		_workspace = workspace;
+    }
+    
+    
+    bool createDebugServer(IBuilder builder,int port){
+		local_debugstream = new XDebugPipe(port);
+        
+        if (local_debugstream.prepareForPipe()){
+			return true;
+        }
+
+        return false;
+    }
+    
+    void debugClose(){
+		synchronized(pipeLock){
+			if (_pipe != nilptr){
+                _pipe = nilptr;
+            }
+        }
+    }
+    
+    void active(){
+		BreakPointWnd.SendBreakPoint();
+		WatchWnd.UpdateWatch();
+		debugActive();
+    }
+    
+    void close(){
+		synchronized(pipeLock){
+			if (_pipe != nilptr){
+				_pipe.close();
+			}
+		}
+    }
+    
+    bool debug_start(){
+        if (local_debugstream.createstream()){
+
+			if (local_debugstream.write(debug_helo, 0, debug_helo.length) > 0){
+				byte []recvdata = new byte[22];
+
+				int readed = 0;
+                
+                while (readed < 22){
+					readed += local_debugstream.read(recvdata, readed, 22 - readed) ;
+                }
+
+				if (readed == 22){
+					String str = new String(recvdata);
+					if (str.equals("XDEBUG_CLIENT_V1 RECV\n")){
+						synchronized(pipeLock){
+							_pipe = local_debugstream;
+						}
+						isDebugging = true;
+
+						debug();
+						isDebugging = false;
+                        cancelAllRequest();
+						synchronized(pipeLock){
+							if (_pipe != nilptr){
+								_pipe = nilptr;
+							}
+						}
+						//_system_.consoleWrite("\n调试器已分离!\n");
+						return true;
+					}
+				}
+			}else{
+				local_debugstream.close();
+				local_debugstream = nilptr;
+			}
+        }else{
+        	local_debugstream.close();
+			local_debugstream = nilptr;
+        }
+        return false;
+    }
+    
+    bool connect(IBuilder builder, String host, int port){
+		StreamSocket _socket = new StreamSocket();
+        builder.OutputText("\n正在连接到调试端口:" + port + "...\n");
+                
+		if (_socket.connect(host, port)){
+			builder.OutputText("\n已连接调试器!\n");
+			if (_socket.write(debug_helo, 0, debug_helo.length) > 0){
+				byte []recvdata = new byte[22];
+
+				int readed = 0;
+                
+                while (readed < 22){
+					int rd = _socket.read(recvdata, readed, 22 - readed) ;
+                    if (rd <=0){
+						_socket.close();
+                        builder.OutputText("\无法连接到远程调试端口!\n");
+                        return false;
+                    }
+					readed += rd;
+                }
+                
+				if (readed == 22){
+					String str = new String(recvdata);
+                    
+					if (str.equals("XDEBUG_CLIENT_V1 RECV\n")){
+                    	synchronized(pipeLock){
+							_pipe = _socket;
+						}
+						isDebugging = true;
+
+						debug();
+						isDebugging = false;
+                        cancelAllRequest();
+						synchronized(pipeLock){
+							if (_pipe != nilptr){
+								_pipe = nilptr;
+							}
+						}
+						return true;
+					}
+				}
+            }
+        }
+        return false;
+    }
+    
+    bool isDebuging(){
+		return isDebugging;
+    }
+    
+    void queryObject(String queryId, String objectid, String param, long start, long end){
+        JsonObject json = new JsonObject();
+        json.put("queryid", queryId);
+        json.put("param", param);
+        json.put("id", objectid);
+        
+        json.put("offset", "" + start);
+        json.put("end", "" + end);
+        
+        String text = json.toString(false);
+        byte [] data = text.getBytes();
+        sendCommand(QueryObject, 0, data, data.length);
+    }
+    
+    void onQueryObject(JsonObject json){
+		String param = json.getString("param");
+        if (param.startWith("auto")){
+			AutoWnd.auto_wnd.onQueryObject(json);
+        }else
+        if (param.startWith("watch")){
+			WatchWnd.watchesWnd.onQueryObject(json);
+        }
+    }
+    
+    void queryFrame(int thread, int frame){
+		JsonObject json = new JsonObject();
+        json.put("frame", frame);
+        String text = json.toString(false);
+        byte [] data = text.getBytes();
+        sendCommand(QueryFrame, thread, data, data.length);
+    }
+    
+    void updateWatch(JsonArray objects, int thread, int frame, bool delete){
+		JsonObject root = new JsonObject();
+        root.put("names", objects);
+        root.put("frame", frame);
+        root.put("delete", delete ? 1 : 0);
+        
+        String text = root.toString(false);
+        byte [] data = text.getBytes();
+        sendCommand(WatchObject, thread, data, data.length);
+    }
+    
+    void setBreak(int tid){
+		sendCommand(Interrupt, tid, new byte[0], 0);
+    }    
+    
+    void stepin(int tid){
+		XStackInfor.clearBreak(tid);
+		sendCommand(StepIn, tid, new byte[0], 0);
+    }
+    
+    void continuerun(int tid){
+		XStackInfor.clearBreak(tid);
+		sendCommand(Continue, tid, new byte[0], 0);
+    }
+    
+    void dumpObjects(){
+		sendCommand(GcDump, 0, new byte[0], 0);
+    }
+    
+    static class QueryThread{
+		JsonObject object;
+        bool cancel = false;
+    };
+    
+    void cancelAllRequest(){
+		synchronized(threadObject){
+			Map.Iterator<long,QueryThread> iter = threadObject.iterator();
+            
+            while (iter.hasNext()){
+				QueryThread qt = iter.getValue();
+                synchronized(qt){
+					qt.cancel = true;
+					qt.notify();
+				}
+                iter.next();
+            }
+            
+            threadObject.clear();
+		}
+    }
+    
+    Map<long,QueryThread> threadObject = new Map<long,QueryThread>();
+    
+    JsonObject queryObjectByName(int thread, int frame, String name){
+        JsonObject json = new JsonObject();
+        json.put("queryid", "" + Thread.getId());
+        json.put("param", "");
+        json.put("name", name);
+        json.put("tid", thread);
+        json.put("frame", frame);
+        
+        String text = json.toString(false);
+        byte [] data = text.getBytes();
+        
+        QueryThread qt = new QueryThread();
+        
+        synchronized(threadObject){
+            threadObject.put(Thread.getId(), qt);
+        }
+        synchronized(qt){
+			sendCommand(QueryByName, 0, data, data.length);
+            while (qt.cancel == false && qt.object == nilptr){
+				qt.wait();
+            }
+        }
+        synchronized(threadObject){
+            threadObject.remove(Thread.getId());
+        }
+        return qt.object;
+    }
+    
+    void onQueryByName(JsonObject json){
+    
+		String qid = json.getString("queryid");
+        
+        if (qid != nilptr && qid.length() > 0){
+        
+			long qnid = qid.parseLong();
+            
+			synchronized(threadObject){
+            
+				QueryThread qt = nilptr;
+                
+				try{
+					qt = threadObject.get(qnid);
+				}catch(Exception e){
+                
+                }
+                
+                if (qt != nilptr){
+					synchronized(qt){
+						qt.object = json;
+						qt.notify();
+                    }
+                }
+			}
+        }
+
+    }
+    
+    void onDumpObjects(JsonObject json){
+		XWndObjectDump.sendInfo(json);
+    }
+    void queryMemory(){
+		sendCommand(QueryMemoryInfo, 0, new byte[0], 0);
+    }
+    
+    void requestGc(){
+		sendCommand(GC, 0, new byte[0], 0);
+    }
+    
+    void stepover(int tid){
+		XStackInfor.clearBreak(tid);
+		sendCommand(StepOver, tid, new byte[0], 0);
+        
+    }
+    
+    void debugActive(){
+		sendCommand(Active, 0, new byte[0], 0);
+    }
+    
+    void stepout(int tid){
+		XStackInfor.clearBreak(tid);
+		sendCommand(StepOut, tid, new byte[0], 0);
+    }
+    
+    void sendCommand(int cmd, int tid, byte[] data, int length){
+		int buf_size = 12 + length;
+		byte [] buffer = new byte[buf_size];
+
+		buffer[0] = 0xff;
+		buffer[1] = 0xfe;
+		buffer[2] = (byte)(cmd & 0xff);
+		buffer[3] = (byte)((cmd >> 8) & 0xff);
+
+		buffer[4] = (byte)(tid & 0xff);
+		buffer[5] = (byte)((tid >> 8) & 0xff);
+		buffer[6] = (byte)((tid >> 16) & 0xff);
+		buffer[7] = (byte)((tid >> 24) & 0xff);
+
+		buffer[8] = (byte)(length & 0xff);
+		buffer[9] = (byte)((length >> 8) & 0xff);
+		buffer[10] = (byte)((length >> 16) & 0xff);
+		buffer[11] = (byte)((length >> 24) & 0xff);
+
+		_system_.arrayCopy(data, 0, buffer, 12, length);
+                
+        new Thread(){
+			void run()override{
+				synchronized(pipeLock){
+					if (_pipe != nilptr){
+						_pipe.write(buffer, 0, buf_size); 
+					}
+				}
+            }
+        }.start();
+	}  
+            
+    void debug(){
+        byte [] buffer = new byte[1024];
+        int length = 0;
+        int rd = 0;
+        
+        Stream _readport = _pipe;
+        
+        if (_readport != nilptr){
+			do{
+                
+				byte [] data = new byte[1024];
+				
+                 
+				rd = _readport.read(data, 0, 1024);
+				
+			
+				if (rd > 0){
+					if (length + rd > buffer.length){
+						byte [] new_buf = new byte[(length + rd) * 2];
+						_system_.arrayCopy(buffer, 0, new_buf, 0, length);
+						buffer = new_buf;
+					}
+					
+					_system_.arrayCopy(data, 0, buffer, length, rd);
+					length += rd;
+					XRegular.Result result = nilptr;
+				 
+					while(nilptr != (result = XRegular.Match(buffer, 0, length, "[FFFE]{c:LEBB}<len:2>{t:LEBB}<len:4>{l:LEBB}<len:4>*<len:l>"))){
+						if (result != nilptr){
+							int cmd = result.getValue('c');
+							int tid = result.getValue('t');
+							int conlen = result.getValue('l');
+							
+							JsonObject json;
+							
+							try{
+								json = new JsonObject(new String(buffer, 12, conlen));
+							}catch(Exception e){
+								_system_.consoleWrite("XDebuggee 181 Exception :" + e.getMessage());
+							}
+							
+							if (json == nilptr){
+								json = new JsonObject();
+							}
+
+							analyzeCommand(cmd, tid, json);
+							int al = result.getRegularLength();
+							if (al > 0){
+								length -= al;
+								if (length > 0){
+									for (int i = 0, c = length;i < c; i++){
+										buffer[i] = buffer[i + al];
+									}
+								}
+							}
+						}
+					}
+				}else{
+					break;
+				}
+                
+			}while (rd > 0);
+			
+			synchronized(pipeLock){
+				_pipe = nilptr;
+			}
+            
+        }
+    }
+    
+    void onInterrupt(int tid, JsonObject json){
+        ThreadManager.Update(json, tid == 0);
+    }
+    
+    void setThreadStatus(int tid, bool interrupt){
+		synchronized(threadStatus){
+			threadStatus.put(tid, interrupt);
+        }
+        updateMenu(tid);
+    }
+    
+    void updateMenu(int thread){
+		bool bInterrupt = false;
+		synchronized(threadStatus){
+			Map.Iterator<int,bool> item = threadStatus.find(thread);
+			if (item != nilptr){
+				bInterrupt = item.getValue();
+			}
+		}
+        XWorkspace.workspace.refreshDebugControl(bInterrupt);
+    }
+    
+    void toggleBreakpoint(String file, int line, bool add){
+		JsonObject json = new JsonObject();
+        json.put("file", file);
+        json.put("line", line);
+        json.put("set", add ? 1 : 0);
+        String content = json.toString(false);
+        byte [] data = content.getBytes();
+        sendCommand(SetBreakPoint, 0, data, data.length);
+    }
+    
+    void onSetBreakPoint(JsonObject json){
+		String file = json.getString("file");
+        int reqline = json.getInt("reqline");
+        int realine = json.getInt("realine");
+        int set = json.getInt("set");
+        int error = json.getInt("error");
+        BreakPointWnd.setBreakPoint(file, reqline, realine, set != 0, error);
+    }
+    
+    void onQueryFrame(int tid, JsonObject json){
+		AutoWnd.setFrameInfo(tid, json);
+    }
+    void analyzeCommand(int cmd, int tid, JsonObject json){
+		switch(cmd){
+			case Unknow:
+            
+            break;
+            
+			case Interrupt :
+            onInterrupt(tid, json);
+            break;
+            
+			case Continue:
+            
+            break;
+            
+			case StepIn:
+            
+            break;
+            
+			case StepOver:
+            
+            break;
+            
+			case StepOut :
+            
+            break;
+            
+			case SetBreakPoint:
+				onSetBreakPoint(json);
+            break;
+            
+			case SetMemoryBreakPoint:
+            
+            break;
+            
+			case SetFunctionBreakPoint:
+            
+            break;
+            
+			case QueryStackStruct:
+            
+            break;
+            
+			case QueryStackObject:
+            
+            break;
+            
+			case QueryStackObjectDetails:
+            
+            break;
+            
+			case QueryHeapStruct:
+            
+            break;
+            
+			case QueryHeapObject:
+            
+            break;
+            
+			case QueryHeapObjectDetails:
+            
+            break;
+            
+			case QueryThreadCount:
+            
+            break;
+            
+			case QueryStackFrame:
+            
+            break;
+            
+			case SwitchThread:
+            
+            break;
+            
+			case QueryFrame:
+				onQueryFrame(tid, json);
+            break;
+            
+			case QueryMemoryInfo:
+				XMemoryWnd.memoryWnd.showInfo(json);
+            break;
+            
+			case GC:
+            
+            break;
+            
+            case Log:
+				XLogcatWnd.sendLogcat(json);
+            break;
+            case WatchObject:
+				//_system_.consoleWrite(json.toString(true));
+                WatchWnd.watchesWnd.showInfo(json);
+            break;
+            
+            case Debug:
+				String message = json.getString("message");
+				if (_system_.getPlatformId() == 0){
+					byte [] data = message.getBytes();
+                    try{
+						message = new String(data, 0, data.length, "CP936");
+                    }catch(Exception e){
+						message = new String(data, 0, data.length);
+                    }
+				}
+				XWndOutput.Output(message + "\n");
+            break;
+            
+            case Active:
+				active();
+            break;
+            
+            case QueryObject:
+				onQueryObject(json);
+            break;
+            
+            case GcDump:
+				onDumpObjects(json);
+            break;
+            
+            case QueryByName:
+				onQueryByName(json);
+            break;
+        }
+    }
+};

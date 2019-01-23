@@ -1,0 +1,24 @@
+//xlang Source, Name:QXIcon.xcsm 
+//Date: Thu Sep 23:07:39 2018 
+
+class QXIcon : QXCore{
+
+    QXIcon(QXByteArray array){
+		nativehandle = createNObject(QType.qtIcon, array.nativehandle);
+        if (nativehandle == 0){
+			throw new Exception("can not create QXIcon");
+        }
+    }
+    QXIcon(String file){
+		nativehandle = createSObject(QType.qtIcon, file);
+        if (nativehandle == 0){
+			throw new Exception("can not create QXIcon");
+        }
+    }
+
+    void finalize(){
+		if (nativehandle != 0){
+			widget_slot(nativehandle, DELLOCICON);
+        }
+    }
+};

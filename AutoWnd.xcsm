@@ -1,0 +1,348 @@
+//xlang Source, Name:AutoWnd.xcsm 
+//Date: Tue Sep 17:08:56 2018 
+
+class AutoWnd : ListDockWidget{
+
+	static const int REFRESH_AUTO = 1, QUERYOBJECT = 2;
+    
+	static int s_tid;
+    static JsonObject s_root;
+    Object serlock = new Object();
+	int serial = 0;
+	static AutoWnd auto_wnd;
+    Vector<JsonObject> queriedObjects = new Vector<JsonObject>();
+    
+	void onListItemClicked(QXTreeView tree,long item, int column)override{
+		
+    }
+    
+	void onListItemDoubleClicked(QXTreeView tree,long item, int column)override{
+		
+        long objectId = tree.getItemTag(item, 2);
+        String caption = tree.getItemText(item, 0);
+        
+        if (objectId != 0){
+			XWorkspace.workspace.debuggee.queryObject("detail:" + caption , "" + objectId, "auto" + serial, 0, 0);
+        }else{
+			TextDetail td = new TextDetail();
+			String text = tree.getItemText(item, 2);
+			td.create(caption, text.escape());
+        }
+	}
+    
+    void onListItemExpanded(QXTreeView tree,long item)override{
+		long objectId = tree.getItemTag(item, 0);
+        if (objectId != 0){
+			tree.setItemTag(item, 0, 0);
+            synchronized(serlock){
+				long start = tree.getItemTag(item, 2);
+                long end = tree.getItemTag(item, 3);
+				XWorkspace.workspace.debuggee.queryObject("" + item, "" + objectId, "auto" + serial, start, end);
+            }
+            /*tree.removeItem(tree.getItemTag(item, 1));
+            try{
+				JsonObject object = objectsMap.get(objectId);
+				if (object != nilptr){
+					displayValue(tree, item, object);
+				}
+            }catch(Exception e){
+            
+            }*/
+        }
+	}
+    
+    void onQueryObject(JsonObject object){
+		synchronized(queriedObjects){
+			queriedObjects.add(object);
+            Notify(QUERYOBJECT);
+        }
+    }
+    
+    String getListName()override{ return "autolist"; }
+    
+    String [] getColumn()override{
+ 
+		String [] columns = {"名称", "类型", "值", "地址"};
+        return columns;
+    }
+    
+    int [] getColumnWidths()override{ 
+		int [] ws = {150, 150, 200, 100};
+        return ws;
+    }
+    
+    void onCreate(){
+		auto_wnd = this;
+    }
+    
+    static void setFrameInfo(int tid, JsonObject json){
+        synchronized(auto_wnd){
+			s_tid = tid;
+			s_root = json;
+			auto_wnd.Notify(REFRESH_AUTO);
+        }
+    }
+    
+	void onNotification(long id){
+		if (id == REFRESH_AUTO){
+			 synchronized(auto_wnd){
+				if (s_root != nilptr){
+					parseFrameInfo(s_tid, s_root);
+				}
+			 }
+        }else
+		if (id == QUERYOBJECT){
+			synchronized(queriedObjects){
+				for (int i =0; i < queriedObjects.size(); i++){
+					loadObject(queriedObjects.get(i));
+                }
+				queriedObjects.clear();
+            }
+        }
+        
+	}
+    
+    void loadObject(JsonObject json){
+		synchronized(serlock){
+			QXTreeView list = getList();
+			
+			long id = json.getString("id").parseLong();
+            
+            String qid = json.getString("queryid");
+            
+            if (qid != nilptr){
+            
+				if (qid.startWith("detail:")){
+					try{
+						TextDetail td = new TextDetail();
+						String text = json.getString("value"); 
+						JsonObject text_root = new JsonObject(text);
+						String content = text_root.getString("value");
+						String caption = qid.substring(7, qid.length());
+                        caption = caption + " : length=" + content.length();
+						td.create(caption, content);
+					}catch(Exception e){
+					
+					}
+                    return ;
+                }
+                
+				long item = qid.parseLong();
+				
+				if (item != 0){
+					String param = json.getString("param");
+					long seri = param.substring(4, param.length()).parseLong();
+					String szType  = json.getString("type");
+					if (seri == serial){
+					
+						String values = json.getString("value"); 
+						long loaditem = list.getItemTag(item, 1);
+						
+						if (loaditem != 0){
+							list.removeItem(loaditem);
+							list.setItemTag(item, 1, 0);
+						}
+						
+						if (values != nilptr && values.length() > 0){
+							try{
+								
+								JsonObject valueroot = new JsonObject(values);
+								if (szType != nilptr){
+									list.setItemText(item,1 , szType);
+								}
+								displayValue(list, item, valueroot);
+							}catch(Exception e){
+								//_system_.consoleWrite("parse error:[" + values + "]\n");
+							}
+						}else{
+							list.setItemText(item, 2, "<找不到调试数据>");
+						}
+					}
+				}
+            }
+        }
+    }
+        
+    static void clear(){
+		synchronized(auto_wnd){
+			synchronized(auto_wnd.serlock){
+				auto_wnd.serial++;
+				auto_wnd.getList().clear();
+            }
+            auto_wnd.s_root = nilptr;
+		}
+    }
+    
+    void parseFrameInfo(int tid, JsonObject json){
+    
+		//_system_.consoleWrite(json.toString(false));
+		JsonArray stack = (JsonArray)json.get("stack");
+        JsonObject watch = (JsonObject)json.get("watch");
+        
+
+		if (stack != nilptr){
+			QXTreeView list = getList();
+            synchronized(serlock){
+				serial++;
+				list.clear();
+            }
+			for (int i = 0; i < stack.length(); i++){
+				JsonObject obj = (JsonObject)stack.get(i);
+				if (obj != nilptr){
+					long item = list.addItem(nilptr, obj.getString("name"));
+                    String sType = obj.getString("type");
+                    if (sType != nilptr){
+						list.setItemText(item, 1, sType);
+                    }
+                    String values = obj.getString("value"); 
+                    
+                    if (values != nilptr && values.length() > 0){
+						try{
+							JsonObject valueroot = new JsonObject(values);
+							displayValue(list, item, valueroot);
+						}catch(Exception e){
+							//_system_.consoleWrite("parse error:[" + values + "]\n");
+						}
+                    }else{
+						list.setItemText(item, 2, "<找不到调试数据>");
+                    }
+				}
+			}
+        }
+        
+        WatchWnd.watchesWnd.parseWatchInfoCore(watch);
+    }
+    
+    long getSplit(long length){
+		long i = 100;
+        while (i < length){
+			i *= 10;
+        }
+        return i / 10;
+    }
+    void splitArray(QXTreeView list, long item , long object,long start, long length, int unit){
+		
+        long newitem = list.insertItem(item, nilptr, String.format("[%d~%d]", start, start + length - 1));
+        if (unit >= 100){
+			int c = length / unit;
+            long pos = start;
+			for (int i =0; i < c; i ++){
+				splitArray(list, newitem, object, pos, unit, unit / 10);
+                pos += unit;
+			}
+            if (pos != start + length){
+				splitArray(list, newitem, object, pos, start + length - pos, unit / 10);
+            }
+        }else{
+			list.setItemText(newitem, 3, "" + object);
+        
+			long iditem = list.insertItem(newitem, nilptr, "array");
+			list.setItemText(iditem, 2, "loading");
+            
+			list.setItemTag(newitem, 0, object);
+			list.setItemTag(newitem, 1, iditem);
+            list.setItemTag(newitem, 2, start);
+            list.setItemTag(newitem, 3, start + length);
+        }
+        
+    }
+    
+    
+    void displayValue(QXTreeView list, long item ,JsonObject valueroot){
+		if (valueroot.has("object_id")){
+        
+			String objectId = valueroot.getString("object_id");
+            
+			if (valueroot.has("length")){
+				String slength = valueroot.getString("length");
+                
+				long lenitem = list.insertItem(item, nilptr, "length");
+				list.setItemText(lenitem, 1, "int");
+				list.setItemText(lenitem, 2, slength);
+        
+                long length = slength.parseLong();
+                splitArray(list, item, objectId.parseLong(), 0,  length, getSplit(length));
+            }else
+            if (valueroot.has("thumb")){
+				String text = valueroot.getString("thumb");
+                
+                text = text.replace("\n", "\\n")
+							.replace("\r", "\\r")
+							.replace("\t", "\\t")
+                            .replace("\b", "\\b");
+                            
+                list.setItemText(item, 2, text);
+                list.setItemText(item, 1, "String");    
+                list.setItemTag(item, 2, objectId.parseLong());
+            }else{
+				long iditem = list.insertItem(item, nilptr, "id");
+				list.setItemText(item, 3, objectId);
+				list.setItemText(iditem, 2, "loading");
+				
+				list.setItemTag(item, 0, objectId.parseLong());
+				list.setItemTag(item, 1, iditem);
+            }
+			return ;
+		}
+        
+		int valueType = valueroot.getInt("valuetype");
+		String values = valueroot.getString("value"); 
+        
+        if (values == nilptr){
+			values = "nilptr";
+        }else{
+			values = values.replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t").replace("\b", "\\b");
+        }
+		switch(valueType){
+		case 0:
+			list.setItemText(item, 2, values);
+		break;
+        
+		case 1:
+			parseMember(list, item, valueroot);
+		break;
+        
+		case 2:
+			parseArrayValue(list, item, valueroot);
+		break;
+		
+		}
+    }
+    void parseArrayValue(QXTreeView list, long item ,JsonObject valueroot){
+        long dataitem = list.insertItem(item, nilptr, "data");
+
+        JsonArray valarr = (JsonArray)valueroot.get("value");
+        if (valarr != nilptr){
+			for (int i =0; i <valarr.length(); i++ ){                
+				JsonObject valroot = (JsonObject)valarr.get(i);
+                if (valroot != nilptr){
+					long datitem = list.insertItem(dataitem, nilptr, "[" + valroot.getString("index") + "]");
+                    String stype = valroot.getString("type");
+                    if (stype != nilptr){
+						list.setItemText(datitem, 1, stype);                
+                    }          
+					displayValue(list, datitem, valroot);
+                }
+            }
+        }
+        
+    }
+    
+    void parseMember(QXTreeView list, long item ,JsonObject valueroot){
+        JsonArray valarr = (JsonArray)valueroot.get("value");
+        if (valarr != nilptr){
+			for (int i =0; i < valarr.length(); i++ ){
+				JsonObject valroot = (JsonObject)valarr.get(i);
+                if (valroot != nilptr){
+					long datitem = list.insertItem(item, nilptr, ((JsonObject)valarr.get(i)).getString("name"));
+                    String stype = valroot.getString("type");
+                    if (stype != nilptr){
+						list.setItemText(datitem, 1, stype);                
+                    }
+					displayValue(list, datitem, valroot);
+                }
+            }
+        } 
+    }
+    
+};

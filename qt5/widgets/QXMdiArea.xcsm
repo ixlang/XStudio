@@ -1,0 +1,59 @@
+class QXMdiArea : QXWidget{
+    static const int ScrollBarAsNeeded = 0;
+    static const int ScrollBarAlwaysOff = 1;
+    static const int ScrollBarAlwaysOn = 2;
+        
+    static const int SubWindowView = 0;
+    static const int TabbedView = 1;
+    
+    QXMdiArea(long handle){
+        super(handle);
+    }
+    
+    QXMdiSubWindow createSubWnd(bool bshow){
+        QXMdiSubWindow wnd = new QXMdiSubWindow();
+        if (wnd.create(this)){
+            if (bshow){
+                wnd.show();
+            }
+            return wnd;
+        }
+        return nilptr;
+    }
+    
+    void setViewMode(int vm){
+        widget_set_vint_value(nativehandle, MDIMODE, vm);
+    }
+    
+    void setHorizontalScrollBarPolicy(int v){
+        widget_set_vint_value(nativehandle, MDISETSCROLLH, v);
+    }
+    
+    void setVerticalScrollBarPolicy(int v){
+        widget_set_vint_value(nativehandle, MDISETSCROLLV, v);
+    }
+    
+    void removeSubWindow(QXWidget subWindow){
+        widget_set_native_value(nativehandle, REMSUBWIN, subWindow.nativehandle);
+    }
+    
+    void addSubWindow(QXWidget subWindow){
+        widget_set_native_value(nativehandle, ADDSUBWIN, subWindow.nativehandle);
+    }
+    
+    QXWidget currentSubWindow(){
+        return (QXWidget)widget_get_object(nativehandle, CURRENTSUBWIN);
+    }
+    
+    void cascadeSubWindows(){
+        widget_slot(nativehandle, CASCADESUBWIN);
+    }
+    
+    void tileSubWindows(){
+        widget_slot(nativehandle, TILESUBWIN);
+    }
+    
+    void setActiveSubWindow(QXMdiSubWindow window){
+        widget_set_native_value(nativehandle, SETACTSUBWIN, window.nativehandle);
+    }
+};

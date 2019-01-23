@@ -1,0 +1,22 @@
+//xlang Source, Name:QXPoint.xcsm 
+//Date: Mon Oct 21:43:44 2018 
+
+class QXPoint{
+
+	QXPoint(int _x, int _y){
+		x = _x;
+        y = _y;
+    }
+    
+	int x , y;
+    
+    void offset(int _x,int _y){
+		x += _x;
+        y += _y;
+    }
+    
+    void offset(QXPoint p){
+		x += p.x;
+        y += p.y;
+    }
+};

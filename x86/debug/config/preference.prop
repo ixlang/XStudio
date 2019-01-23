@@ -1,0 +1,15 @@
+{
+	"intelsence":	"开启",
+	"autosave":	"开启",
+	"switchinfo":	"开启",
+	"qout":	"开启",
+	"brace":	"开启",
+	"ident":	"开启",
+	"editorfont":	"",
+	"verc":	"Git",
+	"vercpath":	"",
+	"synchronize":	"关闭时同步",
+	"style":	"浅色",
+	"language":	"简体中文",
+	"workspace":	"E:/Developments/Cadaqs/caNamespace/castudio/xcross/xlang/temptest"
+}
