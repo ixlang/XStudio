@@ -89,6 +89,8 @@ interface ProjectPropInterface{
 
 参考 XIntelliSense.xcs 
 
+## 其他内容再待补充
+
 # 开发者交流
 
 xlang & XStudio语言开发交流QQ群
