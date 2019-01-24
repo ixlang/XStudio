@@ -131,7 +131,7 @@ class PackageViewer : QXDialog{
 	void install(String file){
 		PackageManager.PackageInfo pi = pm.previewPackage(file);
 		if (pi != nilptr){
-			if (QXMessageBox.Information("提示", "将安装包 " + pi.name + " " + pi.version + "?", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Ok) == QXMessageBox.Ok){
+			if (QXMessageBox.Information("提示", "将安装包 " + pi.name + " " + pi.version + "?" + "<br /><br />简介:<br /><b>" + pi.descr + "</b><br /><br />发布者:<a href=\"" + pi.author + "\">" + pi.author + "<em>", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Ok) == QXMessageBox.Ok){
 				if (pm.installPackage(pi)){
 					loadList();
 				}else{

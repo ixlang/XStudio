@@ -64,7 +64,11 @@ class Builder : IBuilder{
                 }
             }catch(Exception e){
                 String str = e.getMessage();
-                output.output("错误:" + new String(str.getBytes(), "CP936"));
+                if (_system_.getPlatformId() == 0){
+					str = new String(str.getBytes(), "GB18030//IGNORE");
+                    compilerPath = new String(compilerPath.getBytes(), "GB18030//IGNORE");
+                }
+                output.output("运行编译器时发生错误:\n[" + compilerPath + "]" + str);
             }
             buildProcess = nilptr;
         }

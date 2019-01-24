@@ -363,7 +363,7 @@ class XMenuManager {
                 String buildtime = String.formatDate("%Y年%m月%d日", _system_.getAppTimestamp());
                 app.mainWindow.About("关于", 
                 "<Strong>XStudio(Xlang 集成开发环境) Release " + Utils.getAppVersion() + " </Strong><br /><br />" + 
-                 "开发语言: Xlang Beta v8.0<br /><br />" + 
+                 "开发语言: Xlang v1.1<br /><br />" + 
                  "编译时间: " + buildtime + "<br /><br />" + 
                  "<b>该软件使用xlang beta v5开发, 软件全部源代码可在xlang的example中找到," + 
                  "native部分为C++与Xlang的XNL项目(同样在example代码中), native项目仅有软件使用的部分调用," + 

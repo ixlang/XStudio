@@ -2,7 +2,7 @@
 //Date: Thu Nov 09:02:46 2018 
 
 class Utils{
-	static const int X_STUDIO_VERSION = 181214;
+	static const int X_STUDIO_VERSION = 190124;
     
     static void readForProcess(IBuilder builder, Process _process){
 		try{

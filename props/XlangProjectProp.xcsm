@@ -78,11 +78,13 @@ class XlangProjectProp : ProjectPropInterface{
 
 
 	static String getCompilerPath(){
-		String workDir = _system_.getAppDirectory();
+		String comppath = _system_.getAppDirectory();
 		if (_system_.getPlatformId() == 0){
-			return workDir.appendPath(_compile_path);
-		}
-		return workDir.appendPath(_compile_path_linux);
+			comppath = comppath.appendPath(_compile_path);
+		}else{
+			comppath = comppath.appendPath(_compile_path_linux);
+        }
+        return String.formatPath(comppath,false);
 	}
 
     bool setValue(Project object, Configure configure,  String key, String value)override{
