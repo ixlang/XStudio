@@ -33,4 +33,4 @@ F5 即可运行;
 
 # 开发者交流
 
-[![xlang & XStudio语言开发交流群](https://pub.idqqimg.com/wpa/images/group.png)](https://shang.qq.com/wpa/qunwpa?idkey=d942b64d32f7fd1e537b8f49284b33dbb6e9268bb57586be89895737cbae0bb7)
+xlang & XStudio语言开发交流群 [![xlang & XStudio语言开发交流群](https://pub.idqqimg.com/wpa/images/group.png)](https://shang.qq.com/wpa/qunwpa?idkey=d942b64d32f7fd1e537b8f49284b33dbb6e9268bb57586be89895737cbae0bb7)
