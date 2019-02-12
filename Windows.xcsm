@@ -109,7 +109,7 @@ class Windows : QXDialog {
        Map.Iterator<String, XSourceEditor> iter = XSourceEditor.editorMgr.iterator();
        
         while (iter.hasNext()){
-            String key = iter.getKey();
+            //String key = iter.getKey();
             XSourceEditor val = iter.getValue();
             
             iter.next();

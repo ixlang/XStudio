@@ -1015,6 +1015,28 @@ class XWorkspace : QXMdiArea{
         }
 	}
     
+    void test(){
+
+    }
+
+	void overrideFunction(){
+        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        if (wnd != nilptr){
+            wnd.overrideObject(wnd._sci.currentPosition());
+        }
+    }
+    
+	XIntelliSense.XIntelliResult [] XISQueryM(String sourcePath,int line){
+		synchronized(this){
+			if (currentProject != nilptr){
+				if (currentProject.intelliSense != nilptr){
+					return currentProject.intelliSense.getIntelliSenseObjectM(sourcePath, line);
+				}
+			}
+		}
+		return nilptr;
+	}
+    
 	XIntelliSense.XIntelliResult [] XISQuery(String sourcePath,int line,String keyWord){
 		synchronized(this){
 			if (currentProject != nilptr){

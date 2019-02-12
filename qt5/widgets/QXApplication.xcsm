@@ -76,6 +76,12 @@ class QXApplication : QXObject{
 		if (objectClass.equals("QToolBar")){
             return new QXToolBar(object);
         }
+		if (objectClass.equals("QTableWidget")){
+            return new QXTableWidget(object);
+        }
+		if (objectClass.equals("QTreeWidget")){
+            return new QXTreeView(object);
+        }
 		if (objectClass.equals("QFileSystemWatcher")){
             return new QXFileSystemWatcher(object);
         }

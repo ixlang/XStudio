@@ -626,6 +626,45 @@ class QXObject : QXCore{
         }
         void onWindowStateChange(QXObject obj, int state, int oldState){}
     };
+    
+    static class TableWidgetEventListener{
+		void onCellChange(QXTableWidget object, int row ,int column){
+		
+		}
+		void onItemChange(QXTableWidget object,long item){ 
+			
+		}
+		void onCellPress(QXTableWidget object, int row ,int column){ 
+			
+		}
+		void onItemPress(QXTableWidget object,long item){ 
+		 
+		}
+		void onCellClick(QXTableWidget object, int row ,int column){
+		
+		}
+		void onItemClick(QXTableWidget object,long item){ 
+			
+		}
+		void onCellDBClick(QXTableWidget object, int row ,int column){ 
+			
+		}
+		void onItemDBClick(QXTableWidget object,long item){ 
+			
+		}
+		void onCellEnter(QXTableWidget object, int row ,int column){ 
+			
+		}
+		void onItemEnter(QXTableWidget object,long item){ 
+			
+		}
+		void onCellActived(QXTableWidget object, int row ,int column){ 
+			
+		}
+		void onItemActived(QXTableWidget object,long item){ 
+			
+		}    
+    };
 	static class SciEventListener{
 		void QON_SELCHANGED(QXSci sci, bool yes){	}
 		void ON_AUTOCCANCELLED(QXSci sci){	}
@@ -691,7 +730,7 @@ class QXObject : QXCore{
     void setOnFileSystemChangeListener(onFileSystemChangeListener l){
 		_fsweListener = l;
     }
-    
+    TableWidgetEventListener  _tableenvlis = nilptr;
     onFileSystemChangeListener _fsweListener = nilptr;
     onEditEventListener	 _editEventListener = nilptr;
     onMouseEventListener _mouseListener = nilptr;
@@ -710,6 +749,10 @@ class QXObject : QXCore{
 	onContextMenuListener	_contextMenuListener = nilptr;
 	onActivateListener _activateListener = nilptr;
     onComboBoxEventListener _comboboxListener = nilptr;
+    
+   	void setOnTableWidgetEventListener(TableWidgetEventListener l){
+		_tableenvlis = l;
+	} 
    	void setOnComboBoxEventListener(onComboBoxEventListener l){
 		_comboboxListener = l;
 	} 
@@ -1418,5 +1461,64 @@ class QXObject : QXCore{
 			_fsweListener.onDirChange(this, path);
         }  
     }
-    
+	void onCellChange(int row,int column){
+		if (_tableenvlis != nilptr){
+			_tableenvlis.onCellChange((QXTableWidget)this, row, column);
+        }
+    }
+	void onItemChange(long item){ 
+		if (_tableenvlis != nilptr){
+			_tableenvlis.onItemChange((QXTableWidget)this, item);
+        }
+    }
+	void onCellPress(int row,int column){ 
+		if (_tableenvlis != nilptr){
+			_tableenvlis.onCellPress((QXTableWidget)this, row, column);
+        } 
+    }
+	void onItemPress(long item){ 
+		if (_tableenvlis != nilptr){
+			_tableenvlis.onItemPress((QXTableWidget)this, item);
+        }
+    }
+	void onCellClick(int row,int column){
+		if (_tableenvlis != nilptr){
+			_tableenvlis.onCellClick((QXTableWidget)this, row, column);
+        } 
+    }
+	void onItemClick(long item){ 
+		if (_tableenvlis != nilptr){
+			_tableenvlis.onItemClick((QXTableWidget)this, item);
+        }   
+    }
+	void onCellDBClick(int row,int column){ 
+		if (_tableenvlis != nilptr){
+			_tableenvlis.onCellDBClick((QXTableWidget)this, row, column);
+        } 
+    }
+	void onItemDBClick(long item){ 
+		if (_tableenvlis != nilptr){
+			_tableenvlis.onItemDBClick((QXTableWidget)this, item);
+        }   
+    }
+	void onCellEnter(int row,int column){ 
+		if (_tableenvlis != nilptr){
+			_tableenvlis.onCellEnter((QXTableWidget)this, row, column);
+        }  
+    }
+	void onItemEnter(long item){ 
+		if (_tableenvlis != nilptr){
+			_tableenvlis.onItemEnter((QXTableWidget)this, item);
+        }   
+    }
+	void onCellActived(int row,int column){ 
+		if (_tableenvlis != nilptr){
+			_tableenvlis.onCellActived((QXTableWidget)this, row, column);
+        }  
+    }
+	void onItemActived(long item){ 
+		if (_tableenvlis != nilptr){
+			_tableenvlis.onItemActived((QXTableWidget)this, item);
+        }   
+    }
 };

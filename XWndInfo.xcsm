@@ -124,7 +124,7 @@ class XWndInfor : QXDockWidget{
     void loadInfo(){
 		String [] columns = {"提示", "警告", "错误"};
         String [] icons = {"res/toolbar/tips.png", "res/toolbar/warning_out.png", "res/toolbar/error.png"};
-        int []colors = {0xff00ff00, 0xffffff00, 0xffff0000};
+        //int []colors = {0xff00ff00, 0xffffff00, 0xffff0000};
         
         synchronized(infoLock){
             if (infoList != nilptr){

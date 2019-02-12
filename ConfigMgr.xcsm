@@ -123,7 +123,7 @@ class ConfigMgr : QXDialog{
        Map.Iterator<String, Configure> iter = _curproject.configures.iterator();
        
         while (iter.hasNext()){
-            String key = iter.getKey();
+            //String key = iter.getKey();
             Configure cfg = iter.getValue();
             iter.next();
             _listview.addItem(nilptr, cfg.getName());  

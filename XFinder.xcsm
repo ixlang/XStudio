@@ -174,7 +174,7 @@ class XFinder{
         int findlen = findTxt.length();
         
         while ((findpos = text.indexOf(findTxt, findpos + 1)) != -1){
-            result.add(new FindItem(file, findpos, findTxt.length(), cutString(originalText, findpos, findpos + findTxt.length() - 1)));
+            result.add(new FindItem(file, findpos, findlen, cutString(originalText, findpos, findpos + findlen - 1)));
         }
     }
     

@@ -442,10 +442,10 @@ class XlangProjectProp : ProjectPropInterface{
              }
         }
         
-		Process _mprocess = new Process("/usr/bin/make ", margs);
+		Process _mprocess = new Process("/usr/bin/make", margs);
         _mprocess.setWorkDirectory(projectDir);
         
-        String statusoutput = "/usr/bin/make" + args;
+        String statusoutput = "/usr/bin/make " + args;
             
         builder.OutputText(statusoutput + "\n");
         
@@ -554,7 +554,7 @@ class XlangProjectProp : ProjectPropInterface{
 			for (int i = 0; i < sources.length(); i++){
 				String srcname = sources.getString(i);
                 String ext = srcname.findExtension();
-                String fname = srcname.findFilenameAndExtension();
+                //String fname = srcname.findFilenameAndExtension();
                 
                 String fullsourcePath = String.formatPath(workDir.appendPath(srcname), false);
                 if (ext != nilptr && (ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm") || ext.equalsIgnoreCase(".version")) ){
@@ -693,7 +693,7 @@ class XlangProjectProp : ProjectPropInterface{
     
     void generateJsonArrayArgs(String key, JsonArray incpath, Vector<String> args){
 		if (incpath != nilptr){
-			String incs = "";
+			//String incs = "";
             bool pushkey = false;
 			for (int i = 0; i < incpath.length(); i++){
 				String inc = incpath.getString(i);

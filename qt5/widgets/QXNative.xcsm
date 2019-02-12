@@ -79,6 +79,7 @@ class QXNative{
         long cdecl long_intstring(long handle,int proid,int type, String v1);
         long cdecl long_intlong(long handle,int proid, long value);
         long cdecl long_intlong2(long handle,int proid, long value, long v1);
+        long cdecl pointer_intlong2(ObjectPtr handle,int proid, long value, long v1);
         void cdecl void_long2(long handle,int proid, long value1, long v2);
         void cdecl native_double2(long h ,int proid,double v1, double v2);
         void cdecl native_double4(double v1, double v2, double v3, double v4,long h ,int proid);

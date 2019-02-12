@@ -167,6 +167,10 @@ class XMenuManager {
                 app._mdispace.saveFile();
                 return ;
             }
+            if (name.equals("actionoverride")){
+                app._mdispace.overrideFunction();
+                return ;
+            }
 			if (name.equals("actionsaveas")){
                 app._mdispace.saveFileAs();
                 return ; 
@@ -308,7 +312,7 @@ class XMenuManager {
                 return ;
             }
             if (name.equals("actiontest")){
-				//XWorkspace.workspace.currentProject.intelliSense.testClose();
+				XWorkspace.workspace.test();
             }
             if (name.equals("actionstepin")){
 				app._mdispace.debuggee.stepin(ThreadManager.currentThreadId);

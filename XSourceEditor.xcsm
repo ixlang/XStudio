@@ -253,33 +253,33 @@ class XSourceEditor : QXMdiSubWindow{
 		preProcessXIntellisense();
     }
     void preProcessXIntellisense(){
-
-		if (lastxis == nilptr || lastxis.length == 0){
+		XIntelliSense.XIntelliResult[] _lastis = lastxis;
+		if (_lastis == nilptr || _lastis.length == 0){
 			return ;
         }
         int count = 0;
         
-        XIntelliSense.XIntelliResult [] names = new XIntelliSense.XIntelliResult[lastxis.length];
+        XIntelliSense.XIntelliResult [] names = new XIntelliSense.XIntelliResult[_lastis.length];
         
         if (strpretext != nilptr){
 			String prekey = strpretext.upper();
         
 			if (prekey.equals(".") == false){
 				if (prekey.length() > 0){
-					for (int i = 0; i < lastxis.length; i++){
-						if (lastxis[i].name.upper().startWith(prekey)){
-							names[count] = lastxis[i];
+					for (int i = 0; i < _lastis.length; i++){
+						if (_lastis[i].name.upper().startWith(prekey)){
+							names[count] = _lastis[i];
 							count++;
 						}
 					}
                 }
 			}else{
-				count = lastxis.length;
-                names = lastxis;
+				count = _lastis.length;
+                names = _lastis;
 			}
         }else{
-			count = lastxis.length;
-            names = lastxis;
+			count = _lastis.length;
+            names = _lastis;
         }
         
         if (count > 0){
@@ -428,7 +428,7 @@ class XSourceEditor : QXMdiSubWindow{
 
 		int start = _sci.sendEditor(QXSci.SCI_WORDSTARTPOSITION, pos, 0);
 		int end = _sci.sendEditor(QXSci.SCI_WORDENDPOSITION, pos, 0);
-		int line = _sci.positionToLine(pos);
+		//int line = _sci.positionToLine(pos);
 		String curKeyWord = _sci.getText(start, end).trim(true);
         
 
@@ -486,7 +486,6 @@ class XSourceEditor : QXMdiSubWindow{
     void showRtInfos(int pos, JsonArray watches){
 		JsonObject obj = (JsonObject)watches.get(0);
 		if (obj != nilptr){
-			long item = 0;
 			String name = obj.getString("name");
 			int error = obj.getInt("error");
 			try{
@@ -502,7 +501,7 @@ class XSourceEditor : QXMdiSubWindow{
 							JsonObject valueroot = new JsonObject(values);
 							
 							if (valueroot != nilptr){
-								int valueType = valueroot.getInt("valuetype");
+								//int valueType = valueroot.getInt("valuetype");
 								values = valueroot.getString("value"); 
 								
 								if (values == nilptr){
@@ -588,6 +587,8 @@ class XSourceEditor : QXMdiSubWindow{
 				"-",
 				"actiontoback",
 				"actiontofront",
+                "-",
+				"actionoverride",
 				"-",
 				"actioncut",
 				"-",
@@ -966,7 +967,7 @@ class XSourceEditor : QXMdiSubWindow{
     }
     
     int clearIndic(){
-		bool bclr = true;
+		//bool bclr = true;
         int start = 0, end = 0;
 		int del_len = 0;
         do {
@@ -984,6 +985,35 @@ class XSourceEditor : QXMdiSubWindow{
             }
         }while (end != _sci.getLength());
         return del_len;
+    }
+    
+    void overrideObject(int pos){
+		int line = _sci.positionToLine(pos);
+		
+	
+		new Thread(){
+			void run()override{
+				XIntelliSense.XIntelliResult [] res = _mdi_area.XISQueryM(filePath, line);
+				
+				runOnUi(new Runnable(){
+					void run()override{
+						if (res != nilptr && res.length > 0){
+							OverrideDlg.requesOverrideObject(XSourceEditor.this, pos, res);
+						}else{
+							ProgressView pv = ProgressView.showWait(1000);
+							pv.centerScreen();
+							pv.showResult(true, false);
+							pv.setTitleText("找不到对象");
+							pv.dismissAfter(1000);
+						}
+					}
+				});
+
+				
+			}
+		}.start();
+
+		
     }
     
     void locationObject(int pos){
@@ -1243,7 +1273,7 @@ class XSourceEditor : QXMdiSubWindow{
         _sci.sendEditor(QXSci.SCI_STYLESETFORE, 75, 0xffefefef);
         _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
         //_sci.sendEditor(QXSci.STYLE_LINENUMBER, 1, 0);
-        bool bmac = (_system_.getPlatformId() == 2);
+        //bool bmac = (_system_.getPlatformId() == 2);
         
 
 		_sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,Setting.getEditorFont()); 
@@ -1579,8 +1609,10 @@ class XSourceEditor : QXMdiSubWindow{
                         updateTitle();
                         saved = true;
                         String ext = savepath.findExtension();
-						if (ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm")){
-							_mdi_area.UpdateIntelliSense(savepath, content);
+                        if (ext != nilptr && ext.length() > 0){
+							if (ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm")){
+								_mdi_area.UpdateIntelliSense(savepath, content);
+							}
                         }
                     }
                 }catch(Exception e){

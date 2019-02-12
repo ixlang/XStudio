@@ -182,7 +182,7 @@ class BreakPointWnd : ListDockWidget{
 	}
     
     void parseBreakPoint(BreakPointRequest bpr){
-		QXTreeView list = getList();
+		//QXTreeView list = getList();
     
 		if (bpr.error != 0){
 			XWndOutput.outputWnd.output("无法在此位置切换断点:" + bpr.file + " 行:" + bpr.reqline + "\n");

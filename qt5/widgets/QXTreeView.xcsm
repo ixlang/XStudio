@@ -13,6 +13,14 @@ class QXTreeView : QXWidget{
         ItemNeverHasChildren = 128,
         ItemIsUserTristate = 256;
         
+    QXTreeView(){
+    
+    }
+    
+    QXTreeView(long handle){
+        super(handle);
+    }
+    
     bool create(){
         nativehandle = createQObject(QType.qtTreeView, this, 0);
         if (nativehandle == 0){
@@ -126,18 +134,29 @@ class QXTreeView : QXWidget{
     void removeAllchild(long item){
 		widget_slot(item, TRIEMCLEARCHILD);
     }
+    
     void setExpand(long item, bool bExp){
 		widget_set_bool_value(item, TRIEMSETEXPAND, bExp);
     }
+    
     void setItemVisible(long item, bool bHidden){
 		widget_set_bool_value(item, TRIEMSETHIDDEN, bHidden);
     }
+    
 	int getTopLevelCount(){
 		return widget_get_int_value(nativehandle, TREEGETCOUNT);
 	}
     
+    long getTopItem(int id){
+		return object_get_long_int(nativehandle, GETTOPITEM, id, 0);
+    }
+    
 	long[] getSelectedItems(){
 		return (long[])widget_get_object(nativehandle, TREEGETSELITEM);
+	}
+    
+	long[] getTopItems(){
+		return (long[])widget_get_object(nativehandle, TREEGETTOPITEMS);
 	}
     
     long[] getItemChildren(long item){

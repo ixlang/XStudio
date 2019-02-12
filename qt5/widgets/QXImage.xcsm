@@ -62,6 +62,17 @@ class QXImage{
         }
     }
     
+    QXImage(byte [] data, int width, int height, int format){
+		long wh = width;
+        wh <<= 32;
+
+		himage = QXNative.pointer_intlong2(data, QXCore.IMGLOAD, wh | height, format);
+        
+        if (himage == 0){
+			throw new IllegalArgumentException("can not load from data");
+        }
+    }
+    
     void finalize(){
 		if (himage != 0){
 			QXNative.widget_slot(himage, QXCore.DELETEIMAGE);

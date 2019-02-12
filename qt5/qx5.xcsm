@@ -47,6 +47,7 @@ require("widgets/QXEvent.xcsm",
 "widgets/QXCheckBox.xcsm",
 "widgets/QXToolBar.xcsm",
 "widgets/QXFileSystemWatcher.xcsm",
+"widgets/QXTableWidget.xcsm",
 "../uicomponent/ProgressView.xcsm",
 "../uicomponent/Switche.xcsm"
 )

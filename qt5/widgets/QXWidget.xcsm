@@ -82,6 +82,14 @@ class QXWidget : QXObject{
     ActionsContextMenu = 2,
     CustomContextMenu = 3,
     PreventContextMenu = 4;
+    
+    static const int 
+        NoFocus = 0,
+        TabFocus = 0x1,
+        ClickFocus = 0x2,
+        StrongFocus = TabFocus | ClickFocus | 0x8,
+        WheelFocus = StrongFocus | 0x4;
+        
     QXWidget(){
     }
     
@@ -383,8 +391,13 @@ class QXWidget : QXObject{
         widget_set_bool_value(nativehandle, QXCore.ACTIVED, v);
     }
        
+    void setFocusPolicy(int fcy)   {
+		widget_set_vint_value(nativehandle, QXCore.SETFOCUSPOLICY, fcy);
+    }
        
-       
+    int getFocusPolicy(){
+		return widget_get_int_value(nativehandle, QXCore.SETFOCUSPOLICY);
+    }
     int getMinimumHeight(){
         return widget_get_int_value(nativehandle, QXCore.MINIMUMHEIGHT);
     }

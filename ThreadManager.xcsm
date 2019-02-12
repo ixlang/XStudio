@@ -63,9 +63,8 @@ class ThreadManager{
 				parseException(exception);
             }
             
-            if (bInterrupt){
-				parseStack((JsonArray)thread.get("stack"));
-            }
+			parseStack((JsonArray)thread.get("stack"));
+            
         }
         
         void parseException(JsonObject exception){

@@ -3,6 +3,7 @@
 class XIntelliSense{
 	long handle;
 	Project project;
+    
 	static class XIntelliResult{
 		String name;
 		String type;
@@ -99,7 +100,14 @@ class XIntelliSense{
         }
 		return getResult();
 	}
-      
+     
+    XIntelliResult [] getIntelliSenseObjectM(String source,int line){
+		if (Setting.isIntellisense()){
+			XISQueryObjectM(handle, XPlatform.converToPlatformCharSet(source), line);
+        }
+		return getResult();
+	}
+    
 	XIntelliResult [] getIntelliSense(String source,String content, long pos){
 		if (Setting.isIntellisense()){
 			IntelliSense(handle, XPlatform.converToPlatformCharSet(source), content, pos);
@@ -183,6 +191,7 @@ class XIntelliSense{
         bool cdecl updateSource(long h, String file, String content); 
 		bool cdecl IntelliSense(long h, String file, String content, long position); 
         bool cdecl XISQueryObject(long _sc, String sourceFile, int line, String name);
+        bool cdecl XISQueryObjectM(long _sc, String sourceFile, int line);
         bool cdecl IntelliSenseL(long h, String file, int line); 
 		int cdecl getXIntelliSenseCount(long h); 
 		String cdecl getIntelliSenseItemInfo(long h, int id, int prop);

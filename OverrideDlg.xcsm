@@ -1,0 +1,172 @@
+//xlang Source, Name:OverrideDlg.xcsm 
+//Date: Tue Feb 00:33:49 2019 
+
+class OverrideDlg : QXDialog {
+
+	int addType = 0;
+    QXPushButton btnAdd, btnClose;
+    QXTreeView _treeview;
+    //Project currentProject;
+    XIntelliSense.XIntelliResult [] result;
+    XSourceEditor editwnd;
+    long editpos;
+    
+    String prefix = "";
+        
+    Map<String, long> expand_data = new Map<String, long>();
+
+        
+    void onAttach()override{ 
+    
+        setWindowFlags(CustomizeWindowHint | WindowCloseButtonHint);
+        
+        //setFixedSize(width(), height());
+        
+        btnAdd = (QXPushButton)attachByName(new QXPushButton(), "btnAdd");
+        btnClose = (QXPushButton)attachByName(new QXPushButton(), "btnClose");
+        
+        //checkListener
+        _treeview = (QXTreeView)attachByName(new QXTreeView(), "treeWidget");
+        
+        /*if (currentProject == nilptr){
+			close();
+			QXMessageBox.Critical("注意", "当前没有载入项目", QXMessageBox.Ok, QXMessageBox.Ok);
+            return ;
+        }*/
+        
+        btnAdd.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+            
+				String def ="";
+				long [] items = _treeview.getTopItems();
+                for (int i =0; i < items.length; i++){
+					if (_treeview.isItemCheck(items[i], 0)){
+						def = def + "\n\t" + _treeview.getItemText(items[i],1) + "override{\n\t\t//TODO \n\t}\n\n";
+                    }
+                }
+                editwnd._sci.insertText(editpos, def);
+                close();
+            }
+        });
+        
+        btnClose.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+				close();
+            }
+        });
+         
+		setWindowTitle("添加重载方法");
+
+        setModal(true);
+        
+        show();
+        
+        
+        String []columns = {"名称", "方法"};
+        
+        _treeview.setColumns(columns);
+        _treeview.setColumnWidth(0,300);
+        _treeview.setColumnWidth(1,400);
+        
+        
+        loadObject(result);
+        
+         /*setOnLayoutEventListener(new onLayoutEventListener(){
+			void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+				_treeview.resize(w - 40, h-  210);
+                
+                edtName.resize(w - 90, 20);
+                edtFile.resize(w - 90, 20);
+                
+				btnOk.move(w - 190, h - 35);
+				btnCancel.move(w - 100, h - 35);
+			}
+        });*/
+        
+    }
+
+
+    String getFunctionDefine(XIntelliSense.XIntelliResult proc){
+		String txt = nilptr;
+		if (proc._class != nilptr){
+			txt = proc._class.name;
+        }
+        if (proc.prop.length() != 0){
+			return nilptr;
+        }
+        if (txt == nilptr || txt.length() == 0){
+			return nilptr;
+        }
+        
+        txt = txt + " " + proc.name + "(";
+        
+        for (int i =0; i < proc.params.length; i++){
+			XIntelliSense.XIntelliResult param = proc.params[i];
+            if (param != nilptr ){
+				if (param._class != nilptr){
+					if (i != 0){
+						txt = txt + ",";
+                    }
+					txt = txt + param._class.name + " " + param.name;
+                }
+            }else{
+				return nilptr;
+            }
+        }
+        
+        txt = txt + ")";
+        return txt;
+    }
+    
+    void loadObject(XIntelliSense.XIntelliResult [] res){
+		for (int i =0, c = res.length; i < c; i++){
+			XIntelliSense.XIntelliResult obj = res[i];
+            
+			int type = obj.type.parseInt();
+            
+			long item = 0;
+			if (type == 23){
+				String txt = getFunctionDefine(obj);
+                if (txt != nilptr){
+					Map.Iterator<String, long> iter = expand_data.find(txt);
+                    
+                    bool exists = (iter != nilptr);
+					if (exists == false){
+						item = _treeview.addItem("res/toolbar/function.png", obj.name);
+
+						_treeview.setItemText(item,1,txt);
+						if (exists == false){
+							expand_data.put(txt,item);
+						}
+                    }else{
+						item = iter.getValue();
+                        if (item != 0){
+							_treeview.setItemText(item,0,obj.name  + "(已存在)");
+                        }
+                    }
+                }
+			}
+            if (item != 0){
+				_treeview.modifyItemFlags(item, QXTreeView.ItemIsUserCheckable, 0);
+                _treeview.setItemCheck(item, 0, false);
+            }
+		}
+	}
+    
+    static void requesOverrideObject(XSourceEditor wnd, long pos, XIntelliSense.XIntelliResult [] res){
+		QXDialog newDlg = new QXDialog();
+        
+        if (newDlg.load("ui/override.ui") == false){
+            return ;
+        }
+        
+        OverrideDlg wizard = new OverrideDlg();	
+        wizard.result = res;
+        wizard.attach(newDlg);
+        wizard.editwnd = wnd;
+        wizard.editpos = pos;
+    }
+  
+};

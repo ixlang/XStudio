@@ -81,7 +81,6 @@ class PackageViewer : QXDialog{
 		long []items = pcklist.getSelectedItems();
         
         if (items.length > 0){
-			int count = 0;
 			for (int i = 0; i < items.length; i++){
 				int id = pcklist.getItemTag(items[i], 0);
 				PackageManager.PackageInfo pi = pm.get(id);
