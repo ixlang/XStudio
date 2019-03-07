@@ -2,11 +2,57 @@
 class QXPropertyBrowser : QXWidget{
     
     static class PropertyManager : QXObject{
+		
+        Map<long, onPropertyEventListener> eventListener 
+			= new Map<long, onPropertyEventListener>();
+        
+		static class onPropertyEventListener{
+			 void onEnumPropertyValueChanged(long prop, int item){
+				
+			 }
+			 void onVariantPropertyValueChanged(long prop, int dataType, String stringValue){
+				
+			 }
+			 void onVariantPropertyAttributeChanged(long prop,String strAttributr, int dataType, String stringValue){
+				
+			 }
+        };
+        
         PropertyManager(){
         
         }
+        
         PropertyManager(long handle){
             super(handle);
+        }
+        
+        void onEnumPropertyValueChanged(long prop, int item)override{
+			Map.Iterator<long, onPropertyEventListener> _listener = eventListener.find(prop);
+            if (_listener != nilptr){
+				_listener.getValue().onEnumPropertyValueChanged(prop, item);
+            }
+		}
+        
+		void onVariantPropertyValueChanged(long prop, int dataType, String stringValue)override{
+			Map.Iterator<long, onPropertyEventListener> _listener = eventListener.find(prop);
+            if (_listener != nilptr){
+				_listener.getValue().onVariantPropertyValueChanged(prop, dataType, stringValue);
+            }
+		}
+        
+		void onVariantPropertyAttributeChanged(long prop,String strAttributr, int dataType, String stringValue)override{
+			Map.Iterator<long, onPropertyEventListener> _listener = eventListener.find(prop);
+            if (_listener != nilptr){
+				_listener.getValue().onVariantPropertyAttributeChanged(prop, strAttributr, dataType, stringValue);
+            }
+		}
+        
+        void setPropertyEventListener(QtProperty prop, onPropertyEventListener l){
+			if (l == nilptr){
+				eventListener.remove(prop.nativehandle);
+            }else{
+				eventListener.put(prop.nativehandle, l);
+            }
         }
     };
     
@@ -500,6 +546,13 @@ class QXPropertyBrowser : QXWidget{
         widget_set_bool_value(nativehandle, SPWVM, b);
     }
     
+    void setLables(String left, String right){
+		long_string2(nativehandle, QPBSETLABELS, left, right);
+    }
+    
+    void enableAdjust(bool ba){
+		widget_set_bool_value(nativehandle, QPBADJUST, ba);
+    }
     void setRootIsDecorated(bool b){
         widget_set_bool_value(nativehandle, SRID, b);
     }

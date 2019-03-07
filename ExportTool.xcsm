@@ -201,7 +201,7 @@ class ExportTool : QXDialog{
         prgExport = (QXProgressBar)attachByName(new QXProgressBar(), "prgExport");
         
         stBrowser.setOnClickListener(new BrowserListener(edtStaticLib, false, "选择静态库", "X 静态链接库 (*.lix)"));
-        nativeBrowser.setOnClickListener(new BrowserListener(nativefile, false, "选择Native文件", "所有文件 (*.*)"));
+        nativeBrowser.setOnClickListener(new BrowserListener(nativefile, false, "选择Native文件", "Windows 动态链接库 (*.dll);;Unix/Linux 动态链接库文件 (*.so);;Darwin 动态链接库文件 (*.dylib);;所有文件 (*.*)"));
         
 		brwExport.setOnClickListener(new onClickListener(){
 			void onClick(QXObject obj, bool checked)override{
@@ -225,7 +225,7 @@ class ExportTool : QXDialog{
 				String file = QXFileDialog.getOpenFileName("添加图标", nilptr,  "PNG图像 (*.png)", ExportTool.this);
 				if (file != nilptr && file.length() > 0){
 					currentPackage.icon = file;
-                    btnIcon.setStyleSheet("#btnIcon{border-image:url(\"" + file + "\");}");
+                    btnIcon.setStyleSheetString("#btnIcon{border-image:url(\"" + file + "\");}");
 				}
             }
         });
@@ -298,6 +298,7 @@ class ExportTool : QXDialog{
         structView.setColumns(columns);
         
         structView.setColumnWidth(0, 300);
+        setWindowIcon("./res/toolbar/wizard.png");
     }
 
 	void updatepreview(){

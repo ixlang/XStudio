@@ -10,10 +10,19 @@ class PackageViewer : QXDialog{
 	void onAttach() override {
 		//setFixedSize(width(), height());
 		pcklist = (QXTreeView)attachByName(new QXTreeView(), "pcklist");
+        pcklist.setWhatsThis("显示当前开发环境中已安装的包");
+        
         btnInstall = (QXPushButton)attachByName(new QXPushButton(), "btnInstall");
+        btnInstall.setWhatsThis("从文件安装一个包到开发环境中");
+        
         btnDelete = (QXPushButton)attachByName(new QXPushButton(), "btnDelete");
+        btnDelete.setWhatsThis("删除选择的包");
+        
         btnAdd = (QXPushButton)attachByName(new QXPushButton(), "btnAdd");
+        btnAdd.setWhatsThis("将选择的包添加到当前的项目中");
+        
 		btnExport = (QXPushButton)attachByName(new QXPushButton(), "btnExport");
+        btnExport.setWhatsThis("将选择的包导出到文件");
         
 		String [] columns = {"名称", "版本", "描述", "发布者"};
         
@@ -75,6 +84,8 @@ class PackageViewer : QXDialog{
             }
         
         });
+        
+        setWindowIcon("./res/package64.png");
 	}
 
 	void exportPackage(){

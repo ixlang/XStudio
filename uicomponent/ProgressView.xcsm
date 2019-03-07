@@ -353,9 +353,6 @@ class ProgressView : QXWidget{
 	}	
 	
 	void dismiss(){
-		if (__dismissListener != nilptr){
-			__dismissListener.onDismissListener(ProgressView.this);		
-		}
 		_dismiss();
 	}
         
@@ -380,5 +377,11 @@ class ProgressView : QXWidget{
 	void onPaint(int l, int t, int r, int b, long hpaint) override {
 		onDraw(new QXPainter(hpaint));
 	}
-
+    
+	bool onClose()override{
+		if (__dismissListener != nilptr){
+			__dismissListener.onDismissListener(ProgressView.this);		
+		}
+        return true;
+    }
 };

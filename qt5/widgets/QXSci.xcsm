@@ -2266,6 +2266,9 @@ class QXSci : QXWidget{
     int sendEditor(int cmd, int lparam, String wparam){
         return widget_set_intintstring_value(nativehandle, SCICMD, cmd, lparam, wparam);
     }
+    int sendEditor(int cmd, String lparam, String wparam){
+        return long_string2_int2(nativehandle, SCICMD, lparam, wparam, cmd, 0);
+    }
     int appendText(String text){
         return widget_set_intintstring_value(nativehandle, SCICMD, SCI_APPENDTEXT, text.length(), text);
     }

@@ -1194,7 +1194,7 @@ class XlangProjectProp : ProjectPropInterface{
         
         try{
 			if (XWorkspace.workspace.debugPrepare("127.0.0.1", debugSerial)){
-				bool readforstdout = _system_.getPlatformId() != 0;
+				bool readforstdout = Setting.isRelocalStdout();
 				if (process.create(true, readforstdout, false, false)){
 					builder.OutputText("\n已创建进程 ID: " + process.id() + "\n");
 
@@ -1261,7 +1261,7 @@ class XlangProjectProp : ProjectPropInterface{
         builder.OutputText("\n运行: " + exePath + "\n");
         
         try{
-			bool readforstdout = _system_.getPlatformId() != 0;
+			bool readforstdout = Setting.isRelocalStdout();
             if (process.create(true, readforstdout, false, false)){
 				if (readforstdout){
 					Utils.readForProcess(builder, process);
@@ -1307,6 +1307,18 @@ class XlangProjectProp : ProjectPropInterface{
         
 		loader.loadProject(destProj);
 		return true;
+    }
+    
+    bool createExampleProject(WizardLoader loader,String projectName, String projectDir, String localFile){
+		XPlatform.mkdir(projectDir);
+        
+        String projectFile = extartExampleToDir(localFile,projectDir,".xprj");
+     
+        if (projectFile != nilptr){
+			loader.loadProject(projectFile);
+            return true;
+        }
+		return false;
     }
     
     void copyQtLibs(String projectDir){
@@ -1508,6 +1520,69 @@ class XlangProjectProp : ProjectPropInterface{
         return bSuccess;
     }
     
+    String  extartExampleToDir(String zfile, String dir, String extsion){
+		
+        String projectName = nilptr;
+        
+        FileInputStream fis;
+        
+        try{
+			fis = new FileInputStream(zfile);
+        }catch(Exception e){
+			return nilptr;
+        }
+        
+        bool bSuccess = true;
+        ZipArchive zs = new ZipArchive();
+		if (zs.open(fis)){
+			int c = zs.getEntriesCount();
+			for (int i =0; i < c; i ++){
+				ZipEntry entry = zs.getEntry(i);
+				if (bSuccess == false){
+					break;
+                }
+                String entryName = entry.getName();
+				String extision = entryName.findExtension();
+                if (extision != nilptr ){
+					if (extision.equalsIgnoreCase(extsion)){
+						projectName = String.formatPath(dir.appendPath(entryName), false);
+                    }
+                }
+                //entryName = entryName.replace("${ProjectName}", projName);
+                
+                String path = String.formatPath(dir.appendPath(entryName), false);
+                
+				if (entry.isDirectory() == false){
+					ZipFile file = entry.getFile();
+					
+					byte []buf = new byte[1024];
+					int rd = 0;
+					if (file.open()){
+						long filehandler = XPlatform.openSystemFile(path, "w");
+                        if (filehandler != 0){
+							while ((rd = file.read(buf, 0, 1024)) != 0){
+								_system_.writeFile(filehandler, buf, 0, rd);
+							}
+							_system_.closeFile(filehandler);
+                        }else{
+							bSuccess = false;
+                        }
+						file.close();
+					}else{
+						bSuccess = false;
+                    }
+				}else{
+					XPlatform.mkdir(path);
+                }
+			}
+            zs.close();
+		}else{
+			projectName = nilptr;
+        }
+        
+        return projectName;
+    }
+    
     byte [] getContentForNewFile(String filename,Project project, String uuid){
 		
         String projectName = "XApp";
@@ -1677,6 +1752,11 @@ class XlangProjectProp : ProjectPropInterface{
         }
         if (uuid.equals("f48d4411-6b02-4f8b-a961-23a2e079c55c")){
 			return createNormalFileToProject(loader, projectName, projectDir, uuid, ownProject, addToProject, ".version");
+        }
+        
+        if (userType.equals("example")){
+			String priject_dir = String.formatPath(projectDir.appendPath(projectName), false);
+			return createExampleProject(loader, projectName, priject_dir, uuid);
         }
 		return false;
 	}

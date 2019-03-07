@@ -2,7 +2,8 @@
 //Date: Wed Sep 16:29:18 2018 
 
 class Setting : QXDialog {
-
+	static JsonObject _template_root;
+    
 	static class Preference{
 		JsonObject root;
 
@@ -64,7 +65,54 @@ class Setting : QXDialog {
             }
         }
         
+        void apply(JsonObject template){
+        
+			if (root != nilptr){
+				JsonObject keys = (JsonObject)template.get("加速键");
+                
+                JsonObject skey = (JsonObject)keys.child();
+               
+				Map<String, String> keyMap = new Map<String, String>();
+                bool bConflict = false;
+                
+                while ((skey = (JsonObject)skey.next()) != nilptr){
+					String name = skey.getName();
+                    String []names = name.split(":");
+                    
+                    if (names.length == 2){
+						String keyname = names[1];
+                        String shortkey = root.getString(names[1]);
+                        
+                        if (XMenuManager._menuMgr != nilptr && XMenuManager._menuMgr.mainwindow != nilptr){
+							QXAction action = (QXAction)XMenuManager._menuMgr.mainwindow.findByName(keyname);
+							if (action != nilptr){
+								action.setShortcut(shortkey);
+							}
+                        }
+                        if (shortkey.length() > 0){
+							Map.Iterator<String,String> iter = keyMap.find(shortkey);
+                            if (iter != nilptr){
+								String oldKey = iter.getValue();
+                                XWndOutput.outputWnd.Output("加速键 [" + names[0] + "] 与 [" + oldKey + "] 存在冲突:" + shortkey + "\n");
+                                bConflict = true;
+                            }else{
+								keyMap.put(shortkey, names[0]);
+                            }
+                        }
+                    }
+                }
+                
+                XStackInfor.setThreadOuputStatus(outputThreadStat());
+                XLogcatWnd.setMaxItems(getLogcatMaxitems());
+                if (bConflict){
+					QXMessageBox.Critical("注意","加速键存在冲突, 可能不会生效.",QXMessageBox.Ok,QXMessageBox.Ok);
+                }
+            }
+			
+        }
+        
         void save(){
+                   
             String file = getPreferencePath();
             
             FileOutputStream fos = nilptr;
@@ -90,6 +138,7 @@ class Setting : QXDialog {
     };
     
     
+    static bool bTemplateLoaded = loadTemplate();
     static Preference preference = new Preference();
     
     QXPushButton btnClose;
@@ -101,19 +150,25 @@ class Setting : QXDialog {
     
     Map<String, QXPropertyBrowser.QtVariantProperty> currentProps = new Map<String, QXPropertyBrowser.QtVariantProperty>();
 
+	int current_sel_setting = 0;
     onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
         void onItemClicked(QXTreeView list,long item, int column)override{
-            long i = list.getItemTag(item, 0);
+            current_sel_setting = list.getItemTag(item, 0);
             saveSetting();
-            _propTable.clear();
-            currentProps.clear();
-            loadFeature((JsonObject)_propItems.get(i).child());
+			reloadProperty();
         }
     };
     
 
+	void reloadProperty(){
+		_propTable.clear();
+		currentProps.clear();
+		if (current_sel_setting >=0 && current_sel_setting < _propItems.size()){
+			loadFeature((JsonObject)_propItems.get(current_sel_setting).child());
+		}
+    }
     
-    String readSlnPropFile(String file){
+    static String readSlnPropFile(String file){
         FileInputStream fis = nilptr;
         try{
             fis = new FileInputStream(file);
@@ -129,16 +184,30 @@ class Setting : QXDialog {
         return nilptr;
     }
 
-    
-    bool loadSetting(){
-		String file = XPlatform.getAppDirectory();
+    static bool loadTemplate(){
+    	String file = XPlatform.getAppDirectory();
 		file = file.appendPath("config").appendPath("setting.prop");
 		String content = readSlnPropFile(file);
 		if (content != nilptr){
-			JsonObject _root = new JsonObject(content);
-			loadProperites((JsonObject)_root.child());
+			try{
+				_template_root = new JsonObject(content);
+			}catch(Exception e){
+				
+            }
 			return true;
 		}
+        return false;
+    }
+    
+    bool loadSetting(){
+		if (_template_root == nilptr){
+			loadTemplate();
+        }
+        
+		if (_template_root != nilptr){
+			 loadProperites((JsonObject)_template_root.child());
+             return true;
+        }
         return false;
     }
     
@@ -150,7 +219,8 @@ class Setting : QXDialog {
         _propTable.move(170, 40);
         _propTable.resize(500, 410);
         
-        
+        _propTable.setLables("项","值");
+        _propTable.enableAdjust(true);
         String [] columns = {"选项"};
         _listview.setColumns(columns);
         _listview.setOnTreeViewItemEvent(listlistener);
@@ -166,6 +236,7 @@ class Setting : QXDialog {
         new onClickListener(){
             void onClick(QXObject obj, bool checked)override{
                 saveSetting();
+                applySetting();
                 QxApp.statusBar.statusBar.showMessage("部分设置需要在XStudio重新开启后生效.");
                 close();
             }
@@ -181,6 +252,7 @@ class Setting : QXDialog {
         });
 		
         setWindowTitle("设置");
+        setWindowIcon("./res/toolbar/prop.png");
         setModal(true);
         show();
     }
@@ -240,20 +312,140 @@ class Setting : QXDialog {
         String [] options = new String[list.length()];
         for (int i = 0;i < options.length; i++){
             options[i] = list.getString(i);
+            if (options[i].startWith("$(")){
+				String svalue = options[i].substring(2,options[i].length() - 1);
+                options[i] = getSetting(nilptr, svalue);
+            }
         }
         item.setAttributeEnumNames(options);
-        item.setValue(getSetting(options, kv[1]));
+        String defaultValue = getSetting(options, kv[1]);
+        item.setValue(defaultValue);
         _propTable.addProperty(item);
         currentProps.put(kv[1], item);
+        onLoadList(manager,item, kv[1], defaultValue);
+
     }
     
-    void saveSetting(){
+    void onLoadList(QXPropertyBrowser.QtVariantPropertyManager manager,QXPropertyBrowser.QtVariantProperty item, String kv, String defaultValue){
+        if (kv.equals("shortkeystyle")){
+			manager.setPropertyEventListener(item,
+            new QXPropertyBrowser.PropertyManager.onPropertyEventListener(){
+				void onVariantPropertyValueChanged(long prop, int dataType, String stringValue)override{
+					if (stringValue != nilptr){
+                        if (stringValue.parseInt() != 0){
+							if (QXMessageBox.Question("注意","加载选择的键盘布局后,现有加速键设置将丢失?",QXMessageBox.Yes,QXMessageBox.No) == QXMessageBox.Yes){
+								if (loadKeyMap(stringValue.parseInt()) == false){
+									QXMessageBox.Critical("注意","加速键配置文件丢失,不能加载键盘布局",QXMessageBox.Ok,QXMessageBox.Ok);
+                                }
+								reloadProperty();
+								preference.setSetting("shortkeystyle", "0");
+                            }else{
+								item.setValue("0");
+                            }
+                        }
+                    }
+				}
+            });
+        }else
+        if (kv.equals("editorfont")){
+			manager.setPropertyEventListener(item,
+            new QXPropertyBrowser.PropertyManager.onPropertyEventListener(){
+				void onVariantPropertyValueChanged(long prop, int dataType, String stringValue)override{
+					if (stringValue != nilptr){
+                        if (stringValue.parseInt() != 0){
+							item.setValue(defaultValue);
+							flushSetting();
+							String newFont = QXFontDialog.getFontDialog("选择字体",getSetting(nilptr,"editorfont"),Setting.this);
+                            
+							if (newFont != nilptr){
+								preference.setSetting("editorfont", newFont);
+								reloadProperty();
+                            }else{
+								item.setValue("0");
+                            }
+                        }
+                    }
+				}
+            });
+        }else
+        if (kv.equals("workspace")){
+			manager.setPropertyEventListener(item,
+            new QXPropertyBrowser.PropertyManager.onPropertyEventListener(){
+				void onVariantPropertyValueChanged(long prop, int dataType, String stringValue)override{
+					if (stringValue != nilptr){
+                        if (stringValue.parseInt() != 0){
+							item.setValue(defaultValue);
+							flushSetting();
+							String newFont = QXFileDialog.getFolderPath("选择默认工作空间",getSetting(nilptr,"workspace"),nilptr,Setting.this);
+							if (newFont != nilptr){
+								preference.setSetting("workspace", newFont);
+								reloadProperty();
+                            }else{
+								item.setValue("0");
+                            }
+                        }
+                    }
+				}
+            });
+        }
+    }
+    
+    bool loadKeyMap(int id){
+		switch(id){
+			case 1:
+				return loadKeyMapFromFile("./config/msvc.ks");
+            break;
+            case 2:
+				return loadKeyMapFromFile("./config/eclipse.ks");
+            break;
+            case 3:
+				return loadKeyMapFromFile("./config/xcode.ks");
+            break;
+        }
+        return false;
+    }
+    
+    bool loadKeyMapFromFile(String file){
+		String destFile = String.formatPath(_system_.getAppDirectory().appendPath(file), false);
+		String content = readSlnPropFile(destFile);
+		if (content != nilptr){
+			try{
+				JsonObject keymap = new JsonObject(content);
+                
+                keymap = (JsonObject)keymap.child();
+                
+                while (keymap != nilptr){
+					String key = keymap.getName();
+                    String value = keymap.getString();
+                    preference.setSetting(key, value);
+                    keymap = (JsonObject)keymap.next();
+                }
+                
+                return true;
+			}catch(Exception e){
+				
+            }
+		}
+        return false;
+    }
+    
+    static void applySetting(){
+		editorFont = nilptr;
+		preference.apply(_template_root);
+        QxApp._theApp.reconfig();
+    }
+    
+    void flushSetting(){
         Map.Iterator<String, QXPropertyBrowser.QtVariantProperty> iter = currentProps.iterator();
         for (; iter.hasNext(); iter.next()){
             if (false == setSetting(iter.getKey(), iter.getValue().getValue())){
                 QXMessageBox.Critical("错误", iter.getKey() + "字段更改失败.", QXMessageBox.Ok, QXMessageBox.Ok);
             }
         }
+    }
+    
+    void saveSetting(){
+		flushSetting();
         preference.save();
     }
     
@@ -285,6 +477,17 @@ class Setting : QXDialog {
 		return get("switchinfo").equals("开启");
     }
     
+    static int getLogcatMaxitems(){
+		return get("logcatmax").parseInt();
+    }
+    static bool outputThreadStat(){
+        return get("threadstat").equals("开启");
+    }
+    
+    static bool repallconfirm(){
+		return get("repallconfirm").equals("开启");
+    }
+    
     static bool isMatchBrace(){
 		return get("brace").equals("开启");
     }
@@ -293,26 +496,62 @@ class Setting : QXDialog {
 		return get("ident").equals("开启");
     }
     
+    static bool isRelocalStdout(){
+		return get("stdoutrel").equals("开启");
+    }
+    
+    static bool isShowLineNumber(){
+		return get("linenumber").equals("开启");
+    }
+    
+    static QXFont editorFont;
+    
     static String getEditorFont(){
-		String font = get("editorfont");
-		if (font.length() == 0){
+    
+		String font = "";
+    
+    	if (editorFont == nilptr){
+			String sfont = get("editorfont");
+            if (sfont.length() > 0){
+				editorFont = QXFont.loadFromString(sfont); 
+            }
+		}
+        
+		if (editorFont != nilptr){
+			font = editorFont.familyName();
+        }
+
+		if (font == nilptr || font.length() == 0){
 			bool bmac = (_system_.getPlatformId() == 2);
 			font = bmac ? "Monaco" : "Consolas";
-        }
+		}
+            
         return font;
     }
     
     static int getEditorFontSize(){
-		int font_size = get("fontsize").parseDouble() * 100;
+    
+		int font_size = 0;
         
-		if (font_size == 0){
+		if (editorFont == nilptr){
+			String font = get("editorfont");
+            if (font.length() != 0){
+				editorFont = QXFont.loadFromString(font); 
+            }
+		}
+        
+        if (editorFont != nilptr){
+			font_size = editorFont.pointSize() * 100;
+        }
+        
+        if (font_size == 0){
 			if (_system_.getPlatformId() == 2){
 				font_size = 1150;
-            }else{
+			}else{
 				font_size = 1000;
-            }
-        }
-      
+			}
+		}
+            
         return font_size;
     }
     

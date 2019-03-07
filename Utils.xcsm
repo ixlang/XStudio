@@ -1,9 +1,7 @@
 //xlang Source, Name:Utils.xcsm 
 //Date: Thu Nov 09:02:46 2018 
 
-class Utils{
-	static const int X_STUDIO_VERSION = 190124;
-    
+class Utils{    
     static void readForProcess(IBuilder builder, Process _process){
 		try{
 			int rd = 0;
@@ -33,7 +31,7 @@ class Utils{
     }
      
     static void chechUpdate(int opid){
-		String fburl = String.format("http://112.124.120.113:8080/dcbinterface/api/checkupdate?osid=%d&version=%d&opid=%d&arch=%d", _system_.getPlatformId(), X_STUDIO_VERSION , opid, _system_.getOSBit());
+		String fburl = String.format("http://112.124.120.113:8080/dcbinterface/api/checkupdate?osid=%d&version=%d&opid=%d&arch=%d", _system_.getPlatformId(), _system_.getAppVersion() , opid, _system_.getOSBit());
 		 
 		new Thread(){
 			void run()override{
@@ -67,7 +65,7 @@ class Utils{
                         if (verObj != nilptr ){
 							String newverstr = verObj.getString("version");
                             if (newverstr != nilptr ){
-								if (newverstr.parseInt() > X_STUDIO_VERSION){
+								if (newverstr.parseLong() > _system_.getAppVersion()){
 									XWorkspace.workspace.runOnUi(new Runnable(){
 										void run(){
 											showNewVersion(verObj.getString("version"), verObj.getString("url"), verObj.getString("detailurl"), verObj.getString("descr"), verObj.getString("size").parseLong());

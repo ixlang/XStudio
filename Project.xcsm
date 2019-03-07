@@ -18,8 +18,7 @@ class Project{
     bool bModified = false;
     
     Map<String, Configure> configures = new Map<String, Configure>();
-       
-       
+
     bool cloneConfigure(String tempName, String newName){
 		if (configures.containsKey(newName) == false){
 			Configure cfgs = getConfigure(tempName);
@@ -115,6 +114,7 @@ class Project{
         }
         return value;
     }
+    
     String readSlnFile(String file){
         FileInputStream fis = nilptr;
         try{
@@ -488,7 +488,7 @@ class Project{
                 temproot.put("uuid", newid);
                 temproot.put("language", languageConf);
                 temproot.put("icon", "config/xlang.png");
-                temproot.put("platform", "customized");
+                temproot.put("platform", "用户自定义");
                 temproot.put("details", descr);
                 temproot.put("user", "project");
 				

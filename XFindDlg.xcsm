@@ -199,8 +199,13 @@ class XFindDlg : QXDialog {
 					XFindresWnd.ShowResult(result);
                     
                     if (result.size() > 0){
-						int rt = QXMessageBox.Question("提示","将在已打开的文档视图或者磁盘文件中替换整个项目中查找到的" + result.size() + "处内容,磁盘文件更改将无法撤消,确定继续?",  QXMessageBox.Yes | QXMessageBox.No, QXMessageBox.No);
-						
+                    
+						int rt = QXMessageBox.Yes;
+                        
+                        if (Setting.repallconfirm()){
+							rt = QXMessageBox.Question("提示","将在已打开的文档视图或者磁盘文件中替换整个项目中查找到的 " + result.size() + " 处内容,磁盘文件更改将无法撤消,确定继续?",  QXMessageBox.Yes | QXMessageBox.No, QXMessageBox.No);
+                        }
+                        
 						if (rt == QXMessageBox.Yes){
 							addReplaceHistory(replaceStr);
 							XFinder.replace(result, replaceStr);
@@ -255,6 +260,7 @@ class XFindDlg : QXDialog {
         flushHistory(filepattern, filetype);
         
         //setModal(true);
+        setWindowIcon("./res/toolbar/find.png");
         show();
 		editFind.setFocus();
     }

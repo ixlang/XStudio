@@ -97,7 +97,7 @@ class Windows : QXDialog {
 				btnClose.move(w - 150, 60);
 			}
         });*/
-        
+        setWindowIcon("./res/toolbar/winoverlap.png");
         setWindowTitle("窗口");
         setModal(true);
         show();
@@ -114,7 +114,7 @@ class Windows : QXDialog {
             
             iter.next();
             
-            long item = _listview.addItem(nilptr, val.szTitle);
+            long item = _listview.addItem("./res/toolbar/source.png", val.szTitle);
 
 			windows_list.put(item, val);
 

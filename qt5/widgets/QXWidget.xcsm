@@ -500,7 +500,9 @@ class QXWidget : QXObject{
     void setFixedSize(int w, int h){
         widget_set_v2int_value(nativehandle, QXCore.FIXEDSIZE, w, h);
     }
-    
+    void setFontDescrption(String desc){
+        widget_slot_string(nativehandle, QXCore.SETWIDGETFONT, desc);
+    }
     void setFixedWidth(int w){
         widget_set_vint_value(nativehandle, QXCore.FIXEDWIDTH, w);
     }
@@ -634,8 +636,14 @@ class QXWidget : QXObject{
             }
         });
     }
-    void setStyleSheet(String style){
-		widget_slot_string(nativehandle, QXCore.SETSTYLESHEET, style);
+    void setStyleSheet(String file){
+		widget_slot_string(nativehandle, QXCore.SETSTYLESHEET, file);
+    }
+	void setStyleSheetString(String stylesheet){
+		widget_slot_string(nativehandle, QXCore.SETSTYLESHEETSTRING, stylesheet);
+	}
+    void setWhatsThis(String tips){
+		widget_slot_string(nativehandle, QXCore.SETWHATSTHIS, tips);
     }
     void centerScreen(){
 		QXRect rc = getCurrentScreenSize();

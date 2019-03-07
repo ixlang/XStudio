@@ -130,6 +130,8 @@ class XProperites : QXDialog {
         _propTable.move(170, 40);
         _propTable.resize(500, 410);
         
+        _propTable.setLables("项","值");
+        _propTable.enableAdjust(true);
         
         String [] columns = {"选项"};
         _listview.setColumns(columns);
@@ -170,6 +172,7 @@ class XProperites : QXDialog {
         });
 
         setWindowTitle(_project.getName() + " - 属性");
+        setWindowIcon("./res/toolbar/prop.png");
         setModal(true);
         show();
     }

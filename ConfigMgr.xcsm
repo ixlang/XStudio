@@ -112,6 +112,7 @@ class ConfigMgr : QXDialog{
         });*/
         
         setWindowTitle(_curproject.getName() + " - 配置");
+        setWindowIcon("./res/toolbar/output.png");
         setModal(true);
         show();
     }

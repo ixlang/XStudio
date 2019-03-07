@@ -47,9 +47,18 @@ class QxApp : QXApplication{
         xDumpWnd  =  (XWndObjectDump)mainWindow.attachByName(new XWndObjectDump(), "gcinfo");
     }
     
+    
+    void reconfig(){
+		loadConfig();
+        wndOutput.reconfig();
+        XSourceEditor.reconfig();
+    }
+    
 	void loadConfig(){
         if (Setting.isDarkStyle()){
 			setStyleSheet("res/qss/black.qss");
+        }else{
+			setStyleSheetString("");
         }
 	}
 
@@ -160,6 +169,7 @@ class QxApp : QXApplication{
 		   
 		_mdispace.openIndexPage();
         processArgs();
+        Setting.applySetting();
         return true;  
     }
  

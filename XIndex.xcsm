@@ -24,7 +24,7 @@ class XIndexWindow : QXMdiSubWindow{
 				if (Setting.isDarkStyle() == false){
 					wqss = "#Form{background-color:#f0f0f0;}";
 				}
-				indexPage.setStyleSheet(wqss);
+				indexPage.setStyleSheetString(wqss);
             }
 			setWidget(indexPage);
 			indexPage.show();

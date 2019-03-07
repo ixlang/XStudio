@@ -193,7 +193,7 @@ class XMemoryWnd : QXDockWidget{
                 
                 item = _listview.addItem(nilptr, "全部");
                 _listview.setItemText(item, 1, "" + (long)(pooltotal + heap + uheap));
-                _listview.setItemText(item, 2, formatByte(pooltotal + heap + uheap));
+                _listview.setItemText(item, 2, formatByte(pooltotal + heap + uheap + ts + au + js));
 			}
 		}
     }

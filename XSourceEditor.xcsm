@@ -18,7 +18,8 @@ class XSourceEditor : QXMdiSubWindow{
     XIntelliSense.XIntelliResult[] current_autocmp;
     
 	bool autoCompShow;
-	long auto_position;
+    
+	long auto_position, last_autopos;
     XWorkspace _mdi_area;
 	bool sciisHand = false;
 	int lastCursor = 0;
@@ -263,16 +264,21 @@ class XSourceEditor : QXMdiSubWindow{
         
         if (strpretext != nilptr){
 			String prekey = strpretext.upper();
-        
 			if (prekey.equals(".") == false){
-				if (prekey.length() > 0){
-					for (int i = 0; i < _lastis.length; i++){
-						if (_lastis[i].name.upper().startWith(prekey)){
-							names[count] = _lastis[i];
-							count++;
-						}
+				String patternkey = ".*";
+				for (int i = 0; i < prekey.length(); i++){
+					patternkey = patternkey + prekey.substring(i, i + 1) + ".*";
+				}
+				for (int i = 0; i < _lastis.length; i++){
+					if (Pattern.test(_lastis[i].name.upper(), patternkey, 0, false)){
+						names[count] = _lastis[i];
+						count++;
 					}
-                }
+					/*if (_lastis[i].name.upper().startWith(prekey)){
+						names[count] = _lastis[i];
+						count++;
+					}*/
+				}
 			}else{
 				count = _lastis.length;
                 names = _lastis;
@@ -297,10 +303,13 @@ class XSourceEditor : QXMdiSubWindow{
 		}
     }
     
-	void showComplete(XIntelliSense.XIntelliResult[] result, int c){
+	void showComplete(XIntelliSense.XIntelliResult[] result, int c){  
 		autoWnd.clear();
 		autoCompMap.clear();
-        
+        long curpos = _sci.currentPosition();
+        String entenedText = _sci.getText(auto_position, curpos).upper();
+                
+        long selitem = 0;
 		for (int i = 0; i < c; i ++){
 			long item = 0;
             XIntelliSense.XIntelliResult names = result[i];
@@ -341,10 +350,24 @@ class XSourceEditor : QXMdiSubWindow{
 				autoWnd.setItemText(item, 1, names._class.name);
 				autoWnd.setItemColor(item, 1, 0xff7f7f7f);
 			}
+            
+            String uname = names.name.upper();
+            if (selitem == 0){
+				if (uname.startWith(entenedText)){
+					selitem = item;
+				}
+            }
             autoWnd.setItemTag(item, 0, i);
-			autoCompMap.put(names.name.upper(), item);
+			autoCompMap.put(uname, item);
 		}
+        
+
+        //XSourceEditor.this.autoCompleteChange();
+        
 		showAutoWnd(auto_position);
+        if (selitem != 0){
+			autoWnd.setCurrentItem(selitem);
+        }
 	}
     
 	void showAutoWnd(int position){
@@ -430,9 +453,7 @@ class XSourceEditor : QXMdiSubWindow{
 		int end = _sci.sendEditor(QXSci.SCI_WORDENDPOSITION, pos, 0);
 		//int line = _sci.positionToLine(pos);
 		String curKeyWord = _sci.getText(start, end).trim(true);
-        
 
-        
 		if (curKeyWord.length() > 0){
 			if (lastKey.equals(curKeyWord)){
 				return ;
@@ -627,20 +648,40 @@ class XSourceEditor : QXMdiSubWindow{
 		locationObject(_sci.getCurrentPosition());
     }
     
+    Thread autoThread = nilptr;
     
     void continueAutocomp(int pos){
 		if (autoCompShow){
+			if (pos != last_autopos){
+				last_autopos = pos;
+			}else{
+				//XSourceEditor.this.autoCompleteChange();
+				return ;
+            }
 			if (lastxis != nilptr && strpretext != nilptr){
-				
-				if (strpretext.length() == 0 ||  pos >= auto_position && (pos - auto_position) <= strpretext.length()){
+				if (pos >= auto_position){
 					String content = _sci.getText();
 					strpretext = content.substring(auto_position, pos);
-					new Thread(){
-						void run(){
-							preProcessXIntellisense();
+					if  (strpretext.length() == 0 || Pattern.test(strpretext, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true)){
+						synchronized(XSourceEditor.this){
+							if (autoThread == nilptr){
+								autoThread = new Thread(){
+									void run(){
+										preProcessXIntellisense();
+										synchronized(XSourceEditor.this){
+											autoThread = nilptr;
+										}
+									}
+								};
+								autoThread.start();
+							}
 						}
-					}.start();
-				}
+					}else{
+						hideAutoWnd();
+					}
+				}else{
+					hideAutoWnd();
+                }
 			}
 		}
     }
@@ -688,7 +729,7 @@ class XSourceEditor : QXMdiSubWindow{
 					int end = sci.sendEditor(QXSci.SCI_WORDENDPOSITION, pos - 1, 0);
 					String curKeyWord = _sci.getText(start, end);
 					XSourceEditor.this.setHighlightKeyWord(curKeyWord.trim(true));
-					XSourceEditor.this.autoCompleteChange();
+					
 					if (lastAddedChar != 0 && Setting.isAutoIdent()){
 						identguide(sci);
 					}
@@ -757,12 +798,11 @@ class XSourceEditor : QXMdiSubWindow{
 				{		
 					if ((modType & (QXSci.SC_MOD_CHANGEMARKER | QXSci.SC_MOD_CHANGESTYLE | QXSci.SC_MOD_CHANGEFOLD)) == 0){
 						int linep = sci.positionToLine(position);
-                        
                         sci.sendEditor(QXSci.SCI_MARKERDELETE, linep, reserve_modify_mark);
 						sci.sendEditor(QXSci.SCI_MARKERADD, linep, current_modify_mark);
-                        
+                        continueAutocomp(position);
+                        XSourceEditor.this.intellisense_modified = true;
 					}
-					XSourceEditor.this.intellisense_modified = true;
 				}
 
 				void ON_CHARADDED(QXSci sci,int charadded)override{	
@@ -774,6 +814,7 @@ class XSourceEditor : QXMdiSubWindow{
                         strpretext = ".";
 						if (_mdi_area.XIntelliSense(XSourceEditor.this, filePath, content, position)){
 							auto_position = position;
+                            last_autopos = -1;
 						}
 					}else
                     if (autoCompShow == false){
@@ -789,15 +830,13 @@ class XSourceEditor : QXMdiSubWindow{
 								p--;
 							}
                             auto_position = p;
+                            last_autopos = -1;
                             strpretext = content.substring(auto_position, position);
 							_mdi_area.XIntelliSenseL(XSourceEditor.this, filePath, cur_line);
                         }
                     }else{
-                    
 						if (false == (lastAddedChar =='_' || (lastAddedChar >= 'a' && lastAddedChar <='z') || (lastAddedChar >= 'A' && lastAddedChar <='Z'))){
 							hideAutoWnd();
-						}else{
-							continueAutocomp(position);
 						}
                     }
 					if (Setting.isMatchBrace()){
@@ -833,7 +872,8 @@ class XSourceEditor : QXMdiSubWindow{
         _sci.setIndicStyle(1, QXSci.INDIC_CONTAINER);
         _sci.setIndicForeColor(1, 0xff00ffff);
         _sci.setIndicUnderColor(1, 0x7f00ffff);
-        _sci.setIndicCurrent(1);      
+        _sci.setIndicCurrent(1);    
+          
         _sci.setOnKeyEventListener(new onKeyEventListener(){
 			
 			bool onKeyPress(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey)override{
@@ -1039,7 +1079,7 @@ class XSourceEditor : QXMdiSubWindow{
 								}else{
 									XFinder.FindResult fres = new XFinder.FindResult();
 									
-									for (int i =0; i < res.length; i++){
+									for (int i = 0; i < res.length; i++){
 										if (res[i].source.length() > 0){
 											fres.add(new XFinder.FindItem(res[i].source, res[i].line, res[i].row, 1, mapType(res[i].type)));
 										}
@@ -1166,6 +1206,8 @@ class XSourceEditor : QXMdiSubWindow{
 	void autoCompleteDone(){
 		if (autoCompShow){	
 			long item = autoWnd.getSelItem();
+            autoCompShow = false;
+            
 			if (item != 0){
 				String text = autoWnd.getItemText(item, 0);
 				String tips = autoWnd.getItemText(item, 2);
@@ -1219,6 +1261,7 @@ class XSourceEditor : QXMdiSubWindow{
 				}
                 
 			}
+            autoCompShow = true;
 			hideAutoWnd();
 			_sci.setFocus();
 		}
@@ -1239,7 +1282,9 @@ class XSourceEditor : QXMdiSubWindow{
 					}
 					iter.next();
 				}
-				autoWnd.setCurrentItem(selItem);
+                if (selItem != 0){
+					autoWnd.setCurrentItem(selItem);
+                }
 			}
 			if (curpos < auto_position){
 				hideAutoWnd();
@@ -1307,7 +1352,11 @@ class XSourceEditor : QXMdiSubWindow{
         reserve_modify_mark = MARK_SAVED;
         
         _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,1, 15);
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,2, 40);
+        if (Setting.isShowLineNumber()){
+			_sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,2, 40);
+        }else{
+			_sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,2, 0);
+        }
         _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,3, 15);
         _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,4, 3);
         //_sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,4, 0);
@@ -1323,9 +1372,10 @@ class XSourceEditor : QXMdiSubWindow{
         _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, 4, QXSci.SC_MARGIN_SYMBOL);
         _sci.sendEditor(QXSci.SCI_SETMARGINMASKN, 4, (1 << MARK_MODIFIED) | (1 << MARK_SAVED)); 
         
-        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_LINENUMBER, 0xff222827);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_LINENUMBER, 0xffaf912b);
-        _sci.sendEditor(QXSci.SCI_SETMARGINLEFT, 0, 0);
+        
+		_sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_LINENUMBER, 0xff222827);
+		_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_LINENUMBER, 0xffaf912b);
+		_sci.sendEditor(QXSci.SCI_SETMARGINLEFT, 0, 0);
         
 		_sci.sendEditor(QXSci.SCI_STYLESETBOLD, QXSci.STYLE_BRACELIGHT, 1);
         _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_BRACELIGHT, 0xff00ffff);
@@ -1361,6 +1411,17 @@ class XSourceEditor : QXMdiSubWindow{
 
         _sci.sendEditor(QXSci.SCI_SETTABWIDTH, 4); 
 		_sci.sendEditor(QXSci.SCI_SETEOLMODE, QXSci.SC_EOL_LF, 0);
+        
+    }
+    
+    static void reconfig(){
+		Map.Iterator<String, XSourceEditor> iterator = editorMgr.iterator();
+
+		while (iterator.hasNext()){
+			XSourceEditor wnd = iterator.getValue();
+			wnd.syntaxForXlang();
+			iterator.next();
+		}
     }
     
     void syntaxForXlang(){
@@ -1406,7 +1467,11 @@ class XSourceEditor : QXMdiSubWindow{
         reserve_modify_mark = MARK_SAVED;
         
         _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,1, 15);
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,2, 40);
+        if (Setting.isShowLineNumber()){
+			_sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,2, 40);
+        }else{
+			_sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,2, 0);
+        }
         _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,3, 15);
         _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,4, 3);
         //_sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,4, 0);

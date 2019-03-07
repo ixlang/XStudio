@@ -18,6 +18,9 @@ class QXApplication : QXObject{
 	void setStyleSheet(String file){
 		widget_slot_string(nativehandle, STYLESHEET, file);
 	}
+	void setStyleSheetString(String stylesheet){
+		widget_slot_string(nativehandle, STYLESHEETSTRING, stylesheet);
+	}
 	void setPaletteColor(String file){
 		widget_slot_string(nativehandle, PALETTECOLOR, file);
 	}

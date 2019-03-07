@@ -118,9 +118,9 @@ class XMenuManager {
 							"actioncopy",
 							"actionpaste",
 							"actiondelete", 
-							"actionfind",
+							//"actionfind",
                             "actiongoto",
-							"actionreplace", 
+							//"actionreplace", 
 							"actionfindagain",
 							"actionsave",
                             "actionsaveas"};
@@ -380,11 +380,13 @@ class XMenuManager {
                  "<em>	openssl-1.0.1p 9 Jul 2015</em><br />" +
                  "<em>	zlib-1.2.8</em><br />" +
                  "<em>	pcre-8.37</em><br /><br />" +
+                 "官方主页:<a href=\"http://xlang.vsylab.com/\">http://xlang.vsylab.com/</a><br /><br />" + 
                  "github项目首页:<a href=\"https://ixlang.github.io/\">https://ixlang.github.io/</a><br />" + 
-                 "官方主页:<a href=\"http://xlang.vsylab.com/\">http://xlang.vsylab.com/</a><br />" + 
+                 "github项目仓库:<a href=\"https://github.com/ixlang/XStudio\">https://github.com/ixlang/XStudio</a><br />" + 
+                 "github代码示例仓库:<a href=\"https://github.com/ixlang/examples\">https://github.com/ixlang/examples</a><br />" + 
                  "<p align=\"right\">建议可通过以下方式反馈</p>" + 
                  "<p align=\"right\">QQ: 3.vc@163.com</p>" + 
-                 "<p align=\"right\">Cadaqs 2018-07-30</p>");
+                 "<p align=\"right\">Cadaquz 2018-07-30</p>");
             }
         }
     };

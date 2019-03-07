@@ -52,15 +52,15 @@ class FirstPrepare : QXDialog{
             }
         });
         
-        //image.setStyleSheet("#image{image: url(res/light.png);}");
+        //image.setStyleSheetString("#image{image: url(res/light.png);}");
         dark.create(this);
         dark.setChecked(false, false);
         dark.configColor(0xff333333, 0);
         dark.move(310, 515);
         dark.show();
         
-        imagebck.setStyleSheet("#imagebck{image: url(res/dark_vague.png);}");
-        imagefrt.setStyleSheet("#imagefrt{image: url(res/light.png);}");
+        imagebck.setStyleSheetString("#imagebck{image: url(res/dark_vague.png);}");
+        imagefrt.setStyleSheetString("#imagefrt{image: url(res/light.png);}");
         
         dark.setOnSwitchListener(new Switche.OnSwitchListener(){
 			void onSwitch(Switche view,bool __bOn){
@@ -91,8 +91,8 @@ class FirstPrepare : QXDialog{
 								if (revert == false){
 
 									if (st == 15){
-										imagebck.setStyleSheet(bdark ? "#imagebck{image: url(res/light_vague.png);}" : "#imagebck{image: url(res/dark_vague.png);}");
-										imagefrt.setStyleSheet(bdark ? "#imagefrt{image: url(res/dark.png);}" : "#imagefrt{image: url(res/light.png);}");
+										imagebck.setStyleSheetString(bdark ? "#imagebck{image: url(res/light_vague.png);}" : "#imagebck{image: url(res/dark_vague.png);}");
+										imagefrt.setStyleSheetString(bdark ? "#imagefrt{image: url(res/dark.png);}" : "#imagefrt{image: url(res/light.png);}");
 										
 										imagefrt.move(10 + st, 10 + st);
 										imagebck.move(40 + (dist_total * st / 15.f), 40 + (15 * st / 15.f));

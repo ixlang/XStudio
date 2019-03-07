@@ -4,6 +4,15 @@ class QXFont : QXCore{
         widget_slot_string(nativehandle, FONTSETFAMILY, fontName);
     }
     
+    static QXFont loadFromString(String string){
+		long h = long_string2(0, LOADFONTDESCRIPTION, string, nilptr);
+        if (h != 0){
+			return new QXFont(h);
+        }
+        
+        return nilptr;
+    }
+    
     static QXFont loadFromFile(String file, String subName){
 		long h = long_string2(0, LOADFONT, file, subName);
         if (h != 0){
@@ -45,6 +54,18 @@ class QXFont : QXCore{
     
     void finalize(){
         widget_slot(nativehandle, FONTCTOR);
+    }
+    
+    String familyName(){
+		return core_getString(nativehandle, GETFONTNAME);
+    }
+    
+    int pointSize(){
+		return widget_get_int_value(nativehandle, GETFONTPTSIZE);
+    }
+    
+    int pixelSize(){
+		return widget_get_int_value(nativehandle, GETFONTPIXELSIZE);
     }
     
     QXRect measure(String text){

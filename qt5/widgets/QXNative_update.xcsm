@@ -8,71 +8,9 @@ class QXNative{
     QXNative(long h){
         nativehandle = h;
     }
-    
-    static String converPlatformCharSetTo(String filepath){
-		String original_path = filepath;
-		if (_system_.getPlatformId() == 0){
-			// windows 下要转成CP936
-			try{
-				original_path = new String(filepath.getBytes(), "CP936");
-			}catch(Exception e){
-				original_path = filepath;
-			}
-		}
-        return original_path;
-    }
-    static String converToPlatformCharSet(String filepath){
-		String original_path = filepath;
-		if (_system_.getPlatformId() == 0){
-			// windows 下要转成CP936
-			try{
-				original_path = new String(filepath.getBytes("CP936"));
-			}catch(Exception e){
-				original_path = filepath;
-			}
-		}
-        return original_path;
-    }
-    
-    static String getAppDirectory(){
-		return converPlatformCharSetTo(_system_.getAppDirectory());
-    }
-    
-    static long SystemFileSize(String filepath){
-		String original_path = converToPlatformCharSet(filepath);
-        return _system_.getFileSize(original_path);
-    }
-    
-    static bool chmodSystemFile(String filepath, int mode){
-		String original_path = converToPlatformCharSet(filepath);
-        return _system_.chmod(original_path, mode);
-    }
-    
-    static long openSystemFile(String filepath, String mode){
-		String original_path = converToPlatformCharSet(filepath);
-        return _system_.openFile(original_path, mode);
-    }
-    
-    static bool existsSystemFile(String filepath){
-		String original_path = converToPlatformCharSet(filepath);
-        return _system_.fileExists(original_path);
-    }
-    
-    static bool mkdir(String filepath){
-		String original_path = converToPlatformCharSet(filepath);
-        return _system_.mkdir(original_path);
-    }
-    
-    static bool deleteFile(String filepath){
-		String original_path = converToPlatformCharSet(filepath);
-        return _system_.deleteFile(original_path);
-    }
-    
-
     static int getScreenCount(){
 		return widget_get_int_value(0, QXCore.SCREENCOUNT);
     }
-
     import "libxupdate_apply_ui"{
         void cdecl widget_set_vint_value(long h, int proid, int value);
         void cdecl widget_set_object_value(long h, int proid, Object value);
@@ -92,7 +30,7 @@ class QXNative{
         void cdecl widget_set_bkrl(long h, int r);
         int cdecl widget_get_int_value(long h, int proid);
         int cdecl widget_set_v2int_value(long h, int proid, int xv, int yv);
-        int cdecl widget_set_v2int_double_value(long h, int proid, int xv, int yv, double w);
+        int cdecl widget_set_v2int_double_value(long h, int proid, int xv, double w, int yv);
         void cdecl widget_set_native_value(long h, int proid, long value);
         void cdecl widget_slot_string(long h, int proid, String value);
         void cdecl widget_slot(long h, int proid);
@@ -139,9 +77,10 @@ class QXNative{
         long cdecl long_intstring(long handle,int proid,int type, String v1);
         long cdecl long_intlong(long handle,int proid, long value);
         long cdecl long_intlong2(long handle,int proid, long value, long v1);
+        long cdecl pointer_intlong2(ObjectPtr handle,int proid, long value, long v1);
         void cdecl void_long2(long handle,int proid, long value1, long v2);
         void cdecl native_double2(long h ,int proid,double v1, double v2);
-        void cdecl native_double4(long h ,int proid,double v1, double v2, double v3, double v4);
+        void cdecl native_double4(double v1, double v2, double v3, double v4,long h ,int proid);
         void cdecl native_int4(long h ,int proid,int v1, int v2, int v3, int v4);
 		int cdecl int_long_int_long_int_int(long h, int proid, long h1, int v1, int v2);
         bool cdecl array_int2(long h,int proid, Object, int, int);

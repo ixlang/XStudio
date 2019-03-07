@@ -224,7 +224,7 @@ class AddObjectDlg : QXDialog {
 				btnCancel.move(w - 100, h - 35);
 			}
         });*/
-        
+        setWindowIcon("./res/toolbar/interfacefun.png");
     }
     
     void setChildrenUnChecked(long item){

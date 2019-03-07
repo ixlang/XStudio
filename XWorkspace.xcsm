@@ -404,6 +404,7 @@ class XWorkspace : QXMdiArea{
             wnd.close();
         }
     }
+    
     QXWidget currentSubWindow()override{
 		QXWidget win = super.currentSubWindow();
         if (win == indexPage || win == nilptr){
@@ -411,7 +412,7 @@ class XWorkspace : QXMdiArea{
         }
         return win;
     }
-    
+        
     void saveFile(){
 		try{
 			XSourceEditor wnd = (XSourceEditor)currentSubWindow();
@@ -761,7 +762,12 @@ class XWorkspace : QXMdiArea{
 		if (currentProject != nilptr){
 			InputDialog.requestInput(new InputDialog.onInputListener(){
 				bool onInputOk(String text)override{
-					currentProject.saveAsTemplate(tempName, text);
+					bool b = currentProject.saveAsTemplate(tempName, text);
+                    ProgressView pv = ProgressView.showWait(-1);
+                    pv.centerScreen();
+                    pv.showResult(true,b);
+                    pv.setTitleText(b ? "已存为模板" : "保存失败");
+                    pv.dismissAfter(1000);
 					return true;
 				}
 				bool onInputCancel()override{
@@ -832,46 +838,49 @@ class XWorkspace : QXMdiArea{
         }
         return false;
     }
+    
+    
+    InputDialog.onInputListener remotedbglistener = new InputDialog.onInputListener(){
+		String defaultaddress = "127.0.0.1:23326";
+		bool onInputOk(String text)override{
+			int spf = text.indexOf(':');
+			if (spf < 1){
+				QXMessageBox.Critical("错误", "输入了不正确的地址", QXMessageBox.Ok, QXMessageBox.Ok);
+				return false;
+			}
+			
+			String ip = text.substring(0, spf);
+			int port = text.substring(spf + 1, text.length()).parseInt();
+
+			if (port <=0 || port >= 65535){
+				QXMessageBox.Critical("提示", "端口范围错误0~65535", QXMessageBox.Ok, QXMessageBox.Ok);
+				return false;
+			}
+			defaultaddress = text;
+			connectRemoteDebug(ip, port);
+			return true;
+		}
+		bool onInputCancel()override{
+			return true;
+		}
+		String getTitle()override{
+			return "TCP/IP 远程调试";
+		}
+		String getTips()override{
+			return "输入目标地址:(格式 IP:PORT)";
+		}
+		String getDefault()override{
+			return defaultaddress;
+		}
+	};
+    
     void remoteDebug(){
 		if (_debugThread != nilptr){
 			QXMessageBox.Critical("注意", "调试器正忙, 请稍候再试", QXMessageBox.Ok, QXMessageBox.Ok);
 			return ;
 		}
         
-		InputDialog.requestInput(new InputDialog.onInputListener(){
-			bool onInputOk(String text)override{
-				int spf = text.indexOf(':');
-				if (spf < 1){
-					QXMessageBox.Critical("错误", "输入了不正确的地址", QXMessageBox.Ok, QXMessageBox.Ok);
-					return false;
-				}
-                
-                String ip = text.substring(0, spf);
-				int port = text.substring(spf + 1, text.length()).parseInt();
-	
-				if (port <=0 || port >= 65535){
-					QXMessageBox.Critical("提示", "端口范围错误0~65535", QXMessageBox.Ok, QXMessageBox.Ok);
-					return false;
-				}
-				
-				connectRemoteDebug(ip, port);
-				return true;
-			}
-			bool onInputCancel()override{
-				return true;
-			}
-			String getTitle()override{
-				return "TCP/IP 远程调试";
-			}
-			String getTips()override{
-				return "输入目标地址:(格式 IP:PORT)";
-			}
-			String getDefault()override{
-				return "127.0.0.1:23326";
-			}
-		});
-        
-
+		InputDialog.requestInput(remotedbglistener);
     }
     
     void runDebug(){

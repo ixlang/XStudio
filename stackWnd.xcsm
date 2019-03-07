@@ -9,6 +9,8 @@ class XStackInfor : QXDockWidget{
 	static const int XDBG_STATE_EXCEPTION = 	4;	//捕获异常
     static const int XDBG_STATE_REIGGEBP 	= 	8;	//触发断点
     
+    static bool bOutputThreadStatus = true;
+    
     QXTreeView _listview;
     
     JsonObject root;
@@ -242,6 +244,11 @@ class XStackInfor : QXDockWidget{
         }
     }
         
+        
+    static void setThreadOuputStatus(bool b){
+		bOutputThreadStatus = b;
+    }
+    
     void onNotification(long id){
 		synchronized(threadlist){
 			int tid = (id >> 32) & 0xffffffff;
@@ -255,11 +262,15 @@ class XStackInfor : QXDockWidget{
 				break;
 				case XDBG_STATE_CREATE:
 					createThread(tid);
-                    XWndOutput.Output("线程:" + tid + " 已创建/启动.\n");
+                    if (bOutputThreadStatus){
+						XWndOutput.Output("线程:" + tid + " 已创建/启动.\n");
+                    }
 				break;
 				case XDBG_STATE_EXIT:
 					exitThread(tid);
-                    XWndOutput.Output("线程:" + tid + " 已退出/休眠.\n");
+                    if (bOutputThreadStatus){
+						XWndOutput.Output("线程:" + tid + " 已退出/休眠.\n");
+                    }
 				break;
 				case XDBG_STATE_EXCEPTION:
 					onException(tid);
