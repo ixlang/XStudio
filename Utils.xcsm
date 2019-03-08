@@ -134,7 +134,7 @@ class Utils{
 					void run()override{
 						HttpRequest req = new HttpRequest();
                         _system_.output("download url:" + url + "\n");
-						if (req.get(url, 10000, false)){
+						if (req.get(url, 100000, false)){
 							byte [] data = new byte[1024];
 
 							long downloadSize = 0;

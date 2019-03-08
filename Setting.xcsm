@@ -67,7 +67,7 @@ class Setting : QXDialog {
         
         void apply(JsonObject template){
         
-			if (root != nilptr){
+			if (root != nilptr && template != nilptr){
 				JsonObject keys = (JsonObject)template.get("加速键");
                 
                 JsonObject skey = (JsonObject)keys.child();
