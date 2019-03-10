@@ -284,4 +284,19 @@ class Utils{
 		}    
         return vs;
     }
+    
+    static long getVersionValue(String version){
+		String [] bs = version.split('.');
+        
+        long ov = 0;
+        
+		for (int i = 0; i < 4; i ++){
+			if (i < bs.length){
+				ov <<= 16;
+				ov |= bs[bs.length - (i + 1)].parseInt();
+			}
+		}
+        
+        return ov;
+    }
 };

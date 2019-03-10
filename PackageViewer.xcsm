@@ -138,9 +138,19 @@ class PackageViewer : QXDialog{
         }
     }
 
+	
 	void install(String file){
 		PackageManager.PackageInfo pi = pm.previewPackage(file);
-		if (pi != nilptr){
+        if (pi == nilptr){
+			QXMessageBox.Critical("错误", file + " 不是一个有效的X包.", QXMessageBox.Ok, QXMessageBox.Ok);
+			return;
+        }
+        
+        long newVersion = Utils.getVersionValue(pi.version);
+        
+		Vector<PackageManager.PackageInfo> pl = pm.findPackages(pi.name, nilptr);
+        
+        if (pl.size() == 0){
 			if (QXMessageBox.Information("提示", "将安装包 " + pi.name + " " + pi.version + "?" + "<br /><br />简介:<br /><b>" + pi.descr + "</b><br /><br />发布者:<a href=\"" + pi.author + "\">" + pi.author + "<em>", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Ok) == QXMessageBox.Ok){
 				if (pm.installPackage(pi)){
 					loadList();
@@ -148,9 +158,73 @@ class PackageViewer : QXDialog{
 					QXMessageBox.Critical("提示", "安装包 " + pi.name + " " + pi.version + "失败!", QXMessageBox.Ok, QXMessageBox.Ok);
 				}
 			}
-		}else{
-			QXMessageBox.Critical("错误", file + " 不是一个有效的X包.", QXMessageBox.Ok, QXMessageBox.Ok);
-		}
+        }else{
+			bool bExists = false, bUpgrade = false, bDowngrade = false;
+			for (int i = 0; i < pl.size(); i ++){
+				PackageManager.PackageInfo pe = pl.get(i);
+                long v = Utils.getVersionValue(pe.version);
+                if (v == newVersion){
+					bExists = true;
+                }else
+                if (v < newVersion){
+					bUpgrade = true;
+                }else{
+					bDowngrade = true;
+                }
+            }
+            
+            if (bExists){
+				if (QXMessageBox.Question("包已存在","此包已存在,是否重新安装?",QXMessageBox.Yes | QXMessageBox.Cancel,QXMessageBox.Cancel) == QXMessageBox.Cancel){
+					return ;
+                }
+                
+                PackageManager.PackageInfo pe = pm.findPackage(pi.name, pi.version);
+                
+                while (pe != nilptr){
+                    pm.deletePackage(pe);
+                    pe = pm.findPackage(pi.name, pi.version);
+                }
+                
+				if (QXMessageBox.Information("提示", "将安装包 " + pi.name + " " + pi.version + "?" + "<br /><br />简介:<br /><b>" + pi.descr + "</b><br /><br />发布者:<a href=\"" + pi.author + "\">" + pi.author + "<em>", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Ok) == QXMessageBox.Ok){
+					if (pm.installPackage(pi)){
+						loadList();
+					}else{
+						QXMessageBox.Critical("提示", "安装包 " + pi.name + " " + pi.version + "失败!", QXMessageBox.Ok, QXMessageBox.Ok);
+					}
+				}
+            }else
+            if (bUpgrade){
+				if (QXMessageBox.Question("升级包","是否删除旧版包?",QXMessageBox.Yes | QXMessageBox.Cancel,QXMessageBox.Yes) == QXMessageBox.Yes){
+					PackageManager.PackageInfo pe = pm.findPackage(pi.name, pi.version);
+					
+					while (pe != nilptr){
+						pm.deletePackage(pe);
+						pe = pm.findPackage(pi.name, pi.version);
+					}
+                }
+                
+				if (QXMessageBox.Information("提示", "将安装包 " + pi.name + " " + pi.version + "?" + "<br /><br />简介:<br /><b>" + pi.descr + "</b><br /><br />发布者:<a href=\"" + pi.author + "\">" + pi.author + "<em>", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Ok) == QXMessageBox.Ok){
+					if (pm.installPackage(pi)){
+						loadList();
+					}else{
+						QXMessageBox.Critical("提示", "安装包 " + pi.name + " " + pi.version + "失败!", QXMessageBox.Ok, QXMessageBox.Ok);
+					}
+				}
+            }else{
+				if (QXMessageBox.Question("注意","将安装一个更低版的包,系统中已存在比此包更高版本的包,已经是否继续安装?",QXMessageBox.Yes | QXMessageBox.Cancel,QXMessageBox.Yes) == QXMessageBox.Cancel){
+					return;
+                }
+                
+				if (QXMessageBox.Information("提示", "将安装包 " + pi.name + " " + pi.version + "?" + "<br /><br />简介:<br /><b>" + pi.descr + "</b><br /><br />发布者:<a href=\"" + pi.author + "\">" + pi.author + "<em>", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Ok) == QXMessageBox.Ok){
+					if (pm.installPackage(pi)){
+						loadList();
+					}else{
+						QXMessageBox.Critical("提示", "安装包 " + pi.name + " " + pi.version + "失败!", QXMessageBox.Ok, QXMessageBox.Ok);
+					}
+				}
+            }
+            
+        }
     }
     
     void importToProject(){

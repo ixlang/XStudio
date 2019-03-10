@@ -881,6 +881,15 @@ class XlangProjectProp : ProjectPropInterface{
         return infos;
     }
     
+    String formatArgs(String param){
+		if (_system_.getPlatformId() == 0){
+			if (param.indexOf(" ") != -1){
+				return "\"" + param + "\"";
+			}
+        }
+        return param;
+    }
+    
     void cleanup(IBuilder builder, Project object, Configure configure)override{
 		batchbuild(builder, object, configure, "preclean");
         
@@ -951,7 +960,7 @@ class XlangProjectProp : ProjectPropInterface{
 
     
     void runbat(IBuilder builder, String batfile, String projectDir){
-		String [] margs = {"cmd", "/c", batfile};
+		String [] margs = {"cmd", "/c", formatArgs(batfile)};
         
         String execute = XKernel32.getWindowsDir();
         if (execute == nilptr){
@@ -1112,10 +1121,15 @@ class XlangProjectProp : ProjectPropInterface{
     Vector<String> getExecuteArgs(Project object, Configure configure){
 		
         String out_path = configure.getOption("args");
+        Vector<String> argve = processArgs(out_path);
         
-        String args = String.formatPath(map_variable(object, configure, out_path), false);
+        Vector<String> finalargs = new Vector<String>();
         
-        return processArgs(args);
+        for (int i =0; i < argve.size(); i++){
+			finalargs.add(formatArgs(String.formatPath(map_variable(object, configure, argve.get(i)), false)));
+        }
+        
+        return finalargs;
     }
      
     int getDebugSerial(){

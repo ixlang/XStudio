@@ -20,7 +20,7 @@ class PackageManager{
             version = jo.getString("version");
             descr = jo.getString("descr");
             author = jo.getString("author");
-            iconFile = String.formatPath(_system_.getAppDirectory().appendPath(jo.getString("icon")), false);
+            iconFile = String.formatPath(XPlatform.getAppDirectory().appendPath(jo.getString("icon")), false);
             filepath = String.formatPath(_system_.getAppDirectory().appendPath(jo.getString("file")), false);
         }
         
@@ -115,6 +115,31 @@ class PackageManager{
                 
                 if (pi != nilptr){
 					return new PackageInfo(id, pi);
+                }
+            }
+        }
+        return nilptr;
+    }
+    
+    Vector<PackageInfo> findPackages(String name, String version){
+		Vector<PackageInfo> outpackages = new Vector<PackageInfo>();
+		for (int i = 0, c = getCount(); i < c; i++){
+			PackageInfo pj = get(i);
+            if (pj.name.equals(name)){
+				if (version == nilptr || pj.version.equals(version)){
+					outpackages.add(pj);
+                }
+            }
+        }
+        return outpackages;
+    }
+    
+     PackageInfo findPackage(String name, String version){
+		for (int i = 0, c = getCount(); i < c; i++){
+			PackageInfo pj = get(i);
+            if (pj.name.equals(name)){
+				if (version == nilptr || pj.version.equals(version)){
+					return pj;
                 }
             }
         }
