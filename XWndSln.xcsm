@@ -200,14 +200,30 @@ class XWndSln : QXDockWidget{
         }
     };
     
+    String quotePath(String arg){
+		if (_system_.getPlatformId() == 0){
+            if (arg.indexOf(' ') != -1){
+				return "\"" + arg + "\"";
+            }
+        }
+        return arg;
+    }
+    
+    String generateArgs(String arg){
+		if (_system_.getPlatformId() == 0){
+			arg = new String(arg.getBytes("GB18030//IGNORE"));
+        }
+        return quotePath(arg);
+    }
+    
     void openWithDesigner(String path){
 		String degpath = String.formatPath(_system_.getAppPath().findVolumePath().appendPath("designer/designer"), false);
         if (_system_.getPlatformId() == 0){
 			degpath = degpath + ".exe";
         }
         String []args = new String[2];
-        args[0] = degpath;
-        args[1] = path;
+        args[0] = quotePath(degpath);
+        args[1] = generateArgs(path);
 		Process designer = new Process(degpath, args);
         
         try{

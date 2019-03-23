@@ -73,115 +73,170 @@ class XIntelliSense{
 	}
     
     void appendLibpath(String path){
-		addLibPath(handle, XPlatform.converToPlatformCharSet(path));
+		synchronized(this){
+			if (handle != 0){
+				addLibPath(handle, XPlatform.converToPlatformCharSet(path));
+			}
+        }
     }
     
     void appendLib(String path){
-		addLib(handle, XPlatform.converToPlatformCharSet(path));
+		synchronized(this){
+			if (handle != 0){
+				addLib(handle, XPlatform.converToPlatformCharSet(path));
+			}
+		}
     }
     
     void addSource(String source){
 		if (Setting.isIntellisense()){
-			addFile(handle, XPlatform.converToPlatformCharSet(source));
+			synchronized(this){
+				if (handle != 0){
+					addFile(handle, XPlatform.converToPlatformCharSet(source));
+				}
+			}
         }
     }
     
 
 	XIntelliResult [] getIntelliSenseL(String source,int line){
 		if (Setting.isIntellisense()){
-			IntelliSenseL(handle, XPlatform.converToPlatformCharSet(source), line);
+			synchronized(this){
+				if (handle != 0){
+					IntelliSenseL(handle, XPlatform.converToPlatformCharSet(source), line);
+				}
+			}
         }
 		return getResult();
 	}
     
     XIntelliResult [] getIntelliSenseObject(String source,int line, String name){
 		if (Setting.isIntellisense()){
-			XISQueryObject(handle, XPlatform.converToPlatformCharSet(source), line, name);
+			synchronized(this){
+				if (handle != 0){
+					XISQueryObject(handle, XPlatform.converToPlatformCharSet(source), line, name);
+				}
+			}
         }
 		return getResult();
 	}
      
     XIntelliResult [] getIntelliSenseObjectM(String source,int line){
 		if (Setting.isIntellisense()){
-			XISQueryObjectM(handle, XPlatform.converToPlatformCharSet(source), line);
+			synchronized(this){
+				if (handle != 0){
+					XISQueryObjectM(handle, XPlatform.converToPlatformCharSet(source), line);
+                }
+			}
         }
 		return getResult();
 	}
     
 	XIntelliResult [] getIntelliSense(String source,String content, long pos){
 		if (Setting.isIntellisense()){
-			IntelliSense(handle, XPlatform.converToPlatformCharSet(source), content, pos);
+			synchronized(this){
+				if (handle != 0){
+					IntelliSense(handle, XPlatform.converToPlatformCharSet(source), content, pos);
+                }else{
+					return nilptr;
+                }
+			}
 		}
 		return getResult();
 	}
 	
 	String getIntelliSenseMap(){
 		if (Setting.isIntellisense()){
-			genIntelliSense(handle);
-			return XgetStructMap(handle);
+			synchronized(this){
+				if (handle != 0){
+					genIntelliSense(handle);
+					return XgetStructMap(handle);
+                }
+			}
 		}
         return nilptr;
 	}
 	void update(String sourcePath, String content){
 		if (Setting.isIntellisense()){
-			updateFile(handle, XPlatform.converToPlatformCharSet(sourcePath), content);
+			synchronized(this){
+				if (handle != 0){
+					updateFile(handle, XPlatform.converToPlatformCharSet(sourcePath), content);
+                }
+			}
 		}
 	}
     void updateSource(String sourcePath, String newFile){
 		if (Setting.isIntellisense()){
-			updateSource(handle, XPlatform.converToPlatformCharSet(sourcePath), XPlatform.converToPlatformCharSet(newFile));
+			synchronized(this){
+				if (handle != 0){
+					updateSource(handle, XPlatform.converToPlatformCharSet(sourcePath), XPlatform.converToPlatformCharSet(newFile));
+				}
+			}
         }
     }
 	XIntelliResult [] getResult(){
 		if (Setting.isIntellisense() == false){
 			return nilptr;
 		}
-		int count = getXIntelliSenseCount(handle);
-		if (count == 0){
-			return nilptr;
-		}	
-		XIntelliResult []  result = new XIntelliResult[count];
-		
-		for (int i = 0; i < count; i ++){
-			result[i] = new XIntelliResult();
-			result[i].name = getIntelliSenseItemInfo(handle, i, XIS_NAME);
-			result[i].type = getIntelliSenseItemInfo(handle, i, XIS_TYPE);
-			result[i].prop = getIntelliSenseItemInfo(handle, i, XIS_PROP);
-            result[i].source = getIntelliSenseItemInfo(handle, i, XIS_SRC);
-            result[i].line = getIntelliSenseItemInfo(handle, i, XIS_LINE).parseInt();
-            result[i].row = getIntelliSenseItemInfo(handle, i, XIS_ROW).parseInt();
-            
-			result[i]._class = new XIntelliResult();
-			result[i]._class.name = getIntelliSenseItemInfo(handle, i, XIS_CLAS);
-			result[i]._class.type = "31";
+        XIntelliResult []  result  = nilptr;
+        synchronized(this){
+			if (handle == 0){
+				return result;
+            }
+			int count = getXIntelliSenseCount(handle);
+			if (count == 0){
+				return nilptr;
+			}	
+			result = new XIntelliResult[count];
+			
+			for (int i = 0; i < count; i ++){
+				result[i] = new XIntelliResult();
+				result[i].name = getIntelliSenseItemInfo(handle, i, XIS_NAME);
+				result[i].type = getIntelliSenseItemInfo(handle, i, XIS_TYPE);
+				result[i].prop = getIntelliSenseItemInfo(handle, i, XIS_PROP);
+				result[i].source = getIntelliSenseItemInfo(handle, i, XIS_SRC);
+				result[i].line = getIntelliSenseItemInfo(handle, i, XIS_LINE).parseInt();
+				result[i].row = getIntelliSenseItemInfo(handle, i, XIS_ROW).parseInt();
+				
+				result[i]._class = new XIntelliResult();
+				result[i]._class.name = getIntelliSenseItemInfo(handle, i, XIS_CLAS);
+				result[i]._class.type = "31";
 
-			if (result[i].type.equals("23")){
-				int pc = getIntelliSenseFunctionParamCount(handle, i);
-				result[i].params = new XIntelliResult[pc];
-				for (int x =0; x < pc; x ++){
-					result[i].params[x] = new XIntelliResult();
-					result[i].params[x].name = getIntelliSenseFunctionParamInfo(handle, i, x, XIS_NAME);
-					result[i].params[x].type = getIntelliSenseFunctionParamInfo(handle, i, x, XIS_TYPE);
-					result[i].params[x].source = getIntelliSenseFunctionParamInfo(handle, i, x,XIS_SRC);
-					result[i].params[x].line = getIntelliSenseFunctionParamInfo(handle, i, x,XIS_LINE).parseInt();
-					result[i].params[x].row = getIntelliSenseFunctionParamInfo(handle, i, x,XIS_ROW).parseInt();
-            
-					result[i].params[x]._class = new XIntelliResult();
-					result[i].params[x]._class.name = getIntelliSenseFunctionParamInfo(handle, i, x, XIS_CLAS);
-					result[i].params[x]._class.type = "31";
+				if (result[i].type.equals("23")){
+					int pc = getIntelliSenseFunctionParamCount(handle, i);
+					result[i].params = new XIntelliResult[pc];
+					for (int x =0; x < pc; x ++){
+						result[i].params[x] = new XIntelliResult();
+						result[i].params[x].name = getIntelliSenseFunctionParamInfo(handle, i, x, XIS_NAME);
+						result[i].params[x].type = getIntelliSenseFunctionParamInfo(handle, i, x, XIS_TYPE);
+						result[i].params[x].source = getIntelliSenseFunctionParamInfo(handle, i, x,XIS_SRC);
+						result[i].params[x].line = getIntelliSenseFunctionParamInfo(handle, i, x,XIS_LINE).parseInt();
+						result[i].params[x].row = getIntelliSenseFunctionParamInfo(handle, i, x,XIS_ROW).parseInt();
+				
+						result[i].params[x]._class = new XIntelliResult();
+						result[i].params[x]._class.name = getIntelliSenseFunctionParamInfo(handle, i, x, XIS_CLAS);
+						result[i].params[x]._class.type = "31";
+					}
 				}
 			}
-		}
+        }
 		return result;
 	}
     
     void close(){
-		if (handle != 0){
-			destroyXProject(handle);
-			project = nilptr;
-        }
+		synchronized(this){
+			if (handle != 0){
+				destroyXProject(handle);
+                handle = 0;
+				project = nilptr;
+			}
+		}
     }
 
+	void finalize(){
+		close();
+    }
+    
 	import "libXIntelliSense"{
 		//long cdecl getMemoryInfo(int id); 
 		long cdecl createXProject(String workdir); 

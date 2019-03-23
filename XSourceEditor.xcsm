@@ -661,20 +661,25 @@ class XSourceEditor : QXMdiSubWindow{
 			if (lastxis != nilptr && strpretext != nilptr){
 				if (pos >= auto_position){
 					String content = _sci.getText();
-					strpretext = content.substring(auto_position, pos);
-					if  (strpretext.length() == 0 || Pattern.test(strpretext, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true)){
-						synchronized(XSourceEditor.this){
-							if (autoThread == nilptr){
-								autoThread = new Thread(){
-									void run(){
-										preProcessXIntellisense();
-										synchronized(XSourceEditor.this){
-											autoThread = nilptr;
+                    long tl = content.length();
+                    if (auto_position < tl && pos <= tl){
+						strpretext = content.substring(auto_position, pos);
+						if  (strpretext.length() == 0 || Pattern.test(strpretext, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true)){
+							synchronized(XSourceEditor.this){
+								if (autoThread == nilptr){
+									autoThread = new Thread(){
+										void run(){
+											preProcessXIntellisense();
+											synchronized(XSourceEditor.this){
+												autoThread = nilptr;
+											}
 										}
-									}
-								};
-								autoThread.start();
+									};
+									autoThread.start();
+								}
 							}
+						}else{
+							hideAutoWnd();
 						}
 					}else{
 						hideAutoWnd();
@@ -800,11 +805,13 @@ class XSourceEditor : QXMdiSubWindow{
 						int linep = sci.positionToLine(position);
                         sci.sendEditor(QXSci.SCI_MARKERDELETE, linep, reserve_modify_mark);
 						sci.sendEditor(QXSci.SCI_MARKERADD, linep, current_modify_mark);
-                        continueAutocomp(position);
+                        if ((modType & QXSci.SC_MOD_BEFOREDELETE) == QXSci.SC_MOD_BEFOREDELETE){
+							continueAutocomp(position);
+                        }
                         XSourceEditor.this.intellisense_modified = true;
 					}
 				}
-
+ 
 				void ON_CHARADDED(QXSci sci,int charadded)override{	
 					lastAddedChar = charadded;
 					long position = sci.currentPosition();
@@ -837,7 +844,9 @@ class XSourceEditor : QXMdiSubWindow{
                     }else{
 						if (false == (lastAddedChar =='_' || (lastAddedChar >= 'a' && lastAddedChar <='z') || (lastAddedChar >= 'A' && lastAddedChar <='Z'))){
 							hideAutoWnd();
-						}
+						}else{
+							continueAutocomp(position);
+                        }
                     }
 					if (Setting.isMatchBrace()){
 						switch(charadded){
