@@ -48,6 +48,26 @@ class Project{
          }
         bModified = true;
     }
+
+
+    bool detectSourcesModified(){
+		Configure configure = currentConfig;
+        
+        if (configure != nilptr){
+			String workDir = getProjectDir();
+			JsonArray sources = getSources();
+            if (sources != nilptr){
+				for (int i = 0; i < sources.length(); i++){
+					String srcname = sources.getString(i);
+					String fullsourcePath = String.formatPath(workDir.appendPath(srcname), false);
+					if (configure.isModified(fullsourcePath)){
+						return true;
+					}
+				}
+            }
+        }
+        return false;
+    }
     
     void setCurrentConfigure(String configName){
 		if (configName.length() > 0){

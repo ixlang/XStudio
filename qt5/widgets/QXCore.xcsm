@@ -329,7 +329,8 @@ class QXCore : QXNative{
         GETFONTPIXELSIZE = 326,
         GETFONTPTSIZE = 327,
         QPBSETLABELS = 328,
-        QPBADJUST = 329;
+        QPBADJUST = 329,
+        QIMGSAVE = 330;
         
     QXCore(){
     }

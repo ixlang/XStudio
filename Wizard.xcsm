@@ -316,21 +316,21 @@ class WizardDialog : QXDialog {
 				runOnUi(new Runnable(){
 					void run()override{
 						 if (false == loadLocalExample(false)){
-							QXMessageBox.Critical("加载失败","加载在线示例失败,数据错误.",QXMessageBox.Ok,QXMessageBox.Ok);
+							QXMessageBox.Critical("加载失败","加载在线示例失败,请重试,数据错误.",QXMessageBox.Ok,QXMessageBox.Ok);
 						 }
 					}
 				});
 			}else{
 				runOnUi(new Runnable(){
 					void run()override{
-						QXMessageBox.Critical("加载失败","加载在线示例失败,错误代码:" + req.getResponseCode(),QXMessageBox.Ok,QXMessageBox.Ok);
+						QXMessageBox.Critical("加载失败","加载在线示例失败,请重试,错误代码:" + req.getResponseCode(),QXMessageBox.Ok,QXMessageBox.Ok);
 					}
 				});	
 			}
 		}else{
 			runOnUi(new Runnable(){
 				void run()override{
-					QXMessageBox.Critical("加载失败","加载在线示例失败,网络错误.",QXMessageBox.Ok,QXMessageBox.Ok);
+					QXMessageBox.Critical("加载失败","加载在线示例失败,请重试,网络错误.",QXMessageBox.Ok,QXMessageBox.Ok);
 				}
 			});	
         }

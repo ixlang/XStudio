@@ -367,9 +367,9 @@ class XMenuManager {
                 String buildtime = String.formatDate("%Y年%m月%d日", _system_.getAppTimestamp());
                 app.mainWindow.About("关于", 
                 "<Strong>XStudio(Xlang 集成开发环境) Release " + Utils.getAppVersion() + " </Strong><br /><br />" + 
-                 "开发语言: Xlang v1.1<br /><br />" + 
+                 "开发语言: Xlang v1.9<br /><br />" + 
                  "编译时间: " + buildtime + "<br /><br />" + 
-                 "<b>该软件使用xlang beta v5开发, 软件全部源代码可在xlang的example中找到," + 
+                 "<b>该软件使用xlang 1.9 开发, 软件全部源代码可在xlang的example中找到," + 
                  "native部分为C++与Xlang的XNL项目(同样在example代码中), native项目仅有软件使用的部分调用," + 
                  "如需要用于其它开发需要修改native项目增加接口.</b><br /><br />" + 
                  "该软件的使用不受任何限制,可用于任意用途的修改或者发布.<br /><br />" + 
@@ -379,11 +379,15 @@ class XMenuManager {
                  "<em>	iconv-1.11.1</em><br />" +
                  "<em>	openssl-1.0.1p 9 Jul 2015</em><br />" +
                  "<em>	zlib-1.2.8</em><br />" +
-                 "<em>	pcre-8.37</em><br /><br />" +
+                 "<em>	pcre-8.37</em><br />" +
+                 "<em>	cJSON</em><br />" +
+                 "<em>	rapidxml</em><br /><br />" +
                  "官方主页:<a href=\"http://xlang.vsylab.com/\">http://xlang.vsylab.com/</a><br /><br />" + 
                  "github项目首页:<a href=\"https://ixlang.github.io/\">https://ixlang.github.io/</a><br />" + 
                  "github项目仓库:<a href=\"https://github.com/ixlang/XStudio\">https://github.com/ixlang/XStudio</a><br />" + 
-                 "github代码示例仓库:<a href=\"https://github.com/ixlang/examples\">https://github.com/ixlang/examples</a><br />" + 
+                 "github代码示例仓库:<a href=\"https://github.com/ixlang/examples\">https://github.com/ixlang/examples</a><br /><br />" + 
+                 "致谢名单:<a href=\"http://xlang.vsylab.com/credits.html\">http://xlang.vsylab.com/credits.html</a><br />" + 
+                 "<em>(为所有对 xlang 以及 XStudio 的进步有推助作用的名录)</em><br /><br />" + 
                  "<p align=\"right\">建议可通过以下方式反馈</p>" + 
                  "<p align=\"right\">QQ: 3.vc@163.com</p>" + 
                  "<p align=\"right\">Cadaquz 2018-07-30</p>");

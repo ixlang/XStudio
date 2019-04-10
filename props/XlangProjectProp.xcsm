@@ -530,7 +530,7 @@ class XlangProjectProp : ProjectPropInterface{
 			builder.OutputText("修订版本时发生异常:" + e.getMessage() + "\n");
 		}
     }
-    
+        
     Vector<String> getSourceArgs(IBuilder builder, Project object, Configure configure, String workDir, BuildParams param){
 		Vector<String> sourceArgs = new Vector<String>();
         String compiler_path = getCompilerPath();

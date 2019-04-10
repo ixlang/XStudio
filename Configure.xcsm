@@ -3,7 +3,76 @@ class Configure{
     JsonObject root;
     bool bModified = false;
     
+    Map<String, String> filemd5s = new Map<String, String>();
+    
     Configure(){
+    }
+    
+    String getCachedMd5(String path){
+		String md5 = nilptr;
+		try{
+			md5 = filemd5s.get(path);
+        }catch(Exception e){
+			
+        }
+        
+        if (md5 == nilptr){
+			md5 = "";
+        }
+        return md5;
+    }
+    
+    bool isModified(String srcpath){
+		String md5 = getFileMd5(srcpath);
+        String cached = getCachedMd5(srcpath);
+        if (md5.equals(cached) == false){
+			filemd5s.put(srcpath, md5);
+            return true;
+        }
+        return false;
+    }
+    
+    static String getFileMd5(String file){
+		
+        String md5 = "unknow";
+        
+		FileInputStream fis =  nilptr;
+        long hm = 0;
+        try{
+			fis = new FileInputStream(file);
+            
+            hm = Crypto.Md5Init();
+            if (hm != 0){
+				byte[] data = new byte[4096];
+				
+				long readed = 0;
+				while ((readed = fis.read(data, 0, 4096)) > 0){
+					Crypto.Md5Update(hm, data, 0, readed);
+				}
+				Crypto.MD5Final(hm);
+                byte [] mv = Crypto.MD5Get(hm);
+                
+                md5 = "";
+                for (int i =0; i < mv.length; i++){
+					md5 = md5 + String.format("%02X",mv[i]);
+                }
+			}
+        }catch(Exception e){
+        
+        }finally{
+			if (fis != nilptr){
+				fis.close();
+            }
+			if (hm != 0){
+				Crypto.MD5Close(hm);
+            }
+        }
+        
+        if (md5 == nilptr || md5.length() == 0){
+			md5 = "unknow";
+        }
+        
+        return md5;
     }
     
     Configure(String _name, JsonObject _root){

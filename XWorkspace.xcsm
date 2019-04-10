@@ -15,7 +15,7 @@ class XWorkspace : QXMdiArea{
 	XDebuggee debuggee = new XDebuggee(this);
     static XWorkspace workspace;
     QXComboBox cfgSel = new QXComboBox();
-    bool firstBuild = false;
+
     static ActionRecorder ar = new ActionRecorder();
     
     Object xintellisencelock = new Object(), debugThreadLock = new Object(), runThreadLock = new Object();
@@ -146,7 +146,7 @@ class XWorkspace : QXMdiArea{
 			XIntelliSense();
 			XMenuManager.setProjectLoaded(true);
             closeIndexPage();
-            firstBuild = false;
+
             String text = project.getComment();
             if (text != nilptr && text.length() > 0){
 				showComment();
@@ -526,13 +526,31 @@ class XWorkspace : QXMdiArea{
             cleanup_project(_builder);
         }
     }
+    
     void build(){
         if (currentProject != nilptr){
+			bool bNeedCompile = false;
+            String target = currentProject.getOutputTarget();
+            
 			if (Setting.isAutoSave()){
-				saveAllFile();
+				bNeedCompile = saveAllFile();
+				if (bNeedCompile == false){
+					if ((XPlatform.existsSystemFile(target) == false) || currentProject.detectSourcesModified()){
+						bNeedCompile = true;
+					}
+                }
+            }else{
+				bNeedCompile = true;
             }
-            build_project(_builder, nilptr, nilptr);
+            
+            if (bNeedCompile){
+				build_project(_builder, nilptr, nilptr);
+            }else{
+				_builder.OutputText(target + "\n自上次编译以来没有检测到任何改动,请使用[清理]命令后重新编译.\n");
+            }
         }
+        
+
     }
     
     void  generateSource(){
@@ -558,7 +576,7 @@ class XWorkspace : QXMdiArea{
     
     void build_project(IBuilder _builder, BuildListener l, XlangProjectProp.BuildParams params){
         if (currentProject != nilptr){
-			firstBuild = true;
+
 			if (isDebugging() || _run_thread != nilptr){
 				int rt = QXMessageBox.Question("注意", "程序正在运行, 是否关闭并继续?", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Cancel);
 				if (rt == QXMessageBox.Cancel){
@@ -572,7 +590,6 @@ class XWorkspace : QXMdiArea{
     
     void cleanup_project(IBuilder _builder){
         if (currentProject != nilptr){
-			firstBuild = true;
 			if (isDebugging() || _run_thread != nilptr){
 				int rt = QXMessageBox.Question("注意", "程序正在运行, 是否关闭并继续?", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Cancel);
 				if (rt == QXMessageBox.Cancel){
@@ -907,8 +924,8 @@ class XWorkspace : QXMdiArea{
         }else
         if (currentProject != nilptr){
 			String target = currentProject.getOutputTarget();
-            
-			if (_run_thread == nilptr && (firstBuild == false || saveAllFile() || (XPlatform.existsSystemFile(target) == false))){
+            _builder.OutputText("正在检测代码改动...\n");
+			if (_run_thread == nilptr && (saveAllFile() || (XPlatform.existsSystemFile(target) == false) || currentProject.detectSourcesModified() )){
 				build_project(_builder, new BuildListener(){
 					void onBuild(bool b){
 						runDebug();
@@ -941,8 +958,8 @@ class XWorkspace : QXMdiArea{
     void Run(){
         if (currentProject != nilptr){
 			String target = currentProject.getOutputTarget();
-            
-			if (_run_thread == nilptr && (firstBuild == false || saveAllFile() || (XPlatform.existsSystemFile(target) == false))){
+            _builder.OutputText("正在检测代码改动...\n");
+			if (_run_thread == nilptr && (saveAllFile() || (XPlatform.existsSystemFile(target) == false) || currentProject.detectSourcesModified() )){
 				build_project(_builder, new BuildListener(){
 					void onBuild(bool b){
 						runApp();
