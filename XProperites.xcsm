@@ -5,12 +5,16 @@ class XProperites : QXDialog {
     Configure _curconfig;
     QXTreeView _listview;
     ProjectPropInterface _prop;
+    String argsPage = nilptr;
     QXPropertyBrowser _propTable = new QXPropertyBrowser();
     Vector<JsonObject> _propItems = new Vector<JsonObject>();
+    
     Map<String, QXPropertyBrowser.QtVariantProperty> currentProps = new Map<String, QXPropertyBrowser.QtVariantProperty>();
     QXComboBox listConfigures ;
-    XProperites(Project pr){
+    
+    XProperites(Project pr, String args){
         _project = pr;
+        argsPage = args;
     }
      
     onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
@@ -103,7 +107,7 @@ class XProperites : QXDialog {
         );
     }
     
-    bool loadProperites(){
+    bool loadProperites(String defaultFeature){
         _prop = ProjectPropManager.getForProject(getLanguage());
         
         if (_prop != nilptr){
@@ -112,7 +116,7 @@ class XProperites : QXDialog {
             String content = readSlnPropFile(file);
             if (content != nilptr){
                 JsonObject _root = new JsonObject(content);
-                loadProperites((JsonObject)_root.child());
+                loadProperites((JsonObject)_root.child(), defaultFeature);
                 return true;
             }
         }else{
@@ -132,12 +136,13 @@ class XProperites : QXDialog {
         
         _propTable.setLables("项","值");
         _propTable.enableAdjust(true);
+        _propTable.setHeaderWidths(200, 200);
         
         String [] columns = {"选项"};
         _listview.setColumns(columns);
         _listview.setOnTreeViewItemEvent(listlistener);
         loadConfigure();
-        if (loadProperites() == false){
+        if (loadProperites(argsPage) == false){
             close();
             return ;
         }
@@ -202,9 +207,9 @@ class XProperites : QXDialog {
         }
     }
     
-    void loadProperites(JsonObject root){
-        bool loaded = false;
-        
+    void loadProperites(JsonObject root, String defaultFeature){
+
+        JsonObject defobj = nilptr;
 		while(root != nilptr){
 			String featName = root.getName();
 			
@@ -212,12 +217,20 @@ class XProperites : QXDialog {
 			long litem = _listview.addItem(nilptr, featName);
 			_listview.setItemTag(litem, 0, _propItems.size());
 			_propItems.add((JsonObject)root.clone());
-			if (loaded == false){
-				loadFeature((JsonObject)confi);
-				loaded = true;
+			if (defobj == nilptr){
+				defobj = confi;
 			}
+            if (defaultFeature != nilptr){
+				if (defaultFeature.equals(featName)){
+					defobj = confi;
+                }
+            }
 			root = (JsonObject)root.next();
 		}
+        
+        if (defobj != nilptr){
+			loadFeature(defobj);
+        }
     }
   
     void loadString(QXPropertyBrowser.QtVariantPropertyManager manager, String name, JsonObject root){

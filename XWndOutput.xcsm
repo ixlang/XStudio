@@ -148,6 +148,8 @@ class XWndOutput: QXDockWidget{
         _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_DEFAULT, 0xff222827);
         _sci.sendEditor(QXSci.SCI_STYLESETFORE, 75, 0xff222827);
         _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
+        _sci.sendEditor(QXSci.SCI_CLEARDOCUMENTSTYLE, 0, 0);
+        
         //_sci.sendEditor(QXSci.STYLE_LINENUMBER, 1, 0);
         bool bmac = (_system_.getPlatformId() == 2);
         if (bmac == false){
@@ -160,6 +162,8 @@ class XWndOutput: QXDockWidget{
         
         _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0); 
         _sci.sendEditor(QXSci.SCI_SETEOLMODE, 1, 0); 
+        _sci.sendEditor(QXSci.SCI_SETSELBACK,1,0xfff1ebe5);
+        _sci.sendEditor(QXSci.SCI_SETSELFORE,0,0);
         
         _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, 0, QXSci.SC_MARGIN_NUMBER); 
         _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 0, 65); 
@@ -187,6 +191,8 @@ class XWndOutput: QXDockWidget{
         _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_DEFAULT, 0xffefefef);
         _sci.sendEditor(QXSci.SCI_STYLESETFORE, 75, 0xffefefef);
         _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
+        _sci.sendEditor(QXSci.SCI_CLEARDOCUMENTSTYLE, 0, 0);
+        
         //_sci.sendEditor(QXSci.STYLE_LINENUMBER, 1, 0);
         bool bmac = (_system_.getPlatformId() == 2);
         if (bmac == false){
@@ -198,7 +204,9 @@ class XWndOutput: QXDockWidget{
         }
         _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0); 
         _sci.sendEditor(QXSci.SCI_SETEOLMODE, 1, 0); 
-
+        _sci.sendEditor(QXSci.SCI_SETSELBACK,1,0xff3e4849);
+        _sci.sendEditor(QXSci.SCI_SETSELFORE,0,0);
+        
         _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, 0, QXSci.SC_MARGIN_NUMBER); 
         _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 0, 65); 
         _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 1, 5); 
@@ -330,7 +338,7 @@ class XWndOutput: QXDockWidget{
         
 		_sci.setOnKeyEventListener(new onKeyEventListener(){
 			
-			bool onKeyPress(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey)override{                
+			bool onKeyPress(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier)override{                
                 if (key == Key_Control && sciisHand == false){
                     sciisHand = true;
                     testUrl();
@@ -338,7 +346,7 @@ class XWndOutput: QXDockWidget{
                 
 				return true;
 			}
-            bool onKeyRelease(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey)override{
+            bool onKeyRelease(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier)override{
                 if (key == Key_Control ){
 					_sci.setCursor(QXSci.cursorText);
                     sciisHand = false;

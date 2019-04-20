@@ -123,6 +123,7 @@ class XMenuManager {
 							//"actionreplace", 
 							"actionfindagain",
 							"actionsave",
+                            "actionmatchbrace",
                             "actionsaveas"};
 		enabledMenus(names, b);			
 	}
@@ -300,7 +301,7 @@ class XMenuManager {
                 return ;
 			}
             if (name.equals("actionprop")){
-                app._mdispace.showProperites();
+                app._mdispace.showProperites(nilptr);
                 return ;
             }
             if (name.equals("actionbreak")){
@@ -311,6 +312,11 @@ class XMenuManager {
 				app._mdispace.openIndexPage();
                 return ;
             }
+            if (name.equals("actionmatchbrace")){
+				app._mdispace.matchbrace();
+                return ;
+            }
+            
             if (name.equals("actiontest")){
 				XWorkspace.workspace.test();
             }
@@ -438,6 +444,8 @@ class XMenuManager {
         mainwindow.findByName("actiondata").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionlocalProblem").setOnEventListener(_triggerEvent);
 		mainwindow.findByName("actionstartup").setOnEventListener(_triggerEvent);
+        mainwindow.findByName("actionmatchbrace").setOnEventListener(_triggerEvent);
+        
         mainwindow.findByName("actiondebug").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionremotedbg").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionrun").setOnEventListener(_triggerEvent);

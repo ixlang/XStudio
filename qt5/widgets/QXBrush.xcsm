@@ -1,0 +1,166 @@
+//xlang Source, Name:qt5/widgets/QXBrush.xcsm 
+//Date: Thu Apr 18:46:27 2019 
+
+class QXBrush : QXNative{
+
+	/** @brush style
+	*/
+	static class Style{
+		static const int 
+			NoBrush = 0,
+			SolidPattern = 1,
+			Dense1Pattern = 2,
+			Dense2Pattern = 3,
+			Dense3Pattern = 4,
+			Dense4Pattern = 5,
+			Dense5Pattern = 6,
+			Dense6Pattern = 7,
+			Dense7Pattern = 8,
+			HorPattern = 9,
+			VerPattern = 10,
+			CrossPattern = 11,
+			BDiagPattern = 12,
+			FDiagPattern = 13,
+			DiagCrossPattern = 14,
+			LinearGradientPattern = 15,
+			RadialGradientPattern = 16,
+			ConicalGradientPattern = 17,
+			TexturePattern = 24;
+	};
+
+	static const int 
+        PadSpread = 0,
+        ReflectSpread = 1,
+        RepeatSpread = 2;
+        
+	static class Gradient{
+		long gradhandle = 0;
+        
+		int nstyle = Style.LinearGradientPattern;
+                
+		Gradient(int style){
+			nstyle = style;
+        }
+		
+        bool create(double [] data){
+			if (gradhandle != 0){
+				return false;
+            }
+            
+			switch(nstyle){
+				case Style.LinearGradientPattern:
+					gradhandle = QXNative.createPObject(QType.qtLineGradient, data);
+                break;
+                case Style.RadialGradientPattern:
+					{
+						switch(data.length){
+							case 3:
+								gradhandle = QXNative.createPObject(QType.qtRadialGradient3, data);
+                            break;
+                            case 5:
+								gradhandle = QXNative.createPObject(QType.qtRadialGradient5, data);
+                            break;
+                            case 6:
+								gradhandle = QXNative.createPObject(QType.qtRadialGradient6, data);
+                            break;
+                        }
+                    }
+                break;
+                case Style.ConicalGradientPattern:
+					gradhandle = QXNative.createPObject(QType.qtConicalGradient, data);
+                break;
+            }
+            return gradhandle != 0;
+        }
+        
+        void setColorAt(double pos, int color){
+			widget_set_v2int_double_value(gradhandle, QXCore.SETCOLORAT, color, pos, 0);
+        }
+        
+        void setSpread(int spread){
+			widget_set_vint_value(gradhandle, QXCore.SETSPREAD, spread);
+        } 
+        
+        void finalize(){
+			if (gradhandle != 0){
+				QXNative.widget_slot(gradhandle, QXCore.DELLOCGRADIENT);
+			}
+		}
+    };
+    
+    static class QXLinearGradient : Gradient{
+		QXLinearGradient(double x,double y,double ex,double ey){
+			super(Style.LinearGradientPattern);
+            double [] _params = {x, y, ex, ey};
+            if (create(_params) == false){
+				throw new IllegalArgumentException("can not create QXLinearGradient");
+            }
+        }
+
+    };
+    
+    static class QXRadialGradient : Gradient{
+		QXRadialGradient(double x,double y,double r){
+			super(Style.RadialGradientPattern);
+            double [] _params = {x, y, r};
+            if (create(_params) == false){
+				throw new IllegalArgumentException("can not create QXRadialGradient");
+            }
+        }
+        
+        QXRadialGradient(double x,double y,double r,double fx,double fy){
+			super(Style.RadialGradientPattern);
+            double [] _params = {x, y, r, fx, fy};
+            if (create(_params) == false){
+				throw new IllegalArgumentException("can not create QXRadialGradient");
+            }
+        }
+        
+        QXRadialGradient(double x,double y,double r,double fx,double fy, double fr){
+			super(Style.RadialGradientPattern);
+            double [] _params = {x, y, r, fx, fy, fr};
+            if (create(_params) == false){
+				throw new IllegalArgumentException("can not create QXRadialGradient");
+            }
+        }
+    };
+    
+    static class QXConicalGradient : Gradient{
+		QXConicalGradient(double cx,double cy,double s){
+			super(Style.ConicalGradientPattern);
+            double [] _params = {cx, cy, s};
+            if (create(_params) == false){
+				throw new IllegalArgumentException("can not create QXConicalGradient");
+            }
+        }
+    };
+    
+	QXBrush() {//构造
+		nativehandle = createNObject(QType.qtBrush, 0);
+        if (nativehandle == 0){
+            throw new IllegalArgumentException("can not create QXBrush");
+        }
+	}
+
+	QXBrush(Gradient grad){
+        nativehandle = createNObject(QType.qtBrush, grad.gradhandle);
+        if (nativehandle == 0){
+            throw new IllegalArgumentException("can not create QXBrush");
+        }
+    }
+	
+    QXBrush(QXImage img){
+        nativehandle = createNObject(QType.qtImgBrush, img.himage);
+        if (nativehandle == 0){
+            throw new IllegalArgumentException("can not create QXBrush");
+        }
+    }
+    
+	void finalize(){
+		if (nativehandle != 0){
+			QXNative.widget_slot(nativehandle, QXCore.DELLOCBRUSH);
+        }
+    }
+    
+    
+};

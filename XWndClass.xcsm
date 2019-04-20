@@ -4,6 +4,7 @@ class XWndClass : QXDockWidget{
     QXTreeView _treeview;
 	XWorkspace workspace;
 	JsonArray sources;
+    QXLineEdit editSearch;
     
 	static class ItemLoader{
 		long loaditem;
@@ -21,7 +22,7 @@ class XWndClass : QXDockWidget{
 			row = r;
             lib = b;
 		}
-		int source, line, row;
+		int source = -1, line, row;
         bool lib = false;
 	};
     
@@ -30,7 +31,10 @@ class XWndClass : QXDockWidget{
     
 	static XWndClass wndClass;
     
+    String searchkey = nilptr;
+    
     void onAttach(){
+		editSearch =  (QXLineEdit)attachByName(new QXLineEdit(), "classSearch");
         _treeview = (QXTreeView)attachByName(new QXTreeView(), "tree_class");
         wndClass = this;
         /*
@@ -46,14 +50,116 @@ class XWndClass : QXDockWidget{
 			void onItemExpanded(QXTreeView,long item)override{
 				XWndClass.this.expandLoad(item);
 			}
+            void onItemDoubleClicked(QXTreeView,long item, int column){
+				String text = _treeview.getItemText(item,0);
+                if (text.equals("外部库")){
+					workspace.showProperites("项目设置");
+                }
+			}
 			void onItemClicked(QXTreeView,long item, int column)override{
 				XWndClass.this.clickItem(item);
 			}
 		});
+        
+        editSearch.setOnKeyEventListener(new onKeyEventListener(){
+			bool onKeyPress(QXObject obj,int key,bool repeat,int count,String text,int scanCode,int virtualKey,int modifier)override{
+				if (key == Key_Escape){
+					editSearch.setText("");
+                }else
+				if (key == Key_Return){
+					synchronized(searchLock){
+						searchLock.notify();
+                    }
+                }
+                return true;
+			}
+        });
+        
+        editSearch.setOnEditEventListener(new onEditEventListener(){
+            void onTextChanged(QXObject, String text)override{
+				if (ignoreSearch || workspace.currentProject == nilptr){
+					return;
+                }
+				searchkey = text;
+                if (searchkey.length() == 0){
+					searchkey = nilptr;
+                    refresh();
+                }else{
+					onSearch();
+                }
+            }
+        });
+    }
+    
+    Thread searchThread = nilptr;
+    bool ignoreSearch = false;
+    Object searchLock = new Object();
+    
+    void onSearch(){
+		synchronized(searchLock){
+			if (searchThread == nilptr){
+				searchThread = new Thread(){
+					void run()override{
+						String currentKey = nilptr;
+						
+                        synchronized(searchLock){
+							bool bw = false;
+                            String _thekey = searchkey;
+                     
+							while (currentKey == nilptr || (_thekey != nilptr && currentKey.equals(_thekey) == false)){
+								currentKey = _thekey;
+								if (bw == false){
+									bw = searchLock.wait(800);
+								}
+								_thekey = searchkey;
+							}
+                            
+                        }
+                        
+						ignoreSearch = true;
+						runOnUi(new Runnable(){
+							void run()override{
+								editSearch.setText("搜索中...");
+								editSearch.setEnabled(false);
+							}
+						});
+						if (currentKey != nilptr){
+							search(workspace.currentProject, currentKey.upper());
+						}
+							
+						synchronized(searchLock){
+							if (currentKey != nilptr){
+								refresh();
+							}
+							searchThread = nilptr;
+						}
+						
+						runOnUi(new Runnable(){
+							void run()override{
+								if (currentKey != nilptr){
+									editSearch.setText(currentKey);
+								}else{
+									editSearch.setText("");
+								}
+								editSearch.setEnabled(true);
+                                editSearch.setFocus();
+								ignoreSearch = false;
+							}
+						});
+					}
+				};
+				searchThread.start();
+			} 
+			
+		}
     }
     
     static void prepare(Project project){
 		wndClass._treeview.addItem("res/toolbar/project.png", project.getName() + "(正在生成类视图...)");
+    }
+    
+    static void refresh(){
+		XWndClass.postNotify(XWorkspace.AUTODOMPEVENTID);
     }
     
 	void clickItem(long item){
@@ -67,8 +173,15 @@ class XWndClass : QXDockWidget{
         
 		if (pos != nilptr){
 			//_system_.consoleWrite("" + pos.source + ": " + pos.line + "." + pos.row + "\n");
+            if (pos.source == -1){
+				QXMessageBox.Information("注意", "对象不在源代码中定义.", QXMessageBox.Ok, QXMessageBox.Ok);
+                return ;
+            }
 			String source = sources.getString(pos.source);
-			
+			if (source == nilptr || source.length() == 0){
+				QXMessageBox.Information("注意", "对象不在源代码中定义.", QXMessageBox.Ok, QXMessageBox.Ok);
+                return ;
+            }
 			if (workspace.currentProject != nilptr){
 				source = workspace.currentProject.getFullPath(source);
 			}
@@ -98,7 +211,7 @@ class XWndClass : QXDockWidget{
 				_treeview.setItemText(loader.loaditem, 0, "无");
 			}
 			expand_data.remove(item);
-			loadObject(item, nilptr, loader.object);
+			loadObject(item, nilptr, loader.object, 0);
 		}
 	}
     
@@ -138,17 +251,93 @@ class XWndClass : QXDockWidget{
 				for (int i = 0; i < libs.length(); i++){
 					String var = libs.getString(i);
 					if (var != nilptr){
-                        hlibs[i] = _treeview.insertItem(libroot, "res/toolbar/static.png", var.findFilenameAndExtension());
+                        hlibs[i] = _treeview.insertItem(libroot, "res/toolbar/library.png", var.findFilenameAndExtension());
 					}
 				}
 			}
 		}   
         return hlibs; 
     }
+    
+
+    void search(Project project, String key){
+		if (project != nilptr){
+			JsonObject json = project.xintelliSenseMap;
+			bool showBuildin = Setting.isShowBuildin();
+            if (json != nilptr){
+				JsonArray template_class = (JsonArray)json.get("template_class");
+				JsonArray template_instance = (JsonArray)json.get("template_instance");
+				JsonArray heap = (JsonArray)json.get("heap");
+				
+                if (template_class != nilptr)
+					searchObject(template_class, key, showBuildin);
+                
+                if (template_instance != nilptr)
+					searchObject(template_instance, key, showBuildin);
+                
+                if (heap != nilptr)
+					searchObject(heap, key, showBuildin);
+            }
+        }
+
+    }
+    
+    int searchObject(JsonArray objs, String key, bool showBuildin){      
+        int hasVisible = 0;
+        if (objs == nilptr ){
+			return 0;
+        }
+		for (int i =0, c = objs.length(); i < c; i++){
+			JsonObject obj = (JsonObject)objs.get(i); 
+			int type = obj.getInt("type");
+            String objname = obj.getString("name").upper();
+            
+            if (obj.has("buildin")){
+				if (showBuildin == false){
+					continue;
+                }
+            }
+            
+            int bVisible = 0;
+            obj.remove("mathced");
+            if (Pattern.test(objname, key, 0, false)){
+                bVisible ++;
+            }
+	
+			if (type == 31){
+				bVisible += searchObject((JsonArray)obj.get("properites"), key, showBuildin);
+				bVisible += searchObject((JsonArray)obj.get("static_properites"), key, showBuildin);
+				bVisible += searchObject((JsonArray)obj.get("method"), key, showBuildin);
+				bVisible += searchObject((JsonArray)obj.get("static_method"), key, showBuildin);
+			}else
+			if (type == 23){
+				JsonArray param = (JsonArray)obj.get("params");
+				for (int x = 0, y = param.length(); x < y; x++){
+					JsonObject jo = (JsonObject)param.get(x);
+                    String fname = jo.getString("name").upper();
+					jo.remove("mathced");
+					if (Pattern.test(fname, key, 0, false)){
+						jo.put("mathced",1);
+                        bVisible ++;
+					}
+				}
+			}
+            
+            if (bVisible > 0){
+				hasVisible++;
+                obj.put("mathced", 1);
+            }
+		}
+        return hasVisible;
+    }
+    
 	void loadProject(Project project){
 		clear();
 		long root = _treeview.addItem("res/toolbar/project.png", project.getName());
-        
+        long hbuildin = 0;
+        if (Setting.isShowBuildin()){
+			hbuildin = _treeview.addItem("res/toolbar/sources.png", "内置对象");
+        }
         
         long []libs = loadLibs(project.currentConfig);
         
@@ -157,24 +346,40 @@ class XWndClass : QXDockWidget{
 			JsonArray template_class = (JsonArray)project.xintelliSenseMap.get("template_class");
 			JsonArray template_instance = (JsonArray)project.xintelliSenseMap.get("template_instance");
 			JsonArray heap = (JsonArray)project.xintelliSenseMap.get("heap");
-			loadObject(root, libs, template_class);
-			loadObject(root, libs, template_instance);
-			loadObject(root, libs, heap);
+			loadObject(root, libs, template_class, hbuildin);
+			loadObject(root, libs, template_instance, hbuildin);
+			loadObject(root, libs, heap, hbuildin);
 			_treeview.setExpand(root, true);
         }
 	}
 	long insertLoad(long item){
 		return _treeview.insertItem(item, nilptr, "加载中...");
 	}
-	void loadObject(long hroot, long []libs, JsonArray objs){
+	void loadObject(long hroot, long []libs, JsonArray objs, long hbuildin){
 		if (objs == nilptr){
 			return ;
         }
         
+        bool searched = searchkey!= nilptr;
+        bool showBuildin = Setting.isShowBuildin();
         
 		for (int i =0, c = objs.length(); i < c; i++){
 			long root = hroot;
 			JsonObject obj = (JsonObject)objs.get(i);
+
+			if (searched &&  !obj.has("mathced")){
+				continue;
+            }
+            
+            if (obj.has("buildin")){
+				if (showBuildin == false){
+					continue;
+                }else{
+					if (hbuildin != 0){
+						root = hbuildin;
+                    }
+                }
+            }
 			int type = obj.getInt("type");
             int libid = obj.getInt("lib");
             bool blib = obj.has("lib");
@@ -191,12 +396,15 @@ class XWndClass : QXDockWidget{
 			}else
 			if (type == 31){
 				if (obj.has("template")){
-					item = _treeview.insertItem(root, "res/toolbar/tempinstance.png", obj.getString("name"));
-					long temp = _treeview.insertItem(item, "res/toolbar/tempinstance.png", "模板");
+					item = _treeview.insertItem(root, "res/toolbar/tempinst.png", obj.getString("name"));
+					long temp = _treeview.insertItem(item, "res/toolbar/template.png", "模板");
 					_treeview.insertItem(temp, "res/toolbar/template.png", obj.getString("template"));
 				}else
 				if (obj.has("interface")){
 					item = _treeview.insertItem(root, "res/toolbar/interface.png", obj.getString("name"));
+				}else
+                if (obj.has("package")){
+					item = _treeview.insertItem(root, "res/toolbar/package_icon.png", obj.getString("name"));
 				}else{
 					item = _treeview.insertItem(root, "res/toolbar/class.png", obj.getString("name"));
 				}
@@ -235,20 +443,27 @@ class XWndClass : QXDockWidget{
 				JsonArray param = (JsonArray)obj.get("params");
 				for (int x = 0, y = param.length(); x < y; x++){
 					 JsonObject jo = (JsonObject)param.get(x);
-					long pitem = _treeview.insertItem(params, "res/toolbar/static.png", jo.getString("name"));
+                    if (searched &&  !jo.has("mathced")){
+						continue;
+					}
+					long pitem = _treeview.insertItem(params, "res/toolbar/param.png", jo.getString("name"));
 					long temp = _treeview.insertItem(pitem, "res/toolbar/class.png", "类型");
 					_treeview.insertItem(temp, nilptr, jo.getString("type"));
 				}
 			}else
 			if (type == 18){
-				item = _treeview.insertItem(root, "res/toolbar/static.png", obj.getString("name"));
+				item = _treeview.insertItem(root, "res/toolbar/object.png", obj.getString("name"));
 				if (obj.has("typeobj")){
 					long temp = _treeview.insertItem(item, "res/toolbar/class.png", "类型");
 					_treeview.insertItem(temp, nilptr, obj.getString("typeobj"));
 				}
 			}
 			if (item != 0){
-				position_info.put(item, new Position(obj.getInt("source"), obj.getInt("line"), obj.getInt("row"), blib));
+				int sourceid = -1;
+                if (obj.has("source")){
+					sourceid = obj.getInt("source");
+                }
+				position_info.put(item, new Position(sourceid, obj.getInt("line"), obj.getInt("row"), blib));
 			}
 		}
 	}

@@ -549,7 +549,9 @@ class QXPropertyBrowser : QXWidget{
     void setLables(String left, String right){
 		long_string2(nativehandle, QPBSETLABELS, left, right);
     }
-    
+    void setHeaderWidths(int left, int right){
+		widget_set_v2int_value(nativehandle, SETPROPWIDTHS, left, right);
+    }
     void enableAdjust(bool ba){
 		widget_set_bool_value(nativehandle, QPBADJUST, ba);
     }

@@ -67,4 +67,16 @@ class QXAction : QXObject{
     void setChecked(bool b){
         widget_set_bool_value(nativehandle, CHECKED, b);
     }
+    
+    bool getChecked(){
+        return widget_get_bool_value(nativehandle, CHECKED);
+    }
+    
+    void setCheckable(bool b){
+        widget_set_bool_value(nativehandle, CHECKABLE, b);
+    }
+    
+    bool getCheckable(){
+        return widget_get_bool_value(nativehandle, CHECKABLE);
+    }
 };

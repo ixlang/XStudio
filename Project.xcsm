@@ -121,6 +121,12 @@ class Project{
 		return true;
     }
     
+    /*void deployCurrentConfigure(){
+		if (currentConfig != nilptr){
+			currentConfig.deploy(this);
+        }
+    }*/
+    
     String getOption(String key){
 		String value = nilptr;
 		try{
@@ -202,11 +208,13 @@ class Project{
     }
     
     bool build(Builder _builder, BuildListener l, XlangProjectProp. BuildParams params){
-        Builder.clear(true);
+        
         
 		synchronized(buildlock){
 			if (build_thread == nilptr){
             
+				Builder.clear(true);
+                
 				ProgressView pv = ProgressView.showWait(-1);
                 
                 pv.centerScreen();
@@ -719,7 +727,7 @@ class Project{
                 
 				ZipEntry entry = zs.findEntry("major.lix");
                 
-                String lixName = pi.name + pi.version + ".lix";
+                String lixName = pi.name + "_" + pi.version + ".lix";
                 
                 String destpath = projDir.appendPath("libs");
                 
@@ -742,7 +750,7 @@ class Project{
 					zfile.close();
                     fos.close();
                     XWndOutput.Output("成功.\n");
-                    if (currentConfig.importPkg(this, pi, zs, lixName)){
+                    if (currentConfig.importPkg(this, pi, zs, lixName, pi.name, pi.version)){
 						XWndOutput.Output("注意:此包含有运行时文件, 项目目标程序运行位置发生改变时可能需要依赖.\n");
                     }
 				}

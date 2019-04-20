@@ -138,6 +138,14 @@ class XlangProjectProp : ProjectPropInterface{
             }
 			return true;
         }
+        
+        /*if (key.equals("deploypath")){
+			if (value.indexOf("$(Deploy)") != -1){
+				return false;
+            }
+            configure.setOption("deploypath", value);
+            return true;
+        }*/
         if (key.equals("projout")){
 			if (value.indexOf("$(Output)") != -1){
 				return false;
@@ -311,6 +319,9 @@ class XlangProjectProp : ProjectPropInterface{
         if (key.equals("projout")){
             return configure.getOption("outpath");
         }
+        /*if (key.equals("deploypath")){
+            return configure.getOption("deploypath");
+        }*/
         if (key.equals("outfile")){
             return configure.getOption("outname");
         }

@@ -15,7 +15,7 @@ class QXNative{
         void cdecl widget_set_vint_value(long h, int proid, int value);
         void cdecl widget_set_object_value(long h, int proid, Object value);
         void cdecl widget_set_long_object_value(long h, int proid,long i, Object value);
-		void cdecl widget_set_int2_object_value(long h, int proid,int i,int iv, Object value);
+        void cdecl widget_set_int2_object_value(long h, int proid,int i,int iv, Object value);
         bool cdecl widget_get_bool_value(long h, int proid);
         Object cdecl widget_get_object(long h, int proid);
         
@@ -42,11 +42,12 @@ class QXNative{
         String cdecl core_getClassName(long h);
         Object cdecl core_getParent(long h);
         String cdecl core_getString(long h, int proid);
-		String cdecl core_getStringlongint(long h, int proid, long v1, int v2);
+        String cdecl core_getStringlongint(long h, int proid, long v1, int v2);
         int cdecl core_getintlong(long h, int proid, long v);
         long cdecl createQObject(int type, Object xobj, long parent);
         int cdecl widget_set_intstring_value(long h, int proid, int xv, String yv);
         long cdecl createNObject(int type, long param);
+        long cdecl createPObject(int type, ObjectPtr param);
         int cdecl widget_set_v3int_value(long h, int proid, int xv, int yv, int zv);
         int cdecl widget_set_intintstring_value(long h, int proid, int xv, int yv, String zv);
         void cdecl widget_set_intlongstring_value(long h, int proid, long xv, int yv, String zv);
@@ -82,7 +83,7 @@ class QXNative{
         void cdecl native_double2(long h ,int proid,double v1, double v2);
         void cdecl native_double4(double v1, double v2, double v3, double v4,long h ,int proid);
         void cdecl native_int4(long h ,int proid,int v1, int v2, int v3, int v4);
-		int cdecl int_long_int_long_int_int(long h, int proid, long h1, int v1, int v2);
+        int cdecl int_long_int_long_int_int(long h, int proid, long h1, int v1, int v2);
         bool cdecl array_int2(long h,int proid, Object, int, int);
         int cdecl widget_set_bint_value(long h, int proid, int value);
         long cdecl create_array_int2(long h, int proid, Object obj, int pos, int len);

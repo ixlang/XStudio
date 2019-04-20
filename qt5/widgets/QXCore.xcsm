@@ -330,7 +330,14 @@ class QXCore : QXNative{
         GETFONTPTSIZE = 327,
         QPBSETLABELS = 328,
         QPBADJUST = 329,
-        QIMGSAVE = 330;
+        QIMGSAVE = 330,
+        CHECKABLE = 331,
+        SETPROPWIDTHS = 332,
+        DELLOCBRUSH = 333,
+        SETSPREAD = 334,
+        SETCOLORAT = 335,
+        DELLOCGRADIENT = 336,
+        SETGRADIENT = 337;
         
     QXCore(){
     }

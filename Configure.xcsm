@@ -32,6 +32,10 @@ class Configure{
         return false;
     }
     
+    void resetCache(){
+		filemd5s.clear();
+    }
+    
     static String getFileMd5(String file){
 		
         String md5 = "unknow";
@@ -156,7 +160,7 @@ class Configure{
         bModified = true;
     }
     
-    bool addLib(String lib){
+    bool addLib(String lib, String xpname, String xpver){
 		bool isHas = false;
     
         JsonArray libs = (JsonArray)root.get("libs");
@@ -171,7 +175,16 @@ class Configure{
 					if (path.equals(lib)){
 						isHas = true;
 						break;
-					}
+					}else{
+						String filename = path.findFilename();
+						int pos = filename.lastIndexOf('_');
+						if (pos != -1){
+							String pname = filename.substring(0, pos);
+                            if (pname.equals(xpname)){
+								libs.remove(i);
+                            }
+                        }
+                    }
 				}
 			}
         }
@@ -212,7 +225,43 @@ class Configure{
         }
         return false;
     }
+    /*
+    bool removeDepend(String xpname){
+		JsonArray depends = (JsonArray)root.get("depends");
+        if (depends == nilptr){
+			depends = new JsonArray();
+            root.put("depends", depends);
+            return false;
+        }
+        
+        for (int i = 0; i < depends.length(); i++){
+			JsonObject depend = (JsonObject)depends.get(i);
+            if (depend != nilptr){
+				String pname = depend.getString("name");
+                if (pname != nilptr && pname.equals(xpname)){
+					depends.remove(i);
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
     
+    bool addDepends(String xpname, String version){        
+        JsonArray depends = (JsonArray)root.get("depends");
+        if (depends == nilptr){
+			depends = new JsonArray();
+            root.put("depends", depends);
+        }
+        
+        JsonObject depend = new JsonObject();
+        depend.put("name", xpname);
+        depend.put("version", version);
+		depends.put(depend);
+        return true;
+    }
+    */
     int getArchId(){
 		String [] archs = {"", "-arch:x86", "-arch:x86_64", "-arch:arm", "-arch:arm64", "-arch:mips"};
 		String arch = getOption("wtype");
@@ -333,14 +382,114 @@ class Configure{
         return true;
     }
     
-     bool importPkg(Project project, PackageManager.PackageInfo pi, ZipArchive zs, String lixname){
+    
+    /*bool deploy(Project project){
+		PackageManager pm = new PackageManager();
+		JsonArray depends = (JsonArray)root.get("depends");
+        
+        if (depends == nilptr){
+			depends = new JsonArray();
+            root.put("depends", depends);
+            return false;
+        }
+        
+        String deploy_path = getOption("deploypath");
+        if (deploy_path == nilptr || deploy_path.length() == 0){
+			XWndOutput.Output("部署路径错误,请先设置部署路径.");
+            return false;
+        }
+		deploy_path = String.formatPath(XlangProjectProp.map_variable(project, this , deploy_path), false);
+        if (deploy_path == nilptr || deploy_path.length() == 0){
+			XWndOutput.Output("部署路径错误,请先设置部署路径.");
+            return false;
+        }
+        for (int i = 0; i < depends.length(); i++){
+			JsonObject depend = (JsonObject)depends.get(i);
+            if (depend != nilptr){
+				String pname = depend.getString("name");
+                String pversion = depend.getString("version");
+                
+                PackageManager.PackageInfo pi = pm.findPackage(pname,pversion);
+                
+                if (pi != nilptr){
+					if (false == deployPackage(deploy_path, project, pi)){
+						XWndOutput.Output("部署包失败:" + pname + " ver:" + pversion);
+                    }
+                }else{
+					XWndOutput.Output("找不到依赖包:" + pname + " ver:" + pversion);
+                }
+            }
+        }
+        
+        return true;
+    }
+    
+    
+    bool deployPackage(String deploy_path, Project project,PackageManager.PackageInfo pi){
+		bool rt = false;
+        
+        String match = String.formatPath("" + getArchId() + "/" + _system_.getPlatformId(), false);
+        
+		try{
+			FileInputStream fis = new FileInputStream(pi.filepath);
+			ZipArchive zs = new ZipArchive();
+            
+            
+            if (zs.open(fis)){
+				int c = zs.getEntriesCount();
+                
+				for (int i = 0; i < c; i ++){
+					ZipEntry entry = zs.getEntry(i);
+					String name =  String.formatPath(entry.getName(), false);
+					if (name.startWith(match)){
+						ZipFile zf = entry.getFile();
+						if (zf != nilptr && zf.open()){
+						
+							String newpath = String.formatPath(deploy_path.appendPath(name.substring(3, name.length())), false);
+							XWndOutput.Output(newpath + "...");
+							XlangProjectProp.mkdirs(newpath.findVolumePath());
+							
+							FileOutputStream fos ;
+							try{
+								fos = new FileOutputStream(newpath);
+								int rd = 0;
+								byte [] data = new byte[1024];
+								while ((rd = zf.read(data, 0, 1024)) > 0){
+									fos.write(data, 0, rd);
+								}
+								rt = true;
+							}catch(Exception e){
+							
+							}finally{
+								if (fos != nilptr){
+									fos.close();
+								}
+							}
+							zf.close();
+						}
+					}
+                }
+				zs.close();
+            }
+            
+            fis.close();
+        }catch(Exception e){
+        
+        }
+        
+        return rt;
+    }*/
+    
+     bool importPkg(Project project, PackageManager.PackageInfo pi, ZipArchive zs, String lixname, String xpname, String version){
+		resetCache();
+            
 		if (addPathToLibpath("libs")){
 			if (project.intelliSense != nilptr){
 				project.intelliSense.appendLibpath("libs");
             }
         }
         
-		if (addLib(lixname)){
+		if (addLib(lixname, xpname, version)){
 			if (project.intelliSense != nilptr){
 				project.intelliSense.appendLib(lixname);
             }

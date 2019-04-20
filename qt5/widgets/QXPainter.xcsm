@@ -115,30 +115,7 @@ class QXPainter{
         TransparentMode = 0,
         OpaqueMode = 1;
      };
-		/** @brush style
-        */
-     static class BrushStyle{
-		static const int 
-        NoBrush = 0,
-        SolidPattern = 1,
-        Dense1Pattern = 2,
-        Dense2Pattern = 3,
-        Dense3Pattern = 4,
-        Dense4Pattern = 5,
-        Dense5Pattern = 6,
-        Dense6Pattern = 7,
-        Dense7Pattern = 8,
-        HorPattern = 9,
-        VerPattern = 10,
-        CrossPattern = 11,
-        BDiagPattern = 12,
-        FDiagPattern = 13,
-        DiagCrossPattern = 14,
-        LinearGradientPattern = 15,
-        RadialGradientPattern = 16,
-        ConicalGradientPattern = 17,
-        TexturePattern = 24;
-     };
+
         
         /** @ImageConversionFlag
         */
@@ -186,7 +163,7 @@ class QXPainter{
     
     void setPaint(Paint p){
 		if ((p.style & Paint.FILL) != 0){
-			setBrush(p.color, BrushStyle.SolidPattern);
+			setBrush(p.color, QXBrush.Style.SolidPattern);
         }
         
         if ((p.style & Paint.STROKE) != 0){
@@ -199,6 +176,10 @@ class QXPainter{
     
     void setBrush(int color, int brushStyle){
 		QXNative.widget_set_v2int_value(hpaint, QXCore.SETBRUSH, color, brushStyle);
+    }
+    
+    void setBrush(QXBrush brush){
+		QXNative.widget_set_native_value(hpaint, QXCore.SETBRUSH, brush.nativehandle);
     }
     
     void drawLine(int start_x, int start_y, int end_x, int end_y){
@@ -277,8 +258,8 @@ class QXPainter{
     
     void drawImage(QXImage image, QXRect dest, QXRect source, int converFlags){
 		QXNative.long_long_int9(hpaint, QXCore.DRAWIMAGE, image.himage, 
-			dest.left, dest.top, dest.right, dest.bottom, 
-			source.left, source.top, source.right, source.bottom,  
+			dest.left, dest.top, dest.width(), dest.height(), 
+			source.left, source.top, source.width(), source.height(),  
 			converFlags);
     }
     

@@ -13,10 +13,12 @@ class QxApp : QXApplication{
     XMemoryWnd memoryWnd;
     XLogcatWnd logcatWnd;
     XWndObjectDump xDumpWnd;
+    
     static String [] _appargs;
     static QxApp _theApp;
     static String lastTask = nilptr;
     static StatusBarMgr statusBar = new StatusBarMgr();
+    
     XWorkspace _mdispace;
     XMenuManager menuMgr = new XMenuManager();
 
@@ -52,6 +54,7 @@ class QxApp : QXApplication{
 		loadConfig();
         wndOutput.reconfig();
         XSourceEditor.reconfig();
+        
     }
     
 	void loadConfig(){

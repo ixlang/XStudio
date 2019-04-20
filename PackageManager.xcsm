@@ -21,6 +21,9 @@ class PackageManager{
             descr = jo.getString("descr");
             author = jo.getString("author");
             iconFile = String.formatPath(XPlatform.getAppDirectory().appendPath(jo.getString("icon")), false);
+            if (XPlatform.existsSystemFile(iconFile) == false){
+				iconFile = "";
+            }
             filepath = String.formatPath(_system_.getAppDirectory().appendPath(jo.getString("file")), false);
         }
         

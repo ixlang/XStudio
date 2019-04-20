@@ -18,12 +18,23 @@ class QXMatrix : QXCore{
     QXRect mapRect(QXRect r){
 		long lt = object_get_long_int(nativehandle, MATRIXMAPPOINT, r.left, r.top);
         long rb = object_get_long_int(nativehandle, MATRIXMAPPOINT, r.right, r.bottom);
-        QXRect ret = new QXRect();
-        ret.left = (lt >> 32) & 0xffffffff;
-        ret.top = lt & 0xffffffff;
-        ret.right = (rb >> 32) & 0xffffffff;
-        ret.bottom = rb & 0xffffffff;
-        return ret;
+        long lb = object_get_long_int(nativehandle, MATRIXMAPPOINT, r.left, r.bottom);
+        long rt = object_get_long_int(nativehandle, MATRIXMAPPOINT, r.right, r.top);
+        
+        int x1 = (lt >> 32) & 0xffffffff,
+			x2 = (rb >> 32) & 0xffffffff,
+            x3 = (lb >> 32) & 0xffffffff,
+            x4 = (rt >> 32) & 0xffffffff;
+            
+        int y1 = lt & 0xffffffff,
+			y2 = rb & 0xffffffff,
+            y3 = lb & 0xffffffff,
+            y4 = rt & 0xffffffff;
+                
+        return new QXRect(
+			Math.min(x1,Math.min(x2,Math.min(x3,x4))), Math.min(y1,Math.min(y2,Math.min(y3,y4))),
+			Math.max(x1,Math.max(x2,Math.max(x3,x4))), Math.max(y1,Math.max(y2,Math.max(y3,y4)))
+			);
     }
     
     QXMatrix translate(double x, double y){

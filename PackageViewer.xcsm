@@ -280,7 +280,11 @@ class PackageViewer : QXDialog{
 		int c = pm.getCount();
 		for (int i =0; i < c; i++){
 			PackageManager.PackageInfo pi = pm.get(i);
-            long item = pcklist.addItem(pi.iconFile, pi.name);
+            String icon = pi.iconFile;
+            if (icon == nilptr || icon.length() == 0){
+				icon = "res/package64.png";
+            }
+            long item = pcklist.addItem(icon, pi.name);
             pcklist.modifyItemFlags(item, QXTreeView.ItemIsUserCheckable, 0);
             pcklist.setItemText(item, 1, pi.version);
             pcklist.setItemText(item, 2, pi.descr);

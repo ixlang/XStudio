@@ -502,6 +502,16 @@ class QXObject : QXCore{
         Key_CameraFocus = 0x01100021,
         Key_unknown = 0x01ffffff;
         
+     static const int NoModifier           = 0x00000000,
+        ShiftModifier        = 0x02000000,
+        ControlModifier      = 0x04000000,
+        AltModifier          = 0x08000000,
+        MetaModifier         = 0x10000000,
+        KeypadModifier       = 0x20000000,
+        GroupSwitchModifier  = 0x40000000,
+        // Do not extend the mask to include 0x01000000
+        KeyboardModifierMask = 0xfe000000;
+        
 	static const int Invalid = 0,
         Bool = 1,
         Int = 2,
@@ -582,10 +592,10 @@ class QXObject : QXCore{
     };
     
     static class onKeyEventListener{
-        bool onKeyPress(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey){
+        bool onKeyPress(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier){
 			return true;
         }
-        bool onKeyRelease(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey){
+        bool onKeyRelease(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier){
 			return true;
         }
     };
@@ -950,15 +960,15 @@ class QXObject : QXCore{
         }
     }
     ////
-    bool onKeyPress(int key, bool repeat, int count, String text, int scanCode, int virtualKey){
+    bool onKeyPress(int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier){
         if (_keyListener != nilptr){
-            return _keyListener.onKeyPress(this, key, repeat, count, text, scanCode, virtualKey);
+            return _keyListener.onKeyPress(this, key, repeat, count, text, scanCode, virtualKey, modifier);
         }
 		return true;
     }
-    bool onKeyRelease(int key, bool repeat, int count, String text, int scanCode, int virtualKey){
+    bool onKeyRelease(int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier){
         if (_keyListener != nilptr){
-            return _keyListener.onKeyRelease(this, key, repeat, count, text, scanCode, virtualKey);
+            return _keyListener.onKeyRelease(this, key, repeat, count, text, scanCode, virtualKey, modifier);
         }
 		return true;
     }

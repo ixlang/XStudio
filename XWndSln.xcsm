@@ -85,7 +85,7 @@ class XWndSln : QXDockWidget{
 				return ;
             }
             if (obj == XWndSln.this._contextMenu.actions[9]){
-				workspace.showProperites();
+				workspace.showProperites(nilptr);
 				return ;
             }
             if (obj == XWndSln.this._contextMenu.actions[6]){
@@ -283,6 +283,15 @@ class XWndSln : QXDockWidget{
         _treesln.setOnTreeViewItemEvent(listlistener);
 		_slnView = this;
         
+        editSearch.setOnKeyEventListener(new onKeyEventListener(){
+			bool onKeyPress(QXObject obj,int key,bool repeat,int count,String text,int scanCode,int virtualKey,int modifier)override{
+				if (key == Key_Escape){
+					editSearch.setText("");
+                }
+                return true;
+			}
+        });
+        
         editSearch.setOnEditEventListener(new onEditEventListener(){
 
             void onTextChanged(QXObject, String text)override{
@@ -322,7 +331,35 @@ class XWndSln : QXDockWidget{
         
         JsonArray sources = project.getSources();
         for (int i =0; i < sources.length(); i++){
-            long item = _treesln.insertItem(project.sourcesRoot, "res/toolbar/source.png", sources.getString(i));
+			String pathfile = sources.getString(i);
+            /*String extsion = pathfile.findExtension();*/
+            if (pathfile.startWith("./") || pathfile.startWith(".\\")){
+				pathfile = pathfile.substring(2,pathfile.length());
+            }
+            String iconFile = "res/toolbar/source.png";
+           /*if (extsion != nilptr){
+				if (extsion.equalsIgnoreCase(".xcs")){
+					iconFile = "res/toolbar/xcs.png";
+                }else
+                if (extsion.equalsIgnoreCase(".xcsm")){
+					iconFile = "res/toolbar/xcsm.png";
+                }else
+                if (extsion.equalsIgnoreCase(".version")){
+					iconFile = "res/toolbar/version.png";
+                }else
+                if (extsion.equalsIgnoreCase(".ui")){
+					iconFile = "res/toolbar/ui.png";
+                }
+            }
+            
+			String fname = pathfile.findFilenameAndExtension();
+			if (fname != nilptr){
+				if (fname.equalsIgnoreCase("makefile")){
+					iconFile = "res/toolbar/make.png";
+				}
+			}*/
+            
+            long item = _treesln.insertItem(project.sourcesRoot, iconFile, pathfile);
             sourceItem.put(item, new ProjectSource(project,item, i));
         }
         

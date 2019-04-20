@@ -56,7 +56,7 @@ class Switche : QXWidget{
 			_bForceRedraw = false;
 			QXPainter _canvas = new QXPainter(_cachedBitmap);
             _canvas.setCompositionMode(QXPainter.CompositionMode.CompositionMode_Source);
-            _canvas.fillRect(0, 0, width(), height(), 0, QXPainter.BrushStyle.SolidPattern);
+            _canvas.fillRect(0, 0, width(), height(), 0, QXBrush.Style.SolidPattern);
             _canvas.setRenderHint(QXPainter.RenderHint.Antialiasing, true);
             
 			

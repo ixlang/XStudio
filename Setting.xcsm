@@ -83,6 +83,9 @@ class Setting : QXDialog {
 						String keyname = names[1];
                         String shortkey = root.getString(names[1]);
                         
+                        if (shortkey == nilptr){
+							shortkey = "";
+                        }
                         if (XMenuManager._menuMgr != nilptr && XMenuManager._menuMgr.mainwindow != nilptr){
 							QXAction action = (QXAction)XMenuManager._menuMgr.mainwindow.findByName(keyname);
 							if (action != nilptr){
@@ -211,6 +214,7 @@ class Setting : QXDialog {
         return false;
     }
     
+    bool oldbuildinsetting = false;
     void onAttach(){
         //setWindowFlags(CustomizeWindowHint | WindowMinMaxButtonsHint | WindowCloseButtonHint  | Tool);
         _listview = (QXTreeView)attachByName(new QXTreeView(), "listProp");
@@ -221,6 +225,8 @@ class Setting : QXDialog {
         
         _propTable.setLables("项","值");
         _propTable.enableAdjust(true);
+        _propTable.setHeaderWidths(200, 300);
+        
         String [] columns = {"选项"};
         _listview.setColumns(columns);
         _listview.setOnTreeViewItemEvent(listlistener);
@@ -238,6 +244,9 @@ class Setting : QXDialog {
                 saveSetting();
                 applySetting();
                 QxApp.statusBar.statusBar.showMessage("部分设置需要在XStudio重新开启后生效.");
+                if (oldbuildinsetting != isShowBuildin()){
+					XWndClass.refresh();
+				}
                 close();
             }
         });
@@ -255,6 +264,7 @@ class Setting : QXDialog {
         setWindowIcon("./res/toolbar/prop.png");
         setModal(true);
         show();
+        oldbuildinsetting = isShowBuildin();//XWorkspace.workspace.XIntelliSense();
     }
     
     void loadFeature(JsonObject confi){
@@ -433,6 +443,7 @@ class Setting : QXDialog {
 		editorFont = nilptr;
 		preference.apply(_template_root);
         QxApp._theApp.reconfig();
+        
     }
     
     void flushSetting(){
@@ -502,6 +513,18 @@ class Setting : QXDialog {
     
     static bool isShowLineNumber(){
 		return get("linenumber").equals("开启");
+    }
+    
+    static bool isShowFolding(){
+		return get("showfolding").equals("开启");
+    }
+    
+    static bool isIndentGuide(){
+		return get("indentguide").equals("开启");
+    }
+    
+    static bool isShowBuildin(){
+		return get("showbuildin").equals("开启");
     }
     
     static QXFont editorFont;
