@@ -1,6 +1,9 @@
 class QXFont : QXCore{
     QXFont(String fontName){
         nativehandle = createNObject(QType.qtFont, 0);
+        if (nativehandle == 0){
+			throw new IllegalArgumentException("can not new QXPath");
+        }
         widget_slot_string(nativehandle, FONTSETFAMILY, fontName);
     }
     
@@ -39,7 +42,12 @@ class QXFont : QXCore{
     QXFont(){
         nativehandle = createNObject(QType.qtFont, 0);
     }
-    
+	int ascent(){
+		return QXNative.widget_get_int_value(nativehandle, QXCore.FONTASCENT);
+    }
+    int descent(){
+		return QXNative.widget_get_int_value(nativehandle, QXCore.FONTDESCENT);
+    }
     void setFont(String fontName){
         widget_slot_string(nativehandle, FONTSETFAMILY, fontName);
     }

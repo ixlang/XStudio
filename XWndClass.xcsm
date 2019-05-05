@@ -228,11 +228,6 @@ class XWndClass : QXDockWidget{
 		if (workspace.currentProject != nilptr){
 			loadProject(workspace.currentProject);
 		}
-		if (Setting.isIntellisense()){
-			QxApp.statusBar.statusBar.showMessage("XIntelliSense 结束.");
-        }else{
-			QxApp.statusBar.statusBar.showMessage("XIntelliSense 未启用.");
-        }
     }
 	/*static void load(Project project){
 		wndClass.loadProject(project);

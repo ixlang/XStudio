@@ -69,17 +69,21 @@ class Project{
         return false;
     }
     
-    void setCurrentConfigure(String configName){
+    bool setCurrentConfigure(String configName, bool btips){
 		if (configName.length() > 0){
 			try{
 				Configure cfg = configures.get(configName);
 				if (cfg != nilptr){
 					currentConfig = cfg;
+                    return true;
 				}
 			}catch(Exception e){
-				QXMessageBox.Critical("错误", "找不到此配置", QXMessageBox.Ok, QXMessageBox.Ok);
+				if (btips){
+					QXMessageBox.Critical("错误", "找不到此配置", QXMessageBox.Ok, QXMessageBox.Ok);
+                }
 			}
         }
+        return false;
     }
     
     Configure getConfigure(String name){
@@ -281,14 +285,19 @@ class Project{
         return currentConfig != nilptr;
     }
     
-    bool loadProject(JsonObject xworkspace){
+    bool loadProject(JsonObject xworkspace, bool bconsole){
         JsonObject proj = (JsonObject)xworkspace.child();
         if (proj != nilptr){
             root = proj;
             projectName = proj.getName();
             languageConf = proj.getString("language");
             if (false == loadConfigure((JsonObject)proj.get("configures"))){
-				QXMessageBox.Critical("错误", "找不到有效的项目配置.", QXMessageBox.Ok, QXMessageBox.Ok);
+				if (bconsole == false){
+					QXMessageBox.Critical("错误", "找不到有效的项目配置.", QXMessageBox.Ok, QXMessageBox.Ok);
+                }else{
+					_system_.consoleWrite(XPlatform.converToPlatformCharSet("找不到有效的配置") + "\n");
+                }
+				
                 return false;
             }
             variables.setVariable("$(ProjectName)", projectName);
@@ -297,26 +306,36 @@ class Project{
             if (_propinterface != nilptr){
                 return true;        
             }else{
-                QXMessageBox.Critical("错误", "不支持的项目类型.\n请注意: 没有为该类型项目提供配置文件.", QXMessageBox.Ok, QXMessageBox.Ok);
+				if (bconsole == false){
+					QXMessageBox.Critical("错误", "不支持的项目类型.\n请注意: 没有为该类型项目提供配置文件.", QXMessageBox.Ok, QXMessageBox.Ok);
+                }else{
+					_system_.consoleWrite(XPlatform.converToPlatformCharSet("不支持的项目类型.\n请注意: 没有为该类型项目提供配置文件:" + getLanguage()) + "\n");
+                }
             }
         }
         return false;
     }
-    bool loadWorkspace(String file){
+    bool loadWorkspace(String file, bool bconsole){
 		try{
 			String content = readSlnFile(file);
 			if (content != nilptr){
 				JsonObject _root = new JsonObject(content);
-				loadProject(_root);
+				loadProject(_root, bconsole);
 				projpath = file;
 				variables.setVariable("$(ProjectSlnFile)", file);
                 projDir = String.formatPath(file.findVolumePath(), false);
 				variables.setVariable("$(ProjectDir)", projDir);
-				intelliSense = new XIntelliSense(this, currentConfig);
+                if (bconsole == false){
+					intelliSense = new XIntelliSense(this, currentConfig);
+                }
 				return true;
 			}
 		}catch(Exception e){
-			QXMessageBox.Critical("错误", "加载项目时出现错误.", QXMessageBox.Ok, QXMessageBox.Ok);
+			if (bconsole == false){
+				QXMessageBox.Critical("错误", "加载项目时出现错误.", QXMessageBox.Ok, QXMessageBox.Ok);
+            }else{
+				_system_.consoleWrite(XPlatform.converToPlatformCharSet("加载项目时出现错误:" + file) + "\n");
+            }
 		}
         return false;
     }

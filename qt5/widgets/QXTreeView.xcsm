@@ -66,6 +66,14 @@ class QXTreeView : QXWidget{
         widget_set_intlongint_value(nativehandle, SETBACKCOLOR, item, row, color);
     }
     
+    void setItemBackgroundBrush(long item, int row ,QXBrush brush){
+        widget_set_intlongint_value(item, TRSETFOREBR, brush.nativehandle, row, 0);
+    }
+    
+    void setItemForegroundBrush(long item, int row ,QXBrush brush){
+        widget_set_intlongint_value(item, TRSETBACKBR, brush.nativehandle, row, 0);
+    }
+    
     void setColumns(String [] columns){
         widget_set_object_value(nativehandle, SETCOLUMNS, columns);
     }

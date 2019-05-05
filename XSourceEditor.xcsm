@@ -15,6 +15,8 @@ class XSourceEditor : QXMdiSubWindow{
 	bool intellisense_modified = false;
 	QXTreeView autoWnd; 
     
+    bool bClosed = false;
+    
     XIntelliSense.XIntelliResult[] current_autocmp;
     
 	bool autoCompShow;
@@ -39,7 +41,8 @@ class XSourceEditor : QXMdiSubWindow{
         "if import interface stdcall fastcall pascal operator " + 
         "new package include using require synchronized_read synchronized_write " + 
         "return static super switch synchronized this throw " + 
-        "try void while @Declare override bool byte long char int long short String _system_ Thread nilptr Exception Vector Map List Iterator Timer TimerTask true false" ;
+        "try void while @Declare override bool byte long char int long short String _system_ " + 
+        "Thread nilptr Exception Vector Map List Iterator Timer TimerTask true false finalize" ;
         
     static const String szKeywords2 = "";
     
@@ -158,6 +161,7 @@ class XSourceEditor : QXMdiSubWindow{
 		}
 		return false;
 	}
+    
     static bool findSaveFile(String file){
 		XSourceEditor wnd =  findDocumentWindow(nilptr, file, false);
         if (wnd != nilptr){
@@ -168,6 +172,7 @@ class XSourceEditor : QXMdiSubWindow{
         }
         return false;
     }
+    
 	static bool closeAllWindows(){
 
 		Map.Iterator<String, XSourceEditor> iterator = editorMgr.iterator();
@@ -222,10 +227,12 @@ class XSourceEditor : QXMdiSubWindow{
 		_sci.goto(line, row);
 		setActive(true);
 	}
+    
 	void goto(int pos){
 		_sci.gotoPos(pos);
 		setActive(true);
 	} 
+    
     void gotoAndSelect(int line, int row){
 		int pos = _sci.sendEditor(QXSci.SCI_POSITIONFROMLINE, line) + row - 1;
 		_sci.gotoPos(pos);
@@ -233,6 +240,7 @@ class XSourceEditor : QXMdiSubWindow{
         _sci.setFocus();
 		setActive(true);
 	}
+    
     void breakOn(int line, int row, bool set, bool active){
 		if (set){
 			_sci.goto(line, 1);
@@ -260,6 +268,7 @@ class XSourceEditor : QXMdiSubWindow{
 		lastxis = names;
 		preProcessXIntellisense();
     }
+    
     void preProcessXIntellisense(){
 		XIntelliSense.XIntelliResult[] _lastis = lastxis;
 		if (_lastis == nilptr || _lastis.length == 0){
@@ -299,18 +308,15 @@ class XSourceEditor : QXMdiSubWindow{
 			runOnUi(new Runnable(){
 				void run()override{
 					showComplete(names, count);
-				
-					if (Setting.isIntellisense()){
-						QxApp.statusBar.statusBar.showMessage("XIntelliSense 结束.");
-					}else{
-						QxApp.statusBar.statusBar.showMessage("XIntelliSense 未启用.");
-					}
 				}
 			});
 		}
     }
     
 	void showComplete(XIntelliSense.XIntelliResult[] result, int c){  
+        if (bClosed){
+			return ;
+        }
 		autoWnd.clear();
 		autoCompMap.clear();
         long curpos = _sci.currentPosition();
@@ -368,7 +374,6 @@ class XSourceEditor : QXMdiSubWindow{
 			autoCompMap.put(uname, item);
 		}
         
-
         //XSourceEditor.this.autoCompleteChange();
         
 		showAutoWnd(auto_position);
@@ -388,6 +393,7 @@ class XSourceEditor : QXMdiSubWindow{
 		//setFocus();
 		autoCompShow = true;
 	}
+    
 	void hideAutoWnd(){
 		if (autoCompShow){		
 			autoWnd.hide();
@@ -396,6 +402,7 @@ class XSourceEditor : QXMdiSubWindow{
 			autoCompShow = false;
 		}
 	}
+    
 	void createAutoCompWindow(){
 		autoWnd = new QXTreeView();
 		autoWnd.create(_mdi_area.mainWindow);
@@ -447,7 +454,6 @@ class XSourceEditor : QXMdiSubWindow{
 			}
 		});
 	}
-    
     
     Object rtLock = new Object();
     Thread rtThread = nilptr;
@@ -510,7 +516,6 @@ class XSourceEditor : QXMdiSubWindow{
 		
     }
     
-    
     void showRtInfos(int pos, JsonArray watches){
 		JsonObject obj = (JsonObject)watches.get(0);
 		if (obj != nilptr){
@@ -567,6 +572,7 @@ class XSourceEditor : QXMdiSubWindow{
 			}
 		}    
     }
+    
     bool testMark(int line, int id){
 		if (line <= 0){
 			return false;
@@ -577,6 +583,7 @@ class XSourceEditor : QXMdiSubWindow{
         }
 		return false;
     }
+    
     void toggleBreakpoint(){
 		long pos = _sci.currentPosition();
 		int line = _sci.positionToLine(pos);
@@ -651,7 +658,6 @@ class XSourceEditor : QXMdiSubWindow{
         _sci.setContextMenuPolicy(ActionsContextMenu);
     }
     
-    
     void gotodef(){
 		locationObject(_sci.getCurrentPosition());
     }
@@ -706,8 +712,7 @@ class XSourceEditor : QXMdiSubWindow{
 			}
 		}
     }
-    
-
+   
     bool create(QXWidget parent){
         if (super.create(parent)){
             _sci = new QXSci();
@@ -1061,14 +1066,24 @@ class XSourceEditor : QXMdiSubWindow{
         return del_len;
     }
     
+    
+    /***
+    @brief 查询重写方法
+    @param pos 编辑器中的位置
+    如果代码结构比较复杂则 XISQueryM 可能会耗时导致界面停止响应 
+    所以开新线程处理，然后将处理结果交给UI线程处理
+    */
     void overrideObject(int pos){
+		// 获取当前行
 		int line = _sci.positionToLine(pos);
 		
-	
+		// 开一个线程去查询
 		new Thread(){
 			void run()override{
+				// 执行查询
 				XIntelliSense.XIntelliResult [] res = _mdi_area.XISQueryM(filePath, line);
 				
+                //将查询结果交还UI线程处理
 				runOnUi(new Runnable(){
 					void run()override{
 						if (res != nilptr && res.length > 0){
@@ -1082,12 +1097,8 @@ class XSourceEditor : QXMdiSubWindow{
 						}
 					}
 				});
-
-				
 			}
 		}.start();
-
-		
     }
     
     void locationObject(int pos){
@@ -1207,7 +1218,7 @@ class XSourceEditor : QXMdiSubWindow{
         removeFromMap(filePath);
         //_mdi_area.removeSubWindow(this);
 		_mdi_area.updateDocumentStatus();
-		
+		bClosed = true;
         return true;
     }
     
@@ -1959,7 +1970,7 @@ class XSourceEditor : QXMdiSubWindow{
             }
         }
     }
-    
+        
     /*static void updateBreakInfo(Map<int, XStackInfor.BreakPosition> breakList){
 		Map.Iterator<int, XStackInfor.BreakPosition> iter = breakList.iterator();
 		while (iter.hasNext()){

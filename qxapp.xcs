@@ -1,4 +1,79 @@
 
+
+class ArgsProcessor{
+	String[] args;
+    
+	int cmd = 0;
+    
+    String configure = nilptr;
+    String targetpath = nilptr;
+    String xcross = nilptr;
+    String arch = nilptr;
+    String project = nilptr;
+    
+    static const int CMD_INSTXP = 1,
+		CMD_LOADXPRJ = 2,
+        CMD_BUILD = 3;
+        
+    ArgsProcessor(String []_arg) {
+		args = _arg;
+        if (args.length > 1){
+			if (args[1].equals("-installpkg")){
+				cmd = CMD_INSTXP;
+            }else
+            if (args[1].equals("-build")){
+				cmd = CMD_BUILD;
+            }else{
+				cmd = CMD_LOADXPRJ;
+            }
+        }
+    }
+    
+    int getCommand(){
+		return cmd;
+    }
+    
+    bool parse(){
+		if (cmd == CMD_BUILD){
+			if (args[1].equals("-build")){
+				for (int i = 2; i < args.length; i++){
+					if (args[i].startWith("--config=")){
+						configure = args[i].substring(9,args[i].length());
+					}else
+					if (args[i].startWith("--targetdir=")){
+						targetpath = args[i].substring(12,args[i].length());
+					}else
+					if (args[i].startWith("--xcross=")){
+						xcross = args[i].substring(9,args[i].length());
+					}else
+					if (args[i].startWith("--arch=")){
+						arch = args[i].substring(7,args[i].length());
+					}else
+					if (args[i].startWith("--project=")){
+						project = args[i].substring(10,args[i].length());
+					}else{
+						_system_.consoleWrite("unknow args:" + args[i] + "\n");
+						printfHelp();
+                        return false;
+					}
+				}
+			}
+        }
+        return true;
+    }
+    
+    void printfHelp(){
+		_system_.consoleWrite("\nXStudio build command:\n" + 
+        "e.g XStudio -build <options>\n" + 
+        "--config=<Config Name>\n" + 
+        "--targetdir=<target Directory>\n" + 
+        "--xcross=<target OS:[windows|linux|darwin]>\n" + 
+        "--arch=<target OS:[x86|x86_64|arm|arm64|mips]>\n" + 
+        "--project=<Project file : *.xprj>\n");
+    }
+};
+
+
 class QxApp : QXApplication{
     QXMainWindow mainWindow;
     XWndClass wndclass ;
@@ -206,9 +281,51 @@ class QxApp : QXApplication{
     }  
 };
     
+    
+void runConsoleBuild(ArgsProcessor argspro){
+	_system_.createConsole();
+
+    if (argspro.parse()){
+        Project proj = new Project();
+		Builder _builder = new Builder(true);
+        ProjectPropManager.registryAllProp();
+        
+		if (proj.loadWorkspace(argspro.project, true)){
+        
+			if (argspro.configure != nilptr){
+				if (false == proj.setCurrentConfigure(argspro.configure, false)){
+					_system_.consoleWrite(XPlatform.converToPlatformCharSet( "\n项目不包含配置:" + argspro.configure) + "\n");
+                    return ;
+                }
+            }
+            
+            if (argspro.targetpath != nilptr){
+				proj.currentConfig.setOption("outpath", argspro.targetpath);
+            }
+            if (argspro.arch != nilptr){
+				proj.currentConfig.setOption("wtype", "-arch:" + argspro.arch);
+            }
+            if (argspro.xcross != nilptr){
+				proj.currentConfig.setOption("ostype", "-xcross-" + argspro.xcross);
+            }
+                        
+			proj.thread_build(_builder, new BuildListener(){
+				void onBuild(bool success)override{
+					_system_.consoleWrite(XPlatform.converToPlatformCharSet( "\n组建" + (success?"已执行." : "未能执行.") + "\n"));
+				}
+
+			},nilptr);
+		}
+    }
+}
        
 int main(String [] args){  
     _system_.chdir( _system_.getAppDirectory());
+    ArgsProcessor argspro = new ArgsProcessor(args);
+    if (argspro.getCommand() == ArgsProcessor.CMD_BUILD){
+		runConsoleBuild(argspro);
+        return 0;
+    }
     QxApp app = new QxApp();
 	QxApp._appargs = args;
     if (app.create()){

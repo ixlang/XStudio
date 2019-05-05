@@ -2,6 +2,7 @@
 //Date: Thu Nov 09:02:46 2018 
 
 class Utils{    
+    
     static void readForProcess(IBuilder builder, Process _process){
 		try{
 			int rd = 0;
@@ -199,7 +200,7 @@ class Utils{
 				if (entry.isDirectory() == false){                                        
                     String apply_exe;
                     
-					if (entry.getName().startWith("xupdate_apply")){
+					if (entry.getName().startWith("xupgrade_apply")){
 
                         apply_exe = _system_.getAppDirectory().appendPath(entry.getName());
 
@@ -240,7 +241,7 @@ class Utils{
             if (_system_.getPlatformId() == 0){
 				ext = ".exe";
             }
-			runUpdate(_system_.getAppDirectory().appendPath("xupdate_apply" + ext), zipFile, version);
+			runUpdate(_system_.getAppDirectory().appendPath("xupgrade_apply" + ext), zipFile, version);
 		 }else{
 			_system_.deleteFile(zipFile);
 			showError("下载更新失败,请尝试<a href=\"" + url + "\">手动下载</a>.");
@@ -254,9 +255,12 @@ class Utils{
 		args[1] = version;
         
 		Process designer = new Process(updater, args);
-        if (designer.create(true, false, false, false) == false){
-            showError("无法应用更新,请尝试手动解压 " + updatefile + ", 覆盖旧版本文件");
-			return ;
+        try{
+			if (designer.create(true, false, false, false) == false){
+				showError("无法应用更新,请尝试手动解压 " + updatefile + ", 覆盖旧版本文件");
+			}
+        }catch(Exception e){
+			showError("无法应用更新:" + e.getMessage() + ",请尝试手动解压 " + updatefile + ", 覆盖旧版本文件");
         }
     }
     

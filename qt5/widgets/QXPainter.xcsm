@@ -70,7 +70,7 @@ class QXPainter{
 		int style;
 		int color;
         double width;
-        double textSize;
+        int textSize = -1;
         
         void setColor(int c){
 			color = c;
@@ -169,7 +169,20 @@ class QXPainter{
         if ((p.style & Paint.STROKE) != 0){
 			setPen(p.color, PenStyle.SolidLine, p.width);
         }
+        
+        if (p.textSize >0 ){
+			setFontPixelSize(p.textSize);
+        }
     }
+    
+    void setFontPointSize(int size){
+		QXNative.widget_set_vint_value(hpaint, QXCore.PAINTFONTPTSIZE, size);
+    }
+    
+    void setFontPixelSize(int size){
+		QXNative.widget_set_vint_value(hpaint, QXCore.PAINTFONTPXSIZE, size);
+    }
+    
     void setPen(int color, int penStyle, double width){
 		QXNative.widget_set_v2int_double_value(hpaint, QXCore.SETPEN, color, width, penStyle);
     }
@@ -295,6 +308,10 @@ class QXPainter{
 		QXNative.long_long_int9(hpaint, QXCore.ROUNDEDRECT, 0, r.left, r.top, r.width(), r.height(), rx, ry, 0, 0, 0);
     }
     
+    void drawPath(QXPath path){
+		QXNative.widget_set_native_value(hpaint, QXCore.DRAWPATH, path.nativehandle);
+    }
+    
     void rotate(double r, double cx, double cy){
 		QXMatrix m = getMatrix();
         m.translate(cx, cy);
@@ -308,7 +325,12 @@ class QXPainter{
         m.translate(cx, cy);
         setMatrix(m);
     }
-    
+    int ascent(){
+		return QXNative.widget_get_int_value(hpaint, QXCore.PAINTFONTASCENT);
+    }
+    int descent(){
+		return QXNative.widget_get_int_value(hpaint, QXCore.PAINTFONTDESCENT);
+    }
     void setCompositionMode(int flag){
 		QXNative.widget_set_int_bool_value(hpaint, QXCore.SETCOMPOSITIONMODE, flag, false);
     }
@@ -325,6 +347,9 @@ class QXPainter{
 		QXNative.widget_set_native_value(hpaint, QXCore.PAINTERSETFONT, f.nativehandle);
     }
     
+    void setAntialiasing(bool ba){
+		setRenderHint(RenderHint.Antialiasing, ba);
+    }
     
     void drawCircle(int x,int y,int r, Paint p){
 		if (p != nilptr){
@@ -332,6 +357,11 @@ class QXPainter{
         }
         
         QXNative.native_int4(hpaint, QXCore.DRAWELLIPSE, x - r, y - r, r *2, r * 2);
+    }
+    
+    QXRect measureText(int x, int y, String text){
+		long pt= QXNative.long_longstring(hpaint, QXCore.PAINTMEASURETEXT, 0, text);
+        return new QXRect(x, y, x + ((pt >> 32) & 0xffffffff), y + (pt & 0xffffffff));
     }
     
     void finalize(){

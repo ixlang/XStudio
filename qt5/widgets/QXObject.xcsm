@@ -685,6 +685,20 @@ class QXObject : QXCore{
         }
     };
     
+    static class onDragListener{
+		bool onDragEnter(QXObject obj, int l,int t,int r,int b){
+			return true;
+		}
+		bool onDragMove(QXObject obj,int l,int t,int r,int b){
+			return true;
+		}
+		bool onDragLeave(QXObject obj,int l,int t,int r,int b){
+			return true;
+		}
+		void onDrop(QXObject obj,Object [] object){
+		}
+    };
+    
     static class onStatusListener{
         void onCreate(QXObject obj){
         }
@@ -826,7 +840,10 @@ class QXObject : QXCore{
 	onContextMenuListener	_contextMenuListener = nilptr;
 	onActivateListener _activateListener = nilptr;
     onComboBoxEventListener _comboboxListener = nilptr;
-    
+    onDragListener _dragListener = nilptr; 
+    void setOnDragListener(onDragListener l){
+		_dragListener = l;
+	} 
    	void setOnTableWidgetEventListener(TableWidgetEventListener l){
 		_tableenvlis = l;
 	} 
@@ -1072,10 +1089,29 @@ class QXObject : QXCore{
     void onClipboard(){     }
     void onWinEventAct(){}
     void onDeferredDelete(){}
-    bool onDragEnter(int l,int t,int r,int b){return true;}
-    bool onDragMove(int l,int t,int r,int b){return true;}
-    bool onDragLeave(int l,int t,int r,int b){return true; }
-    void onDrop(Object [] object){}
+    bool onDragEnter(int l,int t,int r,int b){
+		if (_dragListener != nilptr){
+			return _dragListener.onDragEnter(this, l,t,r,b);
+        }
+		return true;
+    }
+    bool onDragMove(int l,int t,int r,int b){
+		if (_dragListener != nilptr){
+			return _dragListener.onDragMove(this, l,t,r,b);
+        }
+		return true;
+    }
+    bool onDragLeave(int l,int t,int r,int b){
+		if (_dragListener != nilptr){
+			return _dragListener.onDragLeave(this, l,t,r,b);
+        }
+		return true;
+    }
+    void onDrop(Object [] object){
+		if (_dragListener != nilptr){
+			_dragListener.onDrop(this, object);
+        }
+    }
     void onDragResponse(){}
     void onLayoutRequest(){}
     void onUpdateRequest(){

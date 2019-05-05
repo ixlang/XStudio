@@ -654,4 +654,38 @@ class QXWidget : QXObject{
     bool hasFocus(){
 		return widget_get_bool_value(nativehandle, QXCore.HASFOCUS);
     }
+    
+    String getToolTips(){
+		return core_getString(nativehandle, QXCore.GETTOOLTIPS);
+    }
+    
+    void setToolTips(String text){
+		widget_slot_string(nativehandle, QXCore.SETTOOLTIPS, text);
+    }
+    
+    void showToolTips(int x, int y, long duration){
+		widget_set_intlongstring_value(nativehandle, QXCore.SHOWTOOLTIPS, ((long)x) << 32 |  y, duration, nilptr);
+    }
+    void showToolTips(int x, int y, String text, long duration){
+		widget_set_intlongstring_value(nativehandle, QXCore.SHOWTOOLTIPS, ((long)x) << 32 |  y,  duration, text);
+    }
+    static void ShowToolTips(int x, int y, String text, long duration){
+		widget_set_intlongstring_value(0, QXCore.SHOWTOOLTIPS, ((long)x) << 32 |  y,  duration, text);
+    }
+    
+    bool isAcceptDrops(){
+		return widget_get_bool_value(nativehandle, QXCore.ENABLEDROG);
+    }
+    
+    void setAcceptDrops(bool ba){
+		widget_set_bool_value(nativehandle, QXCore.ENABLEDROG, ba);
+    }
+    
+    void setUpdateEnabled(bool be){
+		widget_set_bool_value(nativehandle, UPDATEENABLE, be);
+    }
+    
+    bool isUpdateEnabled(){
+		return widget_get_bool_value(nativehandle,UPDATEENABLE );
+    }
 };

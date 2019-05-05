@@ -164,7 +164,7 @@ class XWorkspace : QXMdiArea{
 			return false;
 		}
         Project project = new Project();
-        if (project.loadWorkspace(file)){
+        if (project.loadWorkspace(file, false)){
 			Recently.putRecent(project.getName(), file);
 			setCurrentProject(project);
             XWndClass.prepare(project);
@@ -529,7 +529,7 @@ class XWorkspace : QXMdiArea{
     
     bool saveAllFile(){
 		bool bSaveModified = false;
-        setIntelliSensePaused(true);
+        setIntelliSensePaused(true, false);
         if (currentProject != nilptr){
 			bSaveModified = currentProject.isModified();
             if (bSaveModified){
@@ -543,7 +543,7 @@ class XWorkspace : QXMdiArea{
                 }
             }
         } 
-        setIntelliSensePaused(false);
+        setIntelliSensePaused(false, !bSaveModified);
         return bSaveModified;
     }
     
@@ -644,7 +644,7 @@ class XWorkspace : QXMdiArea{
 			new onComboBoxEventListener(){
 				void onItemSelected(QXObject obj, int id){
                     if (currentProject != nilptr){
-						currentProject.setCurrentConfigure(cfgSel.getCurrentText());
+						currentProject.setCurrentConfigure(cfgSel.getCurrentText(), true);
                     }
 				}
 			}
@@ -1074,7 +1074,7 @@ class XWorkspace : QXMdiArea{
 	}
     
     void test(){
-		
+
     }
 
 	void matchbrace(){
@@ -1112,6 +1112,17 @@ class XWorkspace : QXMdiArea{
 		return nilptr;
 	}
     
+    void showXintellisenceComplete(){
+		runOnUi(new Runnable(){
+			void run()override{
+				if (Setting.isIntellisense()){
+					QxApp.statusBar.statusBar.showMessage("XIntelliSense 结束.");
+				}else{
+					QxApp.statusBar.statusBar.showMessage("XIntelliSense 未启用.");
+				}
+            }
+        });
+    }
 	bool XIntelliSense(XSourceEditor editor, String originalName,String content,long position){
 		
 			QxApp.statusBar.statusBar.showMessage("正在运行 XIntelliSense...");
@@ -1122,13 +1133,14 @@ class XWorkspace : QXMdiArea{
 							XWorkspace.this.autocomp = XWorkspace.this.getXIntelliSense(originalName, content, position);
                             editor.setIntellisense(XWorkspace.this.autocomp);
 							XWorkspace.this._autoComp_thread = nilptr;
+                            showXintellisenceComplete();
 						}
 					}; 
 					_autoComp_thread.start();
 					return true;
 				}
 			}
-			QxApp.statusBar.statusBar.showMessage("XIntelliSense 失败");
+			//QxApp.statusBar.statusBar.showMessage("XIntelliSense 失败");
 			return false;
 		
 	}
@@ -1156,13 +1168,14 @@ class XWorkspace : QXMdiArea{
 						XWorkspace.this.autocomp = XWorkspace.this.getXIntelliSenseL(originalName, line);
 						editor.setIntellisense(XWorkspace.this.autocomp);
 						XWorkspace.this._autoComp_thread = nilptr;
+                        showXintellisenceComplete();
 					}
 				};
 				_autoComp_thread.start();
 				return true;
 			}
 		}
-		QxApp.statusBar.statusBar.showMessage("XIntelliSense 失败");
+		//QxApp.statusBar.statusBar.showMessage("XIntelliSense 失败");
 		return false;
 	}
     
@@ -1188,22 +1201,23 @@ class XWorkspace : QXMdiArea{
 								XWndClass.postNotify(AUTODOMPEVENTID);
 							}
 							XWorkspace.this._autoComp_thread = nilptr;
+                            showXintellisenceComplete();
 						}
 					};
 					_autoComp_thread.start();
 					return true;
 				}
 			}
-			QxApp.statusBar.statusBar.showMessage("XIntelliSense 失败");
+			//QxApp.statusBar.statusBar.showMessage("XIntelliSense 失败");
 		}
 		return false;
 	}
     
     static bool bXIntelliSensePaused = false;
     
-    static void setIntelliSensePaused(bool bxp){
+    static void setIntelliSensePaused(bool bxp, bool dontrun){
 		bXIntelliSensePaused = bxp;
-        if (bxp == false){
+        if (dontrun == false && bxp == false){
 			workspace.XIntelliSense();
         }
     }
@@ -1268,5 +1282,4 @@ class XWorkspace : QXMdiArea{
         
 
     }
-
 };

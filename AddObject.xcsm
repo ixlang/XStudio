@@ -77,6 +77,20 @@ class AddObjectDlg : QXDialog {
         chkInterface = (QXCheckBox)attachByName(new QXCheckBox(), "chkInterface");
         chkPackage = (QXCheckBox)attachByName(new QXCheckBox(), "chkPackage");
         
+        switch(addType){
+			case 1:
+            prefix = "class";
+            chkCls.setCheck(true);
+            break;
+            case 2:
+            prefix = "interface";
+            chkInterface.setCheck(true);
+            break;
+            case 3:
+            prefix = "package";
+            chkPackage.setCheck(true);
+            break;
+        }
         chkCls.setOnClickListener(checkListener);
         chkInterface.setOnClickListener(checkListener);
         chkPackage.setOnClickListener(checkListener);
@@ -268,24 +282,34 @@ class AddObjectDlg : QXDialog {
 		return _treeview.insertItem(item, nilptr, "加载中...");
 	}
     
+    static const  int 
+			TYPE_CLASS = 0x100, 
+			TYPE_INTERFACE = 0x10, 
+			TYPE_FUNCTION = 0x1, 
+			TYPE_SUBCLASS = 0x2, 
+			TYPE_TEMPLATE = 4;
+    
     void loadObject(long root, JsonArray objs){
 		for (int i =0, c = objs.length(); i < c; i++){
 			JsonObject obj = (JsonObject)objs.get(i);
             
 			int type = obj.getInt("type");
-            
 			long item = 0;
             
 			if (type == 34){
 				item = _treeview.insertItem(root, "res/toolbar/template.png", obj.getString("name"));
+                _treeview.setItemTag(item, 0, TYPE_CLASS | TYPE_TEMPLATE);
 			}else
 			if (type == 31){
+				int tag = TYPE_CLASS;
+                
 				if (obj.has("template")){
 					item = _treeview.insertItem(root, "res/toolbar/tempinstance.png", obj.getString("name"));
 				}else
 				if (obj.has("interface")){
 					item = _treeview.insertItem(root, "res/toolbar/interface.png", obj.getString("name"));
-                    _treeview.setItemTag(item, 0, 3);
+                    tag |= TYPE_INTERFACE;
+                    
 				}else{
 					item = _treeview.insertItem(root, "res/toolbar/class.png", obj.getString("name"));
 				}
@@ -294,16 +318,18 @@ class AddObjectDlg : QXDialog {
                 
                 if (dynamic_method != nilptr && dynamic_method.length() > 0){
 					long method = _treeview.insertItem(item, "res/toolbar/function.png", "可重载方法");
-                    _treeview.setItemTag(method, 0, 1);
+                    _treeview.setItemTag(method, 0, TYPE_FUNCTION);
 					expand_data.put(method, new ItemLoader(insertLoad(method),  dynamic_method));
                 }
                 
                 JsonArray static_sub_class = (JsonArray)obj.get("static_properites");
                 if (static_sub_class != nilptr && static_sub_class.length() > 0){
 					long static_prop = _treeview.insertItem(item, "res/toolbar/static.png", "可继承成员类");
-                    _treeview.setItemTag(static_prop, 0, 2);
+                    _treeview.setItemTag(static_prop, 0, TYPE_SUBCLASS);
 					expand_data.put(static_prop,new ItemLoader(insertLoad(static_prop),   static_sub_class));
                 }
+                
+                _treeview.setItemTag(item, 0, tag);
 			}else
 			if (type == 23){
 				if (obj.has("interface")){
@@ -313,6 +339,7 @@ class AddObjectDlg : QXDialog {
 					item = _treeview.insertItem(root, "res/toolbar/function.png", obj.getString("name"));
 				}
 			}
+            
             if (item != 0){
 				_treeview.modifyItemFlags(item, QXTreeView.ItemIsUserCheckable, 0);
                 _treeview.setItemCheck(item, 0, false);
@@ -335,7 +362,7 @@ class AddObjectDlg : QXDialog {
     String generateChildren(long item, String parentClass){
 		String text = nilptr;
         int tag = _treeview.getItemTag(item, 0);
-        if (tag == 0 || tag > 2){
+        if ((tag & TYPE_CLASS) == TYPE_CLASS){
 			if (item != root_item){
 				text = _treeview.getItemText(item, 0);
 				if (parentClass != nilptr){
@@ -351,7 +378,7 @@ class AddObjectDlg : QXDialog {
 			bool checked = _treeview.isItemCheck(children[i], 0);
 			if (checked){
 				tag = _treeview.getItemTag(children[i], 0);
-                if (tag == 1){
+                if (tag == TYPE_FUNCTION){
 					String headStr = prefix + " " + edtName.getText() ;
                     if (text != nilptr){
 						headStr = headStr + " : " + text + "{\n";
@@ -367,13 +394,32 @@ class AddObjectDlg : QXDialog {
                     }
                     return headStr;
                 }else{
-					if (prefix.equals("interface") && tag != 3){
+					if (prefix.equals("interface") && (tag & TYPE_INTERFACE) == 0){
 						QXMessageBox.Critical("注意", "接口只能继承接口", QXMessageBox.Ok, QXMessageBox.Ok);
                         throw new Exception("接口只能继承接口");
                         return nilptr;
                     }
        
-					return generateChildren(children[i], text);
+					String finastr = generateChildren(children[i], text);
+                    
+                    if (finastr == nilptr){
+						if ((tag & TYPE_CLASS) != 0){
+							text = _treeview.getItemText(children[i], 0);
+							if (parentClass != nilptr){
+								text = parentClass + "." + text;
+							}
+							String headStr = prefix + " " + edtName.getText() ;
+							if (text != nilptr){
+								headStr = headStr + " : " + text + "{\n";
+							}else{
+								headStr = headStr + "{\n";
+							}
+
+							finastr = headStr + "\n\n\n};";
+                        }
+                    }
+                    
+                    return finastr;
                 }
             }
         }
