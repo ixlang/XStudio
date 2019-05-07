@@ -40,11 +40,11 @@ class QXNative{
         void cdecl ApplicationRun(long g);
         bool cdecl core_sub_class(long h, Object pthis, Object subclass);
         Object cdecl findControl(long h, String name);
-        String cdecl core_getName(long h);
-        String cdecl core_getClassName(long h);
+        Object cdecl core_getName(long h);
+        Object cdecl core_getClassName(long h);
         Object cdecl core_getParent(long h);
-        String cdecl core_getString(long h, int proid);
-		String cdecl core_getStringlongint(long h, int proid, long v1, int v2);
+        Object cdecl core_getString(long h, int proid);
+		Object cdecl core_getStringlongint(long h, int proid, long v1, int v2);
         int cdecl core_getintlong(long h, int proid, long v);
         long cdecl createQObject(int type, Object xobj, long parent);
         int cdecl widget_set_intstring_value(long h, int proid, int xv, String yv);
@@ -67,7 +67,7 @@ class QXNative{
         Object cdecl object_get_string2_handle_string_int(long h, int proid,String h1,String text, long handle, String v1, int v2);
         long cdecl attachControl(long handle, Object _this, String name);
         
-        String cdecl openfile_dlg_string3_obj(int proid,String caption,String defaultPath, String pattern, long parent);
+        Object cdecl openfile_dlg_string3_obj(int proid,String caption,String defaultPath, String pattern, long parent);
         long cdecl long_string2(long handle,int proid, String v1, String v2);
         long cdecl long_object_string(long handle,int proid, Object v1, String v2);
         long cdecl long_longstring(long handle,int proid, long v1, String v2);

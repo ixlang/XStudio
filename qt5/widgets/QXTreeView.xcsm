@@ -89,7 +89,7 @@ class QXTreeView : QXWidget{
         widget_set_v2int_value(nativehandle, SETCOLUMBWIDTH, column, width);
     }
 	String getItemText(long item , int row){
-			return core_getStringlongint(nativehandle, TRGETITEMTEXT, item, row);
+			return (String)core_getStringlongint(nativehandle, TRGETITEMTEXT, item, row);
 	}
     long getSelItem(){
         return long_get(nativehandle, TREEWIDGETGETSEL);

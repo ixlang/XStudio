@@ -474,7 +474,7 @@ class QXPropertyBrowser : QXWidget{
             native_double2(nativehandle, this.PROPSETVALUEPT, x, y);
         }
         String getValue(){
-            return core_getString(nativehandle, this.PROPGETVALUE);
+            return (String)core_getString(nativehandle, this.PROPGETVALUE);
         }
         void setAttributeSizeMax(double cx, double cy){
             native_double2(nativehandle, this.PROPSETARRTSZMAX, cx, cy);

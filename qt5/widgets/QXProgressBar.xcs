@@ -34,7 +34,7 @@ class QXProgressBar : QXWidget{
 		return widget_get_int_value(nativehandle, QPVALUE);
 	}
     String getText(){
-		return core_getString(nativehandle, QPTEXT);
+		return (String)core_getString(nativehandle, QPTEXT);
 	}
     void setTextVisible(bool visible){
 		widget_set_bool_value(nativehandle, QPVISIBLE, visible);
@@ -70,7 +70,7 @@ class QXProgressBar : QXWidget{
 		widget_slot(nativehandle, QPFORMAT);
 	}
     String format() {
-		return core_getString(nativehandle, QPFORMAT);
+		return (String)core_getString(nativehandle, QPFORMAT);
 	}
     void reset(){
 		widget_slot(nativehandle, QPRESET);

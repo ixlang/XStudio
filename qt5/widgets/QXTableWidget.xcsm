@@ -99,10 +99,10 @@ class QXTableWidget : QXWidget{
 		widget_set_object_value(nativehandle, SETTABVHCOLUMNS, columns);
     }
     String getText(int x, int y){
-		return core_getStringlongint(nativehandle, TABLEGETTEXTBYRC, x, y);
+		return (String)core_getStringlongint(nativehandle, TABLEGETTEXTBYRC, x, y);
     }
     String getItemText(long item){
-		return core_getStringlongint(item, TABLEGETTEXTBYITEM, 0, 0);
+		return (String)core_getStringlongint(item, TABLEGETTEXTBYITEM, 0, 0);
     }
     void clear(){
 		widget_slot(nativehandle, TABLECLEAR);

@@ -1127,10 +1127,12 @@ class XWorkspace : QXMdiArea{
 		
 			QxApp.statusBar.statusBar.showMessage("正在运行 XIntelliSense...");
 			synchronized(xintellisencelock){
-				if (_autoComp_thread == nilptr){
+				Project project = currentProject;
+				if (_autoComp_thread == nilptr || project != nilptr){
+                    updateAllOpenedFile(project, originalName);
 					_autoComp_thread = new Thread(){
 						void run()override{
-							XWorkspace.this.autocomp = XWorkspace.this.getXIntelliSense(originalName, content, position);
+							XWorkspace.this.autocomp = XWorkspace.this.getXIntelliSense(project, originalName, content, position);
                             editor.setIntellisense(XWorkspace.this.autocomp);
 							XWorkspace.this._autoComp_thread = nilptr;
                             showXintellisenceComplete();
@@ -1234,22 +1236,27 @@ class XWorkspace : QXMdiArea{
         return true;
     }
     
-	XIntelliSense.XIntelliResult [] getXIntelliSense(String sourcePath,String content,long position){
-		if (currentProject != nilptr){
-			if (currentProject.intelliSense != nilptr){
-				int c = currentProject.getSourceFileCount();
+    void updateAllOpenedFile(Project project, String except){
+		if (project != nilptr){
+			if (project.intelliSense != nilptr){
+				int c = project.getSourceFileCount();
 				for (int i = 0; i < c; i++){
-					String _sourcePath = currentProject.getSourcePath(i);
-					if (_sourcePath.equals(sourcePath) == false){
+					String _sourcePath = project.getSourcePath(i);
+					if (_sourcePath.equals(except) == false){
 						XSourceEditor wnd = XSourceEditor.findFileWindow(_sourcePath);
 						if (wnd != nilptr){
 							String _content = wnd.getTextContent();
-							currentProject.intelliSense.update(_sourcePath, _content);
+							project.intelliSense.update(_sourcePath, _content);
 						}
 					}	
 				}
-				return currentProject.intelliSense.getIntelliSense(sourcePath, content, position);
 			}
+		}
+    }
+    
+	XIntelliSense.XIntelliResult [] getXIntelliSense(Project project, String sourcePath,String content,long position){
+		if (project != nilptr){
+			return project.intelliSense.getIntelliSense(sourcePath, content, position);
 		}
 		return nilptr;
 	}

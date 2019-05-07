@@ -46,7 +46,7 @@ class QXStatusBar : QXWidget{
 		return widget_get_bool_value(nativehandle, SIZEGRIPENABLED);
 	}
     String currentMessage() {
-		return core_getString(nativehandle, CURRENTMESSAGE);
+		return (String)core_getString(nativehandle, CURRENTMESSAGE);
 	}
 	void showMessage(String text){
 		widget_slot_string(nativehandle, SHOWMESSAGE, text);

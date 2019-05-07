@@ -28,6 +28,6 @@ class QXLabel : QXWidget{
     }
     
     String getText(){
-        return core_getString(nativehandle, LBLGETTEXT);
+        return (String)core_getString(nativehandle, LBLGETTEXT);
     }
 };

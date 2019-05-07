@@ -478,7 +478,7 @@ class QXWidget : QXObject{
         widget_set_int_bool_value(nativehandle, QXCore.SETWINDOWFLAG, flag, bOn);
     }
     String getStyleSheet(){
-		return core_getString(nativehandle, GETSTYLESHEEY);
+		return (String)core_getString(nativehandle, GETSTYLESHEEY);
     }
     void addAction(QXAction action){
 		widget_set_native_value(nativehandle, ADDDEFACTION, action.nativehandle);
@@ -656,7 +656,7 @@ class QXWidget : QXObject{
     }
     
     String getToolTips(){
-		return core_getString(nativehandle, QXCore.GETTOOLTIPS);
+		return (String)core_getString(nativehandle, QXCore.GETTOOLTIPS);
     }
     
     void setToolTips(String text){

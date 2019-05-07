@@ -28,7 +28,7 @@ class QXComboBox : QXWidget{
     }
     
     String getCurrentText(){
-        return core_getString(nativehandle, COMBOGETTEXT);
+        return (String)core_getString(nativehandle, COMBOGETTEXT);
     }
     void addItems(String [] items){
         widget_set_object_value(nativehandle, COMBOBOXADD, items);

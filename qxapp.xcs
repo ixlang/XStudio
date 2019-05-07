@@ -136,7 +136,7 @@ class QxApp : QXApplication{
         if (Setting.isDarkStyle()){
 			setStyleSheet("res/qss/black.qss");
         }else{
-			setStyleSheetString("");
+			setStyleSheetString("#indexForm {background: #f0f0f0 }");
         }
 	}
 

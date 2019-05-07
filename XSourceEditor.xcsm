@@ -313,15 +313,84 @@ class XSourceEditor : QXMdiSubWindow{
 		}
     }
     
+    XIntelliSense.XIntelliResult [] moreData = nilptr;
+    int morecount = 0;
+    
+    void loadAutoComplate(long mitem){
+		XIntelliSense.XIntelliResult[] result = moreData;
+        int c = morecount;
+        
+        morecount = 0;
+        moreData = nilptr;
+        
+        autoWnd.removeItem(mitem);
+        
+		for (int i = 50; i < c; i ++){
+			long item = 0;
+            XIntelliSense.XIntelliResult names = result[i];     
+            if (names == nilptr){
+				return ;
+            }
+			if (names.type.equals("23")){
+				if (names.prop.indexOf('S') != -1){
+					item = autoWnd.addItem("res/toolbar/staticfunction.png", names.name);
+				}else{
+					item = autoWnd.addItem("res/toolbar/function.png", names.name);
+				}
+				String descr = names.name + "(";
+				for (int x = 0; x < names.params.length; x ++){
+					XIntelliSense.XIntelliResult param = names.params[x];
+					descr = descr + param._class.name + " " + param.name;
+					if (x + 1 < names.params.length){
+						descr = descr + ", ";
+					}
+				}
+				descr = descr + ")";
+                
+				autoWnd.setItemText(item, 1, names._class.name);
+				autoWnd.setItemText(item, 2, descr);
+				autoWnd.setItemColor(item, 1, 0xff7f7f7f);
+				autoWnd.setItemColor(item, 2, 0xff7f7f7f);
+				
+			}else{
+				if (names.prop.indexOf('C') != -1){
+					item = autoWnd.addItem("res/toolbar/const.png", names.name);
+				}else
+				if (names.prop.indexOf('S') != -1){
+					item = autoWnd.addItem("res/toolbar/static.png", names.name);
+				}else{
+					item = autoWnd.addItem("res/toolbar/member.png", names.name);
+				}
+				
+				autoWnd.setItemText(item, 1, names._class.name);
+				autoWnd.setItemColor(item, 1, 0xff7f7f7f);
+			}
+            
+            String uname = names.name.upper();
+            autoWnd.setItemTag(item, 0, i);
+			autoCompMap.put(uname, item);
+		}
+    }
+
+    
 	void showComplete(XIntelliSense.XIntelliResult[] result, int c){  
         if (bClosed){
 			return ;
         }
+        
 		autoWnd.clear();
 		autoCompMap.clear();
         long curpos = _sci.currentPosition();
         String entenedText = _sci.getText(auto_position, curpos).upper();
-                
+        bool bMore = false;
+        
+        if (c > 100){
+			moreData = result;
+			morecount = c;
+			bMore = true;
+            c = 50;
+        }
+        
         long selitem = 0;
 		for (int i = 0; i < c; i ++){
 			long item = 0;
@@ -375,11 +444,15 @@ class XSourceEditor : QXMdiSubWindow{
 		}
         
         //XSourceEditor.this.autoCompleteChange();
+        if (bMore){
+			autoWnd.addItem(nilptr, "<更多...>");
+        }
         
 		showAutoWnd(auto_position);
         if (selitem != 0){
 			autoWnd.setCurrentItem(selitem);
         }
+        
 	}
     
 	void showAutoWnd(int position){
@@ -1255,6 +1328,12 @@ class XSourceEditor : QXMdiSubWindow{
             
 			if (item != 0){
 				String text = autoWnd.getItemText(item, 0);
+                
+                if (text.equals("<更多...>")){
+					autoCompShow = true;
+                    loadAutoComplate(item);
+                    return;
+                }
 				String tips = autoWnd.getItemText(item, 2);
 				long curpos = _sci.currentPosition();
                 
@@ -1356,7 +1435,7 @@ class XSourceEditor : QXMdiSubWindow{
     }
     
     void syntaxForXlangDark(){
-        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
+        //_sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
         _sci.sendEditor(QXSci.SCI_CLEARDOCUMENTSTYLE, 0, 0);
         
 		_sci.sendEditor(QXSci.SCI_SETLEXER, QXSci.SCLEX_CPP, 0);
@@ -1537,7 +1616,7 @@ class XSourceEditor : QXMdiSubWindow{
             return ;
 		}
         
-        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
+        //_sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
         _sci.sendEditor(QXSci.SCI_CLEARDOCUMENTSTYLE, 0, 0);
 		_sci.sendEditor(QXSci.SCI_SETLEXER, QXSci.SCLEX_CPP, 0);
         _sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);

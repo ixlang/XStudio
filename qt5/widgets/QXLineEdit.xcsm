@@ -30,6 +30,6 @@ class QXLineEdit : QXWidget{
     }
     
     String getText(){
-        return core_getString(nativehandle, LINEEDITGETTEXT);
+        return (String)core_getString(nativehandle, LINEEDITGETTEXT);
     }
 };

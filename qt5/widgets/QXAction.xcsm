@@ -46,7 +46,7 @@ class QXAction : QXObject{
     }
     
     String getText(){
-        return core_getString(nativehandle, ACTGETTEXT);
+        return (String)core_getString(nativehandle, ACTGETTEXT);
     }
     
 	void setEnable(bool b){

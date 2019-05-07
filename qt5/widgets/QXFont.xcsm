@@ -65,7 +65,7 @@ class QXFont : QXCore{
     }
     
     String familyName(){
-		return core_getString(nativehandle, GETFONTNAME);
+		return (String)core_getString(nativehandle, GETFONTNAME);
     }
     
     int pointSize(){

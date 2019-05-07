@@ -935,11 +935,11 @@ class QXObject : QXCore{
     }
     
     String getName(){
-        return core_getName(nativehandle);
+        return (String)core_getName(nativehandle);
     }
     
     String getClassName(){
-        return core_getClassName(nativehandle);
+        return (String)core_getClassName(nativehandle);
     }
     
     QXObject getParent(){
