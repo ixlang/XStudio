@@ -35,16 +35,27 @@ class AutoWnd : ListDockWidget{
     }
     
 	void onListItemDoubleClicked(QXTreeView tree,long item, int column)override{
-		
-        long objectId = tree.getItemTag(item, 2);
-        String caption = tree.getItemText(item, 0);
+	    
+        long objectId = 0;
         
-        if (objectId != 0){
+        if (column == 2){
+			objectId = tree.getItemTag(item, 2);
+        }
+        
+        String caption = tree.getItemText(item, 0);
+        String sztype = tree.getItemText(item, 1);
+        
+        if (objectId != 0 && sztype.equals("String")){
 			XWorkspace.workspace.debuggee.queryObject("detail:" + caption , "" + objectId, "auto" + serial, 0, 0);
         }else{
-			TextDetail td = new TextDetail();
-			String text = tree.getItemText(item, 2);
-			td.create(caption, text.escape());
+			String text = tree.getItemText(item, column);
+            if (text != nilptr && text.length() > 0){
+				TextDetail td = new TextDetail();
+				td.create(caption, text.replace(" ↩ ", "\n")
+							.replace(" ↵ ", "\r")
+							.replace(" ⇥ ", "\t")
+                            .replace(" ⇤ ", "\b"));
+            }
         }
 	}
     
@@ -273,8 +284,6 @@ class AutoWnd : ListDockWidget{
     }
     
     void splitArray(QXTreeView list, long newitem , long object,long start, long length, int unit, bool recursion){
-		
-        
         if (unit >= 100){
             if (recursion == false){
 				long iditem = list.insertItem(newitem, nilptr, "array");
@@ -314,21 +323,19 @@ class AutoWnd : ListDockWidget{
             
 			if (valueroot.has("length")){
 				String slength = valueroot.getString("length");
-                
 				long lenitem = list.insertItem(item, nilptr, "length");
 				list.setItemText(lenitem, 1, "int");
 				list.setItemText(lenitem, 2, slength);
-        
                 long length = slength.parseLong();
                 displayArray(list, item, objectId.parseLong(), 0,  length, getSplit(length), false);
             }else
             if (valueroot.has("thumb")){
 				String text = valueroot.getString("thumb");
                 
-                text = text.replace("\n", "\\n")
-							.replace("\r", "\\r")
-							.replace("\t", "\\t")
-                            .replace("\b", "\\b");
+                text = text.replace("\n", " ↩ ")
+							.replace("\r", " ↵ ")
+							.replace("\t", " ⇥ ")
+                            .replace("\b", " ⇤ ") + " ...";
                             
                 list.setItemText(item, 2, text);
                 list.setItemText(item, 1, "String");    
@@ -337,7 +344,6 @@ class AutoWnd : ListDockWidget{
 				long iditem = list.insertItem(item, nilptr, "id");
 				list.setItemText(item, 3, objectId);
 				list.setItemText(iditem, 2, "loading");
-				
 				list.setItemTag(item, 0, objectId.parseLong());
 				list.setItemTag(item, 1, iditem);
             }
@@ -350,7 +356,10 @@ class AutoWnd : ListDockWidget{
         if (values == nilptr){
 			values = "nilptr";
         }else{
-			values = values.replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t").replace("\b", "\\b");
+			values = values.replace("\n", " ↩ ")
+							.replace("\r", " ↵ ")
+							.replace("\t", " ⇥ ")
+                            .replace("\b", " ⇤ ");
         }
 		switch(valueType){
 		case 0:

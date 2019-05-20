@@ -2,9 +2,7 @@
 
 class ArgsProcessor{
 	String[] args;
-    
 	int cmd = 0;
-    
     String configure = nilptr;
     String targetpath = nilptr;
     String xcross = nilptr;
@@ -129,7 +127,7 @@ class QxApp : QXApplication{
 		loadConfig();
         wndOutput.reconfig();
         XSourceEditor.reconfig();
-        
+        XMemoryWnd.reconfig();
     }
     
 	void loadConfig(){
@@ -159,7 +157,7 @@ class QxApp : QXApplication{
 		if (mainWindow.load("ui/mainwindow.ui") == false){
 			return false;
 		}
-		
+		mainWindow.setAcceptDrops(true);
 		loadConfig();
         
 		//setPaletteColor("#F0F0F0");
@@ -179,6 +177,8 @@ class QxApp : QXApplication{
 		_mdispace.setMainWindow(mainWindow);
 		_mdispace.setSlnView(wndsln);
 		_mdispace.setStackView(wndStack);
+        _mdispace.setupOnDrag(_mdispace);
+        _mdispace.setupOnDrag(mainWindow);
 		wndclass.workspace = _mdispace;
        
 		/*mainWindow.getCentralWindow().setOnLayoutEventListener(new onLayoutEventListener(){

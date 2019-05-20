@@ -8,16 +8,169 @@ class XMemoryWnd : QXDockWidget{
     JsonObject meminfo;
     Object memLock = new Object();
     static XMemoryWnd memoryWnd;
-    
+    MemoryWaveWidget memwidget;
     static const int COMPILE_INFO_NOTIFY = 2;
+    
+
     
     onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
 
     };
     
+    
+    Vector<long> memhistroy = new Vector<long>();
+    
+    static class MemoryWaveWidget : QXWidget{
+		
+		double []histroy = new double[100];
+        int currentidx = 0;
+        bool bupdated = false;
+        QXPainter.Paint mempaint = new QXPainter.Paint();
+        QXPainter.Paint ptpaint = new QXPainter.Paint();
+        QXPainter.Paint txtpaint = new QXPainter.Paint();
+        
+        QXPath _currentpath = nilptr;
+        double hmax = 0;
+       
+        bool bpressed = false;
+		double pressx = 0;
+		int bkcolor = 0xfffefefe;
+		String tipsText = "";
+		double tipy;
+		void onAttach()override{
+			mempaint.setStyle(QXPainter.Paint.FILL_AND_STROKE);
+            mempaint.setColor(0x7f64d9f0);
+            
+            ptpaint.setColor(0xffff0000);
+            ptpaint.setStyle(QXPainter.Paint.STROKE);
+            
+            txtpaint.setColor(0xff00ff00);
+		}
+
+
+        QXPath buildpath(double w, double h){
+			QXPath mempath = new QXPath();
+            mempath.moveto(0,h);
+            for (int i = 0; i < 100; i ++){
+				if (histroy[i] > hmax){
+					hmax = histroy[i];
+                }
+            }
+            double dp = w / 100;
+            double yp = h * 0.8f / hmax;
+            
+            for (int i = 0; i < currentidx + 1; i ++){
+				mempath.lineto(dp * i,h - (yp * histroy[i]));
+            }
+            
+            mempath.lineto(dp * (currentidx),h);
+            bupdated = false;
+            
+            if (bpressed){
+				int id = pressx / dp;
+                if (id >=0 && id < currentidx + 1){
+					double ptmem = histroy[id];
+					tipy = h - (yp * histroy[id]);
+					tipsText = "快照" + (id + 1) + ":" + formatByte(ptmem);
+                }
+            }
+            return mempath;
+        }
+        
+		void onMouseMove(int Button,int x,int y,int flags,int source)override{
+			if (bpressed){
+				pressx = x;
+                bupdated = true;
+                update();
+            }
+		}
+
+
+		void onMouseButtonRelease(int Button,int x,int y,int flags,int source)override{
+			bpressed = false;
+            bupdated = true;
+            update();
+		}
+
+
+		void onMouseButtonPress(int Button,int x,int y,int flags,int source)override{
+			bpressed = true;
+            pressx = x;
+            bupdated = true;
+            update();
+		}
+
+
+        void applySetting(){
+			
+            if (Setting.isDarkStyle()){
+				bkcolor = 0xff252526;
+				txtpaint.setColor(0xffe0e0e0);
+            }else{
+				txtpaint.setColor(0xff252627);
+				bkcolor = 0xfffefefe;            
+            }
+        }
+        
+		void onPaint(int l,int t,int r,int b,long hpaint)override{
+			QXPainter painter = new QXPainter(hpaint);
+            int w = width(), h = height();
+			
+            
+            painter.fillRect(0,0,w,h,bkcolor,QXBrush.Style.SolidPattern);
+			painter.setPaint(mempaint);
+
+            synchronized(this){
+				if (bupdated){
+					_currentpath = buildpath(w, h);
+                }
+            }
+            
+            if (_currentpath != nilptr){
+				painter.drawPath(_currentpath);
+            }
+            
+            
+            
+            if (bpressed){
+                painter.setPaint(ptpaint);
+                painter.drawLine(pressx,0,pressx,h);
+                painter.drawLine(0,tipy,w,tipy);
+
+                painter.drawText(tipsText,pressx,tipy, txtpaint);
+            }else{
+				painter.drawText("峰值:" + formatByte(hmax),5,15, txtpaint);
+            }
+            painter.restore();
+		}
+        
+        void addMemhistroy(long value){
+			synchronized(this){
+				if (currentidx < 99){
+					currentidx++;
+				}else{
+					_system_.arrayCopy(histroy,1,histroy,0,99);
+				}
+				histroy[currentidx] = value;
+                bupdated = true;
+            }
+		}
+        
+        void reset(){
+			currentidx = 0;
+        }
+    };
+    
+    static void reconfig(){
+		memoryWnd.memwidget.applySetting();
+    }
+    
+    static void reset(){
+		memoryWnd.memwidget.reset();
+    }
     void onAttach(){
         _listview = (QXTreeView)attachByName(new QXTreeView(), "memlist");
-        
+        memwidget = (MemoryWaveWidget)attachByName(new MemoryWaveWidget(), "memwidget");
         btnGc = (QXPushButton)attachByName(new QXPushButton(), "btnGc");
         btnRefresh = (QXPushButton)attachByName(new QXPushButton(), "btnRefresh");
         /*setOnLayoutEventListener(new onLayoutEventListener(){
@@ -191,9 +344,12 @@ class XMemoryWnd : QXDockWidget{
                 _listview.setItemText(item, 1, "" + (long)(pooltotal + heap));
                 _listview.setItemText(item, 2, formatByte(pooltotal + heap));
                 
+                long total_used_mem = pooltotal + heap + uheap + ts + au + js;
                 item = _listview.addItem(nilptr, "全部");
                 _listview.setItemText(item, 1, "" + (long)(pooltotal + heap + uheap));
-                _listview.setItemText(item, 2, formatByte(pooltotal + heap + uheap + ts + au + js));
+                _listview.setItemText(item, 2, formatByte(total_used_mem));
+                memwidget.addMemhistroy(total_used_mem);
+                memwidget.postUpdate();
 			}
 		}
     }

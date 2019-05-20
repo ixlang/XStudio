@@ -51,6 +51,31 @@ class XFindDlg : QXDialog {
         filetype.setText(text);
     }
     
+    static int s_scope = 0;
+    static bool s_case = false;
+    static bool s_whole = false;
+    static bool s_regex = false;
+    static bool s_forward = false;
+    static bool s_warp = false;
+    
+    void saveStatus(){
+		s_scope = findscope.getCurrentIndex();
+        s_case = casematch.getCheck();
+        s_whole = wholeword.getCheck();
+        s_regex = regex.getCheck();
+        s_forward = forward.getCheck();
+        s_warp = warp.getCheck();
+    }
+    
+    void loadStatus(){
+		findscope.setCurrentIndex(s_scope);
+        casematch.setCheck(s_case);
+        wholeword.setCheck(s_whole);
+        regex.setCheck(s_regex);
+        forward.setCheck(s_forward);
+        warp.setCheck(s_warp);
+    }
+    
     void onAttach(){
         setWindowFlags(CustomizeWindowHint | WindowCloseButtonHint  | Dialog  | WindowTitleHint);
         setFixedSize(width(), height());
@@ -73,6 +98,9 @@ class XFindDlg : QXDialog {
         findscope.addItems(items);
         findscope.setCurrentIndex(0);
         btnClose = (QXPushButton)attachByName(new QXPushButton(), "btnClose");
+        
+        loadStatus();
+        
         btnClose.setOnClickListener(
         new onClickListener(){
             void onClick(QXObject obj, bool checked)override{
@@ -311,6 +339,7 @@ class XFindDlg : QXDialog {
         return result;
     }
 	void onFinish( int res){
+		saveStatus();
 		XWorkspace.findDlg = nilptr;
 	}
 };

@@ -18,6 +18,42 @@ class XWorkspace : QXMdiArea{
 
     static ActionRecorder ar = new ActionRecorder();
     
+    onDragListener draglistener = new onDragListener(){
+		bool onDragEnter(QXObject obj, int l,int t,int r,int b){
+			return true;
+		}
+		bool onDragMove(QXObject obj,int l,int t,int r,int b){
+			return true;
+		}
+		bool onDragLeave(QXObject obj,int l,int t,int r,int b){
+			return true;
+		}
+		void onDrop(QXObject obj,Object [] object){
+			if (object.length > 0){
+				try{
+					for (int i =0; i < object.length; i++){
+						String file = (String)object[0];
+                        
+                        String ext = file.findExtension();
+                        if (ext != nilptr && ext.equalsIgnoreCase(".xprj")){
+							loadProject(file);
+                        }else{
+							openTextFile(file);
+                        }
+                    }
+                    
+                }catch(Exception e){
+					
+                }
+            }
+		}
+    };
+    
+    void setupOnDrag(QXWidget w){
+		w.setAcceptDrops(true);
+		w.setOnDragListener(draglistener);
+    }
+    
     Object xintellisencelock = new Object(), debugThreadLock = new Object(), runThreadLock = new Object();
     XWorkspace(long handle){
         super(handle);
@@ -78,6 +114,8 @@ class XWorkspace : QXMdiArea{
 			if (indexPage.create(this) == false){
 				return ;
 			}
+			setupOnDrag(indexPage);
+			setupOnDrag(indexPage.indexPage);
         }
         indexPage.show();
     }
@@ -1150,12 +1188,15 @@ class XWorkspace : QXMdiArea{
     
     void addObject(int id){
 		if (id == 0){
-			String file = QXFileDialog.getOpenFileName("添加已有文件", nilptr,  "X 模块源文件(*.xcs *.xcsm);;Qt UI文件(*.ui);;X 模块源文件(*.xcs *.xcsm);;Make File(makefile);;C/C++ 源文件(*.cpp *.c *.cc *.cxx *.hpp *.h *.mm);;html 网页(*.htm *.html);;纯文本文件 (*.txt);;其他文件 (*.*)", this);
-			if (file != nilptr && file.length() > 0){
-				file = String.formatPath(file, false);
-				if (currentProject.addSource(file)){
-					openTextFile(file);
+			String []files = QXFileDialog.getOpenFileNames("添加已有文件", nilptr,  "X 模块源文件(*.xcs *.xcsm);;Qt UI文件(*.ui);;X 模块源文件(*.xcs *.xcsm);;Make File(makefile);;C/C++ 源文件(*.cpp *.c *.cc *.cxx *.hpp *.h *.mm);;html 网页(*.htm *.html);;纯文本文件 (*.txt);;其他文件 (*.*)", this);
+			if (files != nilptr && files.length > 0){
+				
+				for (int i =0; i < files.length; i++){
+					String file = String.formatPath(files[i], false);
+					currentProject.addSource(file);
+                    _builder.OutputText("添加:" + file + "\n");
                 }
+                _builder.OutputText("已添加:" + files.length + "个文件\n");
             }        
         }else{
 			AddObjectDlg.requestAddObject(currentProject, id);

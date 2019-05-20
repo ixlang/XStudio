@@ -824,17 +824,28 @@ class XSourceEditor : QXMdiSubWindow{
                     }
                 }
 				void ON_UPDATEUI(QXSci sci, int updated)override{	
-					int lStart = sci.sendEditor(QXSci.SCI_GETCURRENTPOS, 0, 0);
-                    XWorkspace.recordAction(filePath, lStart);
-					int lEnd = sci.sendEditor(QXSci.SCI_BRACEMATCH, lStart - 1, 0);
+					int position = sci.sendEditor(QXSci.SCI_GETCURRENTPOS, 0, 0);
+                    XWorkspace.recordAction(filePath, position);
+                    
+					int cstyle = sci.getStyleAtPosition(position);
+                    
+                    if (cstyle == QXSci.SCE_C_COMMENT || cstyle == QXSci.SCE_C_COMMENTLINE || cstyle == QXSci.SCE_C_COMMENTDOC
+						|| cstyle == QXSci.SCE_C_STRING || cstyle == QXSci.SCE_C_CHARACTER)
+                    {
+                        return ;
+                    }
+                    
+                    long oppos = position - 1;
+                    
+					int lEnd = sci.sendEditor(QXSci.SCI_BRACEMATCH, oppos, 0);
 					if (lEnd >= 0){
-						sci.sendEditor(QXSci.SCI_BRACEHIGHLIGHT, lStart - 1, lEnd);
+						sci.sendEditor(QXSci.SCI_BRACEHIGHLIGHT, oppos, lEnd);
 					}else{
 						sci.sendEditor(QXSci.SCI_BRACEHIGHLIGHT, -1, -1);
 					}
-					int pos = sci.sendEditor(QXSci.SCI_GETCURRENTPOS, 0, 0);
-					int start = sci.sendEditor(QXSci.SCI_WORDSTARTPOSITION, pos - 1, 0);
-					int end = sci.sendEditor(QXSci.SCI_WORDENDPOSITION, pos - 1, 0);
+
+					int start = sci.sendEditor(QXSci.SCI_WORDSTARTPOSITION, oppos, 0);
+					int end = sci.sendEditor(QXSci.SCI_WORDENDPOSITION, oppos, 0);
 					String curKeyWord = _sci.getText(start, end);
 					XSourceEditor.this.setHighlightKeyWord(curKeyWord.trim(true));
 					
@@ -843,7 +854,7 @@ class XSourceEditor : QXMdiSubWindow{
 					}
 
 					if (autoCompShow){
-						int line = sci.positionToLine(lStart);
+						int line = sci.positionToLine(position);
 						int autoline = sci.positionToLine(auto_position);
 						if (line != autoline){
 							hideAutoWnd();
@@ -904,6 +915,13 @@ class XSourceEditor : QXMdiSubWindow{
 					 int foldLevelNow, int foldLevelPrev,
 					 int token, int annotationLinesAdded)
 				{		
+					int cstyle = sci.getStyleAtPosition(position);
+                    
+                    if (cstyle == QXSci.SCE_C_COMMENT || cstyle == QXSci.SCE_C_COMMENTLINE || cstyle == QXSci.SCE_C_COMMENTDOC
+						|| cstyle == QXSci.SCE_C_STRING || cstyle == QXSci.SCE_C_CHARACTER)
+                    {
+                        return ;
+                    }
 					if ((modType & (QXSci.SC_MOD_CHANGEMARKER | QXSci.SC_MOD_CHANGESTYLE | QXSci.SC_MOD_CHANGEFOLD)) == 0){
 						int linep = sci.positionToLine(position);
                         sci.sendEditor(QXSci.SCI_MARKERDELETE, linep, reserve_modify_mark);
@@ -918,7 +936,15 @@ class XSourceEditor : QXMdiSubWindow{
 				void ON_CHARADDED(QXSci sci,int charadded)override{	
 					lastAddedChar = charadded;
 					long position = sci.currentPosition();
-		
+					int cstyle = sci.getStyleAtPosition(position);
+                    
+                    if (cstyle == QXSci.SCE_C_COMMENT || cstyle == QXSci.SCE_C_COMMENTLINE || cstyle == QXSci.SCE_C_COMMENTDOC
+						|| cstyle == QXSci.SCE_C_STRING || cstyle == QXSci.SCE_C_CHARACTER)
+                    {
+                        return ;
+                    }
+
+    
 					if (charadded == '.'){
 						String content = sci.getText();
                         strpretext = ".";

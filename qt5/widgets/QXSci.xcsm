@@ -2487,5 +2487,7 @@ class QXSci : QXWidget{
     int getCursor(){
 		return sendEditor(SCI_GETCURSOR, 0);
     }
-
+	int getStyleAtPosition(int position){
+		return sendEditor(SCI_GETSTYLEAT,position);
+    }
 };

@@ -44,11 +44,29 @@ class WatchWnd : ListDockWidget{
 		_contextMenu.actions[0].setEnable(item != add_item);
 	}
 	void onListItemDoubleClicked(QXTreeView tree,long item, int column)override{
-		if (column == 2){
-			TextDetail td = new TextDetail();
-			String text = tree.getItemText(item, 2);
-            String caption = tree.getItemText(item, 0);
-			td.create(caption, text.escape());
+		if (item == add_item){
+			return ;
+        }
+        long objectId = 0;
+        
+        if (column == 2){
+			objectId = tree.getItemTag(item, 2);
+        }
+        
+        String caption = tree.getItemText(item, 0);
+        String sztype = tree.getItemText(item, 1);
+        
+        if (objectId != 0 && sztype.equals("String")){
+			XWorkspace.workspace.debuggee.queryObject("detail:" + caption , "" + objectId, "watch" + serial, 0, 0);
+        }else{
+			String text = tree.getItemText(item, column);
+            if (text != nilptr && text.length() > 0){
+				TextDetail td = new TextDetail();
+				td.create(caption, text.replace(" ↩ ", "\n")
+							.replace(" ↵ ", "\r")
+							.replace(" ⇥ ", "\t")
+                            .replace(" ⇤ ", "\b"));
+            }
         }
 	}
     void onListItemExpanded(QXTreeView tree,long item)override{
@@ -86,7 +104,10 @@ class WatchWnd : ListDockWidget{
             list.setItemTag(item, 0, 0);
             
 			if (rg != nilptr){
-				list.removeItem(rg.itemload);
+				if (rg.itemload != 0){
+					list.removeItem(rg.itemload);
+                    rg.itemload = 0;
+                }
 				//void splitArray(QXTreeView list, long newitem , long object,long start, long length, int unit, bool recursion){
 				splitArray(list, item, rg.object, rg.start, rg.length, rg.unit, true);
 			}
@@ -110,16 +131,15 @@ class WatchWnd : ListDockWidget{
 						QXMessageBox.Critical("提示", "该对象已在监视列表中", QXMessageBox.Ok, QXMessageBox.Ok);
 						tree.setItemText(item, 0, "<添加监视>");
 						new_add_item = item;
-                        return ;
+                    }else{
+						watchs.put(name, item);
+						tree.modifyItemFlags(item, 0, QXTreeView.ItemIsEditable);
+						new_add_item = tree.addItem(nilptr, "<添加监视>");
+						if (new_add_item != 0){
+							tree.modifyItemFlags(new_add_item, QXTreeView.ItemIsEditable, 0);
+						}
+						updateWatch();
                     }
-					watchs.put(name, item);
-                    tree.modifyItemFlags(item, 0, QXTreeView.ItemIsEditable);
-                    new_add_item = tree.addItem(nilptr, "<添加监视>");
-                    if (new_add_item != 0){
-						tree.modifyItemFlags(new_add_item, QXTreeView.ItemIsEditable, 0);
-                    }
-                    
-					updateWatch();
                 }
             }else{
 				tree.setItemText(item, column, "");
@@ -183,39 +203,59 @@ class WatchWnd : ListDockWidget{
 	}
     
     void loadObject(JsonObject json){
-		//UI线程使用
 		synchronized(serlock){
 			QXTreeView list = getList();
 			
 			//long id = json.getString("id").parseLong();
-			long item = json.getString("queryid").parseLong();
-            if (item != 0){
-				String param = json.getString("param");
-				long seri = param.substring(5, param.length()).parseLong();
-				String szType  = json.getString("type");
-				if (seri == serial){
-				
-					String values = json.getString("value"); 
-					long loaditem = list.getItemTag(item, 1);
+            
+            String qid = json.getString("queryid");
+            
+            if (qid != nilptr){
+            
+				if (qid.startWith("detail:")){
+					try{
+						TextDetail td = new TextDetail();
+						String text = json.getString("value"); 
+						JsonObject text_root = new JsonObject(text);
+						String content = text_root.getString("value");
+						String caption = qid.substring(7, qid.length());
+                        caption = caption + " : length=" + content.length();
+						td.create(caption, content);
+					}catch(Exception e){
 					
-					if (loaditem != 0){
-						list.removeItem(loaditem);
-						list.setItemTag(item, 1, 0);
 					}
+                    return ;
+                }
+                
+				long item = qid.parseLong();
+				
+				if (item != 0){
+					String param = json.getString("param");
+					long seri = param.substring(5, param.length()).parseLong();
+					String szType  = json.getString("type");
+					if (seri == serial){
 					
-					if (values != nilptr && values.length() > 0){
-						try{
+						String values = json.getString("value"); 
+						long loaditem = list.getItemTag(item, 1);
 						
-							JsonObject valueroot = new JsonObject(values);
-                            if (szType != nilptr){
-								list.setItemText(0, 1, szType);
-                            }
-							displayValue(list, item, valueroot);
-						}catch(Exception e){
-							//_system_.consoleWrite("parse error:[" + values + "]\n");
+						if (loaditem != 0){
+							list.removeItem(loaditem);
+							list.setItemTag(item, 1, 0);
 						}
-					}else{
-						list.setItemText(item, 2, "<找不到调试数据>");
+						
+						if (values != nilptr && values.length() > 0){
+							try{
+								JsonObject valueroot = new JsonObject(values);
+								if (szType != nilptr){
+									list.setItemText(item,1 , szType);
+								}
+								displayValue(list, item, valueroot);
+							}catch(Exception e){
+								//_system_.consoleWrite("parse error:[" + values + "]\n");
+							}
+						}else{
+							list.setItemText(item, 2, "<找不到调试数据>");
+						}
 					}
 				}
             }
@@ -349,14 +389,23 @@ class WatchWnd : ListDockWidget{
             
         	if (valueroot.has("length")){
 				String slength = valueroot.getString("length");
-                
 				long lenitem = list.insertItem(item, nilptr, "length");
 				list.setItemText(lenitem, 1, "int");
 				list.setItemText(lenitem, 2, slength);
-        
-				
                 long length = slength.parseLong();
                 displayArray(list, item, objectId.parseLong(), 0,  length, getSplit(length), false);
+            }else
+            if (valueroot.has("thumb")){
+				String text = valueroot.getString("thumb");
+                
+                text = text.replace("\n", " ↩ ")
+							.replace("\r", " ↵ ")
+							.replace("\t", " ⇥ ")
+                            .replace("\b", " ⇤ ") + " ...";
+                            
+                list.setItemText(item, 2, text);
+                list.setItemText(item, 1, "String");    
+                list.setItemTag(item, 2, objectId.parseLong());
             }else{
 				long iditem = list.insertItem(item, nilptr, "id");
 				list.setItemText(item, 3, objectId);
@@ -373,7 +422,10 @@ class WatchWnd : ListDockWidget{
         if (values == nilptr){
 			values = "nilptr";
         }else{
-			values = values.replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t").replace("\b", "\\b");
+			values = values.replace("\n", " ↩ ")
+							.replace("\r", " ↵ ")
+							.replace("\t", " ⇥ ")
+                            .replace("\b", " ⇤ ");
         }
 		switch(valueType){
 		case 0:

@@ -697,6 +697,7 @@ class Project{
     }
     
     void debugRun(IBuilder builder){
+		XMemoryWnd.reset();
         _propinterface.debugRun(builder, this, currentConfig);
     }
     

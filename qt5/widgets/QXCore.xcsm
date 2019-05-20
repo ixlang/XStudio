@@ -361,7 +361,8 @@ class QXCore : QXNative{
 		ADDELLIPSE = 358,
         PATHCTOR = 359,
         DRAWPATH = 360,
-        UPDATEENABLE = 361;
+        UPDATEENABLE = 361,
+        OPENMULTI = 362;
         
     QXCore(){
     }

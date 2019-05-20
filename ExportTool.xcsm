@@ -5,7 +5,7 @@ class ExportTool : QXDialog{
 
 	QXLineEdit edtStaticLib ,nativefile, destfile, edtName, edtVersion, lelDescr, lblAuthor;
     QXComboBox cbbNative, cbbOs;
-    QXPushButton stBrowser, nativeBrowser, btnEmpty, btnAdd , brwExport, btnExport, btnReadme, btnIcon;
+    QXPushButton stBrowser, nativeBrowser, btnEmpty, btnAdd , brwExport, btnExport, btnReadme, btnIcon, btnsave, btnload;
     QXTreeView  structView;
     QXProgressBar	prgExport;
     
@@ -42,6 +42,18 @@ class ExportTool : QXDialog{
                 }
             }
             return true;
+        }
+        
+        JsonArray save(){
+			JsonArray filesobj = new JsonArray();
+            for (int i =0; i < files.size(); i++){
+				filesobj.put(files.get(i));
+            }
+            return filesobj;
+        }
+        
+        void load(String file){
+			files.add(file);
         }
     };
     
@@ -83,19 +95,67 @@ class ExportTool : QXDialog{
             }     
             return true;
         }
+        
+        JsonObject save(){
+			JsonObject object = new JsonObject();
+			Map.Iterator<int, FilePackage> iters = osFile.iterator();
+            
+            while (iters.hasNext()){
+				JsonArray files = iters.getValue().save();
+				
+                object.put("" + iters.getKey(), files);
+                iters.next();
+            }     
+            
+            return object;
+        }
+        
+        bool load(JsonObject objects){
+			bool bsucc = true;
+            
+			JsonArray fileo = (JsonArray)objects.child();
+            while (fileo != nilptr){
+				String arcname = fileo.getName();
+                int fid = arcname.parseInt();
+                try{
+					FilePackage ar = osFile.get(fid);
+					for (int i = 0; i < fileo.length(); i++){
+						ar.load(fileo.getString(i));
+					}
+                }catch(Exception e){
+					bsucc = false;
+				}
+                fileo = (JsonArray)fileo.next();
+            }
+            return bsucc;
+        }
     };
     
     class Package{
 		String lixpath = "";
         String readme = "";
         String icon = "";
+        String comment = "";
+        
 		Map<int, Arch> archs = new Map<int, Arch>();
         
         Package(){
+			
+        }
+        
+        void init(){
 			for (int i =0; i < 5; i++){
 				archs.put(i , new Arch(i));
             }
         }
+        void reset(){
+			archs.clear();
+            init();
+		}
+        void setComment(String text){
+			comment = text;
+        }
+        
         void preview(QXTreeView tree, long item){
 			long hroot = tree.insertItem(item, "res/toolbar/staticfunction.png", lixpath);
             tree.insertItem(hroot, "res/toolbar/source.png", readme);
@@ -142,6 +202,61 @@ class ExportTool : QXDialog{
             } 
             return true;
         }
+        
+        JsonObject save(){
+			JsonObject root = new JsonObject();
+            root.put("lib",lixpath);
+            root.put("md",readme);
+            root.put("icon",icon);
+            root.put("comment",comment);
+            
+            root.put("archs", saveArchs());
+			return root;
+        }
+        
+        JsonObject saveArchs(){
+			JsonObject archobj = new JsonObject();
+            
+            Map.Iterator<int, Arch> iters = archs.iterator();
+            
+            while (iters.hasNext()){
+				JsonObject archFiles = iters.getValue().save();
+                archobj.put("" + iters.getKey(), archFiles);
+				iters.next();
+            }
+            return archobj;
+        }
+        
+        bool load(JsonObject root ){
+			try{
+				lixpath = root.getString("lib");
+                readme = root.getString("md");
+                icon = root.getString("icon");
+                comment = root.getString("comment");
+                
+                return loadArchs((JsonObject)root.get("archs"));
+            }catch(Exception e){
+				
+            }
+            return false;
+        }
+        
+        bool loadArchs(JsonObject objects){
+			bool bsucc = true;
+			JsonObject archo = (JsonObject)objects.child();
+            while (archo != nilptr){
+				String arcname = archo.getName();
+                int id = arcname.parseInt();
+                try{
+					Arch ar = archs.get(id);
+                    ar.load(archo);
+                }catch(Exception e){
+					bsucc = false;
+                }
+                archo = (JsonObject)archo.next();
+            }
+            return bsucc;
+        }
     };
     
     Package currentPackage = new Package();
@@ -187,7 +302,8 @@ class ExportTool : QXDialog{
         
         cbbNative = (QXComboBox)attachByName(new QXComboBox(), "cbbNative");
         cbbOs = (QXComboBox)attachByName(new QXComboBox(), "cbbOs");
-        
+        btnsave = (QXPushButton)attachByName(new QXPushButton(), "btnsave");
+        btnload = (QXPushButton)attachByName(new QXPushButton(), "btnload");
         btnIcon = (QXPushButton)attachByName(new QXPushButton(), "btnIcon");
         stBrowser = (QXPushButton)attachByName(new QXPushButton(), "stBrowser");
         nativeBrowser = (QXPushButton)attachByName(new QXPushButton(), "nativeBrowser");
@@ -198,6 +314,20 @@ class ExportTool : QXDialog{
         btnReadme = (QXPushButton)attachByName(new QXPushButton(), "btnReadme");
         structView = (QXTreeView)attachByName(new QXTreeView(), "structView");
         
+        
+        btnReadme.setOnMouseEventListener(new onMouseEventListener(){
+        
+			void onMouseMove(QXObject obj,int Button,int x,int y,int flags,int source)override{
+				String md = currentPackage.readme;
+                
+                QPoint cpt = btnReadme.mapToGlobal(x,y);
+                if (md != nilptr && md.length() > 0){
+					btnReadme.showToolTips(cpt.x,cpt.y,md, -1);
+                }else{
+					btnReadme.showToolTips(cpt.x,cpt.y,"没有添加README文件", -1);
+                }
+			}
+        });
         prgExport = (QXProgressBar)attachByName(new QXProgressBar(), "prgExport");
         
         stBrowser.setOnClickListener(new BrowserListener(edtStaticLib, false, "选择静态库", "X 静态链接库 (*.lix)"));
@@ -218,7 +348,89 @@ class ExportTool : QXDialog{
             }                
         });
 
-
+		btnsave.setOnClickListener(new onClickListener(){
+			void onClick(QXObject obj, bool checked)override{
+				String file = QXFileDialog.getSaveFileName("保存", nilptr,  "X导出项目 (*.exp)", ExportTool.this);
+				if (file != nilptr && file.length() > 0){
+					currentPackage.lixpath = edtStaticLib.getText();
+					JsonObject root = currentPackage.save();
+                    
+                    if (root != nilptr){
+						root.put("package", edtName.getText());
+						root.put("version", edtVersion.getText());
+						root.put("descr", lelDescr.getText());
+						root.put("author", lblAuthor.getText());
+                        
+                        String content = root.toString(true);
+                        
+						try{
+							FileOutputStream fos = new FileOutputStream(file);
+							byte [] data = content.getBytes();
+							fos.write(data, 0, data.length);
+							fos.close();
+						}catch(Exception e){
+							QXMessageBox.Critical("错误","未能保存",QXMessageBox.Ok,QXMessageBox.Ok);
+						}
+                    }
+				}
+            }
+        });
+        
+        btnload.setOnClickListener(new onClickListener(){
+			void onClick(QXObject obj, bool checked)override{
+				String file = QXFileDialog.getOpenFileName("载入", nilptr,  "X导出项目 (*.exp)", ExportTool.this);
+				if (file != nilptr && file.length() > 0){
+					try{
+						FileInputStream fis = new FileInputStream(file);
+						byte [] data = fis.read();
+						fis.close();
+						String content = new String(data);
+						JsonObject root = new JsonObject(content);
+                        currentPackage.reset();
+                        
+                        if (false == currentPackage.load(root)){
+							QXMessageBox.Critical("注意","载入项目时有错误发生.",QXMessageBox.Ok,QXMessageBox.Ok);
+                        }
+                        
+                        String packagename = root.getString("package");
+                        String version = root.getString("version");
+                        String descr = root.getString("descr");
+                        String author = root.getString("author");
+                        
+                        if (packagename != nilptr){
+							edtName.setText(packagename);
+                        }
+                        
+                        if (version != nilptr){
+							edtVersion.setText(version);
+                        }
+                        
+                        if (descr != nilptr){
+							lelDescr.setText(descr);
+                        }
+                        
+                        if (author != nilptr){
+							lblAuthor.setText(author);
+                        }
+                        if (currentPackage.icon != nilptr){
+							btnIcon.setStyleSheetString("#btnIcon{border-image:url(\"" + currentPackage.icon + "\");}");
+                        }else{
+							btnIcon.setStyleSheetString("#btnIcon{border-image:url(\"" + "\");}");
+                        }
+                        
+                        if (currentPackage.lixpath != nilptr){
+							edtStaticLib.setText(currentPackage.lixpath);
+                        }else{
+							edtStaticLib.setText("");
+                        }
+                        
+                        updatepreview();
+					}catch(Exception e){
+						QXMessageBox.Critical("错误","未能载入项目",QXMessageBox.Ok,QXMessageBox.Ok);
+					}
+				}
+            }
+        });
         
         btnIcon.setOnClickListener(new onClickListener(){
 			void onClick(QXObject obj, bool checked)override{
@@ -358,8 +570,9 @@ class ExportTool : QXDialog{
             root.put("version", version);
             root.put("descr", descrtxt);
             root.put("author", author);
-            
-            xp.setComment(root.toString(true));
+            String comment = root.toString(true);
+            currentPackage.setComment(comment);
+            xp.setComment(comment);
 			if (xp.create(fos)){
 				if (currentPackage.build(xp)){
 					xp.close();
