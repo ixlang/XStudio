@@ -1,0 +1,48 @@
+{
+	"xlang":	{
+		"version":	"1.2",
+		"language":	"xlang",
+		"sources":	["xlang.xcs", ".\\XTextEditor.xcsm", ".\\DarkStyleSyntax.xcsm", ".\\LightStyleSyntax.xcsm"],
+		"configures":	{
+			"debug":	{
+				"path":	{
+					"incpath":	[],
+					"libpath":	["libs"]
+				},
+				"options":	"",
+				"cmd":	"$(Output)",
+				"args":	"$(Output)",
+				"workdir":	"$(ProjectDir)",
+				"libs":	[],
+				"links":	["XStudio1.xl"],
+				"wtype":	"",
+				"ostype":	"",
+				"outname":	"$(ProjectName)$(Ext)",
+				"outpath":	"D:\\Programs\\windows_x64\\plugins",
+				"command":	"-slx -c",
+				"uaclevel":	"默认",
+				"ignorewarning":	"",
+				"compdest":	"-z",
+				"debugable":	"-dbg",
+				"debugdatabase":	""
+			},
+			"release":	{
+				"path":	{
+					"incpath":	[],
+					"libpath":	[]
+				},
+				"libs":	[],
+				"options":	"-nd",
+				"command":	"-ce",
+				"debugable":	"",
+				"outpath":	"$(ProjectDir)/$(Arch)/$(Configure)",
+				"outname":	"$(ProjectName)$(Ext)",
+				"cmd":	"$(Output)",
+				"args":	"$(Output)",
+				"workdir":	"$(ProjectDir)"
+			}
+		},
+		"icofile":	"",
+		"versioninc":	"0"
+	}
+}

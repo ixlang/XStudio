@@ -1,0 +1,40 @@
+//xlang Source, Name:XTextEditor.xcsm 
+//Date: Sat Jun 17:13:15 2019 
+
+class XTextEditor : TextEditorPlugin{
+	String getIconFile() override {
+		//TODO:	
+		return nilptr;
+	}
+    
+	DarkStyleSyntax _darkConfig = new DarkStyleSyntax();
+    LightStyleSyntax _lightConfig = new LightStyleSyntax();
+    
+	String getKeyWords() override {
+		//TODO:	
+		return 
+			"break case catch char class " + 
+			"const continue default do double else final finally cdecl for " + 
+			"if import interface stdcall fastcall pascal operator " + 
+			"new package include using require synchronized_read synchronized_write " + 
+			"return static super switch synchronized this throw " + 
+			"try void while @Declare override bool byte long char int long short String _system_ " + 
+			"Thread nilptr Exception Vector Map List Iterator Timer TimerTask true false finalize enum" ;
+	}
+
+	bool requestClose(TextEditorController editor) override {
+		//TODO:	
+		return true;
+	}
+
+	SyntaxHighlighting getColorConfigure(String styleName) override {
+		//TODO:	
+		if (styleName.equals("dark")){
+			return _darkConfig;
+        }
+        
+        return _lightConfig;
+	}
+
+
+};

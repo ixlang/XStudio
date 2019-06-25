@@ -233,13 +233,17 @@ class XWndClass : QXDockWidget{
 		wndClass.loadProject(project);
 	}*/
     
-    long [] loadLibs(Configure configure){
+    long [][] loadLibs(Configure configure){
 		long [] hlibs;
-		if (configure != nilptr){		
+        long [] hlinks;
+        
+		if (configure != nilptr){	
+            long libroot = 0;
+            	
 			JsonArray libs = (JsonArray)configure.root.get("libs");
 			if (libs != nilptr){
 				hlibs = new long[libs.length()];
-                long libroot = 0;
+                
                 if (libs.length() > 0){
 					libroot = _treeview.addItem("res/toolbar/sources.png", "外部库");
                 }
@@ -250,8 +254,24 @@ class XWndClass : QXDockWidget{
 					}
 				}
 			}
+            
+            JsonArray links = (JsonArray)configure.root.get("links");
+			if (links != nilptr){
+				hlinks = new long[links.length()];
+                if (links.length() > 0 && libroot == 0){
+					libroot = _treeview.addItem("res/toolbar/sources.png", "外部库");
+                }
+				for (int i = 0; i < links.length(); i++){
+					String var = links.getString(i);
+					if (var != nilptr){
+                        hlinks[i] = _treeview.insertItem(libroot, "res/toolbar/library.png", var.findFilenameAndExtension());
+					}
+				}
+			}
 		}   
-        return hlibs; 
+        
+        long [][] hret = {hlibs, hlinks};
+        return hret; 
     }
     
 
@@ -334,7 +354,7 @@ class XWndClass : QXDockWidget{
 			hbuildin = _treeview.addItem("res/toolbar/sources.png", "内置对象");
         }
         
-        long []libs = loadLibs(project.currentConfig);
+        long [][]libs = loadLibs(project.currentConfig);
         
 		if (project.xintelliSenseMap != nilptr){
 			sources = (JsonArray)project.xintelliSenseMap.get("sources");
@@ -350,7 +370,7 @@ class XWndClass : QXDockWidget{
 	long insertLoad(long item){
 		return _treeview.insertItem(item, nilptr, "加载中...");
 	}
-	void loadObject(long hroot, long []libs, JsonArray objs, long hbuildin){
+	void loadObject(long hroot, long [][]libs, JsonArray objs, long hbuildin){
 		if (objs == nilptr){
 			return ;
         }
@@ -376,15 +396,27 @@ class XWndClass : QXDockWidget{
                 }
             }
 			int type = obj.getInt("type");
-            int libid = obj.getInt("lib");
+            
             bool blib = obj.has("lib");
-            if (blib && libs != nilptr){
-				if (libid < libs.length){
-					root = libs[libid];
+            if (blib && libs != nilptr && libs[0] != nilptr){
+				int libid = obj.getInt("lib");
+				if (libid < libs[0].length){
+					root = libs[0][libid];
                 }else{
 					continue;
                 }
             }
+            
+            bool blink = obj.has("link");
+            if (blink && libs != nilptr && libs[1] != nilptr){
+				int linkid = obj.getInt("link");
+				if (linkid < libs[1].length){
+					root = libs[1][linkid];
+                }else{
+					continue;
+                }
+            }
+            
 			long item = 0;
 			if (type == 34){
 				item = _treeview.insertItem(root, "res/toolbar/template.png", obj.getString("name"));

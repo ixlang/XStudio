@@ -35,16 +35,16 @@ class XSourceEditor : QXMdiSubWindow{
     XSourceEditor(XWorkspace _mdi){
         _mdi_area = _mdi;
     }
-    static const String szKeywords1= 
+    String szKeywords1= 
         "break case catch char class " + 
         "const continue default do double else final finally cdecl for " + 
         "if import interface stdcall fastcall pascal operator " + 
         "new package include using require synchronized_read synchronized_write " + 
         "return static super switch synchronized this throw " + 
         "try void while @Declare override bool byte long char int long short String _system_ " + 
-        "Thread nilptr Exception Vector Map List Iterator Timer TimerTask true false finalize" ;
+        "Thread nilptr Exception Vector Map List Iterator Timer TimerTask true false enum finalize" ;
         
-    static const String szKeywords2 = "";
+    String szKeywords2 = "";
     
 	static const int BREAKPOINT_INDEX = 0,
 			 LINENUMBER_INDEX = 1,
@@ -56,6 +56,70 @@ class XSourceEditor : QXMdiSubWindow{
 		_sci.sendEditor(QXSci.SCI_SETKEYWORDS, 1, keyword);
 	}	
     
+    TextEditorPlugin _textplugins;
+    TextEditorController _controller = new TextEditorController(){
+		String getPath(){
+			return filePath;
+        }
+		String getTitle(){
+			return szTitle;
+        }
+		bool save(){
+			return saveFile();
+        }
+		bool gotoLine(long line, long column){
+			goto(line ,column);
+            return true;
+        }
+		bool gotoPos(long pos){
+			goto(pos);
+            return true;
+        }
+		bool select(long start, long end){
+			_sci.setSelect(start,end);
+            return true;
+        }
+		bool gotoAndSelect(long start, long end){
+			XSourceEditor.this.gotoAndSelect(start, end);
+            return true;
+        }
+		bool setBreakOn(long line, long column, bool set, bool bActive){
+			breakOn(line, column, set, bActive, false);
+            return true;
+        }
+		bool activeEditor(){
+			XWorkspace.workspace.setActiveSubWindow(XSourceEditor.this);
+            return true;
+        }
+		void clearBreakOn(){
+			XSourceEditor.this.clearBreakOn();
+        }
+		bool toggleBreakpoint(long pos, bool bSet){
+			int line = _sci.positionToLine(pos);
+			BreakPointWnd.toggleBreakPoint(XSourceEditor.this, filePath, line, testMark(line, MARK_BREAKPOINT) == false);   
+            return true;    
+        }
+		bool toggleBreakpointAtLine(long line, bool bSet){
+			BreakPointWnd.toggleBreakPoint(XSourceEditor.this, filePath, line, testMark(line, MARK_BREAKPOINT) == false);       
+            return true;
+        }
+		String getText(long start, long end){
+			return _sci.getText(start,end);
+        }
+		String getText(){
+			return _sci.getText();
+        }
+		long getCurrentPosition(){
+			return _sci.getCurrentPosition();
+        }
+		long getCurrentLine(){
+			return _sci.getCurrentLine();
+        }
+    };
+    
+    TextEditorController getController() {
+		return _controller;
+    }
     
     static String getEditingContent(String file){
 		XSourceEditor wnd = findDocumentWindow(nilptr, file, false);
@@ -79,7 +143,9 @@ class XSourceEditor : QXMdiSubWindow{
     
     static XSourceEditor findDocumentWindow(XWorkspace parent, String source, bool open){
 		XSourceEditor wnd =  nilptr;
-		
+        
+		source = String.formatPath(source, false).replace("\\", "/");
+        
 		try{
 			wnd = editorMgr.get(source);
 		}catch(Exception e){
@@ -215,7 +281,9 @@ class XSourceEditor : QXMdiSubWindow{
 	}
     
     static XSourceEditor findFileWindow(String file){
+		
 		try{
+			file = String.formatPath(file, false).replace("\\", "/");
 			return editorMgr.get(file);
 		}catch(Exception e){
 			
@@ -241,15 +309,18 @@ class XSourceEditor : QXMdiSubWindow{
 		setActive(true);
 	}
     
-    void breakOn(int line, int row, bool set, bool active){
+    void breakOn(int line, int row, bool set, bool active, bool onlyActive){
 		if (set){
 			_sci.goto(line, 1);
-			_sci.sendEditor(QXSci.SCI_MARKERADD, line , MARK_POINTER);
+            if (onlyActive == false){
+				_sci.sendEditor(QXSci.SCI_MARKERADD, line , MARK_POINTER);
+            }
 			setActive(true);
             if (active){
 				_mdi_area.setActiveSubWindow(this);
             }
-		}else{
+		}else
+        if (onlyActive == false){
 			_sci.sendEditor(QXSci.SCI_MARKERDELETE, line , MARK_POINTER);
 		}
 	}
@@ -617,7 +688,9 @@ class XSourceEditor : QXMdiSubWindow{
                                 
                                 runOnUi(new Runnable(){
 									void run(){
-										_sci.showTips(pos, tips);
+										if (bClosed == false){
+											_sci.showTips(pos, tips);
+                                        }
                                     }
                                 });
                                 
@@ -628,14 +701,18 @@ class XSourceEditor : QXMdiSubWindow{
 					}else{
 						runOnUi(new Runnable(){
 							void run(){
-								_sci.showTips(pos, "找不到数据");
+								if (bClosed == false){
+									_sci.showTips(pos, "找不到数据");
+                                }
 							}
 						});
 					}
 				}else{
 						runOnUi(new Runnable(){
 							void run(){
-								_sci.showTips(pos, "找不到数据");
+								if (bClosed == false){
+									_sci.showTips(pos, "找不到数据");
+                                }
 							}
 						});
 				}
@@ -705,6 +782,8 @@ class XSourceEditor : QXMdiSubWindow{
 				"-",
 				"actiondelete",
 				"-",
+                "actionbreakpoint",
+                "-",
 				"actiongotodef",
 				"-",
                 "actionmatchbrace",
@@ -998,100 +1077,121 @@ class XSourceEditor : QXMdiSubWindow{
 					}
 				}
 			});
-        }
         
-        updateTitle();
-        
-        setWidget(_sci);
-        syntaxForXlang();
-        _sci.show();
-        setMaximized(true);        
-        addToMap(filePath);
-        _sci.setIndicStyle(1, QXSci.INDIC_CONTAINER);
-        _sci.setIndicForeColor(1, 0xff00ffff);
-        _sci.setIndicUnderColor(1, 0x7f00ffff);
-        _sci.setIndicCurrent(1);    
-          
-        _sci.setOnKeyEventListener(new onKeyEventListener(){
 			
-			bool onKeyPress(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier)override{
-				if (autoCompShow){	
-					
-					if (key == Key_Up){
-						XSourceEditor.this.autoCompleteUp();
-						return false;
+			updateTitle();
+			
+			setWidget(_sci);
+			_textplugins = _mdi_area.getEditorPlugin();
+			updateSyntax();
+			_sci.show();
+			setMaximized(true);        
+			addToMap(filePath);
+			  
+			_sci.setOnKeyEventListener(new onKeyEventListener(){
+				
+				bool onKeyPress(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier)override{
+					if (autoCompShow){	
+						
+						if (key == Key_Up){
+							XSourceEditor.this.autoCompleteUp();
+							return false;
+						}
+						if (key == Key_Down){
+							XSourceEditor.this.autoCompleteDown();
+							return false;
+						}
+						if (key == Key_Enter || key == Key_Return){
+							XSourceEditor.this.autoCompleteDone();
+							return false;
+						}
+						if (key == Key_Escape){
+							XSourceEditor.this.hideAutoWnd();
+							return false;
+						}
+						
 					}
-					if (key == Key_Down){
-						XSourceEditor.this.autoCompleteDown();
-						return false;
-					}
-					if (key == Key_Enter || key == Key_Return){
-						XSourceEditor.this.autoCompleteDone();
-						return false;
-					}
-					if (key == Key_Escape){
-						XSourceEditor.this.hideAutoWnd();
-						return false;
-					}
-                    
-				}
-                if (key == Key_Tab){
-					hideAutoWnd();
-					int pos = _sci.getCurrentPosition();
-					int[] ind = getNextIndic(pos);
-                    if (ind != nilptr){
-						if (ind.length > 0){
-							_sci.gotoPos(ind[1]);
-                        }
-                        return false;
-                    }
-					return true;
-                }
-                if (key == Key_Control){
-					lastCursor = _sci.getCursor();
-					_sci.setCursor(QXSci.cursorHand);
-                    sciisHand = true;
-                }
-                
-				return true;
-			}
-            bool onKeyRelease(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier)override{
-                if (bModified == false){
-                    bModified = _sci.isModified();
-                    if (bModified){
-                        XSourceEditor.this.updateTitle();
-                    }
-                }
-                if (key == Key_Control ){
-					_sci.setCursor(QXSci.cursorText);
-                    sciisHand = false;
-                }
-				return true;
-            }
-        });
-        
-        _sci.setOnFocusEventListener(new onFocusEventListener(){
-			void onFocusIn(QXObject obj, bool focus, int reson){
-				sciisHand = false;
-                XFindDlg.findinOutput = false;
-                _sci.setCursor(QXSci.cursorText);
-			}
-			void onFocusOut(QXObject obj, bool focus, int reson){
-				sciisHand = false;
-                _sci.setCursor(QXSci.cursorText);
-                _sci.cancelTips();
-				if (autoCompShow){	
-					if (autoWnd.hasFocus() == false){
+					if (key == Key_Tab){
 						hideAutoWnd();
-                    }
+						int pos = _sci.getCurrentPosition();
+						int[] ind = getNextIndic(pos);
+						if (ind != nilptr){
+							if (ind.length > 0){
+								_sci.gotoPos(ind[1]);
+							}
+							return false;
+						}
+						return true;
+					}
+					if (key == Key_Control){
+						lastCursor = _sci.getCursor();
+						_sci.setCursor(QXSci.cursorHand);
+						sciisHand = true;
+					}
+					
+					return true;
 				}
-			}
-			void onFocusAboutToChange(QXObject obj, bool focus, int reson){
-			}
-		});
-        return true;
+				bool onKeyRelease(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier)override{
+					if (bModified == false){
+						bModified = _sci.isModified();
+						if (bModified){
+							XSourceEditor.this.updateTitle();
+						}
+					}
+					if (key == Key_Control ){
+						_sci.setCursor(QXSci.cursorText);
+						sciisHand = false;
+					}
+					return true;
+				}
+			});
+			
+			_sci.setOnFocusEventListener(new onFocusEventListener(){
+				void onFocusIn(QXObject obj, bool focus, int reson){
+					sciisHand = false;
+					XFindDlg.findinOutput = false;
+					_sci.setCursor(QXSci.cursorText);
+				}
+				void onFocusOut(QXObject obj, bool focus, int reson){
+					sciisHand = false;
+					_sci.setCursor(QXSci.cursorText);
+					_sci.cancelTips();
+					if (autoCompShow){	
+						if (autoWnd.hasFocus() == false){
+							hideAutoWnd();
+						}
+					}
+				}
+				void onFocusAboutToChange(QXObject obj, bool focus, int reson){
+				}
+			});
+            
+			return true;
+        }
+        return false;
     }
 
+	void onTextEditorCreated(){
+		IXPlugin plugin = _mdi_area.getCurrentProjectPlugin();
+        if (plugin != nilptr){
+			plugin.onTextEditorCreated(_controller);
+        }
+    }
+    
+    void onTextEditorClosed(){
+		IXPlugin plugin = _mdi_area.getCurrentProjectPlugin();
+        if (plugin != nilptr){
+			plugin.onTextEditorClosed(_controller);
+        }
+    }
+    
+    bool requestPluginClose(){
+		if (_textplugins != nilptr){
+			return _textplugins.requestClose(_controller);
+        }
+        return true;
+    }
+    
 	String mapType(String type){
 		int t = type.parseInt();
         switch(t){
@@ -1185,15 +1285,17 @@ class XSourceEditor : QXMdiSubWindow{
                 //将查询结果交还UI线程处理
 				runOnUi(new Runnable(){
 					void run()override{
-						if (res != nilptr && res.length > 0){
-							OverrideDlg.requesOverrideObject(XSourceEditor.this, pos, res);
-						}else{
-							ProgressView pv = ProgressView.showWait(1000);
-							pv.centerScreen();
-							pv.showResult(true, false);
-							pv.setTitleText("找不到对象");
-							pv.dismissAfter(1000);
-						}
+						if (bClosed == false){
+							if (res != nilptr && res.length > 0){
+								OverrideDlg.requesOverrideObject(XSourceEditor.this, pos, res);
+							}else{
+								ProgressView pv = ProgressView.showWait(1000);
+								pv.centerScreen();
+								pv.showResult(true, false);
+								pv.setTitleText("找不到对象");
+								pv.dismissAfter(1000);
+							}
+                        }
 					}
 				});
 			}
@@ -1213,33 +1315,35 @@ class XSourceEditor : QXMdiSubWindow{
 					
 					runOnUi(new Runnable(){
 						void run()override{
-							if (res != nilptr && res.length > 0){
-							
-								sciisHand = false;
-								_sci.setCursor(QXSci.cursorText);
+							if (bClosed == false){
+								if (res != nilptr && res.length > 0){
 								
-								if (res.length == 1){
-									localtion(res[0].source, res[0].line, res[0].row);
-								}else{
-									XFinder.FindResult fres = new XFinder.FindResult();
+									sciisHand = false;
+									_sci.setCursor(QXSci.cursorText);
 									
-									for (int i = 0; i < res.length; i++){
-										if (res[i].source.length() > 0){
-											fres.add(new XFinder.FindItem(res[i].source, res[i].line, res[i].row, 1, mapType(res[i].type)));
+									if (res.length == 1){
+										localtion(res[0].source, res[0].line, res[0].row);
+									}else{
+										XFinder.FindResult fres = new XFinder.FindResult();
+										
+										for (int i = 0; i < res.length; i++){
+											if (res[i].source.length() > 0){
+												fres.add(new XFinder.FindItem(res[i].source, res[i].line, res[i].row, 1, mapType(res[i].type)));
+											}
 										}
+										
+										XFindresWnd.ShowResult(fres);
 									}
 									
-									XFindresWnd.ShowResult(fres);
+								}else{
+									ProgressView pv = ProgressView.showWait(1000);
+									pv.centerScreen();
+									pv.showResult(true, false);
+									pv.setTitleText("找不到对象");
+									pv.dismissAfter(1000);
 								}
-								
-							}else{
-								ProgressView pv = ProgressView.showWait(1000);
-                                pv.centerScreen();
-								pv.showResult(true, false);
-								pv.setTitleText("找不到对象");
-								pv.dismissAfter(1000);
 							}
-						}
+                        }
 					});
 
 					
@@ -1309,6 +1413,9 @@ class XSourceEditor : QXMdiSubWindow{
                 bclose = false;
             }
             
+            if (bclose){
+				bclose = requestPluginClose();
+            }
             if (bclose == false){
                 return false;
             }
@@ -1318,6 +1425,7 @@ class XSourceEditor : QXMdiSubWindow{
         //_mdi_area.removeSubWindow(this);
 		_mdi_area.updateDocumentStatus();
 		bClosed = true;
+        onTextEditorClosed();
         return true;
     }
     
@@ -1458,6 +1566,193 @@ class XSourceEditor : QXMdiSubWindow{
 		_sci.sendEditor(QXSci.SCI_SETTARGETSTART, start); 
 		_sci.sendEditor(QXSci.SCI_SETTARGETEND, start + len); 
 		_sci.sendEditor(QXSci.SCI_REPLACETARGET, text.length(), text); 
+    }
+    
+    
+    void updateSyntax(){
+		_sci.setIndicStyle(1, QXSci.INDIC_CONTAINER);
+  
+		bool updatesuccess = false;
+        
+		if (_textplugins != nilptr){
+			szKeywords1 = _textplugins.getKeyWords();
+            if (szKeywords1 == nilptr){
+				szKeywords1 = "";
+			}
+            
+            SyntaxHighlighting colorConfig = _textplugins.getColorConfigure(Setting.isDarkStyle() ? "dark" : "light");
+            
+            if (colorConfig != nilptr){
+				updatesuccess = true;
+				_sci.sendEditor(QXSci.SCI_CLEARDOCUMENTSTYLE, 0, 0);
+			
+				_sci.sendEditor(QXSci.SCI_SETLEXER, QXSci.SCLEX_CPP, 0);
+				_sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);
+				_sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_DEFAULT, colorConfig.getDefaultBackColor());
+				_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_DEFAULT, colorConfig.getDefaultForeColor());
+				_sci.sendEditor(QXSci.SCI_STYLESETFORE, 75, 0xffefefef);
+				//_sci.sendEditor(QXSci.STYLE_LINENUMBER, 1, 0);
+				//bool bmac = (_system_.getPlatformId() == 2);
+
+				
+				_sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,Setting.getEditorFont()); 
+				_sci.sendEditor(QXSci.SCI_STYLESETSIZEFRACTIONAL, QXSci.STYLE_DEFAULT,Setting.getEditorFontSize()); 
+
+				
+				_sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0); 
+				
+				_sci.sendEditor(QXSci.SCI_SETSELBACK,1,colorConfig.getSelectedBackColor());
+				_sci.sendEditor(QXSci.SCI_SETSELFORE,0,colorConfig.getSelectedForeColor());
+				//C++语法解析 
+				_sci.sendEditor(QXSci.SCI_SETLEXER, QXSci.SCLEX_CPP, 0); 
+				_sci.sendEditor(QXSci.SCI_SETKEYWORDS, 0, szKeywords1);//设置关键字 
+				_sci.sendEditor(QXSci.SCI_SETKEYWORDS, 1, szKeywords2);//设置关键字 
+				// 下面设置各种语法元素风格 
+				_sci.sendEditor(QXSci.SCI_SETEOLMODE, 1, 0); 
+				
+				_sci.sendEditor(QXSci.SCI_MARKERDEFINE, MARK_BREAKPOINT, 0);
+				_sci.sendEditor(QXSci.SCI_MARKERSETBACK, MARK_BREAKPOINT ,colorConfig.getBreakPointBackColor());
+				_sci.sendEditor(QXSci.SCI_MARKERSETFORE, MARK_BREAKPOINT ,colorConfig.getBreakPointForeColor());
+				
+				_sci.sendEditor(QXSci.SCI_MARKERDEFINE, MARK_POINTER,4);
+				_sci.sendEditor(QXSci.SCI_MARKERSETFORE, MARK_POINTER,colorConfig.getMarkPointBackColor());
+				_sci.sendEditor(QXSci.SCI_MARKERSETBACK, MARK_POINTER,colorConfig.getMarkPointForeColor());
+				
+				_sci.sendEditor(QXSci.SCI_MARKERDEFINE,MARK_MODIFIED,25);
+				_sci.sendEditor(QXSci.SCI_MARKERSETFORE,MARK_MODIFIED,colorConfig.getModifiedMarkForeColor());
+				_sci.sendEditor(QXSci.SCI_MARKERSETBACK,MARK_MODIFIED,colorConfig.getModifiedMarkBackColor());
+				
+				_sci.sendEditor(QXSci.SCI_MARKERDEFINE,MARK_SAVED,25);
+				_sci.sendEditor(QXSci.SCI_MARKERSETFORE,MARK_SAVED,colorConfig.getSavedMarkForeColor());
+				_sci.sendEditor(QXSci.SCI_MARKERSETBACK,MARK_SAVED,colorConfig.getSavedMarkBackColor());
+				
+				current_modify_mark = MARK_MODIFIED;
+				reserve_modify_mark = MARK_SAVED;
+										 
+				_sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,BREAKPOINT_INDEX, 15);
+				_sci.sendEditor(QXSci.SCI_SETMARGINSENSITIVEN,BREAKPOINT_INDEX, 1);
+				
+				if (Setting.isIndentGuide()){
+					_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_INDENTGUIDE, colorConfig.getIndentGuideColor());
+					_sci.sendEditor(QXSci.SCI_SETINDENTATIONGUIDES, QXSci.SC_IV_LOOKBOTH);
+				}else{
+					_sci.sendEditor(QXSci.SCI_SETINDENTATIONGUIDES, QXSci.SC_IV_NONE);
+				}
+				
+				if (Setting.isShowLineNumber()){
+					_sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,LINENUMBER_INDEX, 40);
+				}else{
+					_sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,LINENUMBER_INDEX, 0);
+				}
+				
+				_sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,DEBUGPOINT_INDEX, 15);
+				_sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,MODIFIMARK_INDEX, 3);
+				//_sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,4, 0);
+				
+				_sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, BREAKPOINT_INDEX, QXSci.SC_MARGIN_SYMBOL);
+				_sci.sendEditor(QXSci.SCI_SETMARGINMASKN, BREAKPOINT_INDEX, 1 << MARK_BREAKPOINT); 
+				
+				_sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, LINENUMBER_INDEX, QXSci.SC_MARGIN_NUMBER); 
+				_sci.sendEditor(QXSci.SCI_SETMARGINMASKN, LINENUMBER_INDEX, 0); 
+				
+				_sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, DEBUGPOINT_INDEX, QXSci.SC_MARGIN_SYMBOL);
+				_sci.sendEditor(QXSci.SCI_SETMARGINMASKN, DEBUGPOINT_INDEX, 1 << MARK_POINTER); 
+				
+				_sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, MODIFIMARK_INDEX, QXSci.SC_MARGIN_SYMBOL);
+				_sci.sendEditor(QXSci.SCI_SETMARGINMASKN, MODIFIMARK_INDEX, (1 << MARK_MODIFIED) | (1 << MARK_SAVED)); 
+				
+				
+				_sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_LINENUMBER, colorConfig.getLineNumberBackColor());
+				_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_LINENUMBER, colorConfig.getLineNumberForeColor());
+				_sci.sendEditor(QXSci.SCI_SETMARGINLEFT, 0, 0);
+				
+				_sci.sendEditor(QXSci.SCI_STYLESETBOLD, QXSci.STYLE_BRACELIGHT, 1);
+				_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_BRACELIGHT, colorConfig.getMatchedBraceForeColor());
+				_sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_BRACEBAD, colorConfig.getMatchedBraceBackColor());
+			
+				_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTDOCKEYWORD, colorConfig.getDocCommentKeyForeColor());   
+				_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTDOCKEYWORDERROR, colorConfig.getDocCommentErrForeForeColor());  
+				_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_GLOBALCLASS, colorConfig.getGlobalClassForeColor());   
+				_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_OPERATOR, colorConfig.getOperatorForeColor()/* 0xff859dd6 0xffFEE7Bf*/);   
+				_sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.SCE_C_STRINGEOL, colorConfig.getStringEOLColor());   
+				_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_WORD, colorConfig.getWordForeColor());  
+				
+				_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_WORD2, colorConfig.getWord2ForeColor()); 
+				_sci.sendEditor(QXSci.SCI_STYLESETBOLD, QXSci.SCE_C_WORD2, 1);
+				_sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.SCE_C_WORD2, colorConfig.getWord2BackColor());  
+				_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_STRING, colorConfig.getStringForeColor()); 
+				_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_NUMBER, colorConfig.getNumberForeColor());
+				_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_CHARACTER, colorConfig.getCharForeColor()); 
+				_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_PREPROCESSOR, colorConfig.getPreprocessorForeColor());
+				_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENT, colorConfig.getCommentForeColor());
+				_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTLINE, colorConfig.getCommentLineForeColor());
+				_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTDOC, colorConfig.getDocCommentForeColor());
+			   
+				_sci.sendEditor(QXSci.SCI_CALLTIPSETBACK, colorConfig.getCallTipsBackColor());
+				_sci.sendEditor(QXSci.SCI_CALLTIPSETFORE, colorConfig.getCallTipsForeColor());
+		 
+				//_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTDOC, 0xff504f4f);
+				 
+				_sci.sendEditor(QXSci.SCI_SETCARETFORE,colorConfig.getCaretColor(),0);
+				
+				_sci.sendEditor(QXSci.SCI_SETCARETLINEVISIBLE, 1); 
+				_sci.sendEditor(QXSci.SCI_SETCARETLINEBACK, colorConfig.getCaretLineBackColor()); 
+
+				_sci.sendEditor(QXSci.SCI_SETTABWIDTH, 4); 
+				_sci.sendEditor(QXSci.SCI_SETEOLMODE, QXSci.SC_EOL_LF, 0);
+				
+                _sci.setIndicForeColor(1, colorConfig.getIndicForeColor());
+				_sci.setIndicUnderColor(1, colorConfig.getIndicBackColor());
+        
+				if (Setting.isShowFolding()){
+					_sci.sendEditor(QXSci.SCI_SETPROPERTY,"fold","1");
+					_sci.sendEditor(QXSci.SCI_SETPROPERTY,"fold.comment","1");
+					
+					_sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, MARGIN_FOLD_INDEX, QXSci.SC_MARGIN_SYMBOL);//页边类型
+					_sci.sendEditor(QXSci.SCI_SETMARGINMASKN, MARGIN_FOLD_INDEX, QXSci.SC_MASK_FOLDERS); //页边掩码
+					
+					_sci.sendEditor(QXSci.SCI_SETFOLDMARGINCOLOUR, 1, colorConfig.getFoldMarginColor());
+					_sci.sendEditor(QXSci.SCI_SETFOLDMARGINHICOLOUR, 1, colorConfig.getFoldMarginHIColor());
+					
+					_sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, MARGIN_FOLD_INDEX, 11); //页边宽度
+					_sci.sendEditor(QXSci.SCI_SETMARGINSENSITIVEN, MARGIN_FOLD_INDEX, 1); //响应鼠标消息
+
+					
+					// 折叠标签样式 //折叠页边颜色
+					_sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDER, QXSci.SC_MARK_BOXPLUS); 
+					_sci.sendEditor(QXSci.SCI_MARKERSETFORE,QXSci.SC_MARKNUM_FOLDER,colorConfig.getFolderForeColor());
+					_sci.sendEditor(QXSci.SCI_MARKERSETBACK,QXSci.SC_MARKNUM_FOLDER,colorConfig.getFolderBackColor());
+					
+					_sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDEROPEN, QXSci.SC_MARK_BOXMINUS); 
+					setMarginColor(QXSci.SC_MARKNUM_FOLDEROPEN,colorConfig.getFolderOpenForeColor(), colorConfig.getFolderOpenBackColor());
+					
+					_sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDEREND,  QXSci.SC_MARK_BOXPLUSCONNECTED);
+					setMarginColor(QXSci.SC_MARKNUM_FOLDEREND,colorConfig.getFolderEndForeColor(), colorConfig.getFolderEndBackColor());
+					
+					_sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDEROPENMID, QXSci.SC_MARK_BOXMINUSCONNECTED);
+					setMarginColor(QXSci.SC_MARKNUM_FOLDEROPENMID,colorConfig.getFolderMidForeColor(), colorConfig.getFolderMidBackColor());
+					
+					_sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDERMIDTAIL, QXSci.SC_MARK_TCORNER);
+					setMarginColor(QXSci.SC_MARKNUM_FOLDERMIDTAIL,colorConfig.getFolderMidTailForeColor(), colorConfig.getFolderMidTailBackColor());
+					
+					_sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDERSUB, QXSci.SC_MARK_VLINE); 
+					setMarginColor(QXSci.SC_MARKNUM_FOLDERSUB,colorConfig.getFolderSubForeColor(), colorConfig.getFolderSubBackColor());
+					
+					_sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDERTAIL, QXSci.SC_MARK_LCORNER);
+					setMarginColor(QXSci.SC_MARKNUM_FOLDERTAIL,colorConfig.getFolderTailForeColor(), colorConfig.getFolderTailBackColor());
+				}else{
+					_sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, MARGIN_FOLD_INDEX, 0); //页边宽度
+				}
+            }
+        }
+        
+        if (updatesuccess == false){
+			_sci.setIndicForeColor(1, 0xff00ffff);
+			_sci.setIndicUnderColor(1, 0x7f00ffff);
+			syntaxForXlang();
+        }
+        
+        _sci.setIndicCurrent(1);  
     }
     
     void syntaxForXlangDark(){
@@ -1631,7 +1926,7 @@ class XSourceEditor : QXMdiSubWindow{
 
 		while (iterator.hasNext()){
 			XSourceEditor wnd = iterator.getValue();
-			wnd.syntaxForXlang();
+			wnd.updateSyntax();
 			iterator.next();
 		}
     }
@@ -1818,7 +2113,7 @@ class XSourceEditor : QXMdiSubWindow{
     }
     
     void setFilePath(String file){
-		filePath = file;
+		filePath = String.formatPath(file,false).replace("\\","/");
         szTitle = filePath.findFilenameAndExtension();
         updateTitle();
     }
@@ -1890,7 +2185,7 @@ class XSourceEditor : QXMdiSubWindow{
                 String content = new String(data);
                 _sci.setText(content);
                 removeFromMap(filePath);
-                filePath = file;
+                filePath = String.formatPath(file,false).replace("\\","/");
                 _sci.setSavePoint();
                 addToMap(filePath);
 				_sci.clearUndo();
@@ -1991,7 +2286,7 @@ class XSourceEditor : QXMdiSubWindow{
                 removeAllModified();
         
                 removeFromMap(filePath);
-                filePath = path;
+                filePath = String.formatPath(path,false).replace("\\","/");
                 addToMap(filePath);
                 
                 updateTitle();
@@ -2050,14 +2345,14 @@ class XSourceEditor : QXMdiSubWindow{
     static void removeBreak(XStackInfor.BreakPosition bp){
 		XSourceEditor wnd = findDocumentWindow(nilptr, bp.file, false);
 		if (wnd != nilptr){
-			wnd.breakOn(bp.line, bp.row, false, bp.active);
+			wnd.breakOn(bp.line, bp.row, false, bp.active, false);
 		} 
     }
     
-    static void setBreak(XStackInfor.BreakPosition bp){
+    static void setBreak(XStackInfor.BreakPosition bp, bool onlyActive){
 		XSourceEditor wnd = findDocumentWindow(XWorkspace.workspace, bp.file, bp.active);
 		if (wnd != nilptr){
-			wnd.breakOn(bp.line, bp.row, true, bp.active);
+			wnd.breakOn(bp.line, bp.row, true, bp.active, onlyActive);
 		}else{
 			if (QXMessageBox.Question("提示", "无法找到该位置的源代码文件,是否浏览文件?", QXMessageBox.Yes | QXMessageBox.No , QXMessageBox.No ) == QXMessageBox.Yes){
 				String filename = bp.file.findFilenameAndExtension();
@@ -2068,7 +2363,7 @@ class XSourceEditor : QXMdiSubWindow{
 				if (file != nilptr && file.length() > 0){
 					wnd = findDocumentWindow(XWorkspace.workspace, file, bp.active);
                     if (wnd != nilptr){
-						wnd.breakOn(bp.line, bp.row, true, bp.active);
+						wnd.breakOn(bp.line, bp.row, true, bp.active, onlyActive);
                         updateDocumentTo(file, bp.file);
                     }
 				}

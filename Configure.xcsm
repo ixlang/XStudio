@@ -119,8 +119,41 @@ class Configure{
 		bModified = true;
     }
     
+    void setLinks(String text){
+		String [] paths = text.split(';');
+        JsonArray libpath = new JsonArray();
+        for (int i = 0; i < paths.length; i++){
+			if (paths[i].length() > 0){
+				libpath.put(paths[i]);
+            }
+        }
+        root.remove("links");
+        root.put("links", libpath);
+		bModified = true;
+    }
+    
     String getLibs(){        
         JsonArray libpath = (JsonArray)root.get("libs");
+        if (libpath == nilptr){
+			return "";
+        }
+        
+        String out = "";
+        for (int i = 0; i < libpath.length(); i++){
+			String path = libpath.getString(i);
+            if (path != nilptr && path.length() > 0){
+				if (out.length() > 0){
+					out = out + ";";
+                }
+				out = out + path;
+            }
+        }
+        
+        return out;
+    }
+    
+    String getLinks(){        
+        JsonArray libpath = (JsonArray)root.get("links");
         if (libpath == nilptr){
 			return "";
         }
@@ -168,6 +201,43 @@ class Configure{
         if (libs == nilptr){
 			libs = new JsonArray();
             root.put("libs", libs);
+        }else{
+			for (int i = 0; i < libs.length(); i++){
+				String path = libs.getString(i);
+				if (path != nilptr && path.length() > 0){
+					if (path.equals(lib)){
+						isHas = true;
+						break;
+					}else{
+						String filename = path.findFilename();
+						int pos = filename.lastIndexOf('_');
+						if (pos != -1){
+							String pname = filename.substring(0, pos);
+                            if (pname.equals(xpname)){
+								libs.remove(i);
+                            }
+                        }
+                    }
+				}
+			}
+        }
+        
+        if (isHas == false){
+			libs.put(lib);
+            bModified = true;
+            return true;
+        }
+        return false;
+    }
+    
+    bool addLink(String lib, String xpname, String xpver){
+		bool isHas = false;
+    
+        JsonArray libs = (JsonArray)root.get("links");
+        
+        if (libs == nilptr){
+			libs = new JsonArray();
+            root.put("links", libs);
         }else{
 			for (int i = 0; i < libs.length(); i++){
 				String path = libs.getString(i);
@@ -371,11 +441,13 @@ class Configure{
         root.put("paths", paths);
         
         //root.put("source", new JsonArray());
+        
         root.put("libs", new JsonArray());
+        root.put("links", new JsonArray());
         root.put("options", "");
-        root.put("command", "-cr");
-        root.put("outpath", "/out");
-        root.put("outname", projName + ".exe");
+        root.put("command", "-ce");
+        root.put("outpath", "$(ProjectDir)/$(Arch)/$(Configure)");
+        root.put("outname", "$(ProjectName)$(Ext)");
         
         project.put(name, root);
         
@@ -494,6 +566,12 @@ class Configure{
 				project.intelliSense.appendLib(lixname);
             }
         }
+        
+        /*if (addLink(lixname, xpname, version)){
+			if (project.intelliSense != nilptr){
+				project.intelliSense.appendLink(lixname);
+            }
+        }*/
         
         bool rt = false;
         

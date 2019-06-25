@@ -1,0 +1,46 @@
+//xlang 
+
+class XLANGPlugManager{
+
+	static IXStudioController xcontroller;
+
+	static class XLangPlugin : IXPlugin{
+		XTextEditor textPlugin = new XTextEditor();
+        
+		String getName(){
+			return "xlang";
+		}
+		
+		void onTextEditorCreated(TextEditorController editor){
+		
+		}
+		
+		void onTextEditorClosed(TextEditorController editor){
+		
+		}
+		
+		bool initializPlusin(IXStudioController controller){
+			xcontroller = controller;
+            return true; 
+		}
+        
+        TextEditorPlugin getTextEditorPlugin(){
+			return textPlugin;
+        }
+        
+        IProject loadProject(JsonObject content, String lang){
+			return nilptr;
+        }
+	};
+    
+    static void output(String text){
+		if (xcontroller != nilptr){
+			xcontroller.getWorkspace().output(text);
+        }
+    }
+};
+
+
+void _entry(int moduleId, int xvmVer){
+    PluginManager.registryPlugins(new XLANGPlugManager.XLangPlugin());
+}

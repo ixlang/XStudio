@@ -142,7 +142,7 @@ class XStackInfor : QXDockWidget{
 					_listview.setItemText(fitem, 3, sf.source);
 					
 					if (i == 0){
-					
+                        
 						BreakPosition bp = new BreakPosition(sf.source, sf.line, sf.row, bLocate);
 					
 						Map.Iterator<int, BreakPosition> iter = breakList.find(to.id);
@@ -150,17 +150,18 @@ class XStackInfor : QXDockWidget{
 							BreakPosition old_bp = iter.getValue();
 							
 							if (old_bp.file.equals(sf.source) && old_bp.line == sf.line && old_bp.row == sf.row){
-								continue ;
+								if (old_bp.active == false){
+									XSourceEditor.setBreak(bp, true);
+                                }
+								continue;
+								//onlyActive = true;
 							}else{
 								XSourceEditor.removeBreak(iter.getValue());
+                                iter.setValue(bp);
 							}
-							
-							iter.setValue(bp);
-						}else{
-							breakList.put(to.id ,bp);
 						}
-						
-						XSourceEditor.setBreak(bp);
+						breakList.put(to.id ,bp);
+						XSourceEditor.setBreak(bp, false);
 						ThreadManager.setCurrentThread(to.id, 0);
 					}
 				}

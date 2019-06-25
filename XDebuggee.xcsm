@@ -38,7 +38,8 @@ class XDebuggee{
         Debug = 26,
         QueryObject = 27,
         GcDump = 28,
-        QueryByName = 29;
+        QueryByName = 29,
+        ModuleLoaded = 30;
            
     bool isDebugging = false;
      
@@ -290,6 +291,16 @@ class XDebuggee{
             threadObject.remove(Thread.getId());
         }
         return qt.object;
+    }
+    
+    void onLoadModule(JsonObject json){
+		String module = json.getString("module");
+        bool bSymbol = json.getBool("symbol");
+        
+        XWndOutput.Output(module + (bSymbol ? " 已加载调试信息.\n" : " 未找到调试信息.\n"));
+        
+		BreakPointWnd.SendBreakPoint();
+        sendCommand(ModuleLoaded, 0, new byte[0], 0);
     }
     
     void onQueryByName(JsonObject json){
@@ -614,6 +625,10 @@ class XDebuggee{
             
             case QueryByName:
 				onQueryByName(json);
+            break;
+            
+            case ModuleLoaded:
+				onLoadModule(json);
             break;
         }
     }

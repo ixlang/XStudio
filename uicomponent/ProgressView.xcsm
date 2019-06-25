@@ -185,7 +185,7 @@ class ProgressView : QXWidget{
 	
 	void onDraw(QXPainter canvas) {
 		
-		canvas.setPen(0, 0, 0);
+		canvas.setPen(0, QXPainter.PenStyle.NoPen, 0);
         
 		double padding = dip2px(5);
 		QXPainter.Paint paint = new QXPainter.Paint();

@@ -1,0 +1,13 @@
+{
+	"exports":	[
+		"SyntaxHighlighting", 
+		"WorkspaceController", 
+		"IXStudioController", 
+		"TextEditorController", 
+		"TextEditorPlugin", 
+		"IXPlugin",
+        "PluginManager",
+        "IProject",
+        "IConfigure"
+				]
+}

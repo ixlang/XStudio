@@ -1,8 +1,8 @@
 
 class XlangProjectProp : ProjectPropInterface{
 
-    static const String _compile_path = ("bin/xcross.exe");
-	static const String _compile_path_linux = ("bin/xcross");
+    static const String _compile_path = ("bin/xlang.exe");
+	static const String _compile_path_linux = ("bin/xlang");
     
     static const String warning = "警告:";
     static const String error = "错误:";
@@ -120,10 +120,18 @@ class XlangProjectProp : ProjectPropInterface{
                 configure.setOption("command", "-lix -c");
                 return true;
             }
+            if (value.equals("xlang 共享库(-slx -c)")){
+                configure.setOption("command", "-slx -c");
+                return true;
+            }
+            if (value.equals("xlang 链接库(-xl -c)")){
+                configure.setOption("command", "-xl -c");
+                return true;
+            }
             return false;
         }
         if (key.equals("wtype")){
-			if (value.equals("当前开发环境")){
+			if (value.equals("缺省")){
 				configure.setOption("wtype", "");
             }else{
 				configure.setOption("wtype", value);
@@ -131,7 +139,7 @@ class XlangProjectProp : ProjectPropInterface{
 			return true;
         }
         if (key.equals("ostype")){
-			if (value.equals("当前操作系统")){
+			if (value.equals("缺省")){
 				configure.setOption("ostype", "");
             }else{
 				configure.setOption("ostype", value);
@@ -161,6 +169,10 @@ class XlangProjectProp : ProjectPropInterface{
             configure.setLibs(value);
             return true;
         }
+        if (key.equals("links")){
+            configure.setLinks(value);
+            return true;
+        }
         if (key.equals("incspath")){
             configure.setIncsPath(value);
             return true;
@@ -174,6 +186,10 @@ class XlangProjectProp : ProjectPropInterface{
         }
         if (key.equals("cmd")){
             configure.setOption("cmd", value);
+            return true;
+        }
+        if (key.equals("acmd")){
+            configure.setOption("acmd", value);
             return true;
         }
         if (key.equals("arglist")){
@@ -233,6 +249,14 @@ class XlangProjectProp : ProjectPropInterface{
             }
             return true;
         }
+        if (key.equals("compdest")){
+            if (value.equals("禁用(nilptr)")){
+                configure.setOption("compdest", "");
+            }else{
+                configure.setOption("compdest", "-z");
+            }
+            return true;
+        }
         return true;
     }
         
@@ -267,6 +291,12 @@ class XlangProjectProp : ProjectPropInterface{
             if (type.equals("-lix -c")){
                 return "2";
             }
+            if (type.equals("-slx -c")){
+                return "3";
+            }
+            if (type.equals("-xl -c")){
+                return "4";
+            }
             return "未知";
         }
         if (key.equals("wtype")){
@@ -289,7 +319,7 @@ class XlangProjectProp : ProjectPropInterface{
             if (type.equals("-arch:mips")){
                 return "5";
             }
-            return "未知";
+            return type;
         }
         if (key.equals("ostype")){
             String type = configure.getOption("ostype");
@@ -305,13 +335,16 @@ class XlangProjectProp : ProjectPropInterface{
             if (type.equals("-xcross-darwin")){
                 return "3";
             }
-            return "未知";
+            return type;
         }
         if (key.equals("libspath")){
             return configure.getLibsPath();
         }
         if (key.equals("libs")){
             return configure.getLibs();
+        }
+        if (key.equals("links")){
+            return configure.getLinks();
         }
         if (key.equals("incspath")){
             return configure.getIncsPath();
@@ -327,6 +360,9 @@ class XlangProjectProp : ProjectPropInterface{
         }
         if (key.equals("cmd")){
             return configure.getOption("cmd");
+        }
+        if (key.equals("acmd")){
+            return configure.getOption("acmd");
         }
         if (key.equals("arglist")){
             return configure.getOption("args");
@@ -368,6 +404,15 @@ class XlangProjectProp : ProjectPropInterface{
                 return "0";
             }
         }
+        if (key.equals("compdest")){
+            String options = configure.getOption("compdest");
+            if (options != nilptr && options.equals("-z")){
+                return "0";
+            }else{
+                return "1";
+            }
+        }
+        
         if (key.equals("debugable")){
             String options = configure.getOption("debugable");
             if (options != nilptr && options.equals("-dbg")){
@@ -568,7 +613,7 @@ class XlangProjectProp : ProjectPropInterface{
                 //String fname = srcname.findFilenameAndExtension();
                 
                 String fullsourcePath = String.formatPath(workDir.appendPath(srcname), false);
-                if (ext != nilptr && (ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm") || ext.equalsIgnoreCase(".version")) ){
+                if (ext != nilptr && (ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm") || ext.equalsIgnoreCase(".version") || ext.equalsIgnoreCase(".xdef")) ){
 					if (fixver){
 						if (ext.equalsIgnoreCase(".version")){
 							versionIncrement(builder, fullsourcePath);
@@ -632,26 +677,28 @@ class XlangProjectProp : ProjectPropInterface{
             if (arch.equals("-arch:mips")){
 				return archs[5];
             }else{
-				return archs[0];
+				if (arch.length() > 6){
+					return arch.substring(6,arch.length());
+                }
+				return arch;
             }
         }
     }
     
     String getArchArgs(Configure configure){
-		String [] archs = {"", "-arch:x86", "-arch:x86_64", "-arch:arm", "-arch:arm64", "-arch:mips"};
+		/*String [] archs = {"", "-arch:x86", "-arch:x86_64", "-arch:arm", "-arch:arm64", "-arch:mips"};
         
-		String arch = configure.getOption("wtype");
-        if (arch.equals("")){
+		String arch = configure.getOption("wtype");*/
+        /*if (arch.equals("")){
 			int aid = _system_.getArchId();
             
             if (aid <= 0 || aid > 5){
 				aid = 1;
             }
             return archs[aid];
-            
-        }else{
-			return arch;
-        }
+        }*/
+        
+		return configure.getOption("wtype");
     }
     
     String getXcrossName(Configure configure){
@@ -683,18 +730,22 @@ class XlangProjectProp : ProjectPropInterface{
         String ext = "";
         
 		if (ptype.equals("-ce")){
-			if (ostype.length() == 0 || ostype.equalsIgnoreCase("-xcross-windows")){
-				if (_system_.getPlatformId() == 0){
-					ext = ".exe";
-				}
+			if ((ostype.length() == 0 && _system_.getPlatformId() == 0) || ostype.equalsIgnoreCase("-xcross-windows")){
+				ext = ".exe";
 			}
 		}else
 		if (ptype.equals("-lix -c")){
 			ext = ".lix";
 		}else
+		if (ptype.equals("-slx -c")){
+			ext = ".slx";
+		}else
+        if (ptype.equals("-xl -c")){
+			ext = ".xl";
+		}else
 		if (ptype.equals("-c")){
 			ext = ".exc";
-		}      
+		}     
         
         
         text = text.replace("$(Ext)", ext);
@@ -723,6 +774,49 @@ class XlangProjectProp : ProjectPropInterface{
 		}
     }
     
+    void generateJsonArrayArgsMake(JsonArray incpath, Vector<String> args){
+		if (incpath != nilptr){
+			//String incs = "";
+            bool pushkey = false;
+			for (int i = 0; i < incpath.length(); i++){
+				String inc = incpath.getString(i);
+				if (inc != nilptr && inc.length() > 0){
+                    if (inc.indexOf(' ') != -1){
+						args.add("\"" + inc + "\"");
+                    }else{
+						args.add(inc);
+                    }
+				}
+			}
+		}
+    }
+    
+    void generatePathForMake(Configure configure, Vector<String> args){
+        if (configure.root == nilptr){
+			return ;
+        }
+        
+        JsonObject paths = (JsonObject)configure.root.get("path");
+        if (paths != nilptr){
+			JsonArray incpath = (JsonArray)paths.get("incpath");
+            JsonArray libpath = (JsonArray)paths.get("libpath");
+			generateJsonArrayArgsMake(incpath, args);
+            generateJsonArrayArgsMake(libpath, args);
+        }
+    }
+    
+    void generateLibsForMake(Configure configure, Vector<String> args, Vector<String> linkarg){
+        if (configure.root == nilptr){
+			return ;
+        }
+        
+        JsonArray libs = (JsonArray)configure.root.get("libs");
+        generateJsonArrayArgsMake(libs, args);
+        
+        JsonArray links = (JsonArray)configure.root.get("links");
+        generateJsonArrayArgsMake(links, linkarg);
+    }
+    
     void generatePath(Configure configure, Vector<String> args){
         if (configure.root == nilptr){
 			return ;
@@ -735,7 +829,6 @@ class XlangProjectProp : ProjectPropInterface{
 			generateJsonArrayArgs("-incpath", incpath, args);
             generateJsonArrayArgs("-libpath", libpath, args);
         }
-
     }
     
     void generateLibs(Configure configure, Vector<String> args){
@@ -745,43 +838,220 @@ class XlangProjectProp : ProjectPropInterface{
         
         JsonArray libs = (JsonArray)configure.root.get("libs");
         generateJsonArrayArgs("-lib", libs, args);
+        
+        JsonArray links = (JsonArray)configure.root.get("links");
+        generateJsonArrayArgs("-link", links, args);
     }
         
         
-    void checkOptions(Vector<String> args, Configure configure, String []key){
+    void checkOptions(Vector<String> args, Map<String,String> argmap, Configure configure, String []key){
 		for (int i =0; i < key.length; i++){
 			String option = configure.getOption(key[i]);
 			
 			if (option != nilptr && option.length() > 0){
-				args.add(option);
+				if (args != nilptr){
+					args.add(option);
+                }
+                if (argmap != nilptr){
+					argmap.put(key[i], option);
+                }
+                
 			}else
             if (key[i].equals("wtype")){
 				String wtype = getArchArgs(configure);
                 if (wtype.length() > 0){
-					args.add(wtype);
+					if (args != nilptr){
+						args.add(wtype);
+					}
+                    if (argmap != nilptr){
+						argmap.put(key[i], wtype);
+					}
                 }
             }else
             if (key[i].equals("ostype")){
 				String ostype = getXcrossName(configure);
                 if (ostype.length() > 0){
-					args.add(ostype);
+					if (args != nilptr){
+						args.add(ostype);
+					}
+                    if (argmap != nilptr){
+						argmap.put(key[i], ostype);
+					}
                 }
             }
         }
     }
     
+    
+    String getMapValue(Map<String,String> args, String key){
+		Map.Iterator<String,String> iter = args.find(key);
+        if (iter != nilptr){
+			return iter.getValue();
+        }
+        return "";
+    }
+    
+    String getVectorPath(Vector<String> libs , String key){
+		String output = "";
+		for (int i =0; i < libs.size(); i++){
+			output = output + " " + libs.get(i);
+        }
+        if (output.length() > 0){
+			return key + output;
+        }
+        
+        return output.replace("\\", "/");
+    }
+    
+    String generateMake(Project object, Configure configure){
+         
+        String workdir = object.projpath.findVolumePath();
+         
+		String file = _system_.getAppDirectory();
+		file = file.appendPath("config").appendPath(object.getLanguage() + ".mk");
+		
+		String template;
+		
+		try{
+			FileInputStream fis = new FileInputStream(file);
+			byte [] data = fis.read();
+			template = new String(data);
+			fis.close();
+		}catch(Exception e){
+			return nilptr;
+		}
+		
+		if (template == nilptr){
+			return nilptr;
+        }
+	
+        
+		Vector<String> libs = new Vector<String>();
+        Vector<String> links = new Vector<String>();
+        Vector<String> paths = new Vector<String>();
+
+		Map<String,String> args = new Map<String,String>();
+
+		String []options = {"ignorewarning", "debugdatabase", "debugable", "wtype", "ostype", "compdest"};
+        
+		checkOptions(nilptr, args, configure, options);
+        
+        //路径变量
+        generatePathForMake(configure, paths);
+                
+        //外部库
+        generateLibsForMake(configure, libs, links);
+        
+        args.put("acmd",map_variable(object, configure, configure.getOption("acmd")));
+               
+        String uac = configure.getOption("uaclevel");
+        if (uac.length() > 0){
+			if (uac.equals("管理员(-uac-admin)")){
+				args.put("uac", "-uac-admin");
+            }else
+            if (uac.equals("最高级别(-uac-highest)")){
+				args.put("uac", "-uac-highest");
+            }
+        }
+        
+        String icofile = object.getOption("icofile");
+        
+        if (icofile.length() > 0){
+            icofile = map_variable(object, configure, icofile).replace("\\", "/");
+			if (icofile.lastIndexOf(' ') != -1){ /* windows */
+				args.put("ico", "\"" + icofile + "\"");
+			}else{
+				args.put("ico", icofile);
+			}
+        }
+        
+        args.put("output",String.formatPath(map_variable(object, configure, configure.getOption("outpath").appendPath(configure.getOption("outname"))), false)
+			.toRelativePath(workdir,true)
+			.replace("\\", "/"));
+        
+        JsonArray sources = object.getSources();
+		
+        String sourcesText = "";
+        
+        String command = configure.getOption("command");
+        
+		for (int i = 0; i < sources.length(); i++){
+			String srcname = sources.getString(i);
+			String ext = srcname.findExtension();
+			String fname = srcname.findFilenameAndExtension();
+			
+			String fullsourcePath = String.formatPath(workdir.appendPath(srcname), false);
+            
+			fullsourcePath = fullsourcePath.toRelativePath(workdir,true).replace("\\", "/");
+            
+			if (ext != nilptr && (ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm") || ext.equalsIgnoreCase(".version")) ){
+				if (fullsourcePath.indexOf(' ') != -1){
+					fullsourcePath = "\"" + fullsourcePath + "\"";
+                }
+				if (sourcesText.length() != 0){
+					sourcesText = sourcesText + " \\\n\t" + fullsourcePath;
+                }else{
+					sourcesText = fullsourcePath;
+                }
+			}
+		}
+        
+		String xflags = getMapValue(args, "ignorewarning") + " " +
+				getMapValue(args, "debugdatabase") +  " " +
+				getMapValue(args, "debugable") +  " " +
+				getMapValue(args, "compdest") +  " " +
+				getMapValue(args, "uac") +  " " +
+				getMapValue(args, "acmd");
+                
+         String output = getMapValue(args, "output");
+         
+         String icocmd = getMapValue(args, "ico");
+         
+         if (icocmd.length() > 0){
+			xflags = xflags + "-ico " + icocmd;
+         }
+         String xcross = getMapValue(args, "wtype") +  " " +
+				getMapValue(args, "ostype");
+                
+         String pathtext = getVectorPath(paths, "-libpath");
+         
+         String statictext = getVectorPath(libs, "-lib");
+         
+         String lxtext = getVectorPath(links, "-lx");
+         
+         return template.replace("${XFLAGS}", xflags)
+			.replace("${PLATFORM_ARCH}", xcross)
+			.replace("${OUTPUT}", output)
+            .replace("${LIBPATH}", pathtext)
+            .replace("${LX}", lxtext)
+            .replace("${LIBS}", statictext)
+            .replace("${SOURCES}", sourcesText)
+            .replace("${CMD}", command);
+    }
+    
     String [] generateBuildArgs(Vector<String> __args, Project object, Configure configure, BuildParams param){
         Vector<String> args = new Vector<String>();
 
-		String []options = {"ignorewarning", "debugdatabase", "debugable", "wtype", "ostype"};
+		String []options = {"ignorewarning", "debugdatabase", "debugable", "wtype", "ostype", "compdest"};
         
-		checkOptions(args, configure, options);
+		checkOptions(args, nilptr, configure, options);
 
         //路径变量
         generatePath(configure, args);
                 
         //外部库
         generateLibs(configure, args);
+
+		String acmd = map_variable(object, configure, configure.getOption("acmd"));
+        
+        if (acmd.length() > 0){
+			Vector<String> amcds = processArgs(acmd);
+            if (amcds != nilptr){
+				for (int i =0; i < amcds.size(); i++){
+					args.add(amcds.get(i));
+                }
+            }
+        }
 
 		String uac = configure.getOption("uaclevel");
         if (uac.length() > 0){
@@ -1652,7 +1922,7 @@ class XlangProjectProp : ProjectPropInterface{
         if (uuid.equals("f48d4411-6b02-4f8b-a961-23a2e079c55c")){
         // version
 			JsonObject json = new JsonObject();
-            json.put("FileVersion", "1.0.0.0");
+            json.put("FileVersion","1.0.0.0");
             json.put("ProductVersion", "1.0.0.0");
             
             json.put("ProductName", projectName);
@@ -1662,6 +1932,25 @@ class XlangProjectProp : ProjectPropInterface{
             json.put("LegalCopyright", "Copyright (C) 2018 X-Studio");
             
             json.put("FileDescription", projectName);
+            return json.toString(true).getBytes();
+        }else 
+        if (uuid.equals("ddd530a0-1573-44b7-9f6c-06642e3151ad")){
+        // version
+			JsonObject json = new JsonObject();
+            json.put("library",  project.getName() + ".slx");
+            
+            JsonArray export_def = new JsonArray();
+            
+            export_def.put("MyClass.subClass");
+            export_def.put("MyClass1");
+            
+            JsonArray hidden_def = new JsonArray();
+            
+            hidden_def.put("MyClass2.subClass");
+            hidden_def.put("MyClass3");
+            
+            json.put("exports",export_def);
+            json.put("hidden",hidden_def);
             
             return json.toString(true).getBytes();
         }
@@ -1777,6 +2066,9 @@ class XlangProjectProp : ProjectPropInterface{
         }
         if (uuid.equals("f48d4411-6b02-4f8b-a961-23a2e079c55c")){
 			return createNormalFileToProject(loader, projectName, projectDir, uuid, ownProject, addToProject, ".version");
+        }
+        if (uuid.equals("ddd530a0-1573-44b7-9f6c-06642e3151ad")){
+			return createNormalFileToProject(loader, projectName, projectDir, uuid, ownProject, addToProject, ".xdef");
         }
         
         if (userType.equals("example")){

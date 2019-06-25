@@ -107,15 +107,63 @@ class XProperites : QXDialog {
         );
     }
     
+
+    void mergeProp(JsonObject marjon, JsonObject extroot){
+		
+		String name = extroot.getName();
+		if (marjon.has(name)){
+			JsonObject marjonParent = (JsonObject)marjon.get(name);
+            JsonObject child = (JsonObject)extroot.child();
+            
+            if (extroot.has("type")){
+				String type = extroot.getString("type");
+                if (type != nilptr && type.equals("stringlist")){
+					JsonArray list = (JsonArray)marjonParent.get("list");
+                    JsonArray extlist = (JsonArray)extroot.get("list");
+                    
+                    for (int i =0; i < extlist.length(); i ++){
+						list.put(extlist.getString(i));
+                    }
+                }
+            }else{
+				while (child != nilptr){
+					mergeProp(marjonParent, child);
+					child = (JsonObject)child.next();
+				}
+            }
+		}else{
+			marjon.put(name, (JsonObject)extroot.child());
+        }
+    }
+    
+    bool loadExtision(JsonObject marjon, String language){
+		String file = _system_.getAppDirectory();
+		file = file.appendPath("config").appendPath(getLanguage() + ".ext");
+		String content = readSlnPropFile(file);
+        if (content != nilptr){
+			JsonObject _extroot = new JsonObject(content);
+            
+            JsonObject child = (JsonObject)_extroot.child();
+            while (child != nilptr){
+				mergeProp(marjon, child);
+                child = (JsonObject)child.next();
+            }
+            
+			return true;
+		}
+        return false;
+    }
+    
     bool loadProperites(String defaultFeature){
         _prop = ProjectPropManager.getForProject(getLanguage());
         
         if (_prop != nilptr){
-            String file = XPlatform.getAppDirectory();
+            String file = _system_.getAppDirectory();
             file = file.appendPath("config").appendPath(getLanguage() + ".prop");
             String content = readSlnPropFile(file);
             if (content != nilptr){
                 JsonObject _root = new JsonObject(content);
+                loadExtision((JsonObject)_root, getLanguage());
                 loadProperites((JsonObject)_root.child(), defaultFeature);
                 return true;
             }
@@ -245,12 +293,37 @@ class XProperites : QXDialog {
         String [] kv = name.split(':');
         QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
         JsonArray list = root.getArray("list");
-        String [] options = new String[list.length()];
-        for (int i = 0;i < options.length; i++){
+        
+        String selvalue = _prop.getValue(_project, _curconfig, kv[1]);
+		int count = list.length();
+        String addition = nilptr;
+        if (selvalue.isDigit() == false){
+			bool bfound = false;
+			for (int i = 0; i < list.length(); i++){
+				if (list.getString(i).equals(selvalue)){
+					selvalue = "" + i;
+                    bfound = true;
+                    break;
+                }
+            }
+            if (!bfound){
+				count++;
+                addition = selvalue;
+                selvalue = "" + list.length();
+            }
+        }
+        
+        String [] options = new String[count];
+        for (int i = 0;i < list.length(); i++){
             options[i] = list.getString(i);
         }
+        
+        if (addition != nilptr){
+			options[count - 1] = addition + "(未安装)";
+        }
+        
         item.setAttributeEnumNames(options);
-        item.setValue(_prop.getValue(_project, _curconfig, kv[1]));
+        item.setValue(selvalue);
         _propTable.addProperty(item);
         currentProps.put(kv[1], item);
     }

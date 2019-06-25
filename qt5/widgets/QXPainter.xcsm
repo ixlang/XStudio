@@ -16,50 +16,49 @@ class QXPainter{
 			Qt4CompatiblePainting = 0x20;
     };
     
-    static class CompositionMode {
-		static const int 
-			CompositionMode_SourceOver = 0,
-			CompositionMode_DestinationOver = 1,
-			CompositionMode_Clear = 2,
-			CompositionMode_Source = 3,
-			CompositionMode_Destination = 4,
-			CompositionMode_SourceIn =5,
-			CompositionMode_DestinationIn = 6,
-			CompositionMode_SourceOut = 7,
-			CompositionMode_DestinationOut = 8,
-			CompositionMode_SourceAtop = 9,
-			CompositionMode_DestinationAtop = 10,
-			CompositionMode_Xor = 11,
+    enum CompositionMode {
+			CompositionMode_SourceOver ,
+			CompositionMode_DestinationOver ,
+			CompositionMode_Clear ,
+			CompositionMode_Source ,
+			CompositionMode_Destination ,
+			CompositionMode_SourceIn,
+			CompositionMode_DestinationIn ,
+			CompositionMode_SourceOut ,
+			CompositionMode_DestinationOut ,
+			CompositionMode_SourceAtop ,
+			CompositionMode_DestinationAtop ,
+			CompositionMode_Xor ,
 
 			//svg 1.2 blend modes
-			CompositionMode_Plus = 12,
-			CompositionMode_Multiply = 13,
-			CompositionMode_Screen = 14,
-			CompositionMode_Overlay = 15,
-			CompositionMode_Darken = 16,
-			CompositionMode_Lighten = 17,
-			CompositionMode_ColorDodge = 18,
-			CompositionMode_ColorBurn = 19,
-			CompositionMode_HardLight = 20,
-			CompositionMode_SoftLight = 21,
-			CompositionMode_Difference = 22,
-			CompositionMode_Exclusion = 23,
+			CompositionMode_Plus ,
+			CompositionMode_Multiply ,
+			CompositionMode_Screen ,
+			CompositionMode_Overlay ,
+			CompositionMode_Darken ,
+			CompositionMode_Lighten ,
+			CompositionMode_ColorDodge ,
+			CompositionMode_ColorBurn ,
+			CompositionMode_HardLight ,
+			CompositionMode_SoftLight ,
+			CompositionMode_Difference ,
+			CompositionMode_Exclusion ,
 
 			// ROPs
-			RasterOp_SourceOrDestination = 24,
-			RasterOp_SourceAndDestination = 25,
-			RasterOp_SourceXorDestination = 26,
-			RasterOp_NotSourceAndNotDestination = 27,
-			RasterOp_NotSourceOrNotDestination = 28,
-			RasterOp_NotSourceXorDestination = 29,
-			RasterOp_NotSource = 30,
-			RasterOp_NotSourceAndDestination = 31,
-			RasterOp_SourceAndNotDestination = 32,
-			RasterOp_NotSourceOrDestination = 33,
-			RasterOp_SourceOrNotDestination = 34,
-			RasterOp_ClearDestination = 35,
-			RasterOp_SetDestination = 36,
-			RasterOp_NotDestination = 37;
+			RasterOp_SourceOrDestination ,
+			RasterOp_SourceAndDestination ,
+			RasterOp_SourceXorDestination ,
+			RasterOp_NotSourceAndNotDestination ,
+			RasterOp_NotSourceOrNotDestination ,
+			RasterOp_NotSourceXorDestination ,
+			RasterOp_NotSource ,
+			RasterOp_NotSourceAndDestination ,
+			RasterOp_SourceAndNotDestination ,
+			RasterOp_NotSourceOrDestination ,
+			RasterOp_SourceOrNotDestination ,
+			RasterOp_ClearDestination ,
+			RasterOp_SetDestination ,
+			RasterOp_NotDestination 
     };
     
     static class Paint{
@@ -93,19 +92,18 @@ class QXPainter{
         }
     };
     
-    static class PenStyle{
-		static const int       
+    enum PenStyle{   
 		/** @pen style
         
         */
-		NoPen = 0,
-        SolidLine = 1,
-        DashLine = 2,
-        DotLine = 3,
-        DashDotLine = 4,
-        DashDotDotLine = 5,
-        CustomDashLine = 6,
-        MPenStyle = 7;
+		NoPen ,
+        SolidLine ,
+        DashLine ,
+        DotLine ,
+        DashDotLine ,
+        DashDotDotLine ,
+        CustomDashLine ,
+        MPenStyle 
     }; 
         /** @bgm mode
         
@@ -183,11 +181,11 @@ class QXPainter{
 		QXNative.widget_set_vint_value(hpaint, QXCore.PAINTFONTPXSIZE, size);
     }
     
-    void setPen(int color, int penStyle, double width){
+    void setPen(int color, PenStyle penStyle, double width){
 		QXNative.widget_set_v2int_double_value(hpaint, QXCore.SETPEN, color, width, penStyle);
     }
     
-    void setBrush(int color, int brushStyle){
+    void setBrush(int color, QXBrush.Style brushStyle){
 		QXNative.widget_set_v2int_value(hpaint, QXCore.SETBRUSH, color, brushStyle);
     }
     
@@ -331,7 +329,7 @@ class QXPainter{
     int descent(){
 		return QXNative.widget_get_int_value(hpaint, QXCore.PAINTFONTDESCENT);
     }
-    void setCompositionMode(int flag){
+    void setCompositionMode(CompositionMode flag){
 		QXNative.widget_set_int_bool_value(hpaint, QXCore.SETCOMPOSITIONMODE, flag, false);
     }
     

@@ -258,7 +258,7 @@ class XWndOutput: QXDockWidget{
                         if (lp != -1){
 							int le = lineText.indexOf(',', lp);
 							int rp = lineText.indexOf(':', lp + 1);
-                            if (rp != -1){
+                            if (rp != -1 && le != -1){
 								int re = lineText.indexOf(')', lp);
 								String file = lineText.substring(0, pos).trim(true);
                                 int tl = lineText.substring(lp + 1, le).parseInt();

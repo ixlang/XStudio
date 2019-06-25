@@ -58,6 +58,16 @@ class XIntelliSense{
 							}
 						}
 					}
+                    
+                    JsonArray links = (JsonArray)configure.root.get("links");
+					if (links != nilptr){
+						for (int i = 0; i < links.length(); i++){
+							String var = links.getString(i);
+							if (var != nilptr){
+								addLink(handle, XPlatform.converToPlatformCharSet(var));
+							}
+						}
+					}
 				}
 				for (int i =0; i < c; i++){ 
 					String source = project.getSourcePath(i);
@@ -84,6 +94,14 @@ class XIntelliSense{
 		synchronized(this){
 			if (handle != 0){
 				addLib(handle, XPlatform.converToPlatformCharSet(path));
+			}
+		}
+    }
+    
+    void appendLink(String path){
+		synchronized(this){
+			if (handle != 0){
+				addLink(handle, XPlatform.converToPlatformCharSet(path));
 			}
 		}
     }
@@ -255,6 +273,7 @@ class XIntelliSense{
 		bool cdecl addIncPath(long h, String path);
 		bool cdecl addLibPath(long h, String path);
 		bool cdecl addLib(long h, String path);
+        bool cdecl addLink(long h, String path);
 		String cdecl XgetStructMap(long h, bool bv);
 		void cdecl genIntelliSense(long h);
         //void cdecl test(long h);

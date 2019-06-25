@@ -56,7 +56,7 @@ class XFindDlg : QXDialog {
     static bool s_whole = false;
     static bool s_regex = false;
     static bool s_forward = false;
-    static bool s_warp = false;
+    static bool s_warp = true;
     
     void saveStatus(){
 		s_scope = findscope.getCurrentIndex();

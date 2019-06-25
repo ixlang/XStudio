@@ -57,7 +57,7 @@ class XIndexWindow : QXMdiSubWindow{
             lblexamples.setOnMouseEventListener(new onMouseEventListener(){
 				void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source){
 					if (Button == 1){
-						QXCore.openUrl("http://xlang.vsylab.com/examples");
+						QXCore.openUrl("http://xlang.link/examples.html");
 					}
 				}
 			});

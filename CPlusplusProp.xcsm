@@ -26,6 +26,9 @@ class CPlusplusProp : ProjectPropInterface{
         }
     }
     
+    String generateMake(Project object, Configure configure)override{
+		return nilptr;
+    }
 	void Run(IBuilder builder, Project proj, Configure conf) override {
 
 	}

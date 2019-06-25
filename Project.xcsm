@@ -11,6 +11,7 @@ class Project{
     String projDir;
     ProjectPropInterface _propinterface;
     XIntelliSense intelliSense;
+    IXPlugin projectPlugin;
     Variables variables = new Variables();
     Configure currentConfig;
     Object buildlock = new Object();
@@ -212,8 +213,7 @@ class Project{
     }
     
     bool build(Builder _builder, BuildListener l, XlangProjectProp. BuildParams params){
-        
-        
+    
 		synchronized(buildlock){
 			if (build_thread == nilptr){
             
@@ -302,7 +302,8 @@ class Project{
             }
             variables.setVariable("$(ProjectName)", projectName);
             variables.setVariable("$(ProjectLanguage)", languageConf);
-            _propinterface = ProjectPropManager.getForProject(getLanguage());
+            _propinterface = ProjectPropManager.getForProject(languageConf);
+            projectPlugin = PluginsController.getPlugin(languageConf);
             if (_propinterface != nilptr){
                 return true;        
             }else{
@@ -413,7 +414,6 @@ class Project{
         try{
             fos = new FileOutputStream(projpath);
         }catch(Exception e){
-        
             
         }
         
@@ -455,9 +455,7 @@ class Project{
         
         for (int i = 0; i < c; i ++){
 			String source = String.formatPath(getSourcePath(i), false);
-            
             String filerelaPath = source.toRelativePath(projDir, true);
-            
             String[] sp = filerelaPath.split(slash);
             
             String dir = "";
@@ -592,7 +590,6 @@ class Project{
         try{
             fos = new FileOutputStream(path);
         }catch(Exception e){
-        
             
         }
         
@@ -621,7 +618,7 @@ class Project{
 	}
     
 	String getFullPath(String source_path){
-        String fullpath = String.formatPath(source_path.toAbsolutePath(getProjectDir()), false);
+        String fullpath = String.formatPath(source_path.toAbsolutePath(getProjectDir()), false).replace("\\", "/");
         
         String finalpath;
         
@@ -684,7 +681,6 @@ class Project{
     bool isModified(){
         if (bModified == false){
             Map.Iterator<String, Configure> iter = configures.iterator();
-            
             while (iter.hasNext()){
 				if (iter.getValue().isModified()){
 					return true;
@@ -728,7 +724,6 @@ class Project{
 				while ((rd = zf.read(data, 0, 1024)) > 0){
 					text = text + (new String(data, 0, rd));
 				}
-                
                 text = text + "\n################################# README.END #################################\n\n\n";
                 XWndOutput.Output(text);
                 zf.close();

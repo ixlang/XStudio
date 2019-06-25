@@ -16,6 +16,7 @@ class ArgsProcessor{
     ArgsProcessor(String []_arg) {
 		args = _arg;
         if (args.length > 1){
+	//		__XInterrupt(0);
 			if (args[1].equals("-installpkg")){
 				cmd = CMD_INSTXP;
             }else
@@ -98,6 +99,15 @@ class QxApp : QXApplication{
     void finalize()override{
 		super.finalize();
     }
+    
+    IXStudioController _xstudio_controller = new IXStudioController(){
+		WorkspaceController getWorkspace()override{
+			if (_mdispace != nilptr){
+				return _mdispace.getController();
+            }
+            return nilptr;
+        }
+    };
     
     Object onCreateXObject(long object, String objectClass){
         if (objectClass.equals("QMdiArea")){
@@ -244,13 +254,32 @@ class QxApp : QXApplication{
 		}catch(Exception e){
 		 
 		}
-		   
+        
+		loadPlusins();
+        
 		_mdispace.openIndexPage();
         processArgs();
         Setting.applySetting();
         return true;  
     }
  
+	void loadPlusins(){
+		FileSystem.File fp = new FileSystem.File(_system_.getAppDirectory().appendPath("plugins"));
+        List<FileSystem.File> plugins = fp.listFiles();
+        if (plugins != nilptr){
+			List.Iterator<FileSystem.File> iter = plugins.iterator();
+            while (iter.hasNext()){
+				FileSystem.File pfile = iter.next();
+                try{
+					_system_.loadLibrary(pfile.getPath());
+                }catch(Exception e){
+                
+                }
+            }
+        }
+        
+        PluginsController.initPlugins(_xstudio_controller);
+    }
  
 	bool preprocessArgs(){
 		if (_appargs.length > 1){
@@ -279,58 +308,60 @@ class QxApp : QXApplication{
         } 
         return false;
     }  
-};
     
     
-void runConsoleBuild(ArgsProcessor argspro){
-	_system_.createConsole();
+	static void runConsoleBuild(ArgsProcessor argspro){
+		_system_.createConsole();
 
-    if (argspro.parse()){
-        Project proj = new Project();
-		Builder _builder = new Builder(true);
-        ProjectPropManager.registryAllProp();
-        
-		if (proj.loadWorkspace(argspro.project, true)){
-        
-			if (argspro.configure != nilptr){
-				if (false == proj.setCurrentConfigure(argspro.configure, false)){
-					_system_.consoleWrite(XPlatform.converToPlatformCharSet( "\n项目不包含配置:" + argspro.configure) + "\n");
-                    return ;
-                }
-            }
-            
-            if (argspro.targetpath != nilptr){
-				proj.currentConfig.setOption("outpath", argspro.targetpath);
-            }
-            if (argspro.arch != nilptr){
-				proj.currentConfig.setOption("wtype", "-arch:" + argspro.arch);
-            }
-            if (argspro.xcross != nilptr){
-				proj.currentConfig.setOption("ostype", "-xcross-" + argspro.xcross);
-            }
-                        
-			proj.thread_build(_builder, new BuildListener(){
-				void onBuild(bool success)override{
-					_system_.consoleWrite(XPlatform.converToPlatformCharSet( "\n组建" + (success?"已执行." : "未能执行.") + "\n"));
+		if (argspro.parse()){
+			Project proj = new Project();
+			Builder _builder = new Builder(true);
+			ProjectPropManager.registryAllProp();
+			
+			if (proj.loadWorkspace(argspro.project, true)){
+			
+				if (argspro.configure != nilptr){
+					if (false == proj.setCurrentConfigure(argspro.configure, false)){
+						_system_.consoleWrite(XPlatform.converToPlatformCharSet( "\n项目不包含配置:" + argspro.configure) + "\n");
+						return ;
+					}
 				}
+				
+				if (argspro.targetpath != nilptr){
+					proj.currentConfig.setOption("outpath", argspro.targetpath);
+				}
+				if (argspro.arch != nilptr){
+					proj.currentConfig.setOption("wtype", "-arch:" + argspro.arch);
+				}
+				if (argspro.xcross != nilptr){
+					proj.currentConfig.setOption("ostype", "-xcross-" + argspro.xcross);
+				}
+							
+				proj.thread_build(_builder, new BuildListener(){
+					void onBuild(bool success)override{
+						_system_.consoleWrite(XPlatform.converToPlatformCharSet( "\n组建" + (success?"已执行." : "未能执行.") + "\n"));
+					}
 
-			},nilptr);
+				},nilptr);
+			}
 		}
-    }
-}
-       
-int main(String [] args){  
-    _system_.chdir( _system_.getAppDirectory());
-    ArgsProcessor argspro = new ArgsProcessor(args);
-    if (argspro.getCommand() == ArgsProcessor.CMD_BUILD){
-		runConsoleBuild(argspro);
-        return 0;
-    }
-    QxApp app = new QxApp();
-	QxApp._appargs = args;
-    if (app.create()){
-        app.run();
-    }
-    app = nilptr; 
-    return 0;
-}
+	}
+		
+	static int main(String [] args){  
+		_system_.chdir( _system_.getAppDirectory());
+		ArgsProcessor argspro = new ArgsProcessor(args);
+		if (argspro.getCommand() == ArgsProcessor.CMD_BUILD){
+			runConsoleBuild(argspro);
+			return 0;
+		}
+		QxApp app = new QxApp();
+		QxApp._appargs = args;
+		if (app.create()){
+			app.run();
+		}
+		app = nilptr; 
+		return 0;
+	}
+		   
+};
+

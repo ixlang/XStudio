@@ -12,5 +12,6 @@ interface ProjectPropInterface{
     void debugRun(IBuilder builder, Project proj, Configure conf);
     void Run(IBuilder builder, Project proj, Configure conf); 
 	void stopRun();
+    String generateMake(Project object, Configure configure);
 	bool create(WizardLoader loader, String projectName, String projectDir, String uuid, Project object, bool isAddToProject, String userType);
 };

@@ -66,10 +66,10 @@ class BreakPointWnd : ListDockWidget{
     
 	void sendBreakPoint(){
 		Map.Iterator<String,Map<int,BreakPointRequest>> iter = breakPoints.iterator();
-        while (iter.hasNext()){
+		while (iter.hasNext()){
 			applyBreakpoint(iter.getValue());
-            iter.next();
-        }
+			iter.next();
+		}
     }
     
     void applyBreakpoint(Map<int,BreakPointRequest> itemmap){
@@ -102,7 +102,7 @@ class BreakPointWnd : ListDockWidget{
         while (iter.hasNext()){
 			BreakPointRequest brp =  iter.getValue();
             
-			long item = list.addItem("res/toolbar/bp.png", "常规断点");
+			long item = list.addItem("res/toolbar/bps.png", "常规断点");
 			list.setItemText(item, 1, "-");
 			list.setItemText(item, 2, brp.file );
             
@@ -155,7 +155,6 @@ class BreakPointWnd : ListDockWidget{
     }
     
     String getListName()override{
-    
 		return "bplist";
     }
     
@@ -181,11 +180,41 @@ class BreakPointWnd : ListDockWidget{
 		 }
 	}
     
+    
+    void setBreakPointEnable(BreakPointRequest bpr, bool enabled){
+		QXTreeView list = getList();
+        
+        int count = list.getTopLevelCount();
+		for (int i = 0;i < count; i++){
+			long item = list.getTopItem(i);
+			String sfile = list.getItemText(item, 2);
+			String sline = list.getItemText(item, 3);
+            if (sfile.equals(bpr.file) && sline.parseInt() == bpr.reqline){
+				list.setItemIcon(item, 0, enabled ? "res/toolbar/bps.png" : "res/toolbar/bpsd.png");
+            }
+        }
+    }
+    
+    void invalidAllBreakpoint(){
+		QXTreeView list = getList();
+        
+        int count = list.getTopLevelCount();
+		for (int i = 0;i < count; i++){
+			long item = list.getTopItem(i);
+			list.setItemIcon(item, 0, "res/toolbar/bpsd.png");
+        }
+    }
+    
     void parseBreakPoint(BreakPointRequest bpr){
 		//QXTreeView list = getList();
-    
+		runOnUi( new Runnable(){
+			void run(){
+				setBreakPointEnable(bpr, bpr.error == 0);
+			}
+		});
+        
 		if (bpr.error != 0){
-			XWndOutput.outputWnd.output("无法在此位置切换断点:" + bpr.file + " 行:" + bpr.reqline + "\n");
+			//XWndOutput.outputWnd.output("无法在此位置切换断点:" + bpr.file + " 行:" + bpr.reqline + "\n");
             return ;
         }
         
