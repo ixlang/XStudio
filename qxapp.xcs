@@ -87,6 +87,7 @@ class QxApp : QXApplication{
     XMemoryWnd memoryWnd;
     XLogcatWnd logcatWnd;
     XWndObjectDump xDumpWnd;
+    MemoryLookupWnd memlookupWnd;
     
     static String [] _appargs;
     static QxApp _theApp;
@@ -126,6 +127,7 @@ class QxApp : QXApplication{
         autoWndInfo = (AutoWnd)mainWindow.attachByName(new AutoWnd(), "autoinfo");
         watchWndInfo = (WatchWnd)mainWindow.attachByName(new WatchWnd(), "watchinfo");
 		bpWndInfo = (BreakPointWnd)mainWindow.attachByName(new BreakPointWnd(), "bpinfo");
+        memlookupWnd = (MemoryLookupWnd)mainWindow.attachByName(new MemoryLookupWnd(), "memlookup");
         findWnd=  (XFindresWnd)mainWindow.attachByName(new XFindresWnd(), "findinfo");
         memoryWnd =  (XMemoryWnd)mainWindow.attachByName(new XMemoryWnd(), "memoryinfo");
         logcatWnd =  (XLogcatWnd)mainWindow.attachByName(new XLogcatWnd(), "wnd_log");
@@ -138,6 +140,7 @@ class QxApp : QXApplication{
         wndOutput.reconfig();
         XSourceEditor.reconfig();
         XMemoryWnd.reconfig();
+        memlookupWnd.reconfig();
     }
     
 	void loadConfig(){

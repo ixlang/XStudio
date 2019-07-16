@@ -176,6 +176,7 @@ class XWorkspace : QXMdiArea{
         QxApp._theApp.wndInfor.setVisible(bs[i++]);
 		QxApp._theApp.wndStack.setVisible(bs[i++]);
         QxApp._theApp.autoWndInfo.setVisible(bs[i++]);
+        QxApp._theApp.memlookupWnd.setVisible(bs[i++]);
         QxApp._theApp.watchWndInfo.setVisible(bs[i++]);
 		QxApp._theApp.bpWndInfo.setVisible(bs[i++]);
         QxApp._theApp.findWnd.setVisible(bs[i++]);
@@ -185,7 +186,7 @@ class XWorkspace : QXMdiArea{
     }
     
      static Object hideDocks(){
-		bool []bs = new bool[12];
+		bool []bs = new bool[13];
         int i = 0;
         
         bs[i++] = QxApp._theApp.wndclass.isVisible();
@@ -193,6 +194,7 @@ class XWorkspace : QXMdiArea{
         bs[i++] = QxApp._theApp.wndOutput.isVisible();
         bs[i++] = QxApp._theApp.wndInfor.isVisible();
 		bs[i++] = QxApp._theApp.wndStack.isVisible();
+        bs[i++] = QxApp._theApp.memlookupWnd.isVisible();
         bs[i++] = QxApp._theApp.autoWndInfo.isVisible();
         bs[i++] = QxApp._theApp.watchWndInfo.isVisible();
 		bs[i++] = QxApp._theApp.bpWndInfo.isVisible();
@@ -213,7 +215,8 @@ class XWorkspace : QXMdiArea{
         QxApp._theApp.memoryWnd.setVisible(false);
         QxApp._theApp.logcatWnd.setVisible(false);  
         QxApp._theApp.xDumpWnd.setVisible(false);      
-         
+        QxApp._theApp.memlookupWnd.setVisible(false);  
+        
         return bs;
     }
     
@@ -1206,6 +1209,7 @@ class XWorkspace : QXMdiArea{
     void prepareDebug(){
 		BreakPointWnd.bpWnd.invalidAllBreakpoint();
         AutoWnd.clear();
+        MemoryLookupWnd.reset();
         XStackInfor.reset();
     }
     
@@ -1338,6 +1342,7 @@ class XWorkspace : QXMdiArea{
 					XMenuManager.disableDebugMenu();
                 }
                 AutoWnd.clear();
+                MemoryLookupWnd.reset();
                 XStackInfor.reset();
             break;
             

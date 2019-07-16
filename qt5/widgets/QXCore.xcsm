@@ -362,7 +362,9 @@ class QXCore : QXNative{
         PATHCTOR = 359,
         DRAWPATH = 360,
         UPDATEENABLE = 361,
-        OPENMULTI = 362;
+        OPENMULTI = 362,
+        CLIPBOARDTEXT = 363,
+        CLIPBOARDIMAGE = 364;
         
     QXCore(){
     }
@@ -403,5 +405,23 @@ class QXCore : QXNative{
     }
     void Notify(long eventid){
         widget_set_native_value(nativehandle, XNOTIFY, eventid);
+    }
+    static void setClipboardText(String text){
+		widget_slot_string(0, CLIPBOARDTEXT, text);
+    }
+    static String getClipboardText(){
+		return (String)core_getString(0, CLIPBOARDTEXT);
+    }
+    static void setClipboardImage(QXImage img){
+		widget_set_native_value(0, CLIPBOARDIMAGE, img.himage);
+    }
+    static QXImage getClipboardImage(){
+		QXImage img = nilptr;
+		long handle = object_get_long_int(0, CLIPBOARDIMAGE, 0, 0);
+        if (handle != 0){
+			img = new QXImage();
+            img.himage = handle;
+        }
+		return img;
     }
 };

@@ -211,7 +211,11 @@ class XWndSln : QXDockWidget{
     
     String generateArgs(String arg){
 		if (_system_.getPlatformId() == 0){
-			arg = new String(arg.getBytes("GB18030//IGNORE"));
+			try{
+				arg = new String(arg.getBytes("GB18030//IGNORE"));
+            }catch(Exception e){
+            
+            }
         }
         return quotePath(arg);
     }

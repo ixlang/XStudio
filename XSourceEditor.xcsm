@@ -1060,6 +1060,11 @@ class XSourceEditor : QXMdiSubWindow{
 						switch(charadded){
 							case '(':
 								sci.insertText(position, ")");
+								/*if (sci.getChar(position) != ')'){
+									sci.insertText(position, ")");
+                                }else{
+									sci.gotoPos(position + 1);
+                                }*/
 								break;
 							case '[':
 								sci.insertText(position, "]");

@@ -388,10 +388,14 @@ class WatchWnd : ListDockWidget{
 			String objectId = valueroot.getString("object_id");
             
         	if (valueroot.has("length")){
+				String address = valueroot.getString("address");
 				String slength = valueroot.getString("length");
 				long lenitem = list.insertItem(item, nilptr, "length");
 				list.setItemText(lenitem, 1, "int");
 				list.setItemText(lenitem, 2, slength);
+                if (address != nilptr && (address.length() > 0)){
+					list.setItemText(item,2,address);
+                }
                 long length = slength.parseLong();
                 displayArray(list, item, objectId.parseLong(), 0,  length, getSplit(length), false);
             }else
@@ -481,7 +485,7 @@ class WatchWnd : ListDockWidget{
     }
     
     String [] getColumn()override{
-		String [] columns = {"名称", "类型", "值", "地址"};
+		String [] columns = {"名称", "类型", "值", "ID"};
         return columns;
     }
     

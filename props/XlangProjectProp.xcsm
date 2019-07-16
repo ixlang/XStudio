@@ -1524,7 +1524,11 @@ class XlangProjectProp : ProjectPropInterface{
             
 			String str = e.getMessage();
 			
-			builder.OutputText("\n错误:" + new String(str.getBytes(), "GB18030//IGNORE") + "\n");
+			if (_system_.getPlatformId() == 0){
+				builder.OutputText("\n错误:" + new String(str.getBytes(), "GB18030//IGNORE") + "\n");
+            }else{
+				builder.OutputText("\n错误:" + str + "\n");
+            }
         }finally{
 			XWorkspace.workspace.debugClose();
         }
@@ -1568,8 +1572,11 @@ class XlangProjectProp : ProjectPropInterface{
             }
         }catch(Exception e){
 			String str = e.getMessage();
-			
-			builder.OutputText("\n错误:" + new String(str.getBytes(), "GB18030//IGNORE") + "\n");
+			if (_system_.getPlatformId() == 0){
+				builder.OutputText("\n错误:" + new String(str.getBytes(), "GB18030//IGNORE") + "\n");
+            }else{
+				builder.OutputText("\n错误:" + str + "\n");
+            }
         }
     }
     
@@ -2035,7 +2042,9 @@ class XlangProjectProp : ProjectPropInterface{
 			uuid.equals("651c2524-d9a5-40e9-b6cf-3d480bc75631") || 
             uuid.equals("0ef0fe5d-5ab9-4d62-ab6a-ee78f059ad1e") || 
             uuid.equals("85384b44-719b-4aaa-8c8b-ad5ecec4201b") || 
-            uuid.equals("5e5ab583-973f-41cd-98cb-ac5208557f8b") )
+            uuid.equals("5e5ab583-973f-41cd-98cb-ac5208557f8b") ||
+            uuid.equals("48791fab-9225-4baf-a3e4-fe10f2d48a55") ||
+            uuid.equals("917e553d-0008-49db-83ca-d601b92c9ff3"))
         {
                         
 			if (Pattern.test(projectName, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true) == false){

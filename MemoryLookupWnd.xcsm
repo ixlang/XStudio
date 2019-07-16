@@ -1,0 +1,194 @@
+//xlang Source, Name:MemoryLookupWnd.xcsm 
+//Date: Tue Jul 16:39:20 2019 
+
+class MemoryLookupWnd : QXDockWidget{
+	QXLineEdit edtaddress;
+    QXPushButton btnLockup; 
+	HexEditor memcontent;
+    static MemoryLookupWnd memlookupWnd;
+    
+    static class caRegMixMath {
+
+		static class Express{
+			byte [] p;
+			int start;
+			int length;
+			
+            Express(String exp){
+				p = exp.getBytes();
+                start = 0;
+                length = exp.length();
+            }
+            
+			Express(byte [] _p,int _s,int _l){
+				p = _p;
+				start = _s;
+				length = _l;
+			}
+			
+			Express(Express p2) {
+				p = p2.p;
+				start = p2.start;
+				length = p2.length;	
+			}
+
+			char getChar(){
+				return p[start];
+			}
+			bool next(){
+				if (start < length - 1){
+					start++;
+					return true;
+				}
+				return false;
+			}
+			long atoi(){
+				int n = start;
+                bool bhex = false;
+                if (length > 1 && p[n] == '0' && p[n + 1] == 'x'){
+					bhex = true;
+                    n += 2;
+                }
+				while ((p[n] >= '0' && p[n] <= '9') || (p[n] >= 'a' && p[n] <= 'z' && bhex)){
+					n++;
+					if (n >= length){
+						break;
+					}
+				}
+				if (n > start){
+					if (bhex){
+						return new String(p, start, n - start).parseHex();
+                    }
+					return new String(p, start, n - start).parseLong();
+				}
+				return 0;
+			}
+
+			bool complete() {
+				return (length -1) == start;
+			}
+		};
+        
+        static long calc(String text){
+			return mixcalc(new Express(text), true, false);
+        }
+        
+		static long mixcalc(Express p,bool bmain, bool b) {
+			long result = 1;
+
+			while ( p.getChar() != '(' && false == (p.getChar() >= '0' && p.getChar() <= '9') && false == (p.getChar() >= 'a' && p.getChar() <= 'z')) { result *= (p.getChar() == '-' ? -1 : 1); p.next(); }
+
+			if (p.getChar() == '(') {
+				p.next();
+				result *= mixcalc(p, true, false);
+				p.next();
+			} else
+				if (p.getChar() != 0) {
+	
+					result *= p.atoi();
+					
+					while (((p.getChar() >= '0' && p.getChar() <= '9') || (p.getChar() >= 'a' && p.getChar() <= 'z'))) { 
+						if (p.next() == false){
+							break;
+						}
+					}
+				}
+
+			if (p.complete() || b || (bmain == false && (p.getChar() == '+' || p.getChar() == '-'))) { return result; }
+
+			do {
+				char ch = p.getChar();
+				switch (ch)
+				{
+					
+					case '+':
+						p.next();
+						result += mixcalc(p,  false, false); 
+					break;
+						
+					case '-':
+						p.next();
+						result -= mixcalc(p,  false, false); break;
+						
+					case '*':
+						p.next();
+						result *= mixcalc(p,  false, true); break;
+						
+					case '/':
+						p.next();
+						result /= mixcalc(p,  false, true); break;
+					case ')':
+					case '\0':
+					default:
+						return result; 
+				}
+				if (p.complete()){
+					break;
+				}
+			} while (((p.getChar() == '*' || p.getChar() == '/') && (b == false)) || (bmain == true));
+			return result;
+		}
+	};
+    
+    void dump(){
+		String addrtext = edtaddress.getText().replace(" ", "");
+		if (addrtext.length() > 0){
+			long address = caRegMixMath.calc(addrtext.lower());
+			XWorkspace.workspace.debuggee.lookupMemory(address, 512);
+		}
+    }
+	void onAttach(){
+		memlookupWnd = this;
+		edtaddress = (QXLineEdit)attachByName(new QXLineEdit(), "edtaddress");
+        btnLockup = (QXPushButton)attachByName(new QXPushButton(), "btnLockup");
+        memcontent = (HexEditor)attachByName(new HexEditor(), "memcontent");
+        
+        btnLockup.setOnClickListener(new onClickListener(){
+			void onClick(QXObject obj, bool checked)override{
+				dump();
+			}
+        });
+        
+        edtaddress.setOnKeyEventListener(new onKeyEventListener(){
+			bool onKeyPress(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier)override{
+				if (key == Key_Enter || key == Key_Return){
+					dump();
+                    return false;
+                }
+                return true;
+			}
+        });
+        memcontent.init();
+    }
+    
+    static void SetData(JsonObject json){
+		memlookupWnd.runOnUi(new Runnable(){
+			void run()override{
+				memlookupWnd.setData(json);
+            }
+        });
+    }
+    
+    static void reset(){
+    	memlookupWnd.runOnUi(new Runnable(){
+			void run()override{
+				memlookupWnd.memcontent.setData(nilptr, 0, 0, 0);
+            }
+        });
+    }
+    
+    void setData(JsonObject json){
+		String dataCont = json.getString("content");
+        String address =json.getString("address");
+        int requestlen = json.getInt("request");
+        int responselen = json.getInt("response");
+        
+        long offset = address.parseLong();
+        byte[] data = Base64.decodeString(dataCont);
+        memcontent.setData(data, offset, requestlen, responselen);
+    }
+    
+    void reconfig(){
+		memcontent.setStyle(Setting.isDarkStyle());
+    }
+};

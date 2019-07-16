@@ -375,9 +375,9 @@ class XMenuManager {
                 String buildtime = String.formatDate("%Y年%m月%d日", _system_.getAppTimestamp());
                 app.mainWindow.About("关于", 
                 "<Strong>XStudio(Xlang 集成开发环境) Release " + Utils.getAppVersion() + " </Strong><br /><br />" + 
-                 "开发语言: Xlang v2.3<br /><br />" + 
+                 "开发语言: Xlang v2.4<br /><br />" + 
                  "编译时间: " + buildtime + "<br /><br />" + 
-                 "<b>该软件使用xlang 2.3 开发, 软件全部源代码可在xlang的example中找到," + 
+                 "<b>该软件使用xlang 2.4 开发, 软件全部源代码可在xlang的example中找到," + 
                  "native部分为C++与Xlang的XNL项目(同样在example代码中), native项目仅有软件使用的部分调用," + 
                  "如需要用于其它开发需要修改native项目增加接口.</b><br /><br />" + 
                  "该软件的使用不受任何限制,可用于任意用途的修改或者发布.<br /><br />" + 
@@ -389,6 +389,7 @@ class XMenuManager {
                  "<em>	zlib-1.2.8</em><br />" +
                  "<em>	pcre-8.37</em><br />" +
                  "<em>	cJSON</em><br />" +
+                 "<em>	libmicrohttpd</em><br />" +
                  "<em>	rapidxml</em><br /><br />" +
                  "官方主页:<a href=\"http://xlang.link/\">http://xlang.link/</a><br /><br />" + 
                  "github项目首页:<a href=\"https://ixlang.github.io/\">https://ixlang.github.io/</a><br />" + 

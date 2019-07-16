@@ -10,21 +10,27 @@
 					"libpath":	["libs"]
 				},
 				"options":	"",
+				"prebuild":	"",
+				"preclean":	"",
+				"makebuild":	"",
+				"makeclean":	"",
+				"afterbuild":	"",
+				"afterclean":	"",
 				"cmd":	"$(Output)",
 				"args":	"$(Output)",
 				"workdir":	"$(ProjectDir)",
-				"libs":	[],
-				"links":	["XStudio1.xl"],
+				"ignorewarning":	"",
+				"compdest":	"-z",
+				"debugable":	"-dbg",
+				"debugdatabase":	"",
 				"wtype":	"",
 				"ostype":	"",
 				"outname":	"$(ProjectName)$(Ext)",
 				"outpath":	"D:\\Programs\\windows_x64\\plugins",
 				"command":	"-slx -c",
 				"uaclevel":	"默认",
-				"ignorewarning":	"",
-				"compdest":	"-z",
-				"debugable":	"-dbg",
-				"debugdatabase":	""
+				"libs":	[],
+				"links":	["XStudio1.xl"]
 			},
 			"release":	{
 				"path":	{
@@ -42,7 +48,7 @@
 				"workdir":	"$(ProjectDir)"
 			}
 		},
-		"icofile":	"",
-		"versioninc":	"0"
+		"versioninc":	"0",
+		"icofile":	""
 	}
 }

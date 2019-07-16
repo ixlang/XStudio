@@ -694,6 +694,7 @@ class Project{
     
     void debugRun(IBuilder builder){
 		XMemoryWnd.reset();
+        MemoryLookupWnd.reset();
         _propinterface.debugRun(builder, this, currentConfig);
     }
     

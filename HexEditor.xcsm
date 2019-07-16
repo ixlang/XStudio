@@ -1,0 +1,369 @@
+//xlang Source, Name:HexEditor.xcsm 
+//Date: Wed May 19:00:42 2019 
+
+class HexEditor : QXWidget{
+
+	QXPainter.Paint linepaint = new QXPainter.Paint(), 
+		hexfont = new QXPainter.Paint(),
+        hexfonthl = new QXPainter.Paint();
+    //QXMainWindow workspace;
+    int currentposition = 0;
+    int mouseposition = -1;
+	byte [] hexdata ;
+	byte [] old_hexdata ;
+    int sel_start, sel_end;
+
+    bool hilightCaret = false;
+    bool hex_offset = true;
+    QXRect fontsize;
+    
+    int fontwidth = 20, fontheight = 20;
+    int line_padding = 2;
+    int lineheight = 20;
+    int hexwidth = 24;
+    int asciiwidth = 0;
+    int hexpadding = 10;
+    int asciipadding = 2;
+    int topbegin = 48;
+    long baseOffset = 0;
+    
+    int backColor = 0xff252526;
+    
+    
+    int hex_left = 120, 
+					hex_right = hex_left + (hexwidth * 16) + 40;
+                    
+    int hexbegin = hex_left + 20;
+    int asciibegin = hex_right + 20;
+    int scrollbarheight = 0, scrolltop = 0;
+    
+    QXFont _font = nilptr;
+    void setFont(QXFont font){
+		_font = font;
+        fontsize = nilptr;
+    }
+	void onPaint(int l,int t,int r,int b,long hpaint)override{
+        QXPainter canvas = new QXPainter(hpaint);
+        if (_font != nilptr){
+			canvas.setFont(_font);
+        }
+        if (fontsize == nilptr){
+			calcFontHeight(canvas);
+        }
+		drawBack(canvas, l, t, r, b);
+        drawGrid(canvas, l, t, r, b);
+        
+        canvas.setPaint(hexfont);
+        
+        if (hexdata != nilptr && hexdata.length > 0){
+			drawData(canvas);
+        }else{
+			canvas.drawText("<无法访问内存>",5,topbegin);
+        }
+        
+        drawScroll(canvas, l, t, r, b);
+	}
+    
+    void setData(byte [] d, long baseAddress, int reqlen, int avalen){
+		if (baseAddress == baseOffset){
+			old_hexdata = hexdata;
+        }else{
+			old_hexdata = nilptr;
+        }
+		hexdata = d;
+        currentposition = 0;
+        mouseposition = 0;
+        baseOffset = baseAddress;
+        updateDraw();
+    }
+    
+    void calcFontHeight(QXPainter canvas){
+		fontsize = canvas.measureText(0,0,"X");
+        fontwidth = fontsize.width();
+        fontheight = fontsize.height();
+        lineheight = fontheight + line_padding * 2;
+        hexpadding = (hexwidth - (fontwidth *2)) / 2;
+        asciiwidth = fontwidth + (asciipadding * 2);
+        topbegin = fontheight * 2.5;
+    }
+    
+    void drawBack(QXPainter canvas, int l,int t,int r,int b){
+        canvas.fillRect(l,t,r - 20,b,backColor,QXBrush.Style.SolidPattern);
+        canvas.fillRect(l,t,r - 20,lineheight,0x3fefefef,QXBrush.Style.SolidPattern);
+    }
+    
+    void drawGrid(QXPainter canvas, int l,int t,int r,int b){
+
+        //canvas.drawText("offset",40,15);
+        canvas.save();
+        canvas.setPaint(linepaint);
+        
+        t += lineheight;
+        canvas.drawLine(hex_left,t,hex_left,b);
+        canvas.drawLine(hex_right,t,hex_right,b);
+        
+        int midline = hex_left + hexwidth * 8 + 20;
+        canvas.drawLine(midline,t ,midline,b);
+        
+        int acissline = hex_right + 40 + asciiwidth * 16 ;
+        canvas.drawLine(acissline,t ,acissline,b);
+        
+        drawTextInRect(canvas, 0, 0, 120, lineheight, "偏移量");
+        drawTextInRect(canvas, hex_left, 0, hex_right, lineheight, "十六进制");
+        drawTextInRect(canvas, hex_right, 0, acissline, lineheight, "ASCII");
+        
+        canvas.restore();
+    }
+    
+    void drawTextInRect(QXPainter canvas, int l,int t,int r,int b, String text){
+		QXRect rc = canvas.measureText(0,0,text);
+        canvas.drawText(text, (l+r - rc.width()) / 2, t + (t+b - rc.height()) / 2 + rc.height());
+    }
+    
+    
+    void setStyle(bool isDark){
+		if (isDark){
+			linepaint.setColor(0x7fefefef);
+			hexfont.setColor(0xffc0c0c0);
+            backColor = 0xff252526;
+        }else{	
+            linepaint.setColor(0x7f000000);
+            hexfont.setColor(0xff000000);
+			backColor = 0xffffffff;
+        }
+    }
+	void init(/*QXMainWindow works*/){
+		//workspace = works;
+		linepaint.setStyle(QXPainter.Paint.STROKE);
+        linepaint.setColor(0x7fefefef);
+        linepaint.setStrokeWidth(1.0);
+        hexfont.setStyle(QXPainter.Paint.STROKE);
+        hexfont.setColor(0xffefefef);
+        
+        hexfonthl.setStyle(QXPainter.Paint.STROKE);
+        hexfonthl.setColor(0xffff0000);
+	}
+
+	void flashCaret(){
+		hilightCaret = !hilightCaret;
+        postUpdate();
+    }
+
+	void clear(){
+    
+    }
+	void drawData(QXPainter canvas){
+		int totalLine = height() / lineheight + 1;
+        for (int i =0; i < totalLine; i++){
+			drawLine(canvas, hexbegin, topbegin + i * lineheight, hexdata, currentposition + i * 16);
+        }
+    }
+
+    String formatAddr(long addr, bool hex){
+		if (hex){
+			return String.format("%011d", addr);
+        }
+		return String.format("0x%X%08X", (addr >> 32) & 0xffffffff, addr & 0xffffffff);
+    }
+    
+	void drawLine(QXPainter canvas, int x,int y, byte [] data, int position){
+		long max = Math.min(16l,data.length - position);
+        if (max > 0){
+        
+			canvas.drawText(formatAddr(position + baseOffset, hex_offset), 5, y);
+            int sb = Math.min(sel_start,sel_end);
+            int se = Math.max(sel_start,sel_end);
+            int dy = y - (fontheight + line_padding);
+     
+			
+			for (long i = 0; i < max; i++){
+				int id = position + i;
+				byte b = data[id];
+                bool hl = false;
+				if (old_hexdata != nilptr && id < old_hexdata.length){
+					hl = (data[id] != old_hexdata[id]);
+                }
+                
+                int dx = x + hexwidth * i;
+                int ax = asciibegin + asciiwidth * i ;
+                
+                if (id == mouseposition && hilightCaret){
+					canvas.fillRect(dx ,dy,hexwidth,lineheight,0x7f0000ff,QXBrush.Style.SolidPattern);
+                    canvas.fillRect(ax ,dy,asciiwidth,lineheight,0x7f0000ff,QXBrush.Style.SolidPattern);
+                }else
+                if (id >= sb && id <= se){
+					canvas.fillRect(dx ,dy,hexwidth,lineheight,0x3f0000ff,QXBrush.Style.SolidPattern);
+                    canvas.fillRect(ax ,dy,asciiwidth,lineheight,0x3f0000ff,QXBrush.Style.SolidPattern);
+                }
+                
+                if (hl){
+					canvas.setPaint(hexfonthl);
+ 					canvas.drawText(String.format("%02X",b), dx + hexpadding, y);
+					canvas.drawText(String.format("%c",b == 0 ? '.' : b), ax + asciipadding, y);
+                    canvas.setPaint(hexfont);
+                }else{
+					canvas.drawText(String.format("%02X",b), dx + hexpadding, y);
+					canvas.drawText(String.format("%c",b == 0 ? '.' : b), ax + asciipadding, y);
+                }
+			}
+     
+        }
+    }
+
+	void drawScroll(QXPainter canvas, int l,int t,int r,int b){
+		if (hexdata != nilptr && hexdata.length > 16){
+			double pos = (double)currentposition / (double)hexdata.length;
+			scrollbarheight = ((b - t) / lineheight)  * (b - t) / (hexdata.length / 16);
+            if (scrollbarheight < b - t - 20){
+				canvas.fillRect(r - 18,t,18,b,0x3f000000,QXBrush.Style.SolidPattern);
+				if (scrollbarheight < 18){
+					scrollbarheight = 18;
+				}
+				scrolltop = (b - t - scrollbarheight) * pos;
+				canvas.fillRect(r - 18,scrolltop,18,scrollbarheight,0x7f000000,QXBrush.Style.SolidPattern);
+            }
+        }
+    }
+    
+    bool bPressed = false;
+    bool scroll = false;
+    
+	void onMouseMove(int Button,int x,int y,int flags,int source)override{
+		//TODO 
+        if (scroll){
+			calcScrollBar(y-scrollbarheight/2);
+        }else
+	    if (bPressed){
+			sel_end = getPosition(x, y);
+            //workspace.showStatus(String.format("起始: 0x%08X [%d] - 结束: 0x%08X [%d],     选中: 0x%X [%d] 个字节",sel_start, sel_start, sel_end, sel_end, Math.abs(sel_end - sel_start) + 1, Math.abs(sel_end - sel_start) + 1));
+			update();
+	    }
+	}
+
+	void calcScrollBar(long y){
+		if (hexdata != nilptr){
+			currentposition = y *(hexdata.length / 16) / (height() - scrollbarheight) * 16;
+			updateDraw();
+        }
+    }
+    
+    
+	void onMouseButtonRelease(int Button,int x,int y,int flags,int source)override{
+		//TODO 
+        bPressed = false;
+        if (scroll == false){
+			sel_end = getPosition(x, y);
+			update();
+        }else{
+			scroll = false;
+        }
+	}
+
+	void onMouseButtonPress(int Button,int x,int y,int flags,int source)override{
+		//TODO 
+        bPressed = true;
+        if (x > width() - 18){
+			calcScrollBar(y-scrollbarheight/2);
+			scroll = true;
+        }else{
+			if (x < 120){
+				hex_offset = !hex_offset;
+            }
+			sel_end = sel_start = getPosition(x, y);
+            //workspace.showStatus(String.format("偏移量:0x%08X [%d]",sel_start, sel_start));
+            update();
+        }
+	}
+
+
+	void onWheel(int button,int x,int y,int Orientation,int delta,bool inverted)override{
+		if (delta < 0){
+			currentposition += 64;
+        }else{
+			currentposition -= 64;
+        }	
+
+		updateDraw();
+	}
+
+	void updateDraw(){
+		if (hexdata != nilptr){
+			if (currentposition >= hexdata.length){
+				currentposition = hexdata.length - ((hexdata.length % 16) + 64);
+			}
+			if (currentposition < 0){
+				currentposition = 0;
+			}
+			if (mouseposition >= hexdata.length){
+				mouseposition = hexdata.length - 1;
+			}
+			if (mouseposition < 0){
+				mouseposition = 0;
+			}
+        }
+		update();
+    }
+	
+	bool onKeyPress(int key,bool repeat,int count,String text,int scanCode,int virtualKey,int modifier)override{
+		
+        bool bupdate = false;
+        
+        switch(key){
+			case Key_PageDown:
+				int totalLine = height() / lineheight + 1;
+				currentposition +=  totalLine * 16;
+				bupdate = true;
+            break;
+            case Key_PageUp:
+				int totalLine = height() / lineheight + 1;
+				currentposition -=  totalLine * 16;
+				bupdate = true;
+            break;
+            case Key_Left:
+				mouseposition--;
+                bupdate = true;
+            break;
+            case Key_Right:
+				mouseposition++;
+                bupdate = true;
+            break;
+            case Key_Up:
+				mouseposition-=16;
+                bupdate = true;
+            break;
+            case Key_Down:
+				mouseposition+=16;
+                bupdate = true;
+            break;
+        }
+
+        
+        if (bupdate){
+			hilightCaret = true;
+			updateDraw();
+        }
+        return true;
+	}
+
+	int getPosition(int x,int y){
+		if (x >= hex_left && x < hex_right){
+            mouseposition = currentposition + (x - hexbegin) / hexwidth + ((y + (fontheight + line_padding) - topbegin)  / lineheight) * 16;
+        }else
+        if (x > hex_right && x < 1000){
+			mouseposition = currentposition + (x - asciibegin) / asciiwidth + ((y + (fontheight + line_padding) - topbegin)  / lineheight) * 16;
+        }
+        if (hexdata != nilptr){
+			if (mouseposition >= hexdata.length){
+				mouseposition = hexdata.length - 1;
+			}
+        }else{
+			mouseposition = 0;
+        }
+		if (mouseposition < 0){
+			mouseposition = 0;
+		}
+        
+        return mouseposition;
+    }
+	
+};

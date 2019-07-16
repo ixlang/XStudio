@@ -39,7 +39,8 @@ class XDebuggee{
         QueryObject = 27,
         GcDump = 28,
         QueryByName = 29,
-        ModuleLoaded = 30;
+        ModuleLoaded = 30,
+        LookupMemory = 31;
            
     bool isDebugging = false;
      
@@ -194,6 +195,14 @@ class XDebuggee{
         sendCommand(QueryObject, 0, data, data.length);
     }
     
+    void lookupMemory(long address, int len){
+		JsonObject json = new JsonObject();
+        json.put("address",String.format("%d",address));
+        json.put("size",len);
+        String text = json.toString(false);
+        byte [] data = text.getBytes();
+        sendCommand(LookupMemory, 0, data, data.length);
+    }
     void onQueryObject(JsonObject json){
 		String param = json.getString("param");
         if (param.startWith("auto")){
@@ -293,6 +302,10 @@ class XDebuggee{
         return qt.object;
     }
     
+    void onLookupMemory(JsonObject json){
+		MemoryLookupWnd.SetData(json);
+    }
+
     void onLoadModule(JsonObject json){
 		String module = json.getString("module");
         bool bSymbol = json.getBool("symbol");
@@ -629,6 +642,10 @@ class XDebuggee{
             
             case ModuleLoaded:
 				onLoadModule(json);
+            break;
+            
+            case LookupMemory:
+				onLookupMemory(json);
             break;
         }
     }
