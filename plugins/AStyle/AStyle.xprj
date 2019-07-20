@@ -1,0 +1,48 @@
+{
+	"AStyle":	{
+		"version":	"1.2",
+		"language":	"xlang",
+		"sources":	["AStyle.xcs"],
+		"configures":	{
+			"debug":	{
+				"path":	{
+					"incpath":	[],
+					"libpath":	["libs"]
+				},
+				"options":	"",
+				"cmd":	"$(Output)",
+				"args":	"$(Output)",
+				"workdir":	"$(ProjectDir)",
+				"ignorewarning":	"",
+				"compdest":	"",
+				"debugable":	"-dbg",
+				"debugdatabase":	"",
+				"libs":	["XPlatform_1.0.0.2.lix", "FileStream_1.0.0.3.lix", "FileSystem_1.0.0.3.lix"],
+				"links":	["XStudio1.xl"],
+				"wtype":	"",
+				"ostype":	"",
+				"outname":	"$(ProjectName)$(Ext)",
+				"outpath":	"D:\\Programs\\windows_x64\\plugins",
+				"command":	"-slx -c",
+				"uaclevel":	"默认"
+			},
+			"release":	{
+				"path":	{
+					"incpath":	[],
+					"libpath":	[]
+				},
+				"libs":	[],
+				"options":	"-nd",
+				"command":	"-ce",
+				"debugable":	"",
+				"outpath":	"$(ProjectDir)/$(Arch)/$(Configure)",
+				"outname":	"$(ProjectName)$(Ext)",
+				"cmd":	"$(Output)",
+				"args":	"$(Output)",
+				"workdir":	"$(ProjectDir)"
+			}
+		},
+		"versioninc":	"0",
+		"icofile":	""
+	}
+}

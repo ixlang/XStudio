@@ -12,12 +12,6 @@
 				"acmd":	"",
 				"libs":	["FileSystem_1.0.0.2.lix"],
 				"links":	[],
-				"wtype":	"-arch:x86_64",
-				"ostype":	"-xcross-windows",
-				"outname":	"$(ProjectName)$(Ext)",
-				"outpath":	"D:\\Programs\\windows_x64",
-				"command":	"-ce",
-				"uaclevel":	"默认",
 				"prebuild":	"",
 				"preclean":	"",
 				"makebuild":	"",
@@ -27,6 +21,12 @@
 				"cmd":	"$(Output)",
 				"args":	"$(Output)",
 				"workdir":	"D:\\Programs\\windows_x64",
+				"wtype":	"-arch:x86_64",
+				"ostype":	"-xcross-windows",
+				"outname":	"$(ProjectName)$(Ext)",
+				"outpath":	"D:\\Programs\\windows_x64",
+				"command":	"-ce",
+				"uaclevel":	"默认",
 				"ignorewarning":	"",
 				"compdest":	"-z",
 				"debugable":	"-dbg",
@@ -35,6 +35,6 @@
 		},
 		"comment":	"\r此项目为 XStudio 的源代码\r\r使用了QT 界面库作为XNL的底层调用,\r\rQTdll的代码在example文件夹中可以找到, \r\r该项目约有25000行代码.\r\r可以使用编译好的xide打开此项目进行修改编辑以及调试等.\r\r因为有部分第三方XNL调用以及资源文件依赖,所以编译生成\r\r的可执行文件需要放在与此ide相同目录下才可以正常运行.\r\r版本控制系统暂未处理\r\remail:3.vc@163.com  你也可以向此邮件发送你的建议.",
 		"icofile":	"xide.ico",
-		"versioninc":	"0"
+		"versioninc":	"1"
 	}
 }

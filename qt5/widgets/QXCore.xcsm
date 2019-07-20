@@ -364,7 +364,11 @@ class QXCore : QXNative{
         UPDATEENABLE = 361,
         OPENMULTI = 362,
         CLIPBOARDTEXT = 363,
-        CLIPBOARDIMAGE = 364;
+        CLIPBOARDIMAGE = 364,
+        QSCIDISABLESHORTCUT = 365,
+        QSCIUPDATESHORTCUT = 366,
+        QSCIUNBINDSHORTCUT = 367,
+        OBJECTSETNAME = 368;
         
     QXCore(){
     }

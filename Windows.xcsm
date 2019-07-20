@@ -1,126 +1,130 @@
 
-class Windows : QXDialog {
-	XWorkspace  _workspace;
+class Windows : QXDialog
+{
+    XWorkspace  _workspace;
     QXTreeView _listview;
-	Map<long, XSourceEditor> windows_list = new Map<long, XSourceEditor>();
+    Map<long, XSourceEditor> windows_list = new Map<long, XSourceEditor>();
 
     QXPushButton btnOk;
     QXPushButton btnActive;
     QXPushButton btnClose;
-         
-    onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
-        void onItemClicked(QXTreeView tree,long item, int column)override{
-			long [] items = tree.getSelectedItems();
-			btnActive.setEnabled(items.length == 1);
+
+    onTreeViewItemEvent listlistener = new onTreeViewItemEvent()
+    {
+        void onItemClicked(QXTreeView tree,long item, int column)override {
+            long [] items = tree.getSelectedItems();
+            btnActive.setEnabled(items.length == 1);
         }
-        void onItemDoubleClicked(QXTreeView,long item, int column){
-			try{
-				XSourceEditor editor = windows_list.get(item);
-            	if (editor != nilptr){
-					_workspace.setActiveSubWindow(editor);
-					Windows.this.close();
-				}
-            }catch(Exception e){
-            
+        void onItemDoubleClicked(QXTreeView,long item, int column) {
+            try {
+                XSourceEditor editor = windows_list.get(item);
+                if (editor != nilptr) {
+                    _workspace.setActiveSubWindow(editor);
+                    Windows.this.close();
+                }
+            } catch(Exception e) {
+
             }
 
         }
     };
-    
-    void onAttach(){
-    
+
+    void onAttach()
+    {
+
         setWindowFlags(CustomizeWindowHint | WindowMinMaxButtonsHint | WindowCloseButtonHint);
-        
+
         _listview = (QXTreeView)attachByName(new QXTreeView(), "listWindow");
-                
+
         btnOk = (QXPushButton)attachByName(new QXPushButton(), "btnOk");
         btnOk.setOnClickListener(
-        new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+        new onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
                 Windows.this.close();
             }
         });
-        
+
         btnActive = (QXPushButton)attachByName(new QXPushButton(), "btnActive");
         btnActive.setOnClickListener(
-        new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
-				long [] items = _listview.getSelectedItems();
-				if (items.length == 1){
-					try{
-						XSourceEditor editor = windows_list.get(items[0]);
-						if (editor != nilptr){
-							_workspace.setActiveSubWindow(editor);
-							Windows.this.close();
-						}
-                    }catch(Exception e){
-                    
+        new onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                long [] items = _listview.getSelectedItems();
+                if (items.length == 1) {
+                    try {
+                        XSourceEditor editor = windows_list.get(items[0]);
+                        if (editor != nilptr) {
+                            _workspace.setActiveSubWindow(editor);
+                            Windows.this.close();
+                        }
+                    } catch(Exception e) {
+
                     }
-				}
+                }
             }
         });
-        
+
         btnClose = (QXPushButton)attachByName(new QXPushButton(), "btnClose");
         btnClose.setOnClickListener(
-        new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
-				long [] items = _listview.getSelectedItems();
-				for (int i =0; i < items.length; i++){
-					try{
-						XSourceEditor editor = windows_list.get(items[i]);
-						if (editor != nilptr){
-							editor.close();
-						}
-                    }catch(Exception e){
-                    
+        new onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                long [] items = _listview.getSelectedItems();
+                for (int i =0; i < items.length; i++) {
+                    try {
+                        XSourceEditor editor = windows_list.get(items[i]);
+                        if (editor != nilptr) {
+                            editor.close();
+                        }
+                    } catch(Exception e) {
+
                     }
-				}
-				loadWindow();
-				_workspace.updateDocumentStatus();
+                }
+                loadWindow();
+                _workspace.updateDocumentStatus();
             }
         });
-        
+
         _listview.setOnTreeViewItemEvent(listlistener);
-        
+
         String [] columns = {"名称", "路径"};
         _listview.setColumns(columns);
-        
+
         loadWindow();
-        
+
         /*setOnLayoutEventListener(new onLayoutEventListener(){
-			void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
-				_listview.resize(w - 200, h-  50);
-				btnOk.move(w - 150, h - 80);
-				
-				btnActive.move(w - 150, 20);
-				
-				btnClose.move(w - 150, 60);
-			}
+        	void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+        		_listview.resize(w - 200, h-  50);
+        		btnOk.move(w - 150, h - 80);
+
+        		btnActive.move(w - 150, 20);
+
+        		btnClose.move(w - 150, 60);
+        	}
         });*/
         setWindowIcon("./res/toolbar/winoverlap.png");
         setWindowTitle("窗口");
         setModal(true);
         show();
     }
-    void loadWindow(){
-       /* _system_.consoleWrite("loadWindow");*/
-	   windows_list.clear();
-	   _listview.clear();
-       Map.Iterator<String, XSourceEditor> iter = XSourceEditor.editorMgr.iterator();
-       
-        while (iter.hasNext()){
+    void loadWindow()
+    {
+        /* _system_.consoleWrite("loadWindow");*/
+        windows_list.clear();
+        _listview.clear();
+        Map.Iterator<String, XSourceEditor> iter = XSourceEditor.editorMgr.iterator();
+
+        while (iter.hasNext()) {
             //String key = iter.getKey();
             XSourceEditor val = iter.getValue();
-            
+
             iter.next();
-            
+
             long item = _listview.addItem("./res/toolbar/source.png", val.szTitle);
 
-			windows_list.put(item, val);
+            windows_list.put(item, val);
 
-            if (val.filePath.startWith("#")){
+            if (val.filePath.startWith("#")) {
                 _listview.setItemText(item, 1, "<未保存>");
-            }else{
+            } else {
                 _listview.setItemText(item, 1, val.filePath);
             }
         }

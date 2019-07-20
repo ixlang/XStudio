@@ -2490,4 +2490,19 @@ class QXSci : QXWidget{
 	int getStyleAtPosition(int position){
 		return sendEditor(SCI_GETSTYLEAT,position);
     }
+    void disableInternalShortcut(int command){
+		widget_set_vint_value(nativehandle, QSCIDISABLESHORTCUT, command);
+    }
+    void updateInternalShortcut(int command, int key){
+		widget_set_v2int_value(nativehandle, QSCIUPDATESHORTCUT, command, key);
+    }
+    void unbindInternalShortcut(int key){
+		widget_set_vint_value(nativehandle, QSCIUNBINDSHORTCUT, key);
+    }
+    void clearInternalShortcuts(){
+        sendEditor(SCI_CLEARALLCMDKEYS, 0);
+    }
+    void setIndentationsUseTabs(bool b){
+		sendEditor(SCI_SETUSETABS, b ? 1 : 0);
+    }
 };

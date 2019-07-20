@@ -1,419 +1,525 @@
 
-class XMenuManager {
+class XMenuManager
+{
     QxApp app ;
     QXMainWindow mainwindow;
     static XMenuManager _menuMgr;
-	XMenuManager(){
-		_menuMgr = this;
-	}
+    QXMenu [] mainMenus = new QXMenu[7];
+    XMenuManager()
+    {
+        _menuMgr = this;
+    }
 
-	static void setStatusSel(bool b){
-		enabledMenu("actioncut", b);
-		enabledMenu("actioncopy", b);
-	}
+    static void setStatusSel(bool b)
+    {
+        enabledMenu("actioncut", b);
+        //enabledMenu("actioncopy", b);
+    }
 
-	
-	static void setProjectLoaded(bool b){
-		String []names = {"actioncloseproject", 
-							"actiongotodef", 
-							"actionoverride", 
-							"actionautocomplete", 
-							"actioncompile_project",
-							"actionclean",
-							"actionprop", 
-                            "actionopenoutput",
-							"actiongenerateNativeSrc",
-                            "actiongenmake",
-							"actiondebug", 
-                            "actionfile",
-							"actionclass",
-							"actioninterface",
-							"actionpackage",
-							"actioncomment",
-                            "actionsaveastemp",
-							"actionrun",
-							"actionstepin",
-							"actionstepover", 
-							"actionstepout", 
-							"actionbreakpoint",
-							//"actionfunction",
-							"actionbreak",
-							"actionstoprun",
-							//"actiondata",
-							"actionsaveproject"};
-		enabledMenus(names, b);			
-	}
-    
-	static void refreshDebugMenu(bool bDebug){
-		String []enable_names = {	
-							"actionbreak", 
-							"actionstoprun"};
-                            
-        String []disable_names = {"actiondebug", 
-								  "actionrun", 	
+
+    static void setProjectLoaded(bool b)
+    {
+        String []names = {"actioncloseproject",
+                          "actiongotodef",
+                          "actionoverride",
+                          "actionautocomplete",
+                          "actioncompile_project",
+                          "actionclean",
+                          "actionprop",
+                          "actionopenoutput",
+                          "actiongenerateNativeSrc",
+                          "actiongenmake",
+                          "actiondebug",
+                          "actionfile",
+                          "actionclass",
+                          "actioninterface",
+                          "actionpackage",
+                          "actioncomment",
+                          "actionsaveastemp",
+                          "actionrun",
+                          "actionstepin",
+                          "actionstepover",
+                          "actionstepout",
+                          "actionbreakpoint",
+                          //"actionfunction",
+                          "actionbreak",
+                          "actionstoprun",
+                          //"actiondata",
+                          "actionsaveproject"
+                         };
+        enabledMenus(names, b);
+    }
+
+    static void refreshDebugMenu(bool bDebug)
+    {
+        String []enable_names = {
+            "actionbreak",
+            "actionstoprun"
+        };
+
+        String []disable_names = {"actiondebug",
+                                  "actionrun",
                                   "actionstepin",
                                   "actionstepover",
-                                  "actionstepout"};
-                                  
-        enabledMenus(enable_names, bDebug);		
-        enabledMenus(disable_names, !bDebug);		
+                                  "actionstepout"
+                                 };
+
+        enabledMenus(enable_names, bDebug);
+        enabledMenus(disable_names, !bDebug);
     }
-    
-	static void refreshRunMenu(bool bRun){
-		if (bRun){
-			String []enable_names = {	
-								"actionstoprun"};
-								
-			String []disable_names = {"actiondebug", 
-									  "actionrun", 	
-									  "actionbreak", 
-									  "actionstepin",
-									  "actionstepover",
-									  "actionstepout"};
-									  
-			enabledMenus(enable_names, true);		
-			enabledMenus(disable_names, false);	
-        }else{
-			refreshDebugMenu(false);
+
+    static void refreshRunMenu(bool bRun)
+    {
+        if (bRun) {
+            String []enable_names = {
+                "actionstoprun"
+            };
+
+            String []disable_names = {"actiondebug",
+                                      "actionrun",
+                                      "actionbreak",
+                                      "actionstepin",
+                                      "actionstepover",
+                                      "actionstepout"
+                                     };
+
+            enabledMenus(enable_names, true);
+            enabledMenus(disable_names, false);
+        } else {
+            refreshDebugMenu(false);
         }
     }
-    
-	static void disableDebugMenu(){
 
-        String []disable_names = {"actiondebug", 
-								  "actionrun", 	
+    static void disableDebugMenu()
+    {
+
+        String []disable_names = {"actiondebug",
+                                  "actionrun",
                                   "actionstepin",
                                   "actionstepover",
                                   "actionstepout",
-                                  "actionbreak", 
-								  "actionstoprun"};
-	
-        enabledMenus(disable_names, false);		
+                                  "actionbreak",
+                                  "actionstoprun"
+                                 };
+
+        enabledMenus(disable_names, false);
     }
-    
-	static void refreshDebugControl(bool bInterrupt){
-		String []enable_names = {	
-							"actiondebug", 
-							"actionstepin",
-							"actionstepover", 
-							"actionstepout", 
-							"actionfunction"};
-                            
+
+    static void refreshDebugControl(bool bInterrupt)
+    {
+        String []enable_names = {
+            "actiondebug",
+            "actionstepin",
+            "actionstepover",
+            "actionstepout",
+            "actionfunction"
+        };
+
         String []disable_names = {"actionbreak"};
-        enabledMenus(enable_names, bInterrupt);		
-        enabledMenus(disable_names, !bInterrupt);		
+        enabledMenus(enable_names, bInterrupt);
+        enabledMenus(disable_names, !bInterrupt);
     }
-	static void setDocumentOpened(bool b){
-		String []names = {"actionclose", 
-							"actionundo", 
-							"actionredo", 
-							"actioncut", 
-							"actioncopy",
-							"actionpaste",
-							"actiondelete", 
-							//"actionfind",
-                            "actiongoto",
-							//"actionreplace", 
-							"actionfindagain",
-							"actionsave",
-                            "actionmatchbrace",
-                            "actionsaveas"};
-		enabledMenus(names, b);			
-	}
+    static void setDocumentOpened(bool b)
+    {
+        String []names = {"actionclose",
+                          "actionundo",
+                          "actionredo",
+                          "actioncut",
+                          "actioncopy",
+                          "actionnewlineup",
+                          "actionnewlinedown",
+                          "actionpaste",
+                          "actiondelete",
+                          "actiondelcurline",
+                          //"actionfind",
+                          "actiongoto",
+                          //"actionreplace",
+                          "actionfindagain",
+                          "actionsave",
+                          "actionmatchbrace",
+                          "actionsaveas"
+                         };
+        enabledMenus(names, b);
+    }
 
-	static void enabledMenus(String []names, bool b){
-		for (int i =0; i < names.length; i++){
-			QXAction action = ((QXAction)_menuMgr.mainwindow.findByName(names[i]));
-            if (action != nilptr){
-				action.setEnable(b);
+    static void enabledMenus(String []names, bool b)
+    {
+        for (int i =0; i < names.length; i++) {
+            QXAction action = ((QXAction)_menuMgr.mainwindow.findByName(names[i]));
+            if (action != nilptr) {
+                action.setEnable(b);
             }
-		}
-	}
-
-	static void enabledMenu(String name, bool b){
-		QXAction action = ((QXAction)_menuMgr.mainwindow.findByName(name));
-        if (action != nilptr){
-			action.setEnable(b);
         }
-	}
-    
-    class TriggerEvent : QXObject.onEventListener{
-        void onTrigger(QXObject obj)override{
+    }
+
+    static void enabledMenu(String name, bool b)
+    {
+        QXAction action = ((QXAction)_menuMgr.mainwindow.findByName(name));
+        if (action != nilptr) {
+            action.setEnable(b);
+        }
+    }
+
+    class TriggerEvent : QXObject.onEventListener
+    {
+        void onTrigger(QXObject obj)override
+        {
             String name = obj.getName();
-            if (name.equals("actionOpen")){
-				app._mdispace.doOpen();
+            if (name.equals("actionOpen")) {
+                app._mdispace.doOpen();
                 //XMenuManager.this.OpenFile();
                 return ;
             }
-            if (name.equals("actiondebug")){
+            if (name.equals("actiondebug")) {
                 app._mdispace.debugRun();
                 return ;
             }
-            if (name.equals("actionremotedbg")){
+            if (name.equals("actionremotedbg")) {
                 app._mdispace.remoteDebug();
                 return ;
             }
-            if (name.equals("actionrun")){
+            if (name.equals("actionrun")) {
                 app._mdispace.Run();
                 return ;
             }
-            if (name.equals("actionsave")){
+            if (name.equals("actionsave")) {
                 app._mdispace.saveFile();
                 return ;
             }
-            if (name.equals("actionoverride")){
+            if (name.equals("actionoverride")) {
                 app._mdispace.overrideFunction();
                 return ;
             }
-			if (name.equals("actionsaveas")){
+            if (name.equals("actionsaveas")) {
                 app._mdispace.saveFileAs();
-                return ; 
-			}
-            if (name.equals("actionsaveproject")){
+                return ;
+            }
+            if (name.equals("actionsaveproject")) {
                 app._mdispace.saveProject();
                 return ;
             }
-            if (name.equals("actionProject_P")){
+            if (name.equals("actionProject_P")) {
                 app._mdispace.createProject();
                 return ;
             }
-            if (name.equals("actioncompile_project")){
+            if (name.equals("actioncompile_project")) {
                 app._mdispace.build();
                 return ;
             }
-            if (name.equals("actionclean")){
+            if (name.equals("actionclean")) {
                 app._mdispace.cleanup();
                 return ;
             }
-            if (name.equals("allwindows")){
+            if (name.equals("allwindows")) {
                 app._mdispace.showAllWindows();
                 return ;
             }
-            if (name.equals("actiontoback")){
+            if (name.equals("actiontoback")) {
                 app._mdispace.toback();
                 return ;
             }
-            if (name.equals("actiontofront")){
+            if (name.equals("actiontofront")) {
                 app._mdispace.tofront();
                 return ;
             }
-            if (name.equals("actionexporttools")){
+            if (name.equals("actionexporttools")) {
                 ExportTool.Show();
                 return ;
             }
-            if (name.equals("actionpackmgr")){
+            if (name.equals("actionpackmgr")) {
                 PackageViewer.Show();
                 return ;
             }
-            if (name.equals("actionsaveastemp")){
+            if (name.equals("actionsaveastemp")) {
                 app._mdispace.saveProjectAsTemplate();
                 return ;
             }
-            if (name.equals("actionoverlapped")){
+            if (name.equals("actionoverlapped")) {
                 app._mdispace.cascadeSubWindows();
                 return ;
             }
-            if (name.equals("actionlocalProblem")){
-				XWndInfor.infoWnd.nextInfo();
+            if (name.equals("actionlocalProblem")) {
+                XWndInfor.infoWnd.nextInfo();
             }
-            if (name.equals("sortwindows")){
+            if (name.equals("sortwindows")) {
                 app._mdispace.tileSubWindows();
                 return ;
             }
-            if (name.equals("actionundo")){
+            if (name.equals("actionundo")) {
                 app._mdispace.UnDo();
                 return ;
             }
-            if (name.equals("actionredo")){
+            if (name.equals("actionredo")) {
                 app._mdispace.ReDo();
                 return ;
             }
-            if (name.equals("actioncut")){
+            if (name.equals("actioncut")) {
                 app._mdispace.Cut();
                 return ;
             }
-            if (name.equals("actioncopy")){
+            if (name.equals("actioncopy")) {
                 app._mdispace.Copy();
                 return ;
             }
-            if (name.equals("actionclose")){
-				app._mdispace.closeCurrentDocument();
+            if (name.equals("actionnewlineup")) {
+                app._mdispace.insertNewLine();
+                return ;
+            }
+            if (name.equals("actionnewlinedown")) {
+                app._mdispace.appendNewLine();
+                return ;
+            }
+
+            if (name.equals("actionclose")) {
+                app._mdispace.closeCurrentDocument();
                 return;
             }
-			if (name.equals("actioncloseproject")){
-				app._mdispace.closeProject();
+            if (name.equals("actioncloseproject")) {
+                app._mdispace.closeProject();
                 return;
-			}
-            if (name.equals("actionpaste")){
+            }
+            if (name.equals("actionpaste")) {
                 app._mdispace.Paste();
                 return ;
             }
-            if (name.equals("actiondelete")){
+            if (name.equals("actiondelete")) {
                 app._mdispace.Delete();
                 return ;
             }
-            if (name.equals("actionsamples")){
-				String url = _system_.getAppPath().findVolumePath().appendPath("examples");
-				QXCore.openLocal(String.formatPath(url, false));
-            }
-			if (name.equals("actionhelp")){
-				String url = _system_.getAppPath().findVolumePath().appendPath("./document/html/index.html");
-				QXCore.openLocal(String.formatPath(url, false));
+            if (name.equals("actiondelcurline")) {
+                app._mdispace.DeleteCurLine();
                 return ;
             }
-            if (name.equals("actionsetting")){
+
+            if (name.equals("actionsamples")) {
+                String url = _system_.getAppPath().findVolumePath().appendPath("examples");
+                QXCore.openLocal(String.formatPath(url, false));
+            }
+            if (name.equals("actionhelp")) {
+                String url = _system_.getAppPath().findVolumePath().appendPath("./document/html/index.html");
+                QXCore.openLocal(String.formatPath(url, false));
+                return ;
+            }
+            if (name.equals("actionsetting")) {
                 app._mdispace.showSetting();
                 return ;
             }
-            if (name.equals("actionfind") || name.equals("actionreplace")){
+            if (name.equals("actionfind") || name.equals("actionreplace")) {
                 app._mdispace.FindReplace();
                 return ;
             }
-            if (name.equals("actiongoto")){
+            if (name.equals("actiongoto")) {
                 app._mdispace.gotoLine();
                 return ;
             }
-			if (name.equals("actionfindagain")){
+            if (name.equals("actionfindagain")) {
                 app._mdispace.findAgain();
                 return ;
-			}
-            if (name.equals("actiongenerateNativeSrc")){
+            }
+            if (name.equals("actiongenerateNativeSrc")) {
                 app._mdispace.generateSource();
                 return ;
             }
-            if (name.equals("actiongenmake")){
+            if (name.equals("actiongenmake")) {
                 app._mdispace.generateMake();
                 return ;
             }
-            if (name.equals("actionopenoutput")){
+            if (name.equals("actionopenoutput")) {
                 app._mdispace.openOutput();
                 return ;
             }
-            if (name.equals("actiongotodef")){
+            if (name.equals("actiongotodef")) {
                 app._mdispace.gotoDef();
                 return ;
             }
-			if (name.equals("actionstoprun")){
+            if (name.equals("actionstoprun")) {
                 app._mdispace.stopRun();
                 return ;
-			}
-            if (name.equals("actionprop")){
+            }
+            if (name.equals("actionprop")) {
                 app._mdispace.showProperites(nilptr);
                 return ;
             }
-            if (name.equals("actionbreak")){
-				app._mdispace.debuggee.setBreak(ThreadManager.currentThreadId);
+            if (name.equals("actionbreak")) {
+                app._mdispace.debuggee.setBreak(ThreadManager.currentThreadId);
                 return ;
             }
-            if (name.equals("actionstartup")){
-				app._mdispace.openIndexPage();
+            if (name.equals("actionstartup")) {
+                app._mdispace.openIndexPage();
                 return ;
             }
-            if (name.equals("actionmatchbrace")){
-				app._mdispace.matchbrace();
+            if (name.equals("actionmatchbrace")) {
+                app._mdispace.matchbrace();
                 return ;
             }
-            
-            if (name.equals("actiontest")){
-				XWorkspace.workspace.test();
+
+            if (name.equals("actiontest")) {
+                XWorkspace.workspace.test();
             }
-            if (name.equals("actionstepin")){
-				app._mdispace.debuggee.stepin(ThreadManager.currentThreadId);
+            if (name.equals("actionstepin")) {
+                app._mdispace.debuggee.stepin(ThreadManager.currentThreadId);
                 return ;
             }
-            if (name.equals("actionstepover")){
-				app._mdispace.debuggee.stepover(ThreadManager.currentThreadId);
+            if (name.equals("actionstepover")) {
+                app._mdispace.debuggee.stepover(ThreadManager.currentThreadId);
                 return ;
             }
-            if (name.equals("actionstepout")){
-				app._mdispace.debuggee.stepout(ThreadManager.currentThreadId);
+            if (name.equals("actionstepout")) {
+                app._mdispace.debuggee.stepout(ThreadManager.currentThreadId);
                 return ;
             }
-            if (name.equals("actionQTCreator")){
-				openDesigner();
+            if (name.equals("actionQTCreator")) {
+                openDesigner();
                 return;
             }
-            if (name.equals("actionexit")){
-				mainwindow.close();
+            if (name.equals("actionexit")) {
+                mainwindow.close();
                 return ;
             }
-            if (name.equals("actionbreakpoint")){
-				app._mdispace.toggleBreakpoint();
+            if (name.equals("actionbreakpoint")) {
+                app._mdispace.toggleBreakpoint();
                 return ;
             }
-            if (name.equals("actionfile")){
-				app._mdispace.addObject(0);
+            if (name.equals("actionfile")) {
+                app._mdispace.addObject(0);
                 return ;
             }
-            if (name.equals("actionclass")){
-				app._mdispace.addObject(1);
+            if (name.equals("actionclass")) {
+                app._mdispace.addObject(1);
                 return ;
             }
-            if (name.equals("actioninterface")){
-				app._mdispace.addObject(2);
+            if (name.equals("actioninterface")) {
+                app._mdispace.addObject(2);
                 return ;
             }
-            if (name.equals("actionpackage")){
-				app._mdispace.addObject(3);
+            if (name.equals("actionpackage")) {
+                app._mdispace.addObject(3);
                 return ;
             }
-            if (name.equals("actioninstcext")){
-				app._mdispace.installCompileExt();
+            if (name.equals("actioninstcext")) {
+                app._mdispace.installCompileExt();
                 return ;
             }
-            
-            if (name.equals("actioncomment")){
-				app._mdispace.showComment();
+            if (name.equals("actioninstallplugin")) {
+                app._mdispace.installPlugin();
                 return ;
             }
-            if (name.equals("actionsendfeedback")){
-				app._mdispace.sendFeedback();
+            if (name.equals("actioncomment")) {
+                app._mdispace.showComment();
                 return ;
             }
-            if(name.equals("actionabout")){
+            if (name.equals("actionsendfeedback")) {
+                app._mdispace.sendFeedback();
+                return ;
+            }
+            if(name.equals("actionabout")) {
 
                 String buildtime = String.formatDate("%Y年%m月%d日", _system_.getAppTimestamp());
-                app.mainWindow.About("关于", 
-                "<Strong>XStudio(Xlang 集成开发环境) Release " + Utils.getAppVersion() + " </Strong><br /><br />" + 
-                 "开发语言: Xlang v2.4<br /><br />" + 
-                 "编译时间: " + buildtime + "<br /><br />" + 
-                 "<b>该软件使用xlang 2.4 开发, 软件全部源代码可在xlang的example中找到," + 
-                 "native部分为C++与Xlang的XNL项目(同样在example代码中), native项目仅有软件使用的部分调用," + 
-                 "如需要用于其它开发需要修改native项目增加接口.</b><br /><br />" + 
-                 "该软件的使用不受任何限制,可用于任意用途的修改或者发布.<br /><br />" + 
-                 "<em>需要注意该软件底层使用了第三方图形库Qt (Copyright The Qt Company Ltd), 二次发布和使用须遵守第三方授权协议.</em><br /><br />" + 
-                 "<strong>xlang项目中使用了以下第三方项目:</strong><br />" +
-                 "<em>	curl-7.37.0</em><br />" +
-                 "<em>	iconv-1.11.1</em><br />" +
-                 "<em>	openssl-1.0.1p 9 Jul 2015</em><br />" +
-                 "<em>	zlib-1.2.8</em><br />" +
-                 "<em>	pcre-8.37</em><br />" +
-                 "<em>	cJSON</em><br />" +
-                 "<em>	libmicrohttpd</em><br />" +
-                 "<em>	rapidxml</em><br /><br />" +
-                 "官方主页:<a href=\"http://xlang.link/\">http://xlang.link/</a><br /><br />" + 
-                 "github项目首页:<a href=\"https://ixlang.github.io/\">https://ixlang.github.io/</a><br />" + 
-                 "github项目仓库:<a href=\"https://github.com/ixlang/XStudio\">https://github.com/ixlang/XStudio</a><br />" + 
-                 "github代码示例仓库:<a href=\"https://github.com/ixlang/examples\">https://github.com/ixlang/examples</a><br /><br />" + 
-                 "致谢名单:<a href=\"http://xlang.link/credits.html\">http://xlang.link/credits.html</a><br />" + 
-                 "<em>(为所有对 xlang 以及 XStudio 的进步有推助作用的名录)</em><br /><br />" + 
-                 "<p align=\"right\">建议可通过以下方式反馈</p>" + 
-                 "<p align=\"right\">QQ: 3.vc@163.com</p>" + 
-                 "<p align=\"right\">Cadaquz 2018-07-30</p>");
+                app.mainWindow.About("关于",
+                                     "<Strong>XStudio(Xlang 集成开发环境) Release " + Utils.getAppVersion() + " </Strong><br /><br />" +
+                                     "开发语言: Xlang v2.5<br /><br />" +
+                                     "编译时间: " + buildtime + "<br /><br />" +
+                                     "<b>该软件使用xlang 2.5 开发, 软件全部源代码可在xlang的example中找到," +
+                                     "native部分为C++与Xlang的XNL项目(同样在example代码中), native项目仅有软件使用的部分调用," +
+                                     "如需要用于其它开发需要修改native项目增加接口.</b><br /><br />" +
+                                     "该软件的使用不受任何限制,可用于任意用途的修改或者发布.<br /><br />" +
+                                     "<em>需要注意该软件底层使用了第三方图形库Qt (Copyright The Qt Company Ltd), 二次发布和使用须遵守第三方授权协议.</em><br /><br />" +
+                                     "<strong>xlang项目中使用了以下第三方项目:</strong><br />" +
+                                     "<em>	curl-7.37.0</em><br />" +
+                                     "<em>	iconv-1.11.1</em><br />" +
+                                     "<em>	openssl-1.0.1p 9 Jul 2015</em><br />" +
+                                     "<em>	zlib-1.2.8</em><br />" +
+                                     "<em>	pcre-8.37</em><br />" +
+                                     "<em>	cJSON</em><br />" +
+                                     "<em>	libmicrohttpd</em><br />" +
+                                     "<em>	rapidxml</em><br /><br />" +
+                                     "官方主页:<a href=\"http://xlang.link/\">http://xlang.link/</a><br /><br />" +
+                                     "github项目首页:<a href=\"https://ixlang.github.io/\">https://ixlang.github.io/</a><br />" +
+                                     "github项目仓库:<a href=\"https://github.com/ixlang/XStudio\">https://github.com/ixlang/XStudio</a><br />" +
+                                     "github代码示例仓库:<a href=\"https://github.com/ixlang/examples\">https://github.com/ixlang/examples</a><br /><br />" +
+                                     "致谢名单:<a href=\"http://xlang.link/credits.html\">http://xlang.link/credits.html</a><br />" +
+                                     "<em>(为所有对 xlang 以及 XStudio 的进步有推助作用的名录)</em><br /><br />" +
+                                     "<p align=\"right\">建议可通过以下方式反馈</p>" +
+                                     "<p align=\"right\">QQ: 3.vc@163.com</p>" +
+                                     "<p align=\"right\">Cadaquz 2018-07-30</p>");
             }
         }
     };
-    
+
     TriggerEvent  _triggerEvent = new TriggerEvent();
-    
-    void init(QxApp _app){
+    ExternMenuEvent _externListener = new ExternMenuEvent();
+
+    class ExternMenuEvent : QXObject.onEventListener
+    {
+        Map<String, IXPlugin> menu_plusin = new Map<String, IXPlugin>();
+
+        void onTrigger(QXObject obj)override
+        {
+            String name = obj.getName();
+            if (name != nilptr) {
+                try {
+                    IXPlugin plugin = menu_plusin.get(name);
+                    if (plugin != nilptr) {
+                        plugin.onMenuTrigged(name);
+                    }
+                } catch(Exception e) {
+
+                }
+            }
+        }
+
+        void addMenu(QXAction action, String name, IXPlugin plugin)
+        {
+            menu_plusin.put(name, plugin);
+            action.setOnEventListener(_externListener);
+        }
+
+        bool check(String name)
+        {
+            return menu_plusin.containsKey(name);
+        }
+    };
+
+    bool addMenu(int mainid, String name, String text, String icon, String shortcut, IXPlugin plugin)
+    {
+        if (_externListener.check(name)) {
+            return false;
+        }
+
+
+        if (mainid < 0 || mainid >= mainMenus.length) {
+            return false;
+        }
+
+        QXMenu menu = mainMenus[mainid];
+        QXAction action;
+
+        if (icon != nilptr) {
+            action = menu.addAction(icon, text);
+        } else {
+            action = menu.addAction(text);
+        }
+
+        if (action != nilptr) {
+            action.setName(name);
+            if (shortcut != nilptr) {
+                action.setShortcut(shortcut);
+            }
+            _externListener.addMenu(action, name, plugin);
+            return true;
+        }
+        return false;
+    }
+
+    void init(QxApp _app)
+    {
         app = _app;
         mainwindow = _app.mainWindow;
         mainwindow.findByName("actionsetting").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionOpen").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionProject_P").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionsave").setOnEventListener(_triggerEvent);
-		mainwindow.findByName("actionsaveas").setOnEventListener(_triggerEvent);
+        mainwindow.findByName("actionsaveas").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionsaveastemp").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionsaveproject").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionclose").setOnEventListener(_triggerEvent);
@@ -429,8 +535,11 @@ class XMenuManager {
         mainwindow.findByName("actionredo").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actioncut").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actioncopy").setOnEventListener(_triggerEvent);
+        mainwindow.findByName("actionnewlineup").setOnEventListener(_triggerEvent);
+        mainwindow.findByName("actionnewlinedown").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionpaste").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actiondelete").setOnEventListener(_triggerEvent);
+        mainwindow.findByName("actiondelcurline").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actiongotodef").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionfind").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actiongoto").setOnEventListener(_triggerEvent);
@@ -447,9 +556,9 @@ class XMenuManager {
         mainwindow.findByName("actionfunction").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actiondata").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionlocalProblem").setOnEventListener(_triggerEvent);
-		mainwindow.findByName("actionstartup").setOnEventListener(_triggerEvent);
+        mainwindow.findByName("actionstartup").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionmatchbrace").setOnEventListener(_triggerEvent);
-        
+
         mainwindow.findByName("actiondebug").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionremotedbg").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionrun").setOnEventListener(_triggerEvent);
@@ -462,20 +571,21 @@ class XMenuManager {
         mainwindow.findByName("actionstoprun").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actiontest").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actioncomment").setOnEventListener(_triggerEvent);
-		mainwindow.findByName("actionexporttools").setOnEventListener(_triggerEvent);
+        mainwindow.findByName("actionexporttools").setOnEventListener(_triggerEvent);
 
         mainwindow.findByName("actionQTCreator").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionhelp").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionsendfeedback").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionsamples").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionabout").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("menuFile").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("menuEdit").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("menuSln").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("menuDebug").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("menuTools").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("menuWindow").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("menuHelp").setOnEventListener(_triggerEvent);
+
+        String [] mainMenuNames = {"menuFile", "menuEdit", "menuSln", "menuDebug", "menuTools", "menuWindow", "menuHelp"};
+
+        for (int i = 0; i < mainMenuNames.length; i++) {
+            mainMenus[i] = (QXMenu)mainwindow.findByName(mainMenuNames[i]);
+            mainMenus[i].setOnEventListener(_triggerEvent);
+        }
+
 
         mainwindow.findByName("sortwindows").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actionoverlapped").setOnEventListener(_triggerEvent);
@@ -483,23 +593,27 @@ class XMenuManager {
         mainwindow.findByName("actiontoback").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actiontofront").setOnEventListener(_triggerEvent);
         mainwindow.findByName("actioninstcext").setOnEventListener(_triggerEvent);
-        
+        mainwindow.findByName("actioninstallplugin").setOnEventListener(_triggerEvent);
+
+
+
     }
-    
-    void openDesigner(){
-		String degpath = String.formatPath(_system_.getAppPath().findVolumePath().appendPath("designer/designer"), false);
-        
-        if (_system_.getPlatformId() == 0){
-			degpath = degpath + ".exe";
+
+    void openDesigner()
+    {
+        String degpath = String.formatPath(_system_.getAppPath().findVolumePath().appendPath("designer/designer"), false);
+
+        if (_system_.getPlatformId() == 0) {
+            degpath = degpath + ".exe";
         }
         String []args = new String[1];
         args[0] = degpath;
 
-		Process designer = new Process(degpath, args);
-        try{
-			designer.create(true, false, false, false);
-        }catch(Exception e){
-			QXMessageBox.Critical("error", e.getMessage(), QXMessageBox.Ok, QXMessageBox.Ok);
+        Process designer = new Process(degpath, args);
+        try {
+            designer.create(true, false, false, false);
+        } catch(Exception e) {
+            QXMessageBox.Critical("error", e.getMessage(), QXMessageBox.Ok, QXMessageBox.Ok);
         }
     }
 };

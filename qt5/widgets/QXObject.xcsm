@@ -938,6 +938,10 @@ class QXObject : QXCore{
         return (String)core_getName(nativehandle);
     }
     
+    void setName(String name){
+		widget_slot_string(nativehandle, OBJECTSETNAME, name);
+    }
+    
     String getClassName(){
         return (String)core_getClassName(nativehandle);
     }

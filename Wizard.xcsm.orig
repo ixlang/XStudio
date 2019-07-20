@@ -1,0 +1,722 @@
+
+class WizardDialog : QXDialog {
+	XWorkspace _mdispace;
+    QXTreeView _treeview;
+    QXTreeView _listview;
+    QXLineEdit projPath;
+	QXLineEdit projName;
+	
+    JsonObject jsonWizard;
+    
+    ContextMenu _contextMenu = new ContextMenu();
+    
+	QXLabel projDescr, _proName, _proPath;
+	QXPushButton btnOk, btnCancel, btnPathBro;
+	QXWidget lblwidget;
+	QXLabel add_exists;
+	Switche add_check = new Switche();
+    long example_root = 0;
+    long loadexample_item = 0;
+    String demo_url = nilptr;
+	long leftItem = 0;
+    Thread download_thread = nilptr;
+    
+	static class ContextMenu{
+		QXMenu contextMenu = new QXMenu();
+		QXAction [] actions;
+		
+		void create(QXWidget parent, String [] acts, onEventListener listener){
+			if (contextMenu.create(parent)){
+				actions = new QXAction[acts.length];
+				for (int i = 0; i < acts.length; i ++){
+					QXAction action = new QXAction();
+					if (action.create(contextMenu)){
+						
+						if (acts[i].equals("-")){
+							action.setSeparator(true);
+						}else{
+							action.setEnable(false);	
+							action.setText(acts[i]);
+							action.setOnEventListener(listener);
+						}
+					}
+					actions[i] = action;
+				}
+				parent.setContextMenuPolicy(ActionsContextMenu);
+				parent.addActions(actions);
+			}
+		}
+        
+        void enable(bool b){
+			actions[0] .setEnable(b);
+        }
+	};
+    
+    
+    onEventListener menuListener = new onEventListener(){
+       void onTrigger(QXObject obj) override{
+            if (obj == _contextMenu.actions[0]){
+				long [] items = _listview.getSelectedItems();
+                
+				if (items.length != 1){
+					QXMessageBox.Critical("错误", "没有选择一个有效的模板.", QXMessageBox.Ok, QXMessageBox.Ok);
+					return ;
+				}
+				
+				long selected_index = _listview.getItemTag(items[0], 0);
+				long typeitem = _listview.getItemTag(items[0], 1);
+				JsonArray selected_content;
+				
+				try{
+					selected_content = actionMap.get(typeitem);
+                    
+                    if (selected_content != nilptr){
+						selected_content.remove(selected_index);
+                    
+						String confFile = "./config/project_navigation.conf";
+						
+						try{
+							String projection = jsonWizard.toString(true);
+							
+							if (projection.length() > 0){
+								FileOutputStream foss = new FileOutputStream(confFile);
+								foss.write(projection.getBytes());
+								foss.close();
+								_listview.clear();
+								if (leftItem != 0){
+									loadItem(leftItem);
+								}else{
+									loadAllItem();
+								}
+							}
+						}catch(Exception e){
+						
+						}
+                    }
+				}catch(Exception e){
+				
+				}
+                
+				return ;
+            }
+       }
+	};
+    
+	bool selected_is_file = false;
+    Map<long, JsonArray> actionMap = new Map<long, JsonArray>();
+        
+	WizardDialog(XWorkspace _mdi){
+		_mdispace = _mdi;
+	}
+    onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
+        void onItemClicked(QXTreeView,long item, int column)override{
+        
+			_listview.clear();
+			if (loadexample_item == item && loadexample_item != 0){
+				loadExamples();
+                return ;
+            }
+            
+			loadItem(item);
+            projDescr.setText("");
+            leftItem = item;
+        }
+    };
+    
+    void loadItem(long item){
+		
+		JsonArray content = nilptr;
+		try{
+			content = actionMap.get(item);
+		}catch(Exception e){
+		
+		}
+		if (content != nilptr){
+			bool canadd = false;
+			selected_is_file = false;
+			for (int i = 0; i < content.length(); i++){
+				JsonObject objItem = (JsonObject)content.get(i);
+				if (objItem.has("ext")){
+					canadd = true;
+					selected_is_file = true;
+				}
+
+				String iconFile = objItem.getString("icon");
+				if (objItem.has("url")){
+					iconFile = "./res/toolbar/exz.png";
+                }
+				long citem = _listview.addItem(iconFile, objItem.getString("name"));
+				_listview.setItemTag(citem, 0,  i);
+                
+				_listview.setItemText(citem, 1, objItem.getString("platform"));
+                _listview.setItemTag(citem, 1,  item);
+                
+				_listview.setItemText(citem, 2, objItem.getString("language"));
+			}
+			
+			add_check.setChecked(canadd, true);
+			add_check.setEnabled(canadd && (_mdispace.isCurrentProjectEmpty() == false));
+		}
+    }
+    
+	onTreeViewItemEvent devslistener = new onTreeViewItemEvent(){
+        /*void onItemClicked(QXTreeView list,long item, int column)override{
+            long selected_index = list.getItemTag(item, 0);
+            long typeitem = list.getItemTag(item, 1);
+            
+            try{
+				JsonArray typeobj = actionMap.get(typeitem);
+				
+            }catch(Exception e){
+            
+            }
+        }*/
+        void onItemPressed(QXTreeView list, long item, int column)override{
+            long selected_index = list.getItemTag(item, 0);
+            long typeitem = list.getItemTag(item, 1);
+            
+            try{
+				JsonArray typeobj = actionMap.get(typeitem);
+                JsonObject objItem = (JsonObject)typeobj.get(selected_index);
+                
+				if (objItem.has("default")){
+					String defName = objItem.getString("default");
+                    projName.setText(defName);
+					projName.setEnabled(false);
+				}else{
+					projName.setEnabled(true);
+                }
+                projDescr.setText(objItem.getString("details"));
+				String used = objItem.getString("user");
+				_contextMenu.enable(used != nilptr);
+            }catch(Exception e){
+            
+            }
+        }
+    };
+    
+    
+    String getMd5String(String url){
+		long md5 = Crypto.Md5Init();
+        byte [] data = url.getBytes();
+        Crypto.Md5Update(md5,data,0,data.length);
+        Crypto.MD5Final(md5);
+        byte [] dis = Crypto.MD5Get(md5);
+        Crypto.MD5Close(md5);
+
+		String out = "";
+        for (int i =0; i < dis.length; i ++){
+			out = out + String.format("%02X",dis[i]);
+        }
+        return out;
+    }
+    
+    bool loadLocalExample(bool bStartup){
+		String cacheFile = String.formatPath(XPlatform.getAppDirectory().appendPath("examples").appendPath("project.list"), false);
+        if (XPlatform.existsSystemFile(cacheFile)){
+			_treeview.removeAllchild(example_root);
+			try{
+				FileInputStream fis = new FileInputStream(cacheFile);
+                byte [] jdata = fis.read();
+                String jcontent = new String(jdata);
+                parseExample(jcontent);
+			}catch(Exception e){
+			}
+            loadexample_item = _treeview.insertItem(example_root,"./res/toolbar/refresh.png","点击刷新");
+            _treeview.setItemColor(loadexample_item,0,0xff007aff);
+            return true;
+        }else
+        if (bStartup == false){
+			_treeview.setItemText(loadexample_item,0,"加载失败,点击重试");
+        }else{
+			_treeview.setItemText(loadexample_item,0,"点击加载");
+        }
+        return false;
+    }
+    
+    void loadExamples(){
+
+        String strmd5 = getMd5String(demo_url);
+		
+        String cacheFile = String.formatPath(XPlatform.getAppDirectory().appendPath("examples").appendPath("project.list"), false);
+                
+        synchronized(WizardDialog.this){
+			if (download_thread == nilptr){
+				_treeview.setItemText(loadexample_item,0,"加载中...");
+				download_thread = new Thread(){
+					void run()override{
+						getOnlineExample(cacheFile);
+                        synchronized(WizardDialog.this){
+							download_thread = nilptr;
+                        }
+                        
+                        runOnUi(new Runnable(){
+							void run()override{
+								_treeview.setItemText(loadexample_item,0,"点击刷新...");
+								projDescr.setText("完毕");
+                            }
+                        });
+					}
+				};
+                projDescr.setText("正在加载... " + demo_url);
+                download_thread.start();
+            }
+        }
+    }
+    
+    bool onClose()override{
+		//等待线程退出之后才能关闭 ，否则QT底层会销毁窗口  线程再次访问时导致错误
+		if (download_thread != nilptr){
+			QXMessageBox.Critical("程序忙","程序正忙,请稍候.",QXMessageBox.Ok,QXMessageBox.Ok);
+        }
+		return download_thread == nilptr;
+    }
+    
+    bool parseExample(String content){
+		try{
+			 JsonObject onlineDemo = new JsonObject(content);
+			 _treeview.removeAllchild(example_root);
+			 loadProject(example_root, onlineDemo, "./res/toolbar/exz.png");
+			 _treeview.setExpand(example_root, true);    
+             return true;
+		}catch(Exception e){
+        
+        }
+        return false;
+    }
+    
+    void getOnlineExample(String cacheFile){
+        HttpRequest req = new HttpRequest();
+
+		if (req.get(demo_url, 100000, true)){
+			byte [] data = new byte[1024];
+			String content = "";
+
+			if (req.getResponseCode() >= 200){
+				while (req.available(true) > 0){
+					int len = req.readData(data, 0, 1024);
+					String _txt = new String(data, 0, len);
+					content = content + _txt;
+				}
+                
+                FileOutputStream fos ;
+                try{
+					fos  = new FileOutputStream(cacheFile);
+					byte [] jdata = content.getBytes();
+					fos.write(jdata, 0, jdata.length);
+					
+                }catch(Exception e){
+                
+                }finally{
+					if (fos != nilptr){
+						fos.close();
+                    }
+                }
+                
+				runOnUi(new Runnable(){
+					void run()override{
+						 if (false == loadLocalExample(false)){
+							QXMessageBox.Critical("加载失败","加载在线示例失败,请重试,数据错误.",QXMessageBox.Ok,QXMessageBox.Ok);
+						 }
+					}
+				});
+			}else{
+				runOnUi(new Runnable(){
+					void run()override{
+						QXMessageBox.Critical("加载失败","加载在线示例失败,请重试,错误代码:" + req.getResponseCode(),QXMessageBox.Ok,QXMessageBox.Ok);
+					}
+				});	
+			}
+		}else{
+			runOnUi(new Runnable(){
+				void run()override{
+					QXMessageBox.Critical("加载失败","加载在线示例失败,请重试,网络错误.",QXMessageBox.Ok,QXMessageBox.Ok);
+				}
+			});	
+        }
+    }
+    void onAttach(){
+    
+        _treeview = (QXTreeView)attachByName(new QXTreeView(), "projType");
+        _listview = (QXTreeView)attachByName(new QXTreeView(), "projContent");
+		
+        projName = (QXLineEdit)attachByName(new QXLineEdit(), "projName");
+        projPath  = (QXLineEdit)attachByName(new QXLineEdit(), "projPath");
+        
+		btnOk = (QXPushButton)attachByName(new QXPushButton(), "btnOk");
+		btnCancel = (QXPushButton)attachByName(new QXPushButton(), "btnCancel");
+		btnPathBro = (QXPushButton)attachByName(new QXPushButton(), "btnPathBro");
+		
+		projDescr = (QXLabel)attachByName(new QXLabel(), "projDescr");
+		_proName = (QXLabel)attachByName(new QXLabel(), "_proName");
+		_proPath = (QXLabel)attachByName(new QXLabel(), "_proPath");
+		lblwidget = (QXWidget)attachByName(new QXWidget(), "lblwidget");
+		add_exists = (QXLabel)attachByName(new QXLabel(), "addExists");
+        add_check.create(this);
+        add_check.resize(36, 26);
+        add_check.show();
+        add_check.setWhatsThis("将新建的项添加到当前已载入的项目中");
+        String defaultPath = Setting.get("workspace");
+        setWindowIcon("./res/toolbar/newproj.png");
+        bool hasProject = _mdispace.isCurrentProjectEmpty() == false;
+		add_check.setEnabled(hasProject);
+        add_check.setChecked(hasProject, true);
+
+		add_check.setOnSwitchListener(new Switche.OnSwitchListener(){
+			void onSwitch(Switche view,bool checked){
+				if (checked){
+					projPath.setText(_mdispace.currentProjectDir());
+				}else
+                if (defaultPath == nilptr){
+                
+					projPath.setText("");
+					//projName.setEnabled(true);
+				}else{
+					projPath.setText(defaultPath);
+                }
+            }
+        
+        });
+        
+		/*add_check.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+
+            }
+        });*/
+        
+        btnOk.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+				WizardDialog.this.onCreateProjectItem();
+            }
+        });
+        
+        btnCancel.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+                WizardDialog.this.close();
+            }
+        });
+        
+        btnPathBro.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+               String path = QXFileDialog.getFolderPath("选择工作目录", nilptr, nilptr, WizardDialog.this);
+               if (path != nilptr && path.length() > 0){
+                    projPath.setText(path);
+                    Setting.setSetting("workspace", path);
+                    Setting.save();
+               }
+            }
+        });
+        
+        _treeview.setOnTreeViewItemEvent(listlistener);
+        _listview.setOnTreeViewItemEvent(devslistener);
+		setOnLayoutEventListener(new onLayoutEventListener(){
+				void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+					WizardDialog.this.onResize(w, h, oldw, oldh);
+				}
+		});
+		
+        
+        
+        if (hasProject){
+			projPath.setText(_mdispace.currentProjectDir());
+        }else
+        if (defaultPath != nilptr){
+			projPath.setText(defaultPath);
+        }
+        String [] columns = {"项目", "平台", "语言"};
+        _listview.setColumns(columns);
+		_listview.setColumnWidth(0, 200);
+		_listview.setColumnWidth(1, 300);
+		_listview.setColumnWidth(2, 50);
+        loadWizard();
+        setWindowTitle("创建项目");
+        setModal(true);
+        show();
+		createContextMenu();
+    }
+    
+	void createContextMenu(){
+		String []acts = {"删除模板"};
+		_contextMenu.create(_listview, acts, menuListener);
+	}
+    
+	void onCreateProjectItem(){
+		String project_name = projName.getText();
+		String project_path = projPath.getText();
+		
+        long [] items = _listview.getSelectedItems();
+        if (items.length != 1){
+			QXMessageBox.Critical("错误", "没有选择一个新建项目的模板.", QXMessageBox.Ok, QXMessageBox.Ok);
+			return ;
+        }
+        
+		long selected_index = _listview.getItemTag(items[0], 0);
+		long typeitem = _listview.getItemTag(items[0], 1);
+		JsonArray selected_content;
+        
+		try{
+			selected_content = actionMap.get(typeitem);
+		}catch(Exception e){
+		
+		}
+            
+		if (project_name.length() == 0){
+			QXMessageBox.Critical("错误", "未填写项目名称", QXMessageBox.Ok, QXMessageBox.Ok);
+			return ;
+		}
+		if (project_path.length() == 0){
+			QXMessageBox.Critical("错误", "未选择项目路径", QXMessageBox.Ok, QXMessageBox.Ok);
+			return ;
+		}
+		if (selected_content == nilptr){
+			QXMessageBox.Critical("错误", "没有选择一个新建项目的类型.", QXMessageBox.Ok, QXMessageBox.Ok);
+			return ;
+		}
+		if (selected_index < 0 || selected_index >= selected_content.length()){
+			QXMessageBox.Critical("错误", "没有选择一个新建项目的模板.", QXMessageBox.Ok, QXMessageBox.Ok);
+			return ;
+		}
+		
+		JsonObject objItem = (JsonObject)selected_content.get(selected_index);
+		String uuid =  objItem.getString("uuid");
+        
+		String language = objItem.getString("language");
+		ProjectPropInterface _propinterface = ProjectPropManager.getForProject(language);
+		if (_propinterface == nilptr){
+			QXMessageBox.Critical("错误", "没有找到为该类型项目注册的插件:" + language, QXMessageBox.Ok, QXMessageBox.Ok);
+			return ;
+		}
+        
+        if (objItem.has("url")){
+			downloadProject(_propinterface, project_name, objItem.getString("url"));
+            return ;
+        }
+        
+        String type = objItem.getString("user");
+        
+		if (_propinterface.create(new WizardLoader()
+				{
+					void loadProject(String file){
+						_mdispace.loadProject(file);
+					}
+					void openTextFile(String file){
+						_mdispace.openTextFile(file);
+					}
+				},project_name, project_path, uuid, _mdispace.getCurrentProject(), add_check.getChecked(), type))
+		{
+			close();
+		}else{
+			QXMessageBox.Critical("错误", "无法建立项目", QXMessageBox.Ok, QXMessageBox.Ok);
+			return ;
+		}
+	}
+    
+    void downloadProject(ProjectPropInterface _propinterface, String defaultName, String url){
+    
+		String localPath = String.formatPath(XPlatform.getAppDirectory().appendPath("examples").appendPath(defaultName + ".zip"), false);
+		
+		if (XPlatform.existsSystemFile(localPath)){
+			if (QXMessageBox.No == QXMessageBox.Question("提示","该示例代码已在本地磁盘存在,是否重新下载?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.No)){
+				loadProject(_propinterface, defaultName, localPath);
+				return ;
+            }
+		}
+        
+        synchronized(WizardDialog.this){
+			if (download_thread == nilptr){
+				
+                ProgressView pv = ProgressView.showWait(this, -1); 
+                pv.centerScreen();
+				pv.setTitleText("正在下载...");
+				download_thread = new Thread(){
+					void run()override{
+						String localUrl = loadOnlineProject(pv, localPath, url);
+                        synchronized(WizardDialog.this){
+							download_thread = nilptr;
+                        }
+                        
+						pv.showResult(true, localUrl != nilptr);
+                        pv.setTitleText(localUrl != nilptr ? "下载完成" : "下载失败");
+                        
+                        pv.setOnDismissListener(new ProgressView.OnDismissListener(){
+							void onDismissListener(ProgressView v)override{
+								runOnUi(new Runnable(){
+									void run()override{
+                                    	if (QXMessageBox.Yes == QXMessageBox.Question("提示","下载已完成,是否载入此代码示例?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes)){
+											loadProject(_propinterface, defaultName, localUrl);
+										}
+                                    }
+                                });
+                            }
+                        });
+                        
+                        pv.dismissAfter(1000);
+                        
+                        runOnUi(new Runnable(){
+							void run()override{
+								projDescr.setText("完毕");
+                            }
+                        });
+					}
+				};
+                projDescr.setText("正在获取... " + url);
+                download_thread.start();
+            }
+        }
+    }
+    
+    String loadOnlineProject(ProgressView pv, String localPath, String url){
+
+		HttpRequest req = new HttpRequest();
+
+		if (req.get(url, 100000, true)){
+			byte [] data = new byte[1024];
+			String content = "";
+			
+            FileOutputStream fos = nilptr;
+            try{
+				fos = new FileOutputStream(localPath);
+				if (req.getResponseCode() >= 200){
+					long length = req.getLength();
+                    long dlsize = 0;
+                    if (length > 0){
+						pv.EnableProgress(true, 0);
+                    }
+					while (req.available(true) > 0){
+						int len = req.readData(data, 0, 1024);
+                        dlsize += length;
+                        if (length > 0){
+							pv.setProgress(dlsize / length);
+                        }
+                        fos.write(data, 0, len);
+					}
+                    pv.setProgress(100);
+				}
+                
+                
+                return localPath;
+            }catch(Exception e){
+            
+            }finally{
+				if (fos != nilptr){
+					fos.close();
+                }
+            }
+		}
+        return nilptr;
+    }
+    
+    void loadProject(ProjectPropInterface _propinterface, String defaultName, String project_path){
+		String project_dir = projPath.getText();
+		if (_propinterface.create(new WizardLoader()
+				{
+					void loadProject(String file){
+						_mdispace.loadProject(file);
+					}
+					void openTextFile(String file){
+						_mdispace.openTextFile(file);
+					}
+				},defaultName, project_dir, project_path, nilptr, false, "example"))
+		{
+			close();
+		}else{
+			QXMessageBox.Critical("错误", "无法建立项目", QXMessageBox.Ok, QXMessageBox.Ok);
+			return ;
+		}
+    }
+    
+	void onResize(int w, int h, int oldw, int oldh){
+		_listview.resize(w - 272, h - 173);
+		_treeview.resize(269, h - 113);
+		lblwidget.move(270, h - 174);
+		lblwidget.resize(w - 272, 61);
+		projDescr.resize(w - 272, 61);
+		_proName.move(30, h - 84);
+		projName.move(100, h - 89);
+		projName.resize(w - 332, 21);
+		_proPath.move(30, h - 48);
+		projPath.move(100, h - 53);
+		projPath.resize(w - 362, 21);
+		btnPathBro.move(w - 262, h - 54);
+		btnOk.move(w - 193, h - 62);
+		btnCancel.move(w - 103, h - 62);
+        add_exists.move(w - 150, h - 96);
+        add_check.move(w - 190, h - 99);
+	}
+    
+    void loadWizard(){
+		actionMap.clear();
+		jsonWizard = nilptr;
+        String confFile = "./config/project_navigation.conf";
+        byte []data ;
+        
+        try{
+            FileInputStream fis = new FileInputStream(confFile);
+            data = fis.read();
+			parseWizard(new String(data));
+			loadAllItem();
+        }catch(Exception e){
+			QXMessageBox.Critical("注意", "无法加载模板", QXMessageBox.Ok, QXMessageBox.Ok);
+            close();
+        }
+
+    }
+    
+    void loadAllItem(){
+		_listview.clear();
+		Map.Iterator<long, JsonArray> iterator = actionMap.iterator();
+        while (iterator.hasNext()){
+			loadItem(iterator.getKey());
+			iterator.next();
+        }
+    }
+    
+    void parseWizard(String txt){
+		bool hasExistProject = !_mdispace.isCurrentProjectEmpty();
+        
+        try
+        {
+            jsonWizard = new JsonObject(txt);
+            JsonObject root = (JsonObject)jsonWizard.get("Navigation");
+
+            if (hasExistProject == false){
+				long itemprj = _treeview.addItem(nilptr, "项目");
+				loadProject(itemprj, root.get("project"), "./res/toolbar/projc.png");
+                _treeview.setExpand(itemprj, true);
+                demo_url = root.getString("example_url");
+                if (demo_url != nilptr && demo_url.length() > 0){
+					example_root = _treeview.addItem(nilptr, "代码示例");
+                    loadexample_item = _treeview.insertItem(example_root,"./res/toolbar/refresh.png","点击刷新");
+                    _treeview.setItemColor(loadexample_item,0,0xff0000ff);
+                    loadLocalExample(true);
+                }
+            }else{
+				long itemfile = _treeview.addItem(nilptr, "文件");
+				loadProject(itemfile, root.get("file"), "./res/toolbar/files.png");
+                _treeview.setExpand(itemfile, true);
+            }
+            
+        }catch(Exception e){
+            /*_system_.consoleWrite("exception ");*/
+        }
+    }
+    
+    void loadProject(long root, JsonNode projectRoot, String icon){
+        JsonNode child = projectRoot.child();
+        while (child != nilptr){
+			String name = child.getName();
+			long item = _treeview.insertItem(root, icon, name);
+			if (child.isArray()){
+				actionMap.put(item, (JsonArray)child);/*.clone()*/
+			}else{
+				loadProject(item, child, icon);
+			}
+			child = child.next();
+        }
+    }
+    
+};

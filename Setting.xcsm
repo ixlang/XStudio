@@ -279,6 +279,9 @@ class Setting : QXDialog {
                 }else
                 if (type.equals("stringlist")){
                     loadStringList(variantManager, cfgName, confi);
+                }else
+                if (type.equals("keysequence")){
+                    loadKeySequence(variantManager, cfgName, confi);
                 }
 				confi = (JsonObject)confi.next();
             }
@@ -314,6 +317,13 @@ class Setting : QXDialog {
         currentProps.put(kv[1], item);
     }
     
+    void loadKeySequence(QXPropertyBrowser.QtVariantPropertyManager manager, String name, JsonObject root){
+        String [] kv = name.split(':');
+        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addProperty(new QXPropertyBrowser.QtVariantProperty(),QXVariant.KeySequence, kv[0]);
+        _propTable.addProperty(item);
+        item.setValue(getSetting(nilptr, kv[1]));
+        currentProps.put(kv[1], item);
+    }
     
     void loadStringList(QXPropertyBrowser.QtVariantPropertyManager manager, String name, JsonObject root){
         String [] kv = name.split(':');
@@ -525,6 +535,18 @@ class Setting : QXDialog {
     
     static bool isShowBuildin(){
 		return get("showbuildin").equals("开启");
+    }
+    
+    static bool isUseTabstop(){
+		return get("tabstop").equals("制表符");
+    }
+    
+    static int getTabWidth(){
+		int nw = get("tabwidth").parseInt();
+        if (nw < 1){
+			nw = 1;
+        }
+        return nw;
     }
     
     static QXFont editorFont;

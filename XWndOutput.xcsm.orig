@@ -1,0 +1,391 @@
+
+class XWndOutput: QXDockWidget{
+    QXSci _sci;
+    static const long APPENTEVENTID = 1;
+    List<String> outputList = new List<String>();
+    Object outputlock = new Object();
+    static bool outputInFocus = false;
+    static XWndOutput outputWnd;
+    Thread mergeThread = nilptr;
+    //Timer urlmon = new Timer();
+    bool sciisHand = false;
+    
+	Pattern url_match = new Pattern("((http[s]{0,1}|ftp)://[a-zA-Z0-9\\.\\-]" + 
+		"+\\.([a-zA-Z]{2,4})(:\\d+)?(/[a-zA-Z0-9\\.\\-~!@#$%^&*+?:_/=<>]*)?)|" + 
+		"(www.[a-zA-Z0-9\\.\\-]+\\.([a-zA-Z]{2,4})(:\\d+)?(/[a-zA-Z0-9\\.\\-~!@#$%^&*+?:_/=<>]*)?)");
+    
+    static void Output(String text){
+        outputWnd.output(text);
+    }
+    void output(String text){
+
+        synchronized(outputlock){
+            outputList.add(text);
+			if (mergeThread == nilptr){
+				//this.Notify(APPENTEVENTID);
+                processOutput();
+			}
+        }
+
+    }
+    
+    void clear(bool focus){
+        _sci.clear();
+        raise();
+    }
+    
+    
+    void reconfig(){
+		syntaxForOutput();
+    }
+    void appendText(String info){
+        _sci.appendText(info);
+    }
+        
+    /**
+		这里用到一个延迟加载的算法， LOG可能会输出上百万行， 高频率连续不断的刷新造成SCI无法及时处理，导致界面停止响应。
+        因此用一个单独的线程来对琐碎的log文本进行合并
+        但是合并时间不能太久，否则会造成输出卡顿
+        
+        所以合并的时候需要计算合并的行数 然后得出合并花费的时间， 既刷新间隔，达到阈值后再显示，
+        阈值算法 
+        阈值 = 显示所用时间 + 50毫秒 + 行数 / 100000 * 5 毫秒
+        
+        经测试， 能有效处理百万行级别的log输出
+        
+        滚动算法， 显示的最顶端行 + 可显示的行 如果小于最后行 说明被人为向上拉了， 则停止自动滚动， 反之自动滚动
+    */
+    void processOutput(){
+		mergeThread = new Thread(){
+			void run(){
+				List<String> tmplist = nilptr;
+				
+				synchronized(outputlock){
+					tmplist = outputList;
+					outputList = new List<String>();
+				}
+				
+                int interval = 50;
+                
+				while(true){
+					
+					String finalstr = "";
+					List.Iterator<String> iter = tmplist.iterator();
+					
+                    while (iter.hasNext()){
+						long start = _system_.currentTimeMillis();
+						int mgcount = 0;
+                        
+						while (iter.hasNext()){
+							String str = iter.next();
+							finalstr = finalstr + str;
+                            
+							mgcount++;
+                            
+                            if (mgcount > interval){
+								mgcount = 0;
+								long curtime = _system_.currentTimeMillis();
+								if (curtime - start > interval){
+									break;
+								}
+                            }
+						}
+						
+						runOnUi(new Runnable(){
+							String appstr = finalstr;
+							void run()override{
+								long displaytime = _system_.currentTimeMillis();
+								int topline = _sci.getFirstVisibleLine();
+                                int scrlines = _sci.getLinesOfDisplay();
+                                
+                                topline += scrlines;
+                                bool tobottom = true;
+                                if (topline < _sci.countOfLine()){
+									tobottom = false;
+                                }
+								_sci.appendText(appstr);
+                                int cutcountline = _sci.countOfLine();
+                                
+                                if (tobottom){
+									_sci.setFirstVisibleLine(cutcountline - scrlines);
+                                }
+                                
+                                displaytime = _system_.currentTimeMillis() - displaytime;
+                                
+								interval = displaytime + 50 + (cutcountline / 100000) * 5;
+							}
+						
+						});
+						
+						finalstr = "";
+                    }
+                    
+                    Thread.sleep(100);
+                    
+					synchronized(outputlock){
+						if (outputList.size() == 0){
+							mergeThread = nilptr;
+							break;
+						}else{
+							tmplist = outputList;
+							outputList = new List<String>();
+						}
+					}
+				}
+			}
+		};
+		mergeThread.start();
+    }
+    
+    void syntaxForOutput(){
+		if (Setting.isDarkStyle()){
+			syntaxForOutputDark();
+            return ;
+		}
+        _sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);
+        //_sci.setWrap(true);
+        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_DEFAULT, 0xffffffff);
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_DEFAULT, 0xff222827);
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, 75, 0xff222827);
+        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
+        _sci.sendEditor(QXSci.SCI_CLEARDOCUMENTSTYLE, 0, 0);
+        
+        //_sci.sendEditor(QXSci.STYLE_LINENUMBER, 1, 0);
+        bool bmac = (_system_.getPlatformId() == 2);
+        if (bmac == false){
+			_sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,"Consolas"); 
+            _sci.sendEditor(QXSci.SCI_STYLESETSIZE, QXSci.STYLE_DEFAULT,9); 
+        }else{
+			_sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,"Monaco"); 
+            _sci.sendEditor(QXSci.SCI_STYLESETSIZE, QXSci.STYLE_DEFAULT,11); 
+        }
+        
+        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0); 
+        _sci.sendEditor(QXSci.SCI_SETEOLMODE, 1, 0); 
+        _sci.sendEditor(QXSci.SCI_SETSELBACK,1,0xfff1ebe5);
+        _sci.sendEditor(QXSci.SCI_SETSELFORE,0,0);
+        
+        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, 0, QXSci.SC_MARGIN_NUMBER); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 0, 65); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 1, 5); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 2, 0); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 3, 0); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 4, 0); 
+
+        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_LINENUMBER, 0xffefefef);
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_LINENUMBER, 0xffaf912b);
+        _sci.sendEditor(QXSci.SCI_SETMARGINLEFT, 0, 0);
+        
+        _sci.sendEditor(QXSci.SCI_SETCARETFORE,0xff000000,0);
+        
+        _sci.sendEditor(QXSci.SCI_SETCARETLINEVISIBLE, 1); 
+        _sci.sendEditor(QXSci.SCI_SETCARETLINEBACK, 0xffefefef); 
+
+        _sci.sendEditor(QXSci.SCI_SETTABWIDTH, 4); 
+    }
+    
+    void syntaxForOutputDark(){
+        _sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);
+        //_sci.setWrap(true);
+        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_DEFAULT, 0xff262525);
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_DEFAULT, 0xffefefef);
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, 75, 0xffefefef);
+        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
+        _sci.sendEditor(QXSci.SCI_CLEARDOCUMENTSTYLE, 0, 0);
+        
+        //_sci.sendEditor(QXSci.STYLE_LINENUMBER, 1, 0);
+        bool bmac = (_system_.getPlatformId() == 2);
+        if (bmac == false){
+			_sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,"Consolas"); 
+            _sci.sendEditor(QXSci.SCI_STYLESETSIZE, QXSci.STYLE_DEFAULT,9); 
+        }else{
+			_sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,"Monaco"); 
+            _sci.sendEditor(QXSci.SCI_STYLESETSIZE, QXSci.STYLE_DEFAULT,11); 
+        }
+        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0); 
+        _sci.sendEditor(QXSci.SCI_SETEOLMODE, 1, 0); 
+        _sci.sendEditor(QXSci.SCI_SETSELBACK,1,0xff3e4849);
+        _sci.sendEditor(QXSci.SCI_SETSELFORE,0,0);
+        
+        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, 0, QXSci.SC_MARGIN_NUMBER); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 0, 65); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 1, 5); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 2, 0); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 3, 0); 
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 4, 0); 
+        
+        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_LINENUMBER, 0xff262525);
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_LINENUMBER, 0xff666666);
+        _sci.sendEditor(QXSci.SCI_SETMARGINLEFT, 0, 0);
+        
+        _sci.sendEditor(QXSci.SCI_SETCARETFORE,0xffffffff,0);
+        
+        _sci.sendEditor(QXSci.SCI_SETCARETLINEVISIBLE, 1); 
+        _sci.sendEditor(QXSci.SCI_SETCARETLINEBACK, 0xff202020); 
+        
+        
+    }
+    
+    bool onClose()override{
+		/*if (urlmon != nilptr){
+			urlmon.cancel();
+            urlmon = nilptr;
+		}*/
+        return true;
+    }
+    void onAttach(){
+        _sci = new QXSci();
+        
+        if (_sci.create()){
+            syntaxForOutput();
+            setWidget(_sci);
+            setOnLayoutEventListener(new onLayoutEventListener(){
+                    void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+                        if (_sci != nilptr){
+                            _sci.resize(w, h );
+                        }
+                    }
+            });
+            
+            _sci.setOnSciEventListener(new SciEventListener(){
+			void ON_DOUBLECLICK(QXSci sci,int position, int line, int modifiers){	
+ 
+				String lineText = sci.getText(line);
+				if (lineText != nilptr && lineText.length() > 0){
+					int pos = lineText.lastIndexOf('(');
+                    if (pos != -1){
+						int lp = lineText.indexOf(':', pos);
+                        if (lp != -1){
+							int le = lineText.indexOf(',', lp);
+							int rp = lineText.indexOf(':', lp + 1);
+                            if (rp != -1 && le != -1){
+								int re = lineText.indexOf(')', lp);
+								String file = lineText.substring(0, pos).trim(true);
+                                int tl = lineText.substring(lp + 1, le).parseInt();
+                                int tr = lineText.substring(rp + 1, re).parseInt();
+                                
+                                
+                                int i = line + 1;
+                                String infos = lineText;
+                                
+                                for (int c = sci.countOfLine(); i < c; i++){
+									String linestr = sci.getText(i);
+                     
+                                    if (linestr.startWith(" ") == false){
+										break;
+                                    }else{
+										infos = infos + "\n" + linestr ;
+                                    }
+                                }
+                                /*if (infos.length() < 5){
+									infos = nilptr;
+                                }*/
+                                XSourceEditor.openForFileInfo(XWorkspace.workspace, file, tl, tr, infos);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        }
+        
+        
+        outputWnd = this;
+        _sci.setIndicStyle(1, QXSci.INDIC_PLAIN);
+        _sci.setIndicCurrent(1);
+        
+        /*urlmon.schedule(new TimerTask(){
+			void run(){
+				runOnUi(new Runnable(){
+					void run()override{
+						testUrl();
+                    }
+                });
+            }
+        
+        }, 1000, -1);*/
+        
+		QXWidget viewport = _sci.viewPort();
+		viewport.setOnMouseEventListener(new onMouseEventListener(){
+           
+            void onMouseMove(QXObject obj, int Button, int x, int y, int flags, int source)override{
+				if (sciisHand){
+					int pos = _sci.positionFromPoint(x, y);
+					int start = _sci.getIndicStart(1, pos);
+                    int end = _sci.getIndicEnd(1, pos);
+                    if (start != 0 && end != 0){
+						_sci.setCursor(QXSci.cursorHand);
+                    }
+                }
+			}
+            
+            void onMouseButtonPress(QXObject obj, int Button, int x, int y, int flags, int source)override{
+				if (sciisHand){
+					int pos = _sci.positionFromPoint(x, y);
+					int start = _sci.getIndicStart(1, pos);
+                    int end = _sci.getIndicEnd(1, pos);
+                    if (start != 0 && end != 0){
+                        _sci.setSelect(start, end);
+                        String current_Url = _sci.getSelectedText();
+                        current_Url = current_Url.trim(true);
+                        if (current_Url.length() > 0){
+							openUrl(current_Url);
+                        }
+                    }
+                }
+			}
+		});
+        
+		_sci.setOnKeyEventListener(new onKeyEventListener(){
+			
+			bool onKeyPress(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier)override{                
+                if (key == Key_Control && sciisHand == false){
+                    sciisHand = true;
+                    testUrl();
+                }
+                
+				return true;
+			}
+            bool onKeyRelease(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier)override{
+                if (key == Key_Control ){
+					_sci.setCursor(QXSci.cursorText);
+                    sciisHand = false;
+                }
+				return true;
+            }
+        });
+        
+         _sci.setOnFocusEventListener(new onFocusEventListener(){
+			void onFocusIn(QXObject obj, bool focus, int reson){
+				sciisHand = false;
+                XFindDlg.findinOutput = true;
+                _sci.setCursor(QXSci.cursorText);
+			}
+			void onFocusOut(QXObject obj, bool focus, int reson){
+				sciisHand = false;
+                _sci.setCursor(QXSci.cursorText);
+			}
+		});
+    }
+    
+    void testUrl(){
+		if (_sci.isModified()){
+			String text = _sci.getText();
+			_sci.clearIndic(0, _sci.getLength());
+			_sci.setIndicCurrent(1);
+			
+			if (text.length() > 0){
+				Pattern.Result rt = url_match.match(text, 0);
+				
+				for (int i =0; i < rt.length(); i++){
+					int start = rt.get(i).start();
+					int end = rt.get(i).end();
+					_sci.applyIndic(start, end - start + 1);
+				}
+			}
+            _sci.setSavePoint();
+        }
+    }
+    
+    
+};

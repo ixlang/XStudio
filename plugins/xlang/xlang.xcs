@@ -31,6 +31,10 @@ class XLANGPlugManager{
         IProject loadProject(JsonObject content, String lang){
 			return nilptr;
         }
+        
+        void onMenuTrigged(String name){
+        
+        }
 	};
     
     static void output(String text){

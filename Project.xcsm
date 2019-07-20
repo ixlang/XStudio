@@ -1,7 +1,8 @@
 
-class Project{
+class Project
+{
     static const int XPROJECT_VERSION = 1;
-    
+
     long viewItem, sourcesRoot, extendsRoot;
     JsonObject xintelliSenseMap;
     JsonObject root;
@@ -15,23 +16,24 @@ class Project{
     Variables variables = new Variables();
     Configure currentConfig;
     Object buildlock = new Object();
-	Thread build_thread;
+    Thread build_thread;
     bool bModified = false;
-    
+
     Map<String, Configure> configures = new Map<String, Configure>();
 
-    bool cloneConfigure(String tempName, String newName){
-		if (configures.containsKey(newName) == false){
-			Configure cfgs = getConfigure(tempName);
-            if (cfgs != nilptr){
-				Configure newcfg = cfgs.clone(newName);
-                if (newcfg != nilptr){
-					configures.put(newName, newcfg);
+    bool cloneConfigure(String tempName, String newName)
+    {
+        if (configures.containsKey(newName) == false) {
+            Configure cfgs = getConfigure(tempName);
+            if (cfgs != nilptr) {
+                Configure newcfg = cfgs.clone(newName);
+                if (newcfg != nilptr) {
+                    configures.put(newName, newcfg);
                     bModified = true;
-                    try{
-						((JsonObject)root.get("configures")).put(newName, newcfg.root);
-                    }catch(Exception e){
-                    
+                    try {
+                        ((JsonObject)root.get("configures")).put(newName, newcfg.root);
+                    } catch(Exception e) {
+
                     }
                     return true;
                 }
@@ -39,496 +41,549 @@ class Project{
         }
         return false;
     }
-    
-    void removeConfigure(String tempName){
-		configures.remove(tempName);
-         try{
-			((JsonObject)root.get("configures")).remove(tempName);
-         }catch(Exception e){
-                    
-         }
+
+    void removeConfigure(String tempName)
+    {
+        configures.remove(tempName);
+        try {
+            ((JsonObject)root.get("configures")).remove(tempName);
+        } catch(Exception e) {
+
+        }
         bModified = true;
     }
 
 
-    bool detectSourcesModified(){
-		Configure configure = currentConfig;
-        
-        if (configure != nilptr){
-			String workDir = getProjectDir();
-			JsonArray sources = getSources();
-            if (sources != nilptr){
-				for (int i = 0; i < sources.length(); i++){
-					String srcname = sources.getString(i);
-					String fullsourcePath = String.formatPath(workDir.appendPath(srcname), false);
-					if (configure.isModified(fullsourcePath)){
-						return true;
-					}
-				}
+    bool detectSourcesModified()
+    {
+        Configure configure = currentConfig;
+
+        if (configure != nilptr) {
+            String workDir = getProjectDir();
+            JsonArray sources = getSources();
+            if (sources != nilptr) {
+                for (int i = 0; i < sources.length(); i++) {
+                    String srcname = sources.getString(i);
+                    String fullsourcePath = String.formatPath(workDir.appendPath(srcname), false);
+                    if (configure.isModified(fullsourcePath)) {
+                        return true;
+                    }
+                }
             }
         }
         return false;
     }
-    
-    bool setCurrentConfigure(String configName, bool btips){
-		if (configName.length() > 0){
-			try{
-				Configure cfg = configures.get(configName);
-				if (cfg != nilptr){
-					currentConfig = cfg;
-                    return true;
-				}
-			}catch(Exception e){
-				if (btips){
-					QXMessageBox.Critical("错误", "找不到此配置", QXMessageBox.Ok, QXMessageBox.Ok);
+
+    void updateSourceModified(){
+        Configure configure = currentConfig;
+
+        if (configure != nilptr) {
+            String workDir = getProjectDir();
+            JsonArray sources = getSources();
+            if (sources != nilptr) {
+                for (int i = 0; i < sources.length(); i++) {
+                    String srcname = sources.getString(i);
+                    String fullsourcePath = String.formatPath(workDir.appendPath(srcname), false);
+                    configure.isModified(fullsourcePath);
                 }
-			}
+            }
+        }
+    }
+    /* void updateMd5s(){
+    	Configure configure = currentConfig;
+
+         if (configure != nilptr){
+    		configure.updateMd5s();
+         }
+     }*/
+
+    bool setCurrentConfigure(String configName, bool btips)
+    {
+        if (configName.length() > 0) {
+            try {
+                Configure cfg = configures.get(configName);
+                if (cfg != nilptr) {
+                    currentConfig = cfg;
+                    return true;
+                }
+            } catch(Exception e) {
+                if (btips) {
+                    QXMessageBox.Critical("错误", "找不到此配置", QXMessageBox.Ok, QXMessageBox.Ok);
+                }
+            }
         }
         return false;
     }
-    
-    Configure getConfigure(String name){
-		if (name.length() > 0){
-			try{
-				return configures.get(name);
-			}catch(Exception e){
-				
-			}
+
+    Configure getConfigure(String name)
+    {
+        if (name.length() > 0) {
+            try {
+                return configures.get(name);
+            } catch(Exception e) {
+
+            }
         }
         return nilptr;
     }
-    
-    String getOutputDir(){
-		if (currentConfig != nilptr && _propinterface != nilptr){
-			String out_path = currentConfig .getOption("outpath");
-			out_path = String.formatPath(XlangProjectProp.map_variable(this, currentConfig , out_path), false);
-			return (out_path);    
+
+    String getOutputDir()
+    {
+        if (currentConfig != nilptr && _propinterface != nilptr) {
+            String out_path = currentConfig .getOption("outpath");
+            out_path = String.formatPath(XlangProjectProp.map_variable(this, currentConfig, out_path), false);
+            return (out_path);
         }
         return nilptr;
     }
-    
-    String getOutputTarget(){
-		if (currentConfig != nilptr && _propinterface != nilptr){
-			String out_path = currentConfig .getOption("cmd");
-			out_path = String.formatPath(XlangProjectProp.map_variable(this, currentConfig , out_path), false);
-			return (out_path);    
+
+    String getOutputTarget()
+    {
+        if (currentConfig != nilptr && _propinterface != nilptr) {
+            String out_path = currentConfig .getOption("cmd");
+            out_path = String.formatPath(XlangProjectProp.map_variable(this, currentConfig, out_path), false);
+            return (out_path);
         }
         return nilptr;
     }
-    
-    void setOption(String key, String text){
+
+    void setOption(String key, String text)
+    {
         root.remove(key);
         root.put(key, text);
         bModified = true;
     }
-    
-    bool importPackage(PackageManager.PackageInfo pi){
-		return true;
+
+    bool importPackage(PackageManager.PackageInfo pi)
+    {
+        return true;
     }
-    
+
     /*void deployCurrentConfigure(){
-		if (currentConfig != nilptr){
-			currentConfig.deploy(this);
+    	if (currentConfig != nilptr){
+    		currentConfig.deploy(this);
         }
     }*/
-    
-    String getOption(String key){
-		String value = nilptr;
-		try{
-			value = root.getString(key);
-		}catch(Exception e){
-		
-		}
-        
-        if (value == nilptr){
-			value = "";
+
+    String getOption(String key)
+    {
+        String value = nilptr;
+        try {
+            value = root.getString(key);
+        } catch(Exception e) {
+
+        }
+
+        if (value == nilptr) {
+            value = "";
         }
         return value;
     }
-    
-    String readSlnFile(String file){
+
+    String readSlnFile(String file)
+    {
         FileInputStream fis = nilptr;
-        try{
+        try {
             fis = new FileInputStream(file);
-        }catch(Exception e){
-                    
+        } catch(Exception e) {
+
         }
-        if (fis != nilptr){
+        if (fis != nilptr) {
             byte []data = fis.read();
             return new String(data);
         }
-        
+
         return nilptr;
     }
-    
-    void thread_build(Builder _builder, BuildListener l, XlangProjectProp. BuildParams params){
-		if (_propinterface != nilptr){
-			_propinterface.build(_builder, this, currentConfig, params);
-			build_thread = nilptr;
-            if (l != nilptr){
-				l.onBuild(true);
+
+    void thread_build(Builder _builder, BuildListener l, XlangProjectProp. BuildParams params)
+    {
+        if (_propinterface != nilptr) {
+            bool succ = _propinterface.build(_builder, this, currentConfig, params);
+            build_thread = nilptr;
+            if (l != nilptr) {
+                l.onBuild(succ);
             }
-        }else{
-            if (l != nilptr){
-				l.onBuild(false);
-            }        
+        } else {
+            if (l != nilptr) {
+                l.onBuild(false);
+            }
         }
     }
-    
-    void thread_cleanup(Builder _builder){
-		if (_propinterface != nilptr){
-			_propinterface.cleanup(_builder, this, currentConfig);
-			build_thread = nilptr;
+
+    void thread_cleanup(Builder _builder)
+    {
+        if (_propinterface != nilptr) {
+            _propinterface.cleanup(_builder, this, currentConfig);
+            build_thread = nilptr;
         }
     }
-    
-    bool cleanup(Builder _builder){
-		Builder.clear(true);
-        
-		synchronized(buildlock){
-			if (build_thread == nilptr){
-            
-				ProgressView pv = ProgressView.showWait(-1);
-                
+
+    bool cleanup(Builder _builder)
+    {
+        Builder.clear(true);
+
+        synchronized(buildlock) {
+            if (build_thread == nilptr) {
+
+                ProgressView pv = ProgressView.showWait(-1);
+
                 pv.centerScreen();
-                
+
                 pv.setTitleText("正在清理...");
-                
+
                 _builder.OutputText("[" + String.formatDate("%c", _system_.currentTimeMillis()) + "] 已启动清理...\n");
-                
-				build_thread = new Thread(){
-					void run(){
-						thread_cleanup(_builder);
+
+                build_thread = new Thread() {
+                    void run() {
+                        thread_cleanup(_builder);
                         pv.showResult(true, true);
                         pv.setTitleText("清理完成");
                         pv.dismissAfter(1000);
-					}
-				};
-				build_thread.start();
-			}else{ 
-				return false;
-			}
+                    }
+                };
+                build_thread.start();
+            } else {
+                return false;
+            }
         }
         return true;
     }
-    
-    bool build(Builder _builder, BuildListener l, XlangProjectProp. BuildParams params){
-    
-		synchronized(buildlock){
-			if (build_thread == nilptr){
-            
-				Builder.clear(true);
-                
-				ProgressView pv = ProgressView.showWait(-1);
-                
+
+    bool build(Builder _builder, BuildListener l, XlangProjectProp. BuildParams params)
+    {
+
+        synchronized(buildlock) {
+            if (build_thread == nilptr) {
+
+                Builder.clear(true);
+
+                ProgressView pv = ProgressView.showWait(-1);
+
                 pv.centerScreen();
-                
+
                 pv.setTitleText("正在编译...");
-                
+
                 _builder.OutputText("[" + String.formatDate("%c", _system_.currentTimeMillis()) + "] 已启动编译...\n");
-                
-				build_thread = new Thread(){
-					void run(){
-						thread_build(_builder, l, params);
+
+                build_thread = new Thread() {
+                    void run() {
+                        thread_build(_builder, l, params);
                         pv.showResult(true, true);
                         pv.setTitleText("编译完成");
+                        updateSourceModified();
                         pv.dismissAfter(1000);
-					}
-				};
-				build_thread.start();
-			}else{
-				if (l != nilptr){
-					l.onBuild(false);
-				}    
-				return false;
-			}
+                    }
+                };
+                build_thread.start();
+            } else {
+                if (l != nilptr) {
+                    l.onBuild(false);
+                }
+                return false;
+            }
         }
         return true;
     }
-        
-    JsonArray getSources(){
+
+    JsonArray getSources()
+    {
         return root.getArray("sources");
     }
-    
-    String getComment(){
-		String text = root.getString("comment");
-        if (text == nilptr){
-			text = "";
+
+    String getComment()
+    {
+        String text = root.getString("comment");
+        if (text == nilptr) {
+            text = "";
         }
         return text;
     }
-    
-    void setComment(String comment){
-		bModified = true;
-        if (comment == nilptr){
-			comment = "";
+
+    void setComment(String comment)
+    {
+        bModified = true;
+        if (comment == nilptr) {
+            comment = "";
         }
         root.remove("comment");
-		root.put("comment", comment);
+        root.put("comment", comment);
     }
-    
-    bool loadConfigure(JsonObject configs){
+
+    bool loadConfigure(JsonObject configs)
+    {
         JsonObject confi = (JsonObject)configs.child();
-        
-		while(confi != nilptr){
-			String cfgName = confi.getName();
-			variables.setVariable("$(Configure)", cfgName);
-			Configure cfg = new Configure(cfgName, confi);
-			configures.put(cfgName, cfg);
-			/*_system_.consoleWrite(cfgName + " load conf Ok\n");*/
-			if (currentConfig == nilptr){
-				currentConfig = cfg;
-			}
-			confi = (JsonObject)confi.next();
-		}
-        
+
+        while(confi != nilptr) {
+            String cfgName = confi.getName();
+            variables.setVariable("$(Configure)", cfgName);
+            Configure cfg = new Configure(cfgName, confi);
+            configures.put(cfgName, cfg);
+            /*_system_.consoleWrite(cfgName + " load conf Ok\n");*/
+            if (currentConfig == nilptr) {
+                currentConfig = cfg;
+            }
+            confi = (JsonObject)confi.next();
+        }
+
         return currentConfig != nilptr;
     }
-    
-    bool loadProject(JsonObject xworkspace, bool bconsole){
+
+    bool loadProject(JsonObject xworkspace, bool bconsole)
+    {
         JsonObject proj = (JsonObject)xworkspace.child();
-        if (proj != nilptr){
+        if (proj != nilptr) {
             root = proj;
             projectName = proj.getName();
             languageConf = proj.getString("language");
-            if (false == loadConfigure((JsonObject)proj.get("configures"))){
-				if (bconsole == false){
-					QXMessageBox.Critical("错误", "找不到有效的项目配置.", QXMessageBox.Ok, QXMessageBox.Ok);
-                }else{
-					_system_.consoleWrite(XPlatform.converToPlatformCharSet("找不到有效的配置") + "\n");
+            if (false == loadConfigure((JsonObject)proj.get("configures"))) {
+                if (bconsole == false) {
+                    QXMessageBox.Critical("错误", "找不到有效的项目配置.", QXMessageBox.Ok, QXMessageBox.Ok);
+                } else {
+                    _system_.consoleWrite(XPlatform.converToPlatformCharSet("找不到有效的配置") + "\n");
                 }
-				
+
                 return false;
             }
             variables.setVariable("$(ProjectName)", projectName);
             variables.setVariable("$(ProjectLanguage)", languageConf);
             _propinterface = ProjectPropManager.getForProject(languageConf);
             projectPlugin = PluginsController.getPlugin(languageConf);
-            if (_propinterface != nilptr){
-                return true;        
-            }else{
-				if (bconsole == false){
-					QXMessageBox.Critical("错误", "不支持的项目类型.\n请注意: 没有为该类型项目提供配置文件.", QXMessageBox.Ok, QXMessageBox.Ok);
-                }else{
-					_system_.consoleWrite(XPlatform.converToPlatformCharSet("不支持的项目类型.\n请注意: 没有为该类型项目提供配置文件:" + getLanguage()) + "\n");
+            if (_propinterface != nilptr) {
+                return true;
+            } else {
+                if (bconsole == false) {
+                    QXMessageBox.Critical("错误", "不支持的项目类型.\n请注意: 没有为该类型项目提供配置文件.", QXMessageBox.Ok, QXMessageBox.Ok);
+                } else {
+                    _system_.consoleWrite(XPlatform.converToPlatformCharSet("不支持的项目类型.\n请注意: 没有为该类型项目提供配置文件:" + getLanguage()) + "\n");
                 }
             }
         }
         return false;
     }
-    bool loadWorkspace(String file, bool bconsole){
-		try{
-			String content = readSlnFile(file);
-			if (content != nilptr){
-				JsonObject _root = new JsonObject(content);
-				loadProject(_root, bconsole);
-				projpath = file;
-				variables.setVariable("$(ProjectSlnFile)", file);
+    bool loadWorkspace(String file, bool bconsole)
+    {
+        try {
+            String content = readSlnFile(file);
+            if (content != nilptr) {
+                JsonObject _root = new JsonObject(content);
+                loadProject(_root, bconsole);
+                projpath = file;
+                variables.setVariable("$(ProjectSlnFile)", file);
                 projDir = String.formatPath(file.findVolumePath(), false);
-				variables.setVariable("$(ProjectDir)", projDir);
-                if (bconsole == false){
-					intelliSense = new XIntelliSense(this, currentConfig);
+                variables.setVariable("$(ProjectDir)", projDir);
+                if (bconsole == false) {
+                    intelliSense = new XIntelliSense(this, currentConfig);
                 }
-				return true;
-			}
-		}catch(Exception e){
-			if (bconsole == false){
-				QXMessageBox.Critical("错误", "加载项目时出现错误.", QXMessageBox.Ok, QXMessageBox.Ok);
-            }else{
-				_system_.consoleWrite(XPlatform.converToPlatformCharSet("加载项目时出现错误:" + file) + "\n");
+                return true;
             }
-		}
+        } catch(Exception e) {
+            if (bconsole == false) {
+                QXMessageBox.Critical("错误", "加载项目时出现错误.", QXMessageBox.Ok, QXMessageBox.Ok);
+            } else {
+                _system_.consoleWrite(XPlatform.converToPlatformCharSet("加载项目时出现错误:" + file) + "\n");
+            }
+        }
         return false;
     }
-    
-    bool createProject(String name){
+
+    bool createProject(String name)
+    {
         root = new JsonObject();
         root.put("version", XPROJECT_VERSION);
         root.put("name",name);
         root.put("language","xlang");
-                
+
         Configure conf = new Configure();
         conf.createConfigure(name, root, "current");
         return true;
     }
-    
-    String map_variable(String text){
+
+    String map_variable(String text)
+    {
         return variables.map_variable(text);
     }
-    String getName(){
+    String getName()
+    {
         return projectName;
     }
-    
-    String getLanguage(){
+
+    String getLanguage()
+    {
         return languageConf;
     }
-    
-    bool addSource(String filePath){
-		String rfp = filePath.toRelativePath(getProjectDir(), false);
-		/*_system_.consoleWrite(String.format(" %s toRelativePath %s = %s\n", filePath, getProjectDir(), rfp));*/
-		if (rfp == nilptr || rfp.length() == 0){
-			QXMessageBox.Critical("注意", "无法将该文件转换为相对路径储存, 项目移植或者位置发生改动时将不能被正常编译!", QXMessageBox.Ok, QXMessageBox.Ok);
-			rfp = filePath;
-		}
-        if (intelliSense != nilptr){
-			intelliSense.addSource(filePath);
-		}
-        if (root != nilptr){
+
+    bool addSource(String filePath)
+    {
+        String rfp = filePath.toRelativePath(getProjectDir(), false);
+        /*_system_.consoleWrite(String.format(" %s toRelativePath %s = %s\n", filePath, getProjectDir(), rfp));*/
+        if (rfp == nilptr || rfp.length() == 0) {
+            QXMessageBox.Critical("注意", "无法将该文件转换为相对路径储存, 项目移植或者位置发生改动时将不能被正常编译!", QXMessageBox.Ok, QXMessageBox.Ok);
+            rfp = filePath;
+        }
+        if (intelliSense != nilptr) {
+            intelliSense.addSource(filePath);
+        }
+        if (root != nilptr) {
             JsonArray sources = root.getArray("sources");
-            if (sources == nilptr){
+            if (sources == nilptr) {
                 sources = new JsonArray();
                 root.put("sources", sources);
             }
-            sources.put(rfp);	
-            bModified = true; 
-			XWndSln._slnView.updateAppendSource(this, 1);
+            sources.put(rfp);
+            bModified = true;
+            XWndSln._slnView.updateAppendSource(this, 1);
             return true;
         }
         return false;
     }
-    
-    String replaceSource(int index, String filePath){
-		String rfp = filePath.toRelativePath(getProjectDir(), false);
-		/*_system_.consoleWrite(String.format(" %s toRelativePath %s = %s\n", filePath, getProjectDir(), rfp));*/
-		if (rfp == nilptr || rfp.length() == 0){
-			QXMessageBox.Critical("注意", "无法将该文件转换为相对路径储存, 项目移植或者位置发生改动时将不能被正常编译!", QXMessageBox.Ok, QXMessageBox.Ok);
-			rfp = filePath;
-		}
-        if (root != nilptr){
+
+    String replaceSource(int index, String filePath)
+    {
+        String rfp = filePath.toRelativePath(getProjectDir(), false);
+        /*_system_.consoleWrite(String.format(" %s toRelativePath %s = %s\n", filePath, getProjectDir(), rfp));*/
+        if (rfp == nilptr || rfp.length() == 0) {
+            QXMessageBox.Critical("注意", "无法将该文件转换为相对路径储存, 项目移植或者位置发生改动时将不能被正常编译!", QXMessageBox.Ok, QXMessageBox.Ok);
+            rfp = filePath;
+        }
+        if (root != nilptr) {
             JsonArray sources = root.getArray("sources");
-            if (sources == nilptr){
+            if (sources == nilptr) {
                 sources = new JsonArray();
                 root.put("sources", sources);
             }
             //替换原有的
             sources.put(index, rfp);
-            
+
             bModified = true;
             return rfp;
         }
         return nilptr;
     }
-    
-    bool save(){
+
+    bool save()
+    {
         FileOutputStream fos = nilptr;
-        try{
+        try {
             fos = new FileOutputStream(projpath);
-        }catch(Exception e){
-            
+        } catch(Exception e) {
+
         }
-        
-        if (fos != nilptr){
-			JsonObject json = new JsonObject();
-			json.put(projectName, root);
+
+        if (fos != nilptr) {
+            JsonObject json = new JsonObject();
+            json.put(projectName, root);
             byte []data = json.toString(true).getBytes();
             bModified = false;
-            
+
             Map.Iterator<String, Configure> iter = configures.iterator();
-            
-            while (iter.hasNext()){
-				iter.getValue().save();
-				iter.next();
+
+            while (iter.hasNext()) {
+                iter.getValue().save();
+                iter.next();
             }
             return fos.write(data) == data.length;
         }
-        
+
         return false;
     }
-    
-    Project clone(String newName){
-		JsonObject json = new JsonObject();
-		json.put(newName, root);
+
+    Project clone(String newName)
+    {
+        JsonObject json = new JsonObject();
+        json.put(newName, root);
         String content = json.toString(true);
-        
+
         Project newpj = new Project();
         newpj.root = new JsonObject(content);
         return newpj;
     }
-    
-    bool saveAsTemplate(String templateName, String descr){
-		Map<String, String> dirs = new Map<String, String>();
+
+    bool saveAsTemplate(String templateName, String descr)
+    {
+        Map<String, String> dirs = new Map<String, String>();
         Vector<String> predir = new Vector<String>();
-        
+
         int c = getSourceFileCount();
-        
+
         String slash = String.formatPath("/", false);
-        
-        for (int i = 0; i < c; i ++){
-			String source = String.formatPath(getSourcePath(i), false);
+
+        for (int i = 0; i < c; i ++) {
+            String source = String.formatPath(getSourcePath(i), false);
             String filerelaPath = source.toRelativePath(projDir, true);
             String[] sp = filerelaPath.split(slash);
-            
+
             String dir = "";
-            
-            if (sp.length > 0){
-				for (int x = 0;x < sp.length - 1; x++){
-					if (sp[x].equals("..")){
-						return false;
-					}
-					if (sp[x].equals(".")){
-						continue;
-					}else{
-						if (dir.length() > 0){
-							dir.appendPath(sp[x]);
-						}else{
-							dir = sp[x];
-						}
-					}
-					if (dirs.containsKey(dir) == false){
-						dirs.put(dir, nilptr);
-						predir.add(dir);
-					}
-				}
+
+            if (sp.length > 0) {
+                for (int x = 0; x < sp.length - 1; x++) {
+                    if (sp[x].equals("..")) {
+                        return false;
+                    }
+                    if (sp[x].equals(".")) {
+                        continue;
+                    } else {
+                        if (dir.length() > 0) {
+                            dir.appendPath(sp[x]);
+                        } else {
+                            dir = sp[x];
+                        }
+                    }
+                    if (dirs.containsKey(dir) == false) {
+                        dirs.put(dir, nilptr);
+                        predir.add(dir);
+                    }
+                }
 
             }
-            
-            if (filerelaPath.lower().endWith(".xprj") == false){
-				dirs.put(source, filerelaPath);
+
+            if (filerelaPath.lower().endWith(".xprj") == false) {
+                dirs.put(source, filerelaPath);
             }
-            
+
         }
         String newid = "" + Math.random() + "-" + _system_.currentTimeMillis() ;
         String tempfile = "./config/" + newid + ".utemp";
-        
+
         String temppath = XPlatform.getAppDirectory().appendPath(tempfile);
-        
-        try{
-			FileOutputStream fis = new FileOutputStream(temppath);
-			ZipArchive zs = new ZipArchive();
-            
-            if (zs.create(fis)){
-            
-				for (int i = 0; i < predir.size(); i++){
-					zs.createEntry(new ZipFile(predir.get(i), nilptr, true, _system_.currentTimeMillis()));
-                }
-                
-                Map.Iterator<String, String> iter = dirs.iterator();
-                
-                while (iter.hasNext()){
-					String relval = iter.getValue();
-                    if (relval != nilptr){
-						zs.createEntry(new ZipFile(iter.getValue(), new FileInputStream(iter.getKey()), false, _system_.currentTimeMillis()));
-                    }
-					iter.next();
+
+        try {
+            FileOutputStream fis = new FileOutputStream(temppath);
+            ZipArchive zs = new ZipArchive();
+
+            if (zs.create(fis)) {
+
+                for (int i = 0; i < predir.size(); i++) {
+                    zs.createEntry(new ZipFile(predir.get(i), nilptr, true, _system_.currentTimeMillis()));
                 }
 
-				String temp_proj = projpath.append(".temptelate");
+                Map.Iterator<String, String> iter = dirs.iterator();
+
+                while (iter.hasNext()) {
+                    String relval = iter.getValue();
+                    if (relval != nilptr) {
+                        zs.createEntry(new ZipFile(iter.getValue(), new FileInputStream(iter.getKey()), false, _system_.currentTimeMillis()));
+                    }
+                    iter.next();
+                }
+
+                String temp_proj = projpath.append(".temptelate");
                 JsonObject new_proot = new JsonObject();
                 new_proot.put("${ProjectName}", root);
-                
-				try{
-					FileOutputStream pfos = new FileOutputStream(temp_proj);
-					pfos.write(new_proot.toString(true).getBytes());
+
+                try {
+                    FileOutputStream pfos = new FileOutputStream(temp_proj);
+                    pfos.write(new_proot.toString(true).getBytes());
                     pfos.close();
-				}catch(Exception e){
-					return false;
-				}
-                
+                } catch(Exception e) {
+                    return false;
+                }
+
                 zs.createEntry(new ZipFile("${ProjectName}.xprj", new FileInputStream(temp_proj), false, _system_.currentTimeMillis()));
-                
+
                 zs.close();
-                
-				JsonObject temproot = new JsonObject();
+
+                JsonObject temproot = new JsonObject();
                 temproot.put("name", templateName);
                 temproot.put("uuid", newid);
                 temproot.put("language", languageConf);
@@ -536,247 +591,265 @@ class Project{
                 temproot.put("platform", "用户自定义");
                 temproot.put("details", descr);
                 temproot.put("user", "project");
-				
+
                 String confFile = "./config/project_navigation.conf";
-				byte []data ;
-				
-				try{
-					FileInputStream fiss = new FileInputStream(confFile);
-					data = fiss.read();
+                byte []data ;
+
+                try {
+                    FileInputStream fiss = new FileInputStream(confFile);
+                    data = fiss.read();
                     fiss.close();
-				}catch(Exception e){
-					return false;
-				}
-                
+                } catch(Exception e) {
+                    return false;
+                }
+
                 String projections = new String(data);
                 JsonObject pjroot = new JsonObject(projections);
                 JsonObject Navigation = (JsonObject)pjroot.get("Navigation");
-                
-                if (Navigation == nilptr){
-					Navigation = new JsonObject();
+
+                if (Navigation == nilptr) {
+                    Navigation = new JsonObject();
                     pjroot.put("Navigation", Navigation);
                 }
-                
+
                 JsonObject project_class = (JsonObject)Navigation.get("project");
-                
-                if (project_class == nilptr){
-					project_class = new JsonObject();
+
+                if (project_class == nilptr) {
+                    project_class = new JsonObject();
                     Navigation.put("project", project_class);
                 }
-                                
+
                 JsonArray language_class = (JsonArray)project_class.get(languageConf);
-                if (language_class == nilptr){
-					language_class = new JsonArray();
+                if (language_class == nilptr) {
+                    language_class = new JsonArray();
                     Navigation.put(languageConf, language_class);
                 }
-                
+
                 language_class.put(temproot);
-                
-				try{
-					FileOutputStream foss = new FileOutputStream(confFile);
-					foss.write(pjroot.toString(true).getBytes());
-				}catch(Exception e){
-					return false;
-				}
+
+                try {
+                    FileOutputStream foss = new FileOutputStream(confFile);
+                    foss.write(pjroot.toString(true).getBytes());
+                } catch(Exception e) {
+                    return false;
+                }
             }
-            
+
             return true;
-        }catch(Exception e){
-        
+        } catch(Exception e) {
+
         }
     }
-    bool saveAs(String path){
+    bool saveAs(String path)
+    {
         FileOutputStream fos = nilptr;
-        try{
+        try {
             fos = new FileOutputStream(path);
-        }catch(Exception e){
-            
+        } catch(Exception e) {
+
         }
-        
-        if (fos != nilptr){
+
+        if (fos != nilptr) {
             byte []data = root.toString(true).getBytes();
             return fos.write(data) == data.length;
         }
-        
+
         return false;
     }
-    
-	String getSourcePath(int id){
-		String path = getSourceItem(id);
-        if (path != nilptr){
-			return getFullPath(path);
+
+    String getSourcePath(int id)
+    {
+        String path = getSourceItem(id);
+        if (path != nilptr) {
+            return getFullPath(path);
         }
         return path;
-	}
+    }
     /*String getSourceFullPath(int id){
-		String source_path = getSource(id);
-		return getFullPath(source_path);
+    	String source_path = getSource(id);
+    	return getFullPath(source_path);
     }*/
-    String generateFullPath(String source_path){
+    String generateFullPath(String source_path)
+    {
         String fullpath = source_path.toAbsolutePath(getProjectDir());
         return String.formatPath(fullpath, false);
-	}
-    
-	String getFullPath(String source_path){
+    }
+
+    String getFullPath(String source_path)
+    {
         String fullpath = String.formatPath(source_path.toAbsolutePath(getProjectDir()), false).replace("\\", "/");
-        
+
         String finalpath;
-        
-        if (XPlatform.existsSystemFile(fullpath)){
-			finalpath = fullpath;
-        }else{
-			finalpath = source_path;
+
+        if (XPlatform.existsSystemFile(fullpath)) {
+            finalpath = fullpath;
+        } else {
+            finalpath = source_path;
         }
 
         return String.formatPath(finalpath, false);
-	}
-    String getProjectDir(){
+    }
+    String getProjectDir()
+    {
         return projpath.findVolumePath();
     }
-    
-    int getSourceFileCount(){
+
+    int getSourceFileCount()
+    {
         return root.getArray("sources").length();
-    } 
-    
-    String getSourceItem(int id){
+    }
+
+    String getSourceItem(int id)
+    {
         return root.getArray("sources").getString(id);
     }
-    void removeSource(int id){
-		String szFile = getSourcePath(id);
-        if (intelliSense != nilptr){
-			intelliSense.updateSource(szFile, nilptr);
+    void removeSource(int id)
+    {
+        String szFile = getSourcePath(id);
+        if (intelliSense != nilptr) {
+            intelliSense.updateSource(szFile, nilptr);
         }
-        try{
-			root.getArray("sources").remove(id);
+        try {
+            root.getArray("sources").remove(id);
             bModified = true;
-        }catch(Exception e){
-        
+        } catch(Exception e) {
+
         }
-        
-	}
-    
-    String rename(int sourceID, String newname){
-		String path = getSourcePath(sourceID);
-        if ( _system_.rename(path, newname)){
-			if (intelliSense != nilptr){
-				intelliSense.updateSource(path, newname);
-			}
-			String shortname =  replaceSource(sourceID, newname);
-            if (shortname != nilptr){
-				XSourceEditor.updateDocumentTo(path, newname);
+
+    }
+
+    String rename(int sourceID, String newname)
+    {
+        String path = getSourcePath(sourceID);
+        if ( _system_.rename(path, newname)) {
+            if (intelliSense != nilptr) {
+                intelliSense.updateSource(path, newname);
+            }
+            String shortname =  replaceSource(sourceID, newname);
+            if (shortname != nilptr) {
+                XSourceEditor.updateDocumentTo(path, newname);
                 return shortname;
             }
         }
         return nilptr;
     }
-    
-    bool isPathSeted(){
+
+    bool isPathSeted()
+    {
         return projpath != nilptr;
     }
-    
-    void setPath(String path){
+
+    void setPath(String path)
+    {
         projpath = path;
     }
-    
-    bool isModified(){
-        if (bModified == false){
+
+    bool isModified()
+    {
+        if (bModified == false) {
             Map.Iterator<String, Configure> iter = configures.iterator();
-            while (iter.hasNext()){
-				if (iter.getValue().isModified()){
-					return true;
+            while (iter.hasNext()) {
+                if (iter.getValue().isModified()) {
+                    return true;
                 }
-				iter.next();
-            }      
-            return false;  
+                iter.next();
+            }
+            return false;
         }
         return true;
     }
-    
-    void debugRun(IBuilder builder){
-		XMemoryWnd.reset();
+
+    void debugRun(IBuilder builder)
+    {
+        XMemoryWnd.reset();
         MemoryLookupWnd.reset();
         _propinterface.debugRun(builder, this, currentConfig);
     }
-    
-	void stopRun(){
-		_propinterface.stopRun();
-	}
-    void Run(IBuilder builder){
+
+    void stopRun()
+    {
+        _propinterface.stopRun();
+    }
+    void Run(IBuilder builder)
+    {
         _propinterface.Run(builder, this, currentConfig);
     }
-	void updateXintelliSense(){
-		String content = intelliSense.getIntelliSenseMap();
-		//_system_.consoleWrite(content);
-        try{
-			xintelliSenseMap = new JsonObject(content);
-        }catch(Exception e){
-			xintelliSenseMap = nilptr;
+    void updateXintelliSense()
+    {
+        String content = intelliSense.getIntelliSenseMap();
+        //_system_.consoleWrite(content);
+        try {
+            xintelliSenseMap = new JsonObject(content);
+        } catch(Exception e) {
+            xintelliSenseMap = nilptr;
         }
-	}
-    
-    void extartReadMe(ZipArchive zs){
-		ZipEntry entry = zs.findEntry("readme.md");
-        if (entry != nilptr){
-			ZipFile zf = entry.getFile();
-            if (zf != nilptr && zf.open()){
-				String text = "\n################################# README.MD #################################\n";
-				byte [] data = new byte[1024];
+    }
+
+    void extartReadMe(ZipArchive zs)
+    {
+        ZipEntry entry = zs.findEntry("readme.md");
+        if (entry != nilptr) {
+            ZipFile zf = entry.getFile();
+            if (zf != nilptr && zf.open()) {
+                String text = "\n################################# README.MD #################################\n";
+                byte [] data = new byte[1024];
                 int rd = 0;
-				while ((rd = zf.read(data, 0, 1024)) > 0){
-					text = text + (new String(data, 0, rd));
-				}
+                while ((rd = zf.read(data, 0, 1024)) > 0) {
+                    text = text + (new String(data, 0, rd));
+                }
                 text = text + "\n################################# README.END #################################\n\n\n";
                 XWndOutput.Output(text);
                 zf.close();
             }
         }
     }
-    
-    
-    void importPkg(PackageManager.PackageInfo pi){
-		try{
-			FileInputStream fis = new FileInputStream(pi.filepath);
-			ZipArchive zs = new ZipArchive();
-            if (zs.open(fis)){
-            
-				extartReadMe(zs);
-                
-				ZipEntry entry = zs.findEntry("major.lix");
-                
-                String lixName = pi.name + "_" + pi.version + ".lix";
-                
-                String destpath = projDir.appendPath("libs");
-                
-                XPlatform.mkdir(destpath);
-                
-                String destlix = destpath.appendPath(lixName);
-                
-                XWndOutput.Output("生成引用库: " + destlix + " ....   ");
-                
-				int rd = 0;
-				ZipFile zfile = entry.getFile();
-				if (zfile.open()){
-					FileOutputStream fos = new FileOutputStream(destlix);
 
-					byte [] data = new byte[1024];
-					while ((rd = zfile.read(data, 0, 1024)) > 0){
-						fos.write(data, 0, rd);
-					}
-                    
-					zfile.close();
+
+    void importPkg(PackageManager.PackageInfo pi)
+    {
+        try {
+            FileInputStream fis = new FileInputStream(pi.filepath);
+            ZipArchive zs = new ZipArchive();
+            if (zs.open(fis)) {
+
+                extartReadMe(zs);
+
+                ZipEntry entry = zs.findEntry("major.lix");
+
+                String lixName = pi.name + "_" + pi.version + ".lix";
+
+                String destpath = projDir.appendPath("libs");
+
+                XPlatform.mkdir(destpath);
+
+                String destlix = destpath.appendPath(lixName);
+
+                XWndOutput.Output("生成引用库: " + destlix + " ....   ");
+
+                int rd = 0;
+                ZipFile zfile = entry.getFile();
+                if (zfile.open()) {
+                    FileOutputStream fos = new FileOutputStream(destlix);
+
+                    byte [] data = new byte[1024];
+                    while ((rd = zfile.read(data, 0, 1024)) > 0) {
+                        fos.write(data, 0, rd);
+                    }
+
+                    zfile.close();
                     fos.close();
                     XWndOutput.Output("成功.\n");
-                    if (currentConfig.importPkg(this, pi, zs, lixName, pi.name, pi.version)){
-						XWndOutput.Output("注意:此包含有运行时文件, 项目目标程序运行位置发生改变时可能需要依赖.\n");
+                    if (currentConfig.importPkg(this, pi, zs, lixName, pi.name, pi.version)) {
+                        XWndOutput.Output("注意:此包含有运行时文件, 项目目标程序运行位置发生改变时可能需要依赖.\n");
                     }
-				}
-				zs.close();
+                }
+                zs.close();
             }
-            
+
             fis.close();
             save();
-        }catch(Exception e){
-        
+        } catch(Exception e) {
+
         }
     }
 };

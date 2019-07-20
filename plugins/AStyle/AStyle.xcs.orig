@@ -1,0 +1,221 @@
+//xlang
+/** @AStyle 插件 for XStudio   */
+
+using
+{
+    FileStream;
+};
+
+class XLANGPlugManager
+{
+
+    static IXStudioController xcontroller;
+    static WorkspaceController workspace;
+    static class XLangPlugin : IXPlugin
+    {
+        String getName()
+        {
+            return "astyle";
+        }
+
+        void onTextEditorCreated(TextEditorController editor)
+        {
+
+        }
+
+        void onTextEditorClosed(TextEditorController editor)
+        {
+
+        }
+
+        bool initializPlusin(IXStudioController controller)
+        {
+            xcontroller = controller;
+            workspace = xcontroller.getWorkspace();
+            workspace.addMenu(4, "astyle_single", "AStyle 格式化当前源文件", nilptr, this);
+            workspace.addMenu(4, "astyle_config", "AStyle 格式化设置", nilptr, this);
+            return true;
+        }
+
+        TextEditorPlugin getTextEditorPlugin()
+        {
+            return nilptr;
+        }
+
+        IProject loadProject(JsonObject content, String lang)
+        {
+            return nilptr;
+        }
+        Thread beautyThread = nilptr;
+
+        void onMenuTrigged(String name)
+        {
+            if (name.equals("astyle_single"))
+            {
+                TextEditorController editor = workspace.currentTextEditor();
+                if (editor != nilptr)
+                {
+                    String filepath = editor.getPath();
+                    if (beautyThread == nilptr)
+                    {
+                        editor.save();
+                        editor.stopFileWatch();
+                        beautyThread = new Thread()
+                        {
+                            void run()override
+                            {
+
+                                beautySources(filepath);
+
+                                beautyThread = nilptr;
+                                workspace.RunOnUi(new UIRunnable()
+                                {
+                                    void run ()override
+                                    {
+                                        editor.reload();
+                                        editor.continueFileWatch();
+                                    }
+                                });
+                            }
+                        };
+                        beautyThread.start();
+                    }
+                    else
+                    {
+                        output("上一个任务进行中");
+                    }
+                }
+            }
+            else if (name.equals("astyle_config"))
+            {
+                String apppath = XPlatform.getAppDirectory().appendPath("plugins").appendPath("astyle");
+                String astyleconf  = apppath.appendPath("astyle.conf");
+                workspace.openTextEditor(astyleconf);
+            }
+        }
+    };
+
+    static void readForProcess(Process _process)
+    {
+        try
+        {
+            int rd = 0;
+            byte [] buffer = new byte[1024];
+
+            int pos = 0;
+            while ((rd = _process.read(buffer, pos, buffer.length - pos)) > 0)
+            {
+                try
+                {
+                    pos += rd;
+                    String oustr = "";
+                    if (_system_.getPlatformId() == 0)
+                    {
+                        oustr = new String(buffer, 0, pos, "CP936");
+                    }
+                    else
+                    {
+                        oustr = new String(buffer, 0, pos);
+                    }
+                    pos = 0;
+                    output(oustr);
+                }
+                catch(Exception e)
+                {
+                    byte [] newbuf = new byte[buffer.length + 1024];
+                    _system_.arrayCopy(buffer, 0, newbuf, 0, pos);
+                    buffer = newbuf;
+                }
+            }
+        }
+        catch(Exception e)
+        {
+
+        }
+    }
+
+    static void beautySources(String file)
+    {
+        String apppath = XPlatform.getAppDirectory().appendPath("plugins").appendPath("astyle");
+
+        String astyleExe = "";
+        String astyleconf = "";
+        if (_system_.getPlatformId() == 0)
+        {
+            astyleExe = apppath.appendPath("astyle.exe");
+        }
+        else
+        {
+            astyleExe = apppath.appendPath("astyle");
+        }
+
+        astyleconf  = apppath.appendPath("astyle.conf");
+
+        Vector<String> arglist = new Vector<String>();
+        arglist.add(astyleExe);
+        try
+        {
+            FileInputStream fis = new FileInputStream(astyleconf);
+            byte [] data = fis.read();
+            String args = new String(data);
+            String []arg = args.split("\n");
+
+            for (int i =0; i < arg.length; i++)
+            {
+                if (arg[i] != nilptr && arg[i].startWith("#") == false)
+                {
+                    if (arg[i].length() > 0)
+                    {
+                        arglist.add(arg[i]);
+                    }
+                }
+            }
+        }
+        catch(Exception e)
+        {
+
+        }
+        arglist.add(file);
+
+        String outputst = astyleExe;
+
+        for (int i =0; i < arglist.size(); i++)
+        {
+            outputst = outputst + " " + arglist.get(i);
+        }
+        output(outputst + "\n");
+        Process process = new Process(astyleExe, arglist.toArray(new String[0]));
+        process.setWorkDirectory(apppath);
+
+        try
+        {
+            if (process.create(false, true, false, false))
+            {
+                readForProcess(process);
+                process.waitFor(-1);
+            }
+            else
+            {
+                output("\n运行AStyle失败.\n");
+            }
+
+        }
+        catch(Exception e)
+        {
+            String str = e.getMessage();
+            output("\n错误:" + str + "\n");
+        }
+    }
+    static void output(String text)
+    {
+        if (workspace != nilptr)
+        {
+            workspace.output(text);
+        }
+    }
+};
+
+void _entry(int moduleId, int xvnVer)
+{
+    PluginManager.registryPlugins(new XLANGPlugManager.XLangPlugin());
+}

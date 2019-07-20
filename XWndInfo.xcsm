@@ -1,170 +1,183 @@
 
-class XWndInfor : QXDockWidget{
+class XWndInfor : QXDockWidget
+{
     QXTreeView _listview;
     QXPushButton btnError, btnWarning, btnTips;
     XWorkspace _mdi_area;
-    
+
     static XWndInfor infoWnd;
     static const int COMPILE_INFO_NOTIFY = 2;
     int current_click_item = 0;
-    
-    onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
-        void onItemClicked(QXTreeView tree,long item, int column)override{
-			synchronized(infoLock){
-				triggeInfo(tree, item);
-			}
+
+    onTreeViewItemEvent listlistener = new onTreeViewItemEvent()
+    {
+        void onItemClicked(QXTreeView tree,long item, int column)override {
+            synchronized(infoLock) {
+                triggeInfo(tree, item);
+            }
         }
     };
-    
+
     Vector<long>infoItems = new Vector<long>();
     Vector<ICompileInfo> infoList ;
     Object infoLock = new Object();
-    
-    void triggeInfo(QXTreeView tree,long item){
-		if (infoList != nilptr){
-			String file = tree.getItemText(item, 1);
-			String line = tree.getItemText(item, 2);
-			String row = tree.getItemText(item, 3);
-			
-			int tag = tree.getItemTag(item, 0);
-			String infotips = nilptr;
-			if (tag >= 0 && tag < infoList.size()){
-				infotips = "问题" + tag + ":\n";
-				infotips = infotips + infoList.get(tag).getTips();
-			}
-			XSourceEditor.openForFileInfo(XWndInfor.this._mdi_area, file, line.parseInt(), row.parseInt(), infotips);
-		}
-    }
-    
-    onClickListener buttonListener = 
-        new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
-				loadInfo();
+
+    void triggeInfo(QXTreeView tree,long item)
+    {
+        if (infoList != nilptr) {
+            String file = tree.getItemText(item, 1);
+            String line = tree.getItemText(item, 2);
+            String row = tree.getItemText(item, 3);
+
+            int tag = tree.getItemTag(item, 0);
+            String infotips = nilptr;
+            if (tag >= 0 && tag < infoList.size()) {
+                infotips = "问题" + tag + ":\n";
+                infotips = infotips + infoList.get(tag).getTips();
             }
-        };
-    
-    void onAttach(){
+            XSourceEditor.openForFileInfo(XWndInfor.this._mdi_area, file, line.parseInt(), row.parseInt(), infotips);
+        }
+    }
+
+    onClickListener buttonListener =
+        new onClickListener()
+    {
+        void onClick(QXObject obj, bool checked)override {
+            loadInfo();
+        }
+    };
+
+    void onAttach()
+    {
         _listview = (QXTreeView)attachByName(new QXTreeView(), "infoList");
-        
+
         btnError = (QXPushButton)attachByName(new QXPushButton(), "btnError");
         btnWarning = (QXPushButton)attachByName(new QXPushButton(), "btnWarning");
         btnTips = (QXPushButton)attachByName(new QXPushButton(), "btnTips");
-        
+
         btnError.setOnClickListener(buttonListener);
         btnWarning.setOnClickListener(buttonListener);
         btnTips.setOnClickListener(buttonListener);
-                /*
+        /*
         改成layout之后就不需要resize了
         setOnLayoutEventListener(new onLayoutEventListener(){
-                void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
-                    if (_listview != nilptr){
-                        _listview.resize(w, h - 60);
-                        btnError.move(0, h - 55);
-                        btnWarning.move(80, h - 55);
-                        btnTips.move(160, h - 55);
-                    }else{
-                        _system_.consoleWrite("listview no prepared");
-                    }
-                }
+        void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+            if (_listview != nilptr){
+                _listview.resize(w, h - 60);
+                btnError.move(0, h - 55);
+                btnWarning.move(80, h - 55);
+                btnTips.move(160, h - 55);
+            }else{
+                _system_.consoleWrite("listview no prepared");
+            }
+        }
         });
         */
         String [] columns = {"类型", "文件", "行", "字"};
         _listview.setColumns(columns);
-        
+
         _listview.setColumnWidth(0, 100);
         _listview.setColumnWidth(1, 700);
         _listview.setColumnWidth(2, 50);
         _listview.setColumnWidth(3, 50);
-		_listview.setOnTreeViewItemEvent(listlistener);
+        _listview.setOnTreeViewItemEvent(listlistener);
         infoWnd = this;
     }
-    
+
     int []countsOfInfo = new int[3];
-    
-    int getCountOfTips(){
+
+    int getCountOfTips()
+    {
         return countsOfInfo[ICompileInfo.TIPS];
     }
-    
-    int getCountOfWarning(){
+
+    int getCountOfWarning()
+    {
         return countsOfInfo[ICompileInfo.WARNING];
     }
-    
-    int getCountOfError(){
+
+    int getCountOfError()
+    {
         return countsOfInfo[ICompileInfo.ERROR];
     }
-    
-    void nextInfo(){
-		synchronized(infoLock){
-			if (current_click_item < infoItems.size()){
-				long item = infoItems.get(current_click_item++);
-				triggeInfo(_listview, item);
-			}else{
-				current_click_item = 0;
+
+    void nextInfo()
+    {
+        synchronized(infoLock) {
+            if (current_click_item < infoItems.size()) {
+                long item = infoItems.get(current_click_item++);
+                triggeInfo(_listview, item);
+            } else {
+                current_click_item = 0;
             }
-		}
+        }
     }
-    
-    void clear(){
-        synchronized(infoLock){
+
+    void clear()
+    {
+        synchronized(infoLock) {
             _listview.clear();
             infoItems.clear();
             current_click_item = 0;
             infoList = nilptr;
-            
+
             countsOfInfo = new int[3];
         }
     }
-    void showInfo(Vector<ICompileInfo> infos){
-		synchronized(infoLock){
-			infoList = infos;
-			this.Notify(COMPILE_INFO_NOTIFY);
-		}
+    void showInfo(Vector<ICompileInfo> infos)
+    {
+        synchronized(infoLock) {
+            infoList = infos;
+            this.Notify(COMPILE_INFO_NOTIFY);
+        }
     }
-    
-    void loadInfo(){
-		String [] columns = {"提示", "警告", "错误"};
+
+    void loadInfo()
+    {
+        String [] columns = {"提示", "警告", "错误"};
         String [] icons = {"res/toolbar/tips.png", "res/toolbar/warning_out.png", "res/toolbar/error.png"};
         //int []colors = {0xff00ff00, 0xffffff00, 0xffff0000};
-        
-        synchronized(infoLock){
-            if (infoList != nilptr){
-             
-				bool allTip = btnTips.getCheck();
+
+        synchronized(infoLock) {
+            if (infoList != nilptr) {
+
+                bool allTip = btnTips.getCheck();
                 bool allWarning = btnWarning.getCheck();
                 bool allError = btnError.getCheck();
-                
+
                 infoItems.clear();
                 _listview.clear();
                 bool [] allMap = {allTip, allWarning, allError};
-                
-                for (int i = 0; i < infoList.size(); i++){
+
+                for (int i = 0; i < infoList.size(); i++) {
                     ICompileInfo ci = infoList.get(i);
                     int type = ci.getType();
-                    if (type >= 0 && type < 3){
-						if (allMap[type]){
-							long item = _listview.addItem(icons[type], columns[type]);
-							
-							_listview.setItemTag(item, 0, i);
-							infoItems.add(item);
-							_listview.setItemText(item, 1, ci.getFile());
-							_listview.setItemText(item, 2, "" + ci.getLine());
-							_listview.setItemText(item, 3, "" + ci.getRow());
-							//_listview.setItemBackColor(item, 0, colors[type]);
-							countsOfInfo[type]++;
+                    if (type >= 0 && type < 3) {
+                        if (allMap[type]) {
+                            long item = _listview.addItem(icons[type], columns[type]);
+
+                            _listview.setItemTag(item, 0, i);
+                            infoItems.add(item);
+                            _listview.setItemText(item, 1, ci.getFile());
+                            _listview.setItemText(item, 2, "" + ci.getLine());
+                            _listview.setItemText(item, 3, "" + ci.getRow());
+                            //_listview.setItemBackColor(item, 0, colors[type]);
+                            countsOfInfo[type]++;
                         }
                     }
                 }
             }
         }
     }
-    
-    void onNotification(long id){
-		loadInfo();
-        if (Setting.isSwitchToInfo()){
-			raise();
+
+    void onNotification(long id)
+    {
+        loadInfo();
+        if (Setting.isSwitchToInfo()) {
+            raise();
         }
         XWndOutput.Output(String.format("\n (%d 建议, %d 警告, %d 错误.)\n", getCountOfTips(), getCountOfWarning(), getCountOfError()));
-        
+
         XWndOutput.Output("[" + String.formatDate("%c", _system_.currentTimeMillis()) + "] 编译完成.\n");
     }
 };

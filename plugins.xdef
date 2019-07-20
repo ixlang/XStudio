@@ -8,6 +8,7 @@
 		"IXPlugin",
         "PluginManager",
         "IProject",
-        "IConfigure"
+        "IConfigure",
+        "UIRunnable"
 				]
 }

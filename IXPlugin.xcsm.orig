@@ -1,0 +1,348 @@
+//xlang Source, Name:IXPlugin.xcsm 
+//Date: Fri Jun 11:02:11 2019 
+
+interface SyntaxHighlighting{
+	/** 编辑器默认背景色*/
+	int getDefaultBackColor();
+    
+    /** 编辑器默认字体颜色*/
+    int getDefaultForeColor();
+    
+    /** 选中字体背景颜色*/
+    int getSelectedBackColor();
+    
+    /** 选中字体颜色*/
+    int getSelectedForeColor();
+    
+    /** 能否设置断点*/
+    bool canSetBreakPoint();
+    
+    /** 断点背景色*/
+    int getBreakPointBackColor();
+    
+    /** 断点前景色*/
+    int getBreakPointForeColor();
+    
+    /** 能否设置标记*/
+    bool canSetMarkPoint();
+    
+    /** 标记背景色*/
+    int getMarkPointBackColor();
+    
+    /** 标记前景色*/
+    int getMarkPointForeColor();
+    
+    /** 修改标记背景色*/
+    int getModifiedMarkBackColor();
+    
+    /** 修改标记前景色*/
+    int getModifiedMarkForeColor();
+    
+    /** 保存标记背景色*/
+    int getSavedMarkBackColor();
+    
+    /** 保存标记前景色*/
+    int getSavedMarkForeColor();
+    
+    /** 缩进线颜色*/
+    int getIndentGuideColor();
+    
+    /** 行号背景色*/
+    int getLineNumberBackColor();
+    
+    /** 行号前景色*/
+    int getLineNumberForeColor();
+    
+    /** 括号匹配背景色*/
+    int getMatchedBraceBackColor();
+    
+    /** 括号匹配前景色*/
+    int getMatchedBraceForeColor();
+    
+    /** 注释文档前景色*/
+    int getDocCommentKeyForeColor();
+    
+    /** 注释文档错误字前景色*/
+    int getDocCommentErrForeForeColor();
+    
+    /** 全局类前景色*/
+    int getGlobalClassForeColor();
+    
+    /** 操作符字体色*/
+    int getOperatorForeColor();
+    
+    /** 字符串错误色*/
+    int getStringEOLColor();
+    
+    /** 关键字颜色*/
+    int getWordForeColor();
+    
+    /** 关键字背景颜色*/
+    int getWordBackColor();
+    
+    /** 动态关键字背景色*/
+    int getWord2BackColor();
+    
+    /** 动态关键字色*/
+    int getWord2ForeColor();
+    
+    /** 字符串颜色*/
+    int getStringForeColor();
+    
+    /** 数字颜色*/
+    int getNumberForeColor();
+    
+    /** 字符颜色*/
+    int getCharForeColor();
+    
+    /** 预处理器颜色*/
+    int getPreprocessorForeColor();
+    
+    /** 注释颜色*/
+    int getCommentForeColor();
+    
+    /** 行注释眼色*/
+    int getCommentLineForeColor();
+    
+    /** 文档注释颜色*/
+    int getDocCommentForeColor();
+    
+    /** 提示信息字体色*/
+    int getCallTipsForeColor();
+    
+    /** 提示信息背景色*/
+    int getCallTipsBackColor();
+    
+    /** 光标颜色*/
+    int getCaretColor();
+    
+    /** 光标所在行背景色*/
+    int getCaretLineBackColor();
+    
+    /** 折叠边栏颜色*/
+    int getFoldMarginColor();
+    
+    /** 折叠边高亮色*/
+    int getFoldMarginHIColor();
+    
+    /** 折叠标记背景颜色*/
+    int getFolderBackColor();
+    
+    /** 折叠标记颜色*/
+    int getFolderForeColor();
+    
+    /** 折叠标记(未折叠状态)颜色*/
+    int getFolderOpenBackColor();
+    int getFolderOpenForeColor();
+    
+    /** 折叠标记(end状态)颜色*/
+    int getFolderEndBackColor();
+    int getFolderEndForeColor();
+    
+    /** 折叠标记(中段状态)颜色*/
+    int getFolderMidBackColor();
+    int getFolderMidForeColor();
+    
+    /** 折叠标记(中段末尾状态)颜色*/
+    int getFolderMidTailBackColor();
+    int getFolderMidTailForeColor();
+    
+    /** 折叠标记(子段)颜色*/
+    int getFolderSubBackColor();
+    int getFolderSubForeColor();
+    
+    /** 折叠标记(尾部)颜色*/
+    int getFolderTailBackColor();
+    int getFolderTailForeColor();
+    
+    /** 待输入标记前景色*/
+    int getIndicForeColor();
+    
+    /** 待输入标记背景色*/
+    int getIndicBackColor();
+    
+};
+
+
+interface WorkspaceController{
+	TextEditorController findTextEditor(String path, bool openIfNotFound);
+	TextEditorController openTextEditor(String path);
+    TextEditorController createTextEditor();
+    TextEditorController currentTextEditor();
+    void setModifyMonitorAutoLoad();
+    void restoreModifyMonitorAutoLoad();
+	bool saveFile(String path);
+    bool toggleBreakpointAtLine(String path, long line, bool bSet);
+    void output(String text);
+    void setStatus(String text);
+    bool addMenu(int mainid, String name, String text, String icon, IXPlugin plugin);
+    void RunOnUi(UIRunnable);
+};
+
+interface IXStudioController{
+	WorkspaceController getWorkspace();
+};
+
+interface TextEditorController{
+	String getPath();
+    String getTitle();
+    bool save();
+    void reload();
+    void postreload();
+    bool gotoLine(long line, long column);
+    bool gotoPos(long line);
+    bool select(long start, long end);
+    bool gotoAndSelect(long start, long end);
+    bool setBreakOn(long line, long column, bool set, bool bActive);
+    bool activeEditor();
+    void clearBreakOn();
+    bool toggleBreakpoint(long pos, bool bSet);
+    bool toggleBreakpointAtLine(long line, bool bSet);
+    String getText(long start, long end);
+    String getText();
+    long getCurrentPosition();
+    long getCurrentLine();
+    void stopFileWatch();
+    void continueFileWatch();
+};
+
+
+interface TextEditorPlugin{
+	/** 获取关键字， 2个String*/
+	String getKeyWords();
+    /** 获取代码高亮颜色配置类 */
+	SyntaxHighlighting getColorConfigure(String styleName);
+    
+    bool requestClose(TextEditorController editor);
+    String getIconFile();
+};
+
+interface IXPlugin{
+	String getName();
+	void onTextEditorCreated(TextEditorController);
+    void onTextEditorClosed(TextEditorController);
+    bool initializPlusin(IXStudioController );
+    TextEditorPlugin getTextEditorPlugin();
+    IProject loadProject(JsonObject content, String lang);
+    void onMenuTrigged(String id);
+};
+
+interface UIRunnable{
+    void run();
+};
+
+
+
+interface IProject {
+	IConfigure getConfigure(String name);
+    String getOutputDir();
+    JsonObject getContent();
+    String getProjectPath();
+	String getOutputTarget();
+    bool cloneConfigure(String tempName, String newName);
+    void setOption(String key, String text);
+    String getOption(String key);
+    String getName();
+    String getLanguage();
+    bool addSource(String filePath);
+    bool save();
+    String getSourcePath(int id);
+    String getProjectDir();
+    int getSourceFileCount();
+    String getSourceItem(int id);
+    bool detectSourcesModified();
+    void removeSource(int id);
+    void removeConfigure(String tempName);
+    String rename(int sourceID, String newname);
+    void setPath(String path);
+    bool isModified();
+    bool setCurrentConfigure(String configName, bool btips);
+    int getConfigureCount();
+    IConfigure getConfigure(int index);
+    String getComment();
+    IXPlugin getPlugin();
+    void setComment(String );
+    void close();
+    bool build(Builder _builder, BuildListener l, XlangProjectProp. BuildParams params);
+    bool cleanup(Builder _builder);
+    void stopRun();
+    bool debugRun(Builder _builder);
+    bool Run(Builder _builder);
+    XIntelliSense.XIntelliResult [] XISQueryM(String sourcePath,int line);
+    XIntelliSense.XIntelliResult [] getIntelliSenseObject(String sourcePath,int line,String keyWord);
+    bool updateIntelliSenseFile(String path, String content);
+    bool updateXintelliSense();
+    XIntelliSense.XIntelliResult [] getIntelliSense(String sourcePath,String content,long position);
+    XIntelliSense.XIntelliResult [] getIntelliSenseL(String sourcePath,int line);
+    void setSlnViewLong(long id);
+    void setFileViewLong(long id);
+    
+    long getSlnViewLong();
+    long getFileViewLong();
+};
+
+interface IConfigure{
+	void setOption(String key, String text);
+    IConfigure clone(String newName);
+	void setLibs(String text);
+    void setLinks(String text);
+    String getLibs();
+    String getLinks();
+    void setLibsPath(String text);
+    bool addPathToLibpath(String path);
+    bool createConfigure(String projName,JsonObject project, String configName);
+    String getName();
+};
+
+
+static class XPluginShell{
+        XPluginShell(IXPlugin _p){
+            _plugin = _p;
+        }
+        IXPlugin _plugin;
+        bool inited = false;
+};
+    
+class PluginsController{
+
+	static Map<String, XPluginShell> plugins_list = new Map<String, XPluginShell>();
+    
+	static void initPlugins(IXStudioController ic){
+		Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
+		while (iter.hasNext()){
+            XPluginShell splug = iter.getValue();
+			if ((splug._plugin != nilptr) && (splug.inited == false)){
+                splug._plugin.initializPlusin(ic);
+                splug.inited = true;
+            }
+            iter.next();
+        }
+    }
+    
+    static IXPlugin getPlugin(String language){
+		Map.Iterator<String, XPluginShell> iter = plugins_list.find(language);
+        if (iter != nilptr){
+			return iter.getValue()._plugin;
+        }
+        return nilptr;
+    }
+
+	static IProject openProject(String language, JsonObject content){
+		Map.Iterator<String, XPluginShell> iter = plugins_list.find(language);
+        if (iter != nilptr){
+			IXPlugin plug = iter.getValue()._plugin;
+            if (plug != nilptr){
+				return plug.loadProject(content, language);
+            }
+        }
+        return nilptr;
+    }
+};
+
+class PluginManager{
+	static void registryPlugins(IXPlugin plugin){
+        if (plugin != nilptr){ 
+            PluginsController.plugins_list.put(plugin.getName(), new XPluginShell(plugin));
+        }
+    }
+};

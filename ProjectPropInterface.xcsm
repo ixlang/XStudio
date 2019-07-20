@@ -7,7 +7,7 @@ interface WizardLoader{
 interface ProjectPropInterface{
     bool setValue(Project object, Configure configure, String key, String value);
     String getValue(Project object, Configure configure,  String key);
-    void build(IBuilder builder, Project object, Configure configure, Object param);
+    bool build(IBuilder builder, Project object, Configure configure, Object param);
     void cleanup(IBuilder builder, Project object, Configure configure);
     void debugRun(IBuilder builder, Project proj, Configure conf);
     void Run(IBuilder builder, Project proj, Configure conf); 
