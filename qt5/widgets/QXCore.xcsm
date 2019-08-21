@@ -1,4 +1,4 @@
-class QXCore : QXNative{ 
+class QXCore : QXNative {
     static const int OPACITY = 0;
     static const int VISIBLE = 1;
     static const int MAXIMIZED = 2;
@@ -97,10 +97,10 @@ class QXCore : QXNative{
     static const int REMSUBWIN = 95;
     static const int ADDSUBWIN = 96;
     static const int MESSAGEBOXWAR = 97;
-	static const int MESSAGEBOXERR = 98;
-	static const int MESSAGEBOXINF = 99;
-	static const int MESSAGEBOXABT = 100;
-	static const int MESSAGEBOXQUE = 101;
+    static const int MESSAGEBOXERR = 98;
+    static const int MESSAGEBOXINF = 99;
+    static const int MESSAGEBOXABT = 100;
+    static const int MESSAGEBOXQUE = 101;
     static const int CURRENTSUBWIN = 102;
     static const int WINDOWFLAG = 103;
     static const int SETWINDOWFLAG = 104;
@@ -148,284 +148,314 @@ class QXCore : QXNative{
     static const int COMBOBOXSETID = 146;
     static const int COMBOBOXGETID = 147;
     static const int SETFOCUS = 148;
-	static const int TRGETITEMTEXT = 149;
-	static const int QSCIGETRANGE = 150;
-	static const int LBLSETTEXT = 151;
-	static const int LBLGETTEXT = 152;
-	
-	static const int CHKSETCHECK = 153;
-	static const int CHKGETCHECK = 154;
-	static const int GETVIEWPORT = 155;
-	static const int ADDDEFACTION = 156;
-	static const int SETCONTEXTMENUPOLICY = 157;
-	static const int ACTSETTEXT = 158;
-	static const int ACTGETTEXT = 159;
-	static const int ACTENABLED = 160;
-	static const int TREEWIDGETREM = 161;
-	static const int WINDOWICON = 162;
-	static const int ADDWIDGET = 163;
-	static const int INSERTWIDGET = 164;
-	static const int ADDPERWIDGET = 165;
-	static const int INSERTPERWIDGET = 166;
-	static const int REMOVEWIDGET = 167;
-	static const int SIZEGRIPENABLED = 168;
-	static const int CURRENTMESSAGE = 169;
-	static const int STATUSBAR = 170;
-	static const int SHOWMESSAGE = 171,
-		QPMININUM = 172,
-		QPMAXINUM = 173,
-		QPVALUE = 174,
-		QPTEXT	=	175,
-		QPVISIBLE = 176,
-		QPALIGN = 177,
-		QPORIENTATION = 178,
-		QPINVERTAPPEAR = 179,
-		QPTEXTDIR = 180,
-		QPFORMAT = 181,
-		QPRESET = 182,
-		QPRANGE = 183,
-		STYLESHEET = 184,
-		PALETTECOLOR = 185,
-		TRCOLUMNSHOW = 186,
-		TRSELECTMODE = 187,
-		TRAUTORESIZE = 188,
-		TRHEADERWIDTH = 189,
-		TRSORTENABLE = 190,
-		TRELIDMODE = 191,
-		TREESETCURITEM = 192,
-		TREEGETCURROW = 193,
-		TREEGETCURCOL = 194,
-		TREESETCURROW = 195,
-		TREESETCURCOL = 196,
-		TREEGETCOUNT = 197,
-		TREEGETSELITEM = 198,
-        TREEITEMFLAG = 199,
-        TREEITEMGETFLAG = 200,
-        TREEITEMPARENT = 201,
-        DELLOCBUFFER = 202,
-        BUFFERSETDATA = 203,
-        OPENBUFFER = 204,
-        DELLOCICON = 205,
-        DELLOCBYTEARRAY = 206,
-        SAVESTATE = 207,
-        LOADSTATE = 208,
-        TRSCROLLBOTTOM = 209,
-        TRIEMCLEARCHILD = 210,
-        TRIEMSETEXPAND = 211,
-        TRIEMSETHIDDEN = 212,
-        MAPPOINT = 213,
-        TRITEMSETCHECK = 214,
-		TRITEMGETCHECK = 215,
-        TREEGETCHILDREN = 216,
-        SETITEMICON = 217,
-        SETPEN	=	218, 
-        SETBRUSH = 219,
-        QXPAINTDRAWLINE = 220,
-        SETBKBRUSH = 221,
-        QXPAINTOPACITY = 222,
-        QXPAINTBGMMODE = 223,
-        IMGLOAD = 224,
-        DELETEIMAGE = 225,
-        DRAWIMAGE = 226,
-        IMGWIDTH = 227,
-        IMGHEIGHT = 228,
-        IMGFORMAT = 229,
-        IMGGETDATA = 230,
-        QXPAINTDRAWRECT = 231,
-        FILLRECT = 232,
-        DRAWTEXT = 233,
-        PAINTERSETFONT = 234,
-        LOADFONT = 235,
-        SETAPPFONT = 236,
-        MATRIXDTOR = 237,		
-        PAINTERSAVE = 238,
-		PAINTERRESTORE = 239,
-		PAINTRESETMATRIX = 240,
-		PAINTRESETTRANSFORM = 241,
-        MATRIXMAPPOINT = 242,
-        MATRIXTRANSLATE = 243,
-		MATRIXSCALE = 244,
-		MATRIXSHEAR = 245,
-		MATRIXROTATE = 246,
-		MATRIXMUL = 247,
-        PAINTERGETMATRIX = 248,
-        PAINTSETMATRIX = 249,
-        COMBOXCLR = 250,
-        BUTTONSETTEXT = 251,
-        ROUNDRECT = 252,
-        ROUNDEDRECT = 253,
-        SETATTRIBUTE = 254,
-        SETRENDERHINT = 255,
-        MEASURETEXT = 256,
-        PAINTERGETFCONT = 257,
-        PAINTERFROMIMG = 258,
-        DELLOCPAINTER = 259,
-        DRAWELLIPSE = 260,
-        SCREENPOSITION = 261,
-        SCREENSIZE	= 262,
-        SCREENCOUNT = 263,
-        CURRENTSCREEN = 264,
-        DELETEWIDGET = 265,
-        TOOLBARADDWIDGET = 266,
-        TOOLBARINSWIDGET = 267,
-        OPENURL		=	268,
-        SETSTYLESHEET = 269,
-        SETCOMPOSITIONMODE = 270,
-        GETSTYLESHEEY = 271,
-        FSWADDFILE = 272,
-		FSWREMFILE = 273,
-        SETCURSOR = 274,
-        LOADTRANSLATE = 275,
-        OPENLOCAL = 276,
-        HASFOCUS = 277,
-        GETTOPITEM = 278,
-        TREEGETTOPITEMS = 279,
-        TABLESETITEM = 280,
-        TABLEREMOVEROW = 281,
-		TABLEREMOVECOLUMN = 282,
-		TABLESETCOLUMNCNT = 283,
-		TABLESETROWCNT = 284,
-		TABLESELECTROW = 285,
-		TABLEITEMFLAG = 286,
-		TABLESETTAG = 287,
-		TABLEGETTAG = 288,
-		TABLESETVHRM = 289,
-		TABLESETVHDSS = 290,
-		TABLESETSM = 291,
-		TABLESETSB = 292,
-		TABLESETET = 293,
-		TABLESETHHFH = 294,
-		TABLESETHHLS = 295,
-		TABLESETSG = 296,
-		TABLESETVHV = 297,
-        TABLESETHHRS = 298,
-        SETTABHHCOLUMNS = 299,
-        SETTABVHCOLUMNS = 300,
-        TABLEGETTEXTBYRC = 301,
-        TABLEGETTEXTBYITEM = 302,
-        TABLECLEAR = 303,
-        TABLECLEARCONTENT = 304,
-        TABLEGETSELITEM = 305,
-        TABLEGETSELRANGE = 306,
-        TABLEGETITEM = 307,
-        SETTABLEITEMTEXT = 308,
-        SETTABLEITEMICON = 309,
-		SETTABLEITEMCOLOR = 310,
-		SETTABLEITEMBACKCOLOR = 311,
-        TABITEMGETCHECK = 312,
-        TABITEMSETCHECK = 313,
-        TABITEMGETFLAG = 314,
-        TABLESETCELLWIDGET = 315,
-        TABLEGETCELLWIDGET = 316,
-        SETFOCUSPOLICY = 317,
-        SETWHATSTHIS = 318,
-        STYLESHEETSTRING = 319,
-        SETSTYLESHEETSTRING = 320,
-        GETFONT = 321,
-        LOADFONTDESCRIPTION = 322,
-        SETWIDGETFONT = 323,
-        GETFONTDESCRIPTION = 324,
-        GETFONTNAME = 325,
-        GETFONTPIXELSIZE = 326,
-        GETFONTPTSIZE = 327,
-        QPBSETLABELS = 328,
-        QPBADJUST = 329,
-        QIMGSAVE = 330,
-        CHECKABLE = 331,
-        SETPROPWIDTHS = 332,
-        DELLOCBRUSH = 333,
-        SETSPREAD = 334,
-        SETCOLORAT = 335,
-        DELLOCGRADIENT = 336,
-        SETGRADIENT = 337,
-        SHOWTOOLTIPS = 338,
-        SETTOOLTIPS = 339,
-        GETTOOLTIPS = 340,
-        PAINTMEASURETEXT = 341,
-        PAINTFONTPTSIZE = 342,
-        PAINTFONTPXSIZE = 343,
-        FONTASCENT = 344,
-		FONTDESCENT = 345,
-		PAINTFONTASCENT = 346,
-		PAINTFONTDESCENT = 347,
-        TRSETFOREBR = 348,
-		TRSETBACKBR = 349,
-        ENABLEDROG = 350,
-        PATHMOVETO = 351,
-		PATHLINETO = 352,
-		PATHARCMOVETO = 353,
-		PATHARCTO = 354,
-		CUBICTO = 355,
-		QUADTO = 356,
-		ADDRECT = 357,
-		ADDELLIPSE = 358,
-        PATHCTOR = 359,
-        DRAWPATH = 360,
-        UPDATEENABLE = 361,
-        OPENMULTI = 362,
-        CLIPBOARDTEXT = 363,
-        CLIPBOARDIMAGE = 364,
-        QSCIDISABLESHORTCUT = 365,
-        QSCIUPDATESHORTCUT = 366,
-        QSCIUNBINDSHORTCUT = 367,
-        OBJECTSETNAME = 368;
-        
-    QXCore(){
+    static const int TRGETITEMTEXT = 149;
+    static const int QSCIGETRANGE = 150;
+    static const int LBLSETTEXT = 151;
+    static const int LBLGETTEXT = 152;
+
+    static const int CHKSETCHECK = 153;
+    static const int CHKGETCHECK = 154;
+    static const int GETVIEWPORT = 155;
+    static const int ADDDEFACTION = 156;
+    static const int SETCONTEXTMENUPOLICY = 157;
+    static const int ACTSETTEXT = 158;
+    static const int ACTGETTEXT = 159;
+    static const int ACTENABLED = 160;
+    static const int TREEWIDGETREM = 161;
+    static const int WINDOWICON = 162;
+    static const int ADDWIDGET = 163;
+    static const int INSERTWIDGET = 164;
+    static const int ADDPERWIDGET = 165;
+    static const int INSERTPERWIDGET = 166;
+    static const int REMOVEWIDGET = 167;
+    static const int SIZEGRIPENABLED = 168;
+    static const int CURRENTMESSAGE = 169;
+    static const int STATUSBAR = 170;
+    static const int SHOWMESSAGE = 171,
+                     QPMININUM = 172,
+                     QPMAXINUM = 173,
+                     QPVALUE = 174,
+                     QPTEXT	=	175,
+                      QPVISIBLE = 176,
+                      QPALIGN = 177,
+                      QPORIENTATION = 178,
+                      QPINVERTAPPEAR = 179,
+                      QPTEXTDIR = 180,
+                      QPFORMAT = 181,
+                      QPRESET = 182,
+                      QPRANGE = 183,
+                      STYLESHEET = 184,
+                      PALETTECOLOR = 185,
+                      TRCOLUMNSHOW = 186,
+                      TRSELECTMODE = 187,
+                      TRAUTORESIZE = 188,
+                      TRHEADERWIDTH = 189,
+                      TRSORTENABLE = 190,
+                      TRELIDMODE = 191,
+                      TREESETCURITEM = 192,
+                      TREEGETCURROW = 193,
+                      TREEGETCURCOL = 194,
+                      TREESETCURROW = 195,
+                      TREESETCURCOL = 196,
+                      TREEGETCOUNT = 197,
+                      TREEGETSELITEM = 198,
+                      TREEITEMFLAG = 199,
+                      TREEITEMGETFLAG = 200,
+                      TREEITEMPARENT = 201,
+                      DELLOCBUFFER = 202,
+                      BUFFERSETDATA = 203,
+                      OPENBUFFER = 204,
+                      DELLOCICON = 205,
+                      DELLOCBYTEARRAY = 206,
+                      SAVESTATE = 207,
+                      LOADSTATE = 208,
+                      TRSCROLLBOTTOM = 209,
+                      TRIEMCLEARCHILD = 210,
+                      TRIEMSETEXPAND = 211,
+                      TRIEMSETHIDDEN = 212,
+                      MAPPOINT = 213,
+                      TRITEMSETCHECK = 214,
+                      TRITEMGETCHECK = 215,
+                      TREEGETCHILDREN = 216,
+                      SETITEMICON = 217,
+                      SETPEN	=	218,
+                       SETBRUSH = 219,
+                       QXPAINTDRAWLINE = 220,
+                       SETBKBRUSH = 221,
+                       QXPAINTOPACITY = 222,
+                       QXPAINTBGMMODE = 223,
+                       IMGLOAD = 224,
+                       DELETEIMAGE = 225,
+                       DRAWIMAGE = 226,
+                       IMGWIDTH = 227,
+                       IMGHEIGHT = 228,
+                       IMGFORMAT = 229,
+                       IMGGETDATA = 230,
+                       QXPAINTDRAWRECT = 231,
+                       FILLRECT = 232,
+                       DRAWTEXT = 233,
+                       PAINTERSETFONT = 234,
+                       LOADFONT = 235,
+                       SETAPPFONT = 236,
+                       MATRIXDTOR = 237,
+                       PAINTERSAVE = 238,
+                       PAINTERRESTORE = 239,
+                       PAINTRESETMATRIX = 240,
+                       PAINTRESETTRANSFORM = 241,
+                       MATRIXMAPPOINT = 242,
+                       MATRIXTRANSLATE = 243,
+                       MATRIXSCALE = 244,
+                       MATRIXSHEAR = 245,
+                       MATRIXROTATE = 246,
+                       MATRIXMUL = 247,
+                       PAINTERGETMATRIX = 248,
+                       PAINTSETMATRIX = 249,
+                       COMBOXCLR = 250,
+                       BUTTONSETTEXT = 251,
+                       ROUNDRECT = 252,
+                       ROUNDEDRECT = 253,
+                       SETATTRIBUTE = 254,
+                       SETRENDERHINT = 255,
+                       MEASURETEXT = 256,
+                       PAINTERGETFCONT = 257,
+                       PAINTERFROMIMG = 258,
+                       DELLOCPAINTER = 259,
+                       DRAWELLIPSE = 260,
+                       SCREENPOSITION = 261,
+                       SCREENSIZE	= 262,
+                        SCREENCOUNT = 263,
+                        CURRENTSCREEN = 264,
+                        DELETEWIDGET = 265,
+                        TOOLBARADDWIDGET = 266,
+                        TOOLBARINSWIDGET = 267,
+                        OPENURL		=	268,
+                           SETSTYLESHEET = 269,
+                           SETCOMPOSITIONMODE = 270,
+                           GETSTYLESHEEY = 271,
+                           FSWADDFILE = 272,
+                           FSWREMFILE = 273,
+                           SETCURSOR = 274,
+                           LOADTRANSLATE = 275,
+                           OPENLOCAL = 276,
+                           HASFOCUS = 277,
+                           GETTOPITEM = 278,
+                           TREEGETTOPITEMS = 279,
+                           TABLESETITEM = 280,
+                           TABLEREMOVEROW = 281,
+                           TABLEREMOVECOLUMN = 282,
+                           TABLESETCOLUMNCNT = 283,
+                           TABLESETROWCNT = 284,
+                           TABLESELECTROW = 285,
+                           TABLEITEMFLAG = 286,
+                           TABLESETTAG = 287,
+                           TABLEGETTAG = 288,
+                           TABLESETVHRM = 289,
+                           TABLESETVHDSS = 290,
+                           TABLESETSM = 291,
+                           TABLESETSB = 292,
+                           TABLESETET = 293,
+                           TABLESETHHFH = 294,
+                           TABLESETHHLS = 295,
+                           TABLESETSG = 296,
+                           TABLESETVHV = 297,
+                           TABLESETHHRS = 298,
+                           SETTABHHCOLUMNS = 299,
+                           SETTABVHCOLUMNS = 300,
+                           TABLEGETTEXTBYRC = 301,
+                           TABLEGETTEXTBYITEM = 302,
+                           TABLECLEAR = 303,
+                           TABLECLEARCONTENT = 304,
+                           TABLEGETSELITEM = 305,
+                           TABLEGETSELRANGE = 306,
+                           TABLEGETITEM = 307,
+                           SETTABLEITEMTEXT = 308,
+                           SETTABLEITEMICON = 309,
+                           SETTABLEITEMCOLOR = 310,
+                           SETTABLEITEMBACKCOLOR = 311,
+                           TABITEMGETCHECK = 312,
+                           TABITEMSETCHECK = 313,
+                           TABITEMGETFLAG = 314,
+                           TABLESETCELLWIDGET = 315,
+                           TABLEGETCELLWIDGET = 316,
+                           SETFOCUSPOLICY = 317,
+                           SETWHATSTHIS = 318,
+                           STYLESHEETSTRING = 319,
+                           SETSTYLESHEETSTRING = 320,
+                           GETFONT = 321,
+                           LOADFONTDESCRIPTION = 322,
+                           SETWIDGETFONT = 323,
+                           GETFONTDESCRIPTION = 324,
+                           GETFONTNAME = 325,
+                           GETFONTPIXELSIZE = 326,
+                           GETFONTPTSIZE = 327,
+                           QPBSETLABELS = 328,
+                           QPBADJUST = 329,
+                           QIMGSAVE = 330,
+                           CHECKABLE = 331,
+                           SETPROPWIDTHS = 332,
+                           DELLOCBRUSH = 333,
+                           SETSPREAD = 334,
+                           SETCOLORAT = 335,
+                           DELLOCGRADIENT = 336,
+                           SETGRADIENT = 337,
+                           SHOWTOOLTIPS = 338,
+                           SETTOOLTIPS = 339,
+                           GETTOOLTIPS = 340,
+                           PAINTMEASURETEXT = 341,
+                           PAINTFONTPTSIZE = 342,
+                           PAINTFONTPXSIZE = 343,
+                           FONTASCENT = 344,
+                           FONTDESCENT = 345,
+                           PAINTFONTASCENT = 346,
+                           PAINTFONTDESCENT = 347,
+                           TRSETFOREBR = 348,
+                           TRSETBACKBR = 349,
+                           ENABLEDROG = 350,
+                           PATHMOVETO = 351,
+                           PATHLINETO = 352,
+                           PATHARCMOVETO = 353,
+                           PATHARCTO = 354,
+                           CUBICTO = 355,
+                           QUADTO = 356,
+                           ADDRECT = 357,
+                           ADDELLIPSE = 358,
+                           PATHCTOR = 359,
+                           DRAWPATH = 360,
+                           UPDATEENABLE = 361,
+                           OPENMULTI = 362,
+                           CLIPBOARDTEXT = 363,
+                           CLIPBOARDIMAGE = 364,
+                           QSCIDISABLESHORTCUT = 365,
+                           QSCIUPDATESHORTCUT = 366,
+                           QSCIUNBINDSHORTCUT = 367,
+                           OBJECTSETNAME = 368,
+                           QPB_SETEXPAND = 369,
+                           QPB_SETSELECT = 370,
+                           QPB_SETVISIBLE = 371,
+                           QPB_SETBACKCOLOR = 372,
+                           ASSOCIATEEXT = 373,
+                           CHECKASSOCIATED = 374,
+                           PAINTDEVICEMETRICGET = 375,
+                           PAINTDEVICEPRFS = 376,
+                           PRTDLGEXEC = 377,
+                           PAINTDEVICEMETRICGETPRF = 378,
+                           PRTDLGDONE = 379,
+                           PRTDLGSETOPT = 380,
+                           PRTDLGTEST = 381,
+                           PRTDLGSETOPTS = 382,
+                           PRTDLGGETOPTS = 383,
+                           PAINTERTYPE = 384,
+                           PAINTDEVICETYPE = 385,
+                           PAINTDEVICEACTIVE = 386,
+                           PAINTERFROMDEVICE = 387,
+                           PVWDLGEXEC = 388,
+                           PVWDLGDONE = 389,
+                           PRINTERDTOR = 390,
+                           PRINTERSETOUTFMT = 391,
+                           PRINTERGETOUTFMT= 392,
+                           WIDGETRENDERF = 393,
+                           WIDGETRENDER4 = 394,
+                           WIDGETRENDER2 = 395,
+                           WIDGETRENDER1 = 396,
+                           PRINTSCIRANGE = 397,
+                           SCIPRINTERDTOR = 398;
+
+    QXCore() {
     }
-    QXCore(int type){
+    QXCore(int type) {
         nativehandle = createQObject(type, this, 0);
-        if (nativehandle == 0){
+        if (nativehandle == 0) {
             throw new IllegalArgumentException("can't new Object");
         }
     }
-    QXCore(int type, QXNative parent){
-        if (parent == nilptr){
+    QXCore(int type, QXNative parent) {
+        if (parent == nilptr) {
             throw new IllegalArgumentException("parent is null");
         }
         nativehandle = createQObject(QType.qtWidget, this, parent.nativehandle);
-        if (nativehandle == 0){
+        if (nativehandle == 0) {
             throw new IllegalArgumentException("can't new Object");
         }
     }
-    
-    QXCore(long handle){
+
+    QXCore(long handle) {
         super(handle);
     }
-    
-    Object subClass(QXCore object){
-        if (core_sub_class(nativehandle, this, object)){
+
+    Object subClass(QXCore object) {
+        if (core_sub_class(nativehandle, this, object)) {
             object.nativehandle = nativehandle;
             nativehandle = 0;
             return object;
         }
         return nilptr;
     }
-    
-    static bool openUrl(String url){
+
+    static bool openUrl(String url) {
         return 0 != long_string2(0, OPENURL, url, nilptr);
     }
-    static bool openLocal(String url){
-		return 0 != long_string2(0, OPENLOCAL, url, nilptr);
+    static bool openLocal(String url) {
+        return 0 != long_string2(0, OPENLOCAL, url, nilptr);
     }
-    void Notify(long eventid){
+    void Notify(long eventid) {
         widget_set_native_value(nativehandle, XNOTIFY, eventid);
     }
-    static void setClipboardText(String text){
-		widget_slot_string(0, CLIPBOARDTEXT, text);
+    static void setClipboardText(String text) {
+        widget_slot_string(0, CLIPBOARDTEXT, text);
     }
-    static String getClipboardText(){
-		return (String)core_getString(0, CLIPBOARDTEXT);
+    static String getClipboardText() {
+        return (String)core_getString(0, CLIPBOARDTEXT);
     }
-    static void setClipboardImage(QXImage img){
-		widget_set_native_value(0, CLIPBOARDIMAGE, img.himage);
+    static void setClipboardImage(QXImage img) {
+        widget_set_native_value(0, CLIPBOARDIMAGE, img.himage);
     }
-    static QXImage getClipboardImage(){
-		QXImage img = nilptr;
-		long handle = object_get_long_int(0, CLIPBOARDIMAGE, 0, 0);
-        if (handle != 0){
-			img = new QXImage();
+    static QXImage getClipboardImage() {
+        QXImage img = nilptr;
+        long handle = object_get_long_int(0, CLIPBOARDIMAGE, 0, 0);
+        if (handle != 0) {
+            img = new QXImage();
             img.himage = handle;
         }
-		return img;
+        return img;
     }
 };

@@ -47,6 +47,7 @@ class QXNative{
 		Object cdecl core_getStringlongint(long h, int proid, long v1, int v2);
         int cdecl core_getintlong(long h, int proid, long v);
         long cdecl createQObject(int type, Object xobj, long parent);
+        long cdecl createQPObject(int type, Object xobj, long parent, long param1, long param2, long param3, long param4);
         int cdecl widget_set_intstring_value(long h, int proid, int xv, String yv);
         long cdecl createNObject(int type, long param);
         long cdecl createPObject(int type, ObjectPtr param);

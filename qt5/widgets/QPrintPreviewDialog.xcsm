@@ -1,0 +1,61 @@
+//xlang Source, Name:QPrintPreviewDialog.xcsm 
+//Date: Sat Aug 15:42:52 2019 
+
+class QPrintPreviewDialog : QXDialog{
+    
+    QPrintPreviewDialog(){
+
+    }
+    QPrintPreviewDialog(QPrinter printer){
+        if (false == create(nilptr, printer)){
+            throw new IllegalArgumentException("canot create QPrintPreviewDialog");
+        }
+    }
+    QPrintPreviewDialog(QXWidget parent, QPrinter printer){
+        if (false == create(parent, printer)){
+            throw new IllegalArgumentException("canot create QPrintPreviewDialog");
+        }
+    }
+    QPrintPreviewDialog(QXWidget parent){
+        if (false == create(parent, nilptr)){
+            throw new IllegalArgumentException("canot create QPrintPreviewDialog");
+        }
+    }
+    void onPreviewRequest(long printer){
+        requestPreview(new QPrinter(printer));
+    }
+    
+    void requestPreview(QPrinter printer);
+    int exec(){
+        return widget_get_int_value(nativehandle, PVWDLGEXEC);
+    }
+    
+    void done(int result){
+        widget_set_vint_value(nativehandle, PVWDLGDONE, result);
+    }
+    
+    
+    bool create(){
+        nativehandle = createQPObject(QType.qtPrintViewDialog, this, 0, 0, 0, 0, 0);
+        if (nativehandle == 0){
+            return false;
+        }
+        return true;
+    }
+    
+    bool create(QXWidget parent){
+        nativehandle = createQPObject(QType.qtPrintViewDialog, this, parent.nativehandle, 0, 0, 0, 0);
+        if (nativehandle == 0){
+            return false;
+        }
+        return true;
+    }    
+    
+    bool create(QXWidget parent, QPrinter printer){
+        nativehandle = createQPObject(QType.qtPrintViewDialog, this, parent == nilptr ? 0 : parent.nativehandle,printer == nilptr ? 0 : printer.nativehandle, 0, 0, 0);
+        if (nativehandle == 0){
+            return false;
+        }
+        return true;
+    }  
+};

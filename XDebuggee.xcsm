@@ -40,7 +40,8 @@ class XDebuggee{
         GcDump = 28,
         QueryByName = 29,
         ModuleLoaded = 30,
-        LookupMemory = 31;
+        LookupMemory = 31,
+        DumpMemory = 32;
            
     bool isDebugging = false;
      
@@ -203,6 +204,17 @@ class XDebuggee{
         byte [] data = text.getBytes();
         sendCommand(LookupMemory, 0, data, data.length);
     }
+    
+    void dumpMemory(long address, int len, String param){
+		JsonObject json = new JsonObject();
+        json.put("address",String.format("%d",address));
+        json.put("param",param);
+        json.put("size",len);
+        String text = json.toString(false);
+        byte [] data = text.getBytes();
+        sendCommand(DumpMemory, 0, data, data.length);
+    }
+    
     void onQueryObject(JsonObject json){
 		String param = json.getString("param");
         if (param.startWith("auto")){
@@ -306,6 +318,10 @@ class XDebuggee{
 		MemoryLookupWnd.SetData(json);
     }
 
+    void onDumpMemory(JsonObject json){
+		MemoryLookupWnd.SetDumpData(json);
+    }
+    
     void onLoadModule(JsonObject json){
 		String module = json.getString("module");
         bool bSymbol = json.getBool("symbol");
@@ -646,6 +662,10 @@ class XDebuggee{
             
             case LookupMemory:
 				onLookupMemory(json);
+            break;
+            
+            case DumpMemory:
+				onDumpMemory(json);
             break;
         }
     }

@@ -13,6 +13,8 @@ class XMenuManager
     static void setStatusSel(bool b)
     {
         enabledMenu("actioncut", b);
+        enabledMenu("actionupper", b);
+        enabledMenu("actionlower", b);
         //enabledMenu("actioncopy", b);
     }
 
@@ -41,6 +43,8 @@ class XMenuManager
                           "actionstepover",
                           "actionstepout",
                           "actionbreakpoint",
+                          "actionupper",
+                          "actionlower",
                           //"actionfunction",
                           "actionbreak",
                           "actionstoprun",
@@ -126,6 +130,16 @@ class XMenuManager
                           "actionredo",
                           "actioncut",
                           "actioncopy",
+                          "actioncurup",
+                          "actioncurleft",
+                          "actioncurright",
+                          "actioncurdown",
+                          "actionlinebegin",
+                          "actionlineend",
+                          "actionprepage",
+                          "actionnextpage",
+                          "actiontotop",
+                          "actiontobottom",
                           "actionnewlineup",
                           "actionnewlinedown",
                           "actionpaste",
@@ -137,7 +151,8 @@ class XMenuManager
                           "actionfindagain",
                           "actionsave",
                           "actionmatchbrace",
-                          "actionsaveas"
+                          "actionsaveas",
+                          "actionprint"
                          };
         enabledMenus(names, b);
     }
@@ -269,7 +284,14 @@ class XMenuManager
                 app._mdispace.appendNewLine();
                 return ;
             }
-
+            if (name.equals("actionupper")) {
+                app._mdispace.setUpper();
+                return;
+            }
+            if (name.equals("actionlower")) {
+                app._mdispace.setLower();
+                return;
+            }
             if (name.equals("actionclose")) {
                 app._mdispace.closeCurrentDocument();
                 return;
@@ -396,6 +418,52 @@ class XMenuManager
                 app._mdispace.addObject(3);
                 return ;
             }
+            
+            if (name.equals("actioncurup")) {
+                app._mdispace.CursorUp();
+                return ;
+            }
+            if (name.equals("actioncurleft")) {
+                app._mdispace.CursorLeft();
+                return ;
+            }
+            if (name.equals("actioncurright")) {
+                app._mdispace.CursorRight();
+                return ;
+            }
+            if (name.equals("actioncurdown")) {
+                app._mdispace.CursorDown();
+                return ;
+            }
+            if (name.equals("actionlinebegin")) {
+                app._mdispace.CursorLineBegin();
+                return ;
+            }
+            if (name.equals("actionlineend")) {
+                app._mdispace.CursorLineEnd();
+                return ;
+            }
+            if (name.equals("actionprepage")) {
+                app._mdispace.CursorPrevPage();
+                return ;
+            }
+            if (name.equals("actionnextpage")) {
+                app._mdispace.CursorNextPage();
+                return ;
+            }
+            if (name.equals("actiontotop")) {
+                app._mdispace.CursortoTop();
+                return ;
+            }
+            if (name.equals("actiontobottom")) {
+                app._mdispace.CursortoBottom();
+                return ;
+            }
+            if (name.equals("actionprint")) {
+                app._mdispace.doPrint();
+                return ;
+            }
+
             if (name.equals("actioninstcext")) {
                 app._mdispace.installCompileExt();
                 return ;
@@ -511,92 +579,37 @@ class XMenuManager
         return false;
     }
 
+    void setupListener(String actname){
+        mainwindow.findByName(actname).setOnEventListener(_triggerEvent);
+    }
+    
     void init(QxApp _app)
     {
         app = _app;
         mainwindow = _app.mainWindow;
-        mainwindow.findByName("actionsetting").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionOpen").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionProject_P").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionsave").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionsaveas").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionsaveastemp").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionsaveproject").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionclose").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actioncloseproject").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionexit").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionfile").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionclass").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actioninterface").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionpackage").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionpackmgr").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("menuaddition").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionundo").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionredo").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actioncut").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actioncopy").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionnewlineup").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionnewlinedown").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionpaste").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actiondelete").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actiondelcurline").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actiongotodef").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionfind").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actiongoto").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionreplace").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionfindagain").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionoverride").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionautocomplete").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionopenoutput").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actioncompile_project").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionclean").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actiongenerateNativeSrc").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actiongenmake").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionprop").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionfunction").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actiondata").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionlocalProblem").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionstartup").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionmatchbrace").setOnEventListener(_triggerEvent);
+        
+        String [] actions = {
+            "actionsetting","actionOpen","actionProject_P","actionsave","actionsaveas","actionsaveastemp","actionsaveproject","actionclose","actioncloseproject","actionexit",
+            "actionfile","actionclass","actioninterface","actionpackage","actionpackmgr","menuaddition","actionundo","actionredo","actioncut","actioncopy","actionnewlineup",
+            "actionnewlinedown","actionpaste","actiondelete","actiondelcurline","actiongotodef","actionfind","actiongoto","actionreplace","actionfindagain","actionoverride",
+            "actionautocomplete","actionopenoutput","actioncompile_project","actionclean","actiongenerateNativeSrc","actiongenmake","actionprop","actionfunction","actiondata",
+            "actionlocalProblem","actionstartup","actionmatchbrace","actiondebug","actionremotedbg","actionrun","actionstepin","actionstepover","actionstepout","actionbreakpoint",
+            "menunewbreakpoint","actionbreak","actionstoprun","actiontest","actioncomment","actionexporttools","actionQTCreator","actionhelp","actionsendfeedback","actionsamples",
+            "actionabout","sortwindows", "actionoverlapped","allwindows","actiontoback","actiontofront","actioninstcext","actioninstallplugin","actioncurup","actioncurleft",
+            "actioncurright","actioncurdown","actionlinebegin","actionlineend","actionprepage","actionnextpage","actiontotop","actiontobottom","menukeyboard","actionupper",
+            "actionlower","actionprint"
+        };
 
-        mainwindow.findByName("actiondebug").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionremotedbg").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionrun").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionstepin").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionstepover").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionstepout").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionbreakpoint").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("menunewbreakpoint").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionbreak").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionstoprun").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actiontest").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actioncomment").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionexporttools").setOnEventListener(_triggerEvent);
-
-        mainwindow.findByName("actionQTCreator").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionhelp").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionsendfeedback").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionsamples").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionabout").setOnEventListener(_triggerEvent);
-
+        for (int i = 0; i < actions.length; i++) {
+            setupListener(actions[i]);
+        }
+        
         String [] mainMenuNames = {"menuFile", "menuEdit", "menuSln", "menuDebug", "menuTools", "menuWindow", "menuHelp"};
 
         for (int i = 0; i < mainMenuNames.length; i++) {
             mainMenus[i] = (QXMenu)mainwindow.findByName(mainMenuNames[i]);
             mainMenus[i].setOnEventListener(_triggerEvent);
         }
-
-
-        mainwindow.findByName("sortwindows").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actionoverlapped").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("allwindows").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actiontoback").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actiontofront").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actioninstcext").setOnEventListener(_triggerEvent);
-        mainwindow.findByName("actioninstallplugin").setOnEventListener(_triggerEvent);
-
-
-
     }
 
     void openDesigner()

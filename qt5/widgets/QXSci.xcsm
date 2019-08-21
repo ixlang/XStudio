@@ -1,17 +1,47 @@
 
-class QXSci : QXWidget{
+class QXSci : QXWidget {
 
-	static const int  
-		cursorInvalid = 0,
-		cursorText = 1, 
-		cursorArrow = 2,
-        cursorUp = 3, 
-        cursorWait = 4, 
-        cursorHoriz = 5, 
-        cursorVert = 6, 
-        cursorReverseArrow = 7, 
-        cursorHand = 8;
-    
+    static class QSciPrinter : QPrinter{
+        QSciPrinter(){
+            nativehandle = createQPObject(QType.qtSciPrinter, this, 0, PrinterMode.ScreenResolution, 0, 0, 0);
+            if (nativehandle == 0) {
+                throw new IllegalArgumentException("can't new Object");
+            }
+        }
+        
+        QSciPrinter(long handle){
+            need_delloc = false;
+            nativehandle = handle;
+        } 
+        
+        QSciPrinter(PrinterMode mode){
+            nativehandle = createQPObject(QType.qtSciPrinter, this, 0, mode, 0, 0, 0);
+            if (nativehandle == 0) {
+                throw new IllegalArgumentException("can't new Object");
+            }
+        }
+        
+        void printRange(QXSci sci, int from, int to){
+            widget_set_intlongint_value(nativehandle, PRINTSCIRANGE, sci.nativehandle, from, to);
+        }
+        
+        void finalize(){
+            if (need_delloc){
+                widget_slot(nativehandle, SCIPRINTERDTOR);    
+            }
+        }
+    };
+    static const int
+    cursorInvalid = 0,
+    cursorText = 1,
+    cursorArrow = 2,
+    cursorUp = 3,
+    cursorWait = 4,
+    cursorHoriz = 5,
+    cursorVert = 6,
+    cursorReverseArrow = 7,
+    cursorHand = 8;
+
     static const int SCI_START = 2000;
     static const int SCI_OPTIONAL_START = 3000;
     static const int SCI_LEXER_START = 4000;
@@ -847,9 +877,9 @@ class QXSci : QXWidget{
     static const int BREAK_POINT_MARK_ID = 9;
     static const int DEBUGGING_CURSOR_POS = 11;
     static const int DISABLED_LINE_ID = 16;
-    
-    
-    //sccommand 
+
+
+    //sccommand
     static const int SCLEX_CONTAINER = 0;
     static const int SCLEX_NULL = 1;
     static const int SCLEX_PYTHON = 2;
@@ -2214,295 +2244,295 @@ class QXSci : QXWidget{
     static const int SCE_MARKDOWN_CODE = 19;
     static const int SCE_MARKDOWN_CODE2 = 20;
     static const int SCE_MARKDOWN_CODEBK = 21;
-    QXSci(){
-    
+    QXSci() {
+
     }
-    bool create(){
+    bool create() {
         nativehandle = createQObject(QType.qtSci, this, 0);
-        if (nativehandle == 0){
+        if (nativehandle == 0) {
             return false;
         }
         return true;
     }
-    
-    bool create(QXWidget parent){
+
+    bool create(QXWidget parent) {
         nativehandle = createQObject(QType.qtSci, this, parent.nativehandle);
-        if (nativehandle == 0){
+        if (nativehandle == 0) {
             return false;
         }
         return true;
     }
-        
-    QXSci(long handle){
-    
+
+    QXSci(long handle) {
+
     }
-    QXWidget viewPort(){
-		return (QXWidget)widget_get_object(nativehandle, GETVIEWPORT);
-	}
-	long currentPosition(){
-		 return sendEditor(SCI_GETCURRENTPOS, 0, 0);
-	}
-	int xFromPosition(int position){
-		return sendEditor(SCI_POINTXFROMPOSITION, position, position);
-	}
-	int yFromPosition(int position){
-		return sendEditor(SCI_POINTYFROMPOSITION, position, position);
-	}
-    void setFont(QXFont font){
+    QXWidget viewPort() {
+        return (QXWidget)widget_get_object(nativehandle, GETVIEWPORT);
+    }
+    long currentPosition() {
+        return sendEditor(SCI_GETCURRENTPOS, 0, 0);
+    }
+    int xFromPosition(int position) {
+        return sendEditor(SCI_POINTXFROMPOSITION, position, position);
+    }
+    int yFromPosition(int position) {
+        return sendEditor(SCI_POINTYFROMPOSITION, position, position);
+    }
+    void setFont(QXFont font) {
         widget_set_native_value(nativehandle, SCIFONT, font.nativehandle);
     }
-	int getLineHeight(){
-		return sendEditor(SCI_TEXTHEIGHT,0,0);
-	}
-    int sendEditor(int lparam, int wparam){
+    int getLineHeight() {
+        return sendEditor(SCI_TEXTHEIGHT,0,0);
+    }
+    int sendEditor(int lparam, int wparam) {
         return widget_set_v2int_value(nativehandle, SCICMD, lparam, wparam);
     }
-    int sendEditor(int cmd, int lparam, int wparam){
+    int sendEditor(int cmd, int lparam, int wparam) {
         return widget_set_v3int_value(nativehandle, SCICMD, cmd, lparam, wparam);
     }
-    int sendEditor(int lparam, String wparam){
+    int sendEditor(int lparam, String wparam) {
         return widget_set_intstring_value(nativehandle, SCICMD, lparam, wparam);
     }
-    int sendEditor(int cmd, int lparam, String wparam){
+    int sendEditor(int cmd, int lparam, String wparam) {
         return widget_set_intintstring_value(nativehandle, SCICMD, cmd, lparam, wparam);
     }
-    int sendEditor(int cmd, String lparam, String wparam){
+    int sendEditor(int cmd, String lparam, String wparam) {
         return long_string2_int2(nativehandle, SCICMD, lparam, wparam, cmd, 0);
     }
-    int appendText(String text){
+    int appendText(String text) {
         return widget_set_intintstring_value(nativehandle, SCICMD, SCI_APPENDTEXT, text.length(), text);
     }
-    int setText(String text){
+    int setText(String text) {
         return widget_set_intintstring_value(nativehandle, SCICMD, SCI_SETTEXT, text.length(), text);
     }
-    int positionToLine(int position){
-		return sendEditor(SCI_LINEFROMPOSITION, position, 0);
-	}
-	int getChar(int position){
-		return sendEditor(SCI_GETCHARAT, position, 0);
-	}
-	void autoShow(String [] completes){
-		widget_set_int2_object_value(nativehandle, SCICMD, SCI_AUTOCSHOW, 0, completes);
-	}
-	int getWordStart(int pos){
-		return sendEditor(SCI_WORDSTARTPOSITION, pos, 0);
-	}
-    String getText(){
-       return (String)core_getString(nativehandle, QSCIGETTEXT);
+    int positionToLine(int position) {
+        return sendEditor(SCI_LINEFROMPOSITION, position, 0);
     }
-    String getSelectedText(){
-       return (String)core_getString(nativehandle, QSCIGETSELTXT);
+    int getChar(int position) {
+        return sendEditor(SCI_GETCHARAT, position, 0);
     }
-    
-    String getText(int start, int end){
-		if (end <= start){
-			return "";
-		}
-       return (String)core_getStringlongint(nativehandle, QSCIGETRANGE, start, end);
+    void autoShow(String [] completes) {
+        widget_set_int2_object_value(nativehandle, SCICMD, SCI_AUTOCSHOW, 0, completes);
     }
-    String getText(int line){
-		int start = getPosition(line);
-		int end = getEndOfLine(line);
-		return getText(start, end);
+    int getWordStart(int pos) {
+        return sendEditor(SCI_WORDSTARTPOSITION, pos, 0);
     }
-    void Undo(){
+    String getText() {
+        return (String)core_getString(nativehandle, QSCIGETTEXT);
+    }
+    String getSelectedText() {
+        return (String)core_getString(nativehandle, QSCIGETSELTXT);
+    }
+
+    String getText(int start, int end) {
+        if (end <= start) {
+            return "";
+        }
+        return (String)core_getStringlongint(nativehandle, QSCIGETRANGE, start, end);
+    }
+    String getText(int line) {
+        int start = getPosition(line);
+        int end = getEndOfLine(line);
+        return getText(start, end);
+    }
+    void Undo() {
         sendEditor(SCI_UNDO, 0, 0);
     }
-    
-    void Redo(){
+
+    void Redo() {
         sendEditor(SCI_REDO, 0, 0);
     }
-    
-    void Cut(){
+
+    void Cut() {
         sendEditor(SCI_CUT, 0, 0);
     }
-    
-    void Copy(){
+
+    void Copy() {
         sendEditor(SCI_COPY, 0, 0);
     }
-    
-    void Paste(){
+
+    void Paste() {
         sendEditor(SCI_PASTE, 0, 0);
     }
-    
-    void Delete(){
+
+    void Delete() {
         sendEditor(SCI_DELETEBACK, 0, 0);
     }
-    void insertText(long position, String Text){
-		sendEditor(SCI_INSERTTEXT, position,Text);
-	}
-    void setWrap(bool bWrap){
-        sendEditor(SCI_SETWRAPMODE, bWrap ? SC_WRAP_WORD : SC_WRAP_NONE , 0);
+    void insertText(long position, String Text) {
+        sendEditor(SCI_INSERTTEXT, position,Text);
     }
-    bool findFirst(String text, bool regex, bool bCase, bool bWholeWord, bool warp, bool forward, int startLine, int startIndex,bool bshow, bool posix){
+    void setWrap(bool bWrap) {
+        sendEditor(SCI_SETWRAPMODE, bWrap ? SC_WRAP_WORD : SC_WRAP_NONE, 0);
+    }
+    bool findFirst(String text, bool regex, bool bCase, bool bWholeWord, bool warp, bool forward, int startLine, int startIndex,bool bshow, bool posix) {
         return string_bool5_int2_bool2(nativehandle, SCIFINDFIRST, text, regex, bCase, bWholeWord, warp, forward, startLine, startIndex, bshow, posix);
     }
-    bool replace(String text, bool regex, bool bCase, bool bWholeWord, bool warp, bool forward, int startLine, int startIndex,bool bshow, bool posix, String replaceStr){
-        if (string_bool5_int2_bool2(nativehandle, SCIFINDFIRST, text, regex, bCase, bWholeWord, warp, forward, startLine, startIndex, bshow, posix)){
-			replaceSelect(replaceStr);
+    bool replace(String text, bool regex, bool bCase, bool bWholeWord, bool warp, bool forward, int startLine, int startIndex,bool bshow, bool posix, String replaceStr) {
+        if (string_bool5_int2_bool2(nativehandle, SCIFINDFIRST, text, regex, bCase, bWholeWord, warp, forward, startLine, startIndex, bshow, posix)) {
+            replaceSelect(replaceStr);
             return true;
         }
         return false;
     }
 
-    bool findNext(){
+    bool findNext() {
         return widget_get_bool_value(nativehandle, SCIFINDNEXT);
     }
-    int clear(){
+    int clear() {
         sendEditor(SCI_CLEARALL, 0, 0);
         sendEditor(SCI_EMPTYUNDOBUFFER, 0, 0);
         return 0;
     }
-	void setSelect(int startPos, int endPos){
-		sendEditor(SCI_SETSEL, startPos, endPos);
-	}
-	void replaceSelect(String text){
-		sendEditor(SCI_REPLACESEL, 0, text);
-	}
-	void replaceRange(int s,int e,String text){
-		setSelect(s, e);
-		replaceSelect(text);
-	}
-	void showTips(int pos, String tips){
-		sendEditor(SCI_CALLTIPSHOW, pos, tips);
-	}
-    
-    void cancelTips(){
-		sendEditor(SCI_CALLTIPCANCEL, 0, 0);
+    void setSelect(int startPos, int endPos) {
+        sendEditor(SCI_SETSEL, startPos, endPos);
     }
-	void clearUndo(){
-		sendEditor(SCI_EMPTYUNDOBUFFER, 0, 0);
-	}
-    bool isModified(){
+    void replaceSelect(String text) {
+        sendEditor(SCI_REPLACESEL, 0, text);
+    }
+    void replaceRange(int s,int e,String text) {
+        setSelect(s, e);
+        replaceSelect(text);
+    }
+    void showTips(int pos, String tips) {
+        sendEditor(SCI_CALLTIPSHOW, pos, tips);
+    }
+
+    void cancelTips() {
+        sendEditor(SCI_CALLTIPCANCEL, 0, 0);
+    }
+    void clearUndo() {
+        sendEditor(SCI_EMPTYUNDOBUFFER, 0, 0);
+    }
+    bool isModified() {
         return sendEditor(SCI_GETMODIFY, 0, 0) != 0;
-    }    
-    
-    void setSavePoint(){
+    }
+
+    void setSavePoint() {
         sendEditor(SCI_SETSAVEPOINT, 0, 0);
     }
-    
-    int getCurrentLine(){
-		return sendEditor(SCI_GETCURLINE, 0, 0);
+
+    int getCurrentLine() {
+        return sendEditor(SCI_GETCURLINE, 0, 0);
     }
-    long getLength(){
+    long getLength() {
         return sendEditor(SCI_GETLENGTH, 0, 0);
     }
-    
-    int countOfLine(){
-		return sendEditor(SCI_GETLINECOUNT, 0, 0);
+
+    int countOfLine() {
+        return sendEditor(SCI_GETLINECOUNT, 0, 0);
     }
-    
-    int gotoPos(long pos){
+
+    int gotoPos(long pos) {
         return sendEditor(SCI_GOTOPOS, pos, 0);
     }
 
-	int getPosition(int line){
-		return sendEditor(SCI_POSITIONFROMLINE, line);
-	}
-    
-	int getCurrentPosition(){
-		return sendEditor(SCI_GETCURRENTPOS, 0, 0);
-	}
+    int getPosition(int line) {
+        return sendEditor(SCI_POSITIONFROMLINE, line);
+    }
 
-	int getLinesOfDisplay(){
-		return sendEditor(SCI_LINESONSCREEN,0,0);
+    int getCurrentPosition() {
+        return sendEditor(SCI_GETCURRENTPOS, 0, 0);
     }
-    
-    int getFirstVisibleLine(){
-		return sendEditor(SCI_GETFIRSTVISIBLELINE, 0);
+
+    int getLinesOfDisplay() {
+        return sendEditor(SCI_LINESONSCREEN,0,0);
     }
-    
-    int setFirstVisibleLine(int line){
-		return sendEditor(SCI_SETFIRSTVISIBLELINE, line);
+
+    int getFirstVisibleLine() {
+        return sendEditor(SCI_GETFIRSTVISIBLELINE, 0);
     }
-    
-    int getEndOfLine(int line){
-		return sendEditor(SCI_GETLINEENDPOSITION, line);
+
+    int setFirstVisibleLine(int line) {
+        return sendEditor(SCI_SETFIRSTVISIBLELINE, line);
     }
-    
-	void goto(int line,int row){
-		int pos = sendEditor(SCI_POSITIONFROMLINE, line);
-		gotoPos(pos + row - 1);
-	}
-	
-    void setReadOnly(bool ro){
-		sendEditor(QXSci.SCI_SETREADONLY, ro ? 1 : 0);
+
+    int getEndOfLine(int line) {
+        return sendEditor(SCI_GETLINEENDPOSITION, line);
     }
-    
-    void setIndicStyle(int id, int style){
-		sendEditor(SCI_INDICSETSTYLE, id, style);
+
+    void goto(int line,int row) {
+        int pos = sendEditor(SCI_POSITIONFROMLINE, line);
+        gotoPos(pos + row - 1);
     }
-    
-    void setIndicForeColor(int id, int color){
-		sendEditor(SCI_INDICSETFORE, id, color);
+
+    void setReadOnly(bool ro) {
+        sendEditor(QXSci.SCI_SETREADONLY, ro ? 1 : 0);
     }
-    
-    void setIndicUnderColor(int id, int color){
-		sendEditor(SCI_INDICSETUNDER, id, color);
+
+    void setIndicStyle(int id, int style) {
+        sendEditor(SCI_INDICSETSTYLE, id, style);
     }
-    
-    void applyIndic(int position, int len){
-		sendEditor(SCI_INDICATORFILLRANGE, position, len);
+
+    void setIndicForeColor(int id, int color) {
+        sendEditor(SCI_INDICSETFORE, id, color);
     }
-    
-    void setIndicCurrent(int id){
-		sendEditor(SCI_SETINDICATORCURRENT, id);
+
+    void setIndicUnderColor(int id, int color) {
+        sendEditor(SCI_INDICSETUNDER, id, color);
     }
-    
-    void clearIndic(int position, int length){
-		sendEditor(SCI_INDICATORCLEARRANGE, length);
+
+    void applyIndic(int position, int len) {
+        sendEditor(SCI_INDICATORFILLRANGE, position, len);
     }
-    
-    void setCursor(int cursor){
-		sendEditor(SCI_SETCURSOR, cursor);
+
+    void setIndicCurrent(int id) {
+        sendEditor(SCI_SETINDICATORCURRENT, id);
     }
-    
-    int getIndicStart(int indic, int position){
-		return sendEditor(SCI_INDICATORSTART, indic, position);
+
+    void clearIndic(int position, int length) {
+        sendEditor(SCI_INDICATORCLEARRANGE, length);
     }
-    
-    int getIndicEnd(int indic, int position){
-		return sendEditor(SCI_INDICATOREND, indic, position);
+
+    void setCursor(int cursor) {
+        sendEditor(SCI_SETCURSOR, cursor);
     }
-    
-    int IndicForPosition(int pos){
-		return sendEditor(SCI_INDICATORALLONFOR, pos, 0);
+
+    int getIndicStart(int indic, int position) {
+        return sendEditor(SCI_INDICATORSTART, indic, position);
     }
-    int getCurrentIndic(){
-		return sendEditor(SCI_GETINDICATORCURRENT, 0);
+
+    int getIndicEnd(int indic, int position) {
+        return sendEditor(SCI_INDICATOREND, indic, position);
     }
-    int getSelectStart(){
-		return sendEditor(SCI_GETSELECTIONSTART, 0);
+
+    int IndicForPosition(int pos) {
+        return sendEditor(SCI_INDICATORALLONFOR, pos, 0);
     }
-    
-    int getSelectEnd(){
-		return sendEditor(SCI_GETSELECTIONEND, 0);
+    int getCurrentIndic() {
+        return sendEditor(SCI_GETINDICATORCURRENT, 0);
     }
-    int getIndicPosition(int pos){
-		return sendEditor(SCI_INDICATORVALUEAT, pos);
+    int getSelectStart() {
+        return sendEditor(SCI_GETSELECTIONSTART, 0);
     }
-    int positionFromPoint(int x, int y){
-		return sendEditor(SCI_POSITIONFROMPOINT, x, y);
+
+    int getSelectEnd() {
+        return sendEditor(SCI_GETSELECTIONEND, 0);
     }
-    int getCursor(){
-		return sendEditor(SCI_GETCURSOR, 0);
+    int getIndicPosition(int pos) {
+        return sendEditor(SCI_INDICATORVALUEAT, pos);
     }
-	int getStyleAtPosition(int position){
-		return sendEditor(SCI_GETSTYLEAT,position);
+    int positionFromPoint(int x, int y) {
+        return sendEditor(SCI_POSITIONFROMPOINT, x, y);
     }
-    void disableInternalShortcut(int command){
-		widget_set_vint_value(nativehandle, QSCIDISABLESHORTCUT, command);
+    int getCursor() {
+        return sendEditor(SCI_GETCURSOR, 0);
     }
-    void updateInternalShortcut(int command, int key){
-		widget_set_v2int_value(nativehandle, QSCIUPDATESHORTCUT, command, key);
+    int getStyleAtPosition(int position) {
+        return sendEditor(SCI_GETSTYLEAT,position);
     }
-    void unbindInternalShortcut(int key){
-		widget_set_vint_value(nativehandle, QSCIUNBINDSHORTCUT, key);
+    void disableInternalShortcut(int command) {
+        widget_set_vint_value(nativehandle, QSCIDISABLESHORTCUT, command);
     }
-    void clearInternalShortcuts(){
+    void updateInternalShortcut(int command, int key) {
+        widget_set_v2int_value(nativehandle, QSCIUPDATESHORTCUT, command, key);
+    }
+    void unbindInternalShortcut(int key) {
+        widget_set_vint_value(nativehandle, QSCIUNBINDSHORTCUT, key);
+    }
+    void clearInternalShortcuts() {
         sendEditor(SCI_CLEARALLCMDKEYS, 0);
     }
-    void setIndentationsUseTabs(bool b){
-		sendEditor(SCI_SETUSETABS, b ? 1 : 0);
+    void setIndentationsUseTabs(bool b) {
+        sendEditor(SCI_SETUSETABS, b ? 1 : 0);
     }
 };

@@ -1,0 +1,45 @@
+//xlang Source, Name:QPaintDevice.xcsm 
+//Date: Sat Aug 13:38:22 2019 
+
+
+class QPaintDevice : QXCore{
+    enum PaintDeviceMetric {
+        PdmWidth = 1,
+        PdmHeight,
+        PdmWidthMM,
+        PdmHeightMM,
+        PdmNumColors,
+        PdmDepth,
+        PdmDpiX,
+        PdmDpiY,
+        PdmPhysicalDpiX,
+        PdmPhysicalDpiY,
+        PdmDevicePixelRatio,
+        PdmDevicePixelRatioScaled
+    };
+    
+    
+    int devType() {
+        return widget_get_int_value(nativehandle, PAINTDEVICETYPE);
+    }
+    
+    bool paintingActive() {
+        return widget_get_bool_value(nativehandle, PAINTDEVICEACTIVE);
+    }
+
+
+    int width()  { return core_getintlong(nativehandle, PAINTDEVICEMETRICGET, PaintDeviceMetric.PdmWidth); }
+    int height()  { return core_getintlong(nativehandle, PAINTDEVICEMETRICGET, PaintDeviceMetric.PdmHeight); }
+    int widthMM()  { return core_getintlong(nativehandle, PAINTDEVICEMETRICGET, PaintDeviceMetric.PdmWidthMM); }
+    int heightMM()  { return core_getintlong(nativehandle, PAINTDEVICEMETRICGET, PaintDeviceMetric.PdmHeightMM); }
+    int logicalDpiX()  { return core_getintlong(nativehandle, PAINTDEVICEMETRICGET, PaintDeviceMetric.PdmDpiX); }
+    int logicalDpiY()  { return core_getintlong(nativehandle, PAINTDEVICEMETRICGET, PaintDeviceMetric.PdmDpiY); }
+    int physicalDpiX()  { return core_getintlong(nativehandle, PAINTDEVICEMETRICGET, PaintDeviceMetric.PdmPhysicalDpiX); }
+    int physicalDpiY()  { return core_getintlong(nativehandle, PAINTDEVICEMETRICGET, PaintDeviceMetric.PdmPhysicalDpiY); }
+    int devicePixelRatio()  { return core_getintlong(nativehandle, PAINTDEVICEMETRICGET, PaintDeviceMetric.PdmDevicePixelRatio); }
+    double devicePixelRatioF()   { return widget_get_double_value(nativehandle, PAINTDEVICEMETRICGETPRF); }
+    double devicePixelRatioFScale(){ return widget_get_double_value(nativehandle, PAINTDEVICEPRFS);}
+    
+    int colorCount()  { return core_getintlong(nativehandle, PAINTDEVICEMETRICGET,PaintDeviceMetric.PdmNumColors); }
+    int depth()  { return core_getintlong(nativehandle, PAINTDEVICEMETRICGET,PaintDeviceMetric.PdmDepth); }
+};

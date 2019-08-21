@@ -1,6 +1,5 @@
 
-class XlangProjectProp : ProjectPropInterface
-{
+class XlangProjectProp : ProjectPropInterface {
 
     static const String _compile_path = ("bin/xlang.exe");
     static const String _compile_path_linux = ("bin/xlang");
@@ -12,20 +11,17 @@ class XlangProjectProp : ProjectPropInterface
     int XDEBUG_SERIAL = 0;
 
     Process process ;
-    static class CompileInfo : ICompileInfo
-    {
+    static class CompileInfo : ICompileInfo {
         String file;
         int line;
         int row;
         int type;
         String tip;
-        CompileInfo(String s, int l,int r)
-        {
+        CompileInfo(String s, int l,int r) {
 
         }
 
-        CompileInfo(String text, int t, String _tips)
-        {
+        CompileInfo(String text, int t, String _tips) {
             int pos = text.lastIndexOf("(");
             int rpos = text.lastIndexOf(")");
             if (pos != -1 && rpos != -1) {
@@ -63,31 +59,25 @@ class XlangProjectProp : ProjectPropInterface
             }
         }
 
-        int getType()override
-        {
+        int getType()override {
             return type;
         }
-        String getFile()override
-        {
+        String getFile()override {
             return file;
         }
-        int getLine()override
-        {
+        int getLine()override {
             return line;
         }
-        int getRow()override
-        {
+        int getRow()override {
             return row;
         }
-        String getTips()
-        {
+        String getTips() {
             return tip;
         }
     };
 
 
-    static String getCompilerPath()
-    {
+    static String getCompilerPath() {
         String comppath = _system_.getAppDirectory();
         if (_system_.getPlatformId() == 0) {
             comppath = comppath.appendPath(_compile_path);
@@ -97,8 +87,7 @@ class XlangProjectProp : ProjectPropInterface
         return String.formatPath(comppath,false);
     }
 
-    bool setValue(Project object, Configure configure,  String key, String value)override
-    {
+    bool setValue(Project object, Configure configure,  String key, String value)override {
         if (key.equals("projname")) {
             return true;
         }
@@ -244,6 +233,10 @@ class XlangProjectProp : ProjectPropInterface
 
             return true;
         }
+        if (key.equals("ignorewl")) {
+            configure.setOption(key, value);
+            return true;
+        }
         if (key.equals("debuginfo")) {
             if (value.equals("禁用(-nd)")) {
                 configure.setOption("debugdatabase", "-nd");
@@ -271,8 +264,7 @@ class XlangProjectProp : ProjectPropInterface
         return true;
     }
 
-    String getValue(Project object, Configure configure,  String key)override
-    {
+    String getValue(Project object, Configure configure,  String key)override {
         if (key.equals("projname")) {
             return object.getName();
         }
@@ -400,6 +392,9 @@ class XlangProjectProp : ProjectPropInterface
         if (key.equals("afterclean")) {
             return configure.getOption(key);
         }
+        if (key.equals("ignorewl")) {
+            return configure.getOption(key);
+        }
         if (key.equals("ignorew")) {
             String options = configure.getOption("ignorewarning");
             if (options != nilptr && options.equals("-w")) {
@@ -436,8 +431,7 @@ class XlangProjectProp : ProjectPropInterface
 
         return "";
     }
-    bool testOptions(String options, String opt)
-    {
+    bool testOptions(String options, String opt) {
         String[] opts = options.split(' ');
         for (int i = 0; i < opts.length; i++) {
             /*_system_.consoleWrite(opts[i] + " matched " + opt + "\n");*/
@@ -448,8 +442,7 @@ class XlangProjectProp : ProjectPropInterface
         return false;
     }
 
-    void generateCommand(Configure configure, Vector<String> sourceArgs)
-    {
+    void generateCommand(Configure configure, Vector<String> sourceArgs) {
         String cmd = configure.getOption("command");
         String []cmds = cmd.split(' ');
         for (int i =0; i < cmds.length; i++) {
@@ -457,8 +450,7 @@ class XlangProjectProp : ProjectPropInterface
         }
     }
 
-    void makefile(IBuilder builder, Project object, Configure configure, String projectDir)
-    {
+    void makefile(IBuilder builder, Project object, Configure configure, String projectDir) {
         String [] margs = {"make"};
 
         String args = configure.getOption("makebuild");
@@ -496,8 +488,7 @@ class XlangProjectProp : ProjectPropInterface
         }
     }
 
-    void makefile_clean(IBuilder builder, Project object, Configure configure, String projectDir)
-    {
+    void makefile_clean(IBuilder builder, Project object, Configure configure, String projectDir) {
         String [] margs = {"make", "clean"};
 
         String args = configure.getOption("makeclean");
@@ -535,14 +526,12 @@ class XlangProjectProp : ProjectPropInterface
         }
     }
 
-    static class BuildParams
-    {
+    static class BuildParams {
         bool forgs;
         String output_source;
     };
 
-    void IncrementVersionSection(String [] section, int id)
-    {
+    void IncrementVersionSection(String [] section, int id) {
 
         int verval = section[id].parseInt() + 1;
 
@@ -553,8 +542,7 @@ class XlangProjectProp : ProjectPropInterface
         section[id] = "" + verval;
     }
 
-    void versionIncrement(IBuilder builder, String file)
-    {
+    void versionIncrement(IBuilder builder, String file) {
         try {
             FileInputStream fis = new FileInputStream(file);
             byte [ ] data = fis.read();
@@ -606,8 +594,7 @@ class XlangProjectProp : ProjectPropInterface
         }
     }
 
-    Vector<String> getSourceArgs(IBuilder builder, Project object, Configure configure, String workDir, BuildParams param)
-    {
+    Vector<String> getSourceArgs(IBuilder builder, Project object, Configure configure, String workDir, BuildParams param) {
         Vector<String> sourceArgs = new Vector<String>();
         String compiler_path = getCompilerPath();
 
@@ -669,8 +656,7 @@ class XlangProjectProp : ProjectPropInterface
         return sourceArgs;
     }
 
-    static String getArch(Configure configure)
-    {
+    static String getArch(Configure configure) {
         String [] archs = {"unknow", "x86", "x64", "arm", "arm64", "mips"};
 
         String arch = configure.getOption("wtype");
@@ -702,8 +688,7 @@ class XlangProjectProp : ProjectPropInterface
         }
     }
 
-    String getArchArgs(Configure configure)
-    {
+    String getArchArgs(Configure configure) {
         /*String [] archs = {"", "-arch:x86", "-arch:x86_64", "-arch:arm", "-arch:arm64", "-arch:mips"};
 
         String arch = configure.getOption("wtype");*/
@@ -719,8 +704,7 @@ class XlangProjectProp : ProjectPropInterface
         return configure.getOption("wtype");
     }
 
-    String getXcrossName(Configure configure)
-    {
+    String getXcrossName(Configure configure) {
         String [] archs = {"", "-xcross-windows", "-xcross-linux", "-xcross-darwin"};
 
         String arch = configure.getOption("ostype");
@@ -738,8 +722,7 @@ class XlangProjectProp : ProjectPropInterface
         }
     }
 
-    static String map_variable(Project object, Configure configure, String text)
-    {
+    static String map_variable(Project object, Configure configure, String text) {
         text = text.replace("$(Output)", configure.getOption("outpath").appendPath(configure.getOption("outname")));
         text = text.replace("$(Configure)", configure.getName());
         text = text.replace("$(Arch)", getArch(configure));
@@ -769,8 +752,7 @@ class XlangProjectProp : ProjectPropInterface
         return object.map_variable(text);
     }
 
-    void generateJsonArrayArgs(String key, JsonArray incpath, Vector<String> args)
-    {
+    void generateJsonArrayArgs(String key, JsonArray incpath, Vector<String> args) {
         if (incpath != nilptr) {
             //String incs = "";
             bool pushkey = false;
@@ -791,8 +773,7 @@ class XlangProjectProp : ProjectPropInterface
         }
     }
 
-    void generateJsonArrayArgsMake(JsonArray incpath, Vector<String> args)
-    {
+    void generateJsonArrayArgsMake(JsonArray incpath, Vector<String> args) {
         if (incpath != nilptr) {
             //String incs = "";
             bool pushkey = false;
@@ -809,8 +790,18 @@ class XlangProjectProp : ProjectPropInterface
         }
     }
 
-    void generatePathForMake(Configure configure, Vector<String> args)
-    {
+    void generateWarning(Configure configure, Vector<String> args) {
+        String values = configure.getOption("ignorewl");
+        if (values.length() != 0) {
+            args.add("-wl");
+            String [] vals = values.split(';');
+            for (int i = 0; i < vals.length; i++) {
+                args.add(vals[i]);
+            }
+        }
+    }
+
+    void generatePathForMake(Configure configure, Vector<String> args) {
         if (configure.root == nilptr) {
             return ;
         }
@@ -824,8 +815,7 @@ class XlangProjectProp : ProjectPropInterface
         }
     }
 
-    void generateLibsForMake(Configure configure, Vector<String> args, Vector<String> linkarg)
-    {
+    void generateLibsForMake(Configure configure, Vector<String> args, Vector<String> linkarg) {
         if (configure.root == nilptr) {
             return ;
         }
@@ -837,8 +827,7 @@ class XlangProjectProp : ProjectPropInterface
         generateJsonArrayArgsMake(links, linkarg);
     }
 
-    void generatePath(Configure configure, Vector<String> args)
-    {
+    void generatePath(Configure configure, Vector<String> args) {
         if (configure.root == nilptr) {
             return ;
         }
@@ -852,8 +841,7 @@ class XlangProjectProp : ProjectPropInterface
         }
     }
 
-    void generateLibs(Configure configure, Vector<String> args)
-    {
+    void generateLibs(Configure configure, Vector<String> args) {
         if (configure.root == nilptr) {
             return ;
         }
@@ -866,8 +854,7 @@ class XlangProjectProp : ProjectPropInterface
     }
 
 
-    void checkOptions(Vector<String> args, Map<String,String> argmap, Configure configure, String []key)
-    {
+    void checkOptions(Vector<String> args, Map<String,String> argmap, Configure configure, String []key) {
         for (int i =0; i < key.length; i++) {
             String option = configure.getOption(key[i]);
 
@@ -904,8 +891,7 @@ class XlangProjectProp : ProjectPropInterface
     }
 
 
-    String getMapValue(Map<String,String> args, String key)
-    {
+    String getMapValue(Map<String,String> args, String key) {
         Map.Iterator<String,String> iter = args.find(key);
         if (iter != nilptr) {
             return iter.getValue();
@@ -913,8 +899,7 @@ class XlangProjectProp : ProjectPropInterface
         return "";
     }
 
-    String getVectorPath(Vector<String> libs, String key)
-    {
+    String getVectorPath(Vector<String> libs, String key) {
         String output = "";
         for (int i =0; i < libs.size(); i++) {
             output = output + " " + libs.get(i);
@@ -926,8 +911,7 @@ class XlangProjectProp : ProjectPropInterface
         return output.replace("\\", "/");
     }
 
-    String generateMake(Project object, Configure configure)
-    {
+    String generateMake(Project object, Configure configure) {
 
         String workdir = object.projpath.findVolumePath();
 
@@ -996,6 +980,9 @@ class XlangProjectProp : ProjectPropInterface
 
         String sourcesText = "";
 
+        String warning_dis = configure.getOption("ignorewl");
+        warning_dis = warning_dis.trim(true).replace(";"," ");
+
         String command = configure.getOption("command");
 
         for (int i = 0; i < sources.length(); i++) {
@@ -1030,9 +1017,14 @@ class XlangProjectProp : ProjectPropInterface
 
         String icocmd = getMapValue(args, "ico");
 
-        if (icocmd.length() > 0) {
-            xflags = xflags + "-ico " + icocmd;
+        if (warning_dis.length() > 0) {
+            xflags = xflags + " -wl " + warning_dis;
         }
+
+        if (icocmd.length() > 0) {
+            xflags = xflags + " -ico " + icocmd;
+        }
+
         String xcross = getMapValue(args, "wtype") +  " " +
                         getMapValue(args, "ostype");
 
@@ -1052,13 +1044,15 @@ class XlangProjectProp : ProjectPropInterface
                .replace("${CMD}", command);
     }
 
-    String [] generateBuildArgs(Vector<String> __args, Project object, Configure configure, BuildParams param)
-    {
+    String [] generateBuildArgs(Vector<String> __args, Project object, Configure configure, BuildParams param) {
         Vector<String> args = new Vector<String>();
 
         String []options = {"ignorewarning", "debugdatabase", "debugable", "wtype", "ostype", "compdest"};
 
         checkOptions(args, nilptr, configure, options);
+
+        //路径变量
+        generateWarning(configure, args);
 
         //路径变量
         generatePath(configure, args);
@@ -1137,8 +1131,7 @@ class XlangProjectProp : ProjectPropInterface
 
 
 
-    static bool mkdirs(String path)
-    {
+    static bool mkdirs(String path) {
         if (XPlatform.existsSystemFile(path) == false) {
             if (XPlatform.mkdir(path) == false) {
                 mkdirs(path.findVolumePath());
@@ -1148,8 +1141,7 @@ class XlangProjectProp : ProjectPropInterface
         return true;
     }
 
-    int detectInfo(String line)
-    {
+    int detectInfo(String line) {
         if (line.endWith(warning)) {
             return ICompileInfo.WARNING;
         }
@@ -1162,8 +1154,7 @@ class XlangProjectProp : ProjectPropInterface
         return -1;
     }
 
-    Vector<ICompileInfo> parseInfo(String info)
-    {
+    Vector<ICompileInfo> parseInfo(String info) {
         Vector<ICompileInfo> infos = new Vector<ICompileInfo>();
         String [] list = info.split("\n");
         if (list != nilptr) {
@@ -1188,8 +1179,7 @@ class XlangProjectProp : ProjectPropInterface
         return infos;
     }
 
-    String formatArgs(String param)
-    {
+    String formatArgs(String param) {
         if (_system_.getPlatformId() == 0) {
             if (param.indexOf(" ") != -1) {
                 return "\"" + param + "\"";
@@ -1198,8 +1188,7 @@ class XlangProjectProp : ProjectPropInterface
         return param;
     }
 
-    void cleanup(IBuilder builder, Project object, Configure configure)override
-    {
+    void cleanup(IBuilder builder, Project object, Configure configure)override {
         batchbuild(builder, object, configure, "preclean");
 
         String workdir = object.projpath.findVolumePath();
@@ -1234,13 +1223,11 @@ class XlangProjectProp : ProjectPropInterface
     }
 
 
-    class XKernel32 : Library
-    {
+    class XKernel32 : Library {
 
         static bool loaded = false;
 
-        static bool load()
-        {
+        static bool load() {
             if (loaded == false) {
                 try {
                     loadLibrary("kernel32.dll");
@@ -1252,8 +1239,7 @@ class XlangProjectProp : ProjectPropInterface
             return loaded;
         }
 
-        static String getWindowsDir()
-        {
+        static String getWindowsDir() {
             if (load()) {
                 byte [] dir = new byte[320];
                 int pathlen = GetWindowsDirectoryA(dir, 320);
@@ -1271,8 +1257,7 @@ class XlangProjectProp : ProjectPropInterface
     };
 
 
-    void runbat(IBuilder builder, String batfile, String projectDir)
-    {
+    void runbat(IBuilder builder, String batfile, String projectDir) {
         String [] margs = {"cmd", "/c", formatArgs(batfile)};
 
         String execute = XKernel32.getWindowsDir();
@@ -1302,8 +1287,7 @@ class XlangProjectProp : ProjectPropInterface
         }
     }
 
-    void runsh(IBuilder builder, String shfile, String projectDir)
-    {
+    void runsh(IBuilder builder, String shfile, String projectDir) {
         String [] margs = {"bash", "-c", shfile};
         Process _mprocess = new Process("/bin/bash", margs);
         _mprocess.setWorkDirectory(projectDir);
@@ -1326,8 +1310,7 @@ class XlangProjectProp : ProjectPropInterface
         }
     }
 
-    void batchbuild(IBuilder builder, Project object, Configure configure, String key)
-    {
+    void batchbuild(IBuilder builder, Project object, Configure configure, String key) {
         String workdir = object.projpath.findVolumePath();
 
         String txt = configure.getOption(key);
@@ -1348,8 +1331,7 @@ class XlangProjectProp : ProjectPropInterface
     }
 
 
-    bool build(IBuilder builder, Project object, Configure configure, Object param)override
-    {
+    bool build(IBuilder builder, Project object, Configure configure, Object param)override {
 
         String target = getTarget(object, configure);
 
@@ -1387,34 +1369,30 @@ class XlangProjectProp : ProjectPropInterface
         return true;
     }
 
-    void stopRun()override
-    {
+    void stopRun()override {
         if (process != nilptr) {
-            process.exit(0);
-        }
+            process.exit(0); 
+            Thread.sleep(80);
+        } 
     }
 
-    String getTarget(Project object, Configure configure)
-    {
+    String getTarget(Project object, Configure configure) {
         String out_path = map_variable(object, configure, "$(Output)");
         return String.formatPath(out_path, false);
     }
 
-    String getExecuteCmd(Project object, Configure configure)
-    {
+    String getExecuteCmd(Project object, Configure configure) {
         String out_path = configure.getOption("cmd");
         out_path = map_variable(object, configure, out_path);
         return String.formatPath(out_path, false);
     }
-    String getExecuteWd(Project object, Configure configure)
-    {
+    String getExecuteWd(Project object, Configure configure) {
         String out_path = configure.getOption("workdir");
         out_path = map_variable(object, configure, out_path);
         return String.formatPath(out_path, false);
     }
 
-    Vector<String> processArgs(String args)
-    {
+    Vector<String> processArgs(String args) {
         Vector<String> args_list = new Vector<String>();
 
         byte []data = args.getBytes();
@@ -1449,8 +1427,7 @@ class XlangProjectProp : ProjectPropInterface
         return args_list;
     }
 
-    Vector<String> getExecuteArgs(Project object, Configure configure)
-    {
+    Vector<String> getExecuteArgs(Project object, Configure configure) {
 
         String out_path = configure.getOption("args");
         Vector<String> argve = processArgs(out_path);
@@ -1464,8 +1441,7 @@ class XlangProjectProp : ProjectPropInterface
         return finalargs;
     }
 
-    int getDebugSerial()
-    {
+    int getDebugSerial() {
         if (XDEBUG_SERIAL == 0) {
             XDEBUG_SERIAL = Process.getId() * 100;
         } else {
@@ -1475,8 +1451,7 @@ class XlangProjectProp : ProjectPropInterface
     }
 
 
-    bool checkDebugFlag(String path)
-    {
+    bool checkDebugFlag(String path) {
         long hf = XPlatform.openSystemFile(path, "r");
         if (hf == 0) {
             return false;
@@ -1497,8 +1472,7 @@ class XlangProjectProp : ProjectPropInterface
         return bret;
     }
 
-    void debugRun(IBuilder builder, Project proj, Configure conf)override
-    {
+    void debugRun(IBuilder builder, Project proj, Configure conf)override {
         if (XWorkspace.isDebugging()) {
             builder.OutputText("\调试器已在运行中,请等待当前调试工作结束.\n");
             return ;
@@ -1591,8 +1565,7 @@ class XlangProjectProp : ProjectPropInterface
         }
     }
 
-    void Run(IBuilder builder, Project proj, Configure conf)override
-    {
+    void Run(IBuilder builder, Project proj, Configure conf)override {
 
         String exePath = getExecuteCmd(proj, conf);/*getBuildFile(proj, conf);*/
 
@@ -1638,8 +1611,7 @@ class XlangProjectProp : ProjectPropInterface
         }
     }
 
-    static bool copyFile(String source, String dest)
-    {
+    static bool copyFile(String source, String dest) {
         if (XPlatform.existsSystemFile(source)) {
             try {
                 FileOutputStream fos = new FileOutputStream(dest);
@@ -1654,8 +1626,7 @@ class XlangProjectProp : ProjectPropInterface
     }
 
 
-    bool createZTemplateProject(WizardLoader loader,String projectName, String projectDir, String uuid)
-    {
+    bool createZTemplateProject(WizardLoader loader,String projectName, String projectDir, String uuid) {
         XPlatform.mkdir(projectDir);
 
         String confFile = XPlatform.getAppDirectory().appendPath("config").appendPath(uuid + ".utemp");
@@ -1671,8 +1642,7 @@ class XlangProjectProp : ProjectPropInterface
         return true;
     }
 
-    bool createExampleProject(WizardLoader loader,String projectName, String projectDir, String localFile)
-    {
+    bool createExampleProject(WizardLoader loader,String projectName, String projectDir, String localFile) {
         XPlatform.mkdir(projectDir);
 
         String projectFile = extartExampleToDir(localFile,projectDir,".xprj");
@@ -1684,8 +1654,7 @@ class XlangProjectProp : ProjectPropInterface
         return false;
     }
 
-    void copyQtLibs(String projectDir)
-    {
+    void copyQtLibs(String projectDir) {
         String source = XPlatform.getAppDirectory().appendPath("lib").appendPath("QXLibrary.lix");
         String dest = projectDir.appendPath("libs").appendPath("QXLibrary.lix");
         copyFile(source, dest);
@@ -1711,8 +1680,7 @@ class XlangProjectProp : ProjectPropInterface
         copyFile(source, dest);
     }
 
-    bool generateLibs(String projectDir, String uuid)
-    {
+    bool generateLibs(String projectDir, String uuid) {
         String [] qtprojs = {"0ef0fe5d-5ab9-4d62-ab6a-ee78f059ad1e", "5e5ab583-973f-41cd-98cb-ac5208557f8b"};
 
         for (int i =0; i < qtprojs.length; i++) {
@@ -1725,8 +1693,7 @@ class XlangProjectProp : ProjectPropInterface
         return true;
     }
 
-    bool generateProjectFile(String destFile, String projectName)
-    {
+    bool generateProjectFile(String destFile, String projectName) {
         try {
             FileInputStream fis = new FileInputStream(destFile);
             byte [] data = fis.read();
@@ -1744,8 +1711,7 @@ class XlangProjectProp : ProjectPropInterface
         return true;
     }
 
-    bool createTemplateProject(WizardLoader loader,String projectName, String projectDir, String uuid)
-    {
+    bool createTemplateProject(WizardLoader loader,String projectName, String projectDir, String uuid) {
         XPlatform.mkdir(projectDir);
 
 
@@ -1779,8 +1745,7 @@ class XlangProjectProp : ProjectPropInterface
 
     }
 
-    bool createNormalProject(WizardLoader loader,String projectName, String projectDir, String uuid)
-    {
+    bool createNormalProject(WizardLoader loader,String projectName, String projectDir, String uuid) {
         XPlatform.mkdir(projectDir);
         String confFile = "./config/" + uuid + ".prop";
         String destProj = String.formatPath(projectDir.appendPath(projectName + ".xprj"), false);
@@ -1833,8 +1798,7 @@ class XlangProjectProp : ProjectPropInterface
         return true;
     }
 
-    bool extartToDir(String zfile, String dir, String projName)
-    {
+    bool extartToDir(String zfile, String dir, String projName) {
 
         FileInputStream fis;
 
@@ -1889,8 +1853,7 @@ class XlangProjectProp : ProjectPropInterface
         return bSuccess;
     }
 
-    String  extartExampleToDir(String zfile, String dir, String extsion)
-    {
+    String  extartExampleToDir(String zfile, String dir, String extsion) {
 
         String projectName = nilptr;
 
@@ -1953,8 +1916,7 @@ class XlangProjectProp : ProjectPropInterface
         return projectName;
     }
 
-    byte [] getContentForNewFile(String filename,Project project, String uuid)
-    {
+    byte [] getContentForNewFile(String filename,Project project, String uuid) {
 
         String projectName = "XApp";
         if (project != nilptr) {
@@ -2033,8 +1995,7 @@ class XlangProjectProp : ProjectPropInterface
         return ("//xlang Source, Name:" + filename + " \n" + "//Date: " + date + " \n").getBytes();
 
     }
-    bool createNormalFileToProject(WizardLoader loader,String projectName, String projectDir, String uuid, Project ownProject, bool addToProject, String ext)
-    {
+    bool createNormalFileToProject(WizardLoader loader,String projectName, String projectDir, String uuid, Project ownProject, bool addToProject, String ext) {
         XPlatform.mkdir(projectDir);
         try {
             String extsion = projectName.findExtension();
@@ -2067,8 +2028,7 @@ class XlangProjectProp : ProjectPropInterface
         }
         return false;
     }
-    bool create(WizardLoader loader, String projectName, String projectDir, String uuid, Project ownProject, bool addToProject, String userType)override
-    {
+    bool create(WizardLoader loader, String projectName, String projectDir, String uuid, Project ownProject, bool addToProject, String userType)override {
 
         if (userType != nilptr && userType.equals("project")) {
             if (Pattern.test(projectName, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true) == false) {

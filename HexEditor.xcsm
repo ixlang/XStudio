@@ -29,6 +29,7 @@ class HexEditor : QXWidget{
     
     int backColor = 0xff252526;
     
+    ContextMenu _contextMenu = new ContextMenu();
     
     int hex_left = 120, 
 					hex_right = hex_left + (hexwidth * 16) + 40;
@@ -71,6 +72,7 @@ class HexEditor : QXWidget{
 			old_hexdata = nilptr;
         }
 		hexdata = d;
+        _contextMenu.enableAll(hexdata != nilptr);
         currentposition = 0;
         mouseposition = 0;
         baseOffset = baseAddress;
@@ -250,28 +252,32 @@ class HexEditor : QXWidget{
     
 	void onMouseButtonRelease(int Button,int x,int y,int flags,int source)override{
 		//TODO 
-        bPressed = false;
-        if (scroll == false){
-			sel_end = getPosition(x, y);
-			update();
-        }else{
-			scroll = false;
+        if (Button == LeftButton){ 
+            bPressed = false;
+            if (scroll == false){
+                sel_end = getPosition(x, y);
+                update();
+            }else{
+                scroll = false;
+            }
         }
 	}
 
 	void onMouseButtonPress(int Button,int x,int y,int flags,int source)override{
 		//TODO 
-        bPressed = true;
-        if (x > width() - 18){
-			calcScrollBar(y-scrollbarheight/2);
-			scroll = true;
-        }else{
-			if (x < 120){
-				hex_offset = !hex_offset;
+        if (Button == LeftButton){ 
+            bPressed = true;
+            if (x > width() - 18){
+                calcScrollBar(y-scrollbarheight/2);
+                scroll = true;
+            }else{
+                if (x < 120){
+                    hex_offset = !hex_offset;
+                }
+                sel_end = sel_start = getPosition(x, y);
+                //workspace.showStatus(String.format("偏移量:0x%08X [%d]",sel_start, sel_start));
+                update();
             }
-			sel_end = sel_start = getPosition(x, y);
-            //workspace.showStatus(String.format("偏移量:0x%08X [%d]",sel_start, sel_start));
-            update();
         }
 	}
 
@@ -366,4 +372,101 @@ class HexEditor : QXWidget{
         return mouseposition;
     }
 	
+    void onAttach(){
+        createContextMenu();
+    }
+    
+    static class ContextMenu{
+		QXMenu contextMenu = new QXMenu();
+		QXAction [] actions;
+		
+		void create(QXWidget parent, String [] acts, onEventListener listener){
+			if (contextMenu.create(parent)){
+				actions = new QXAction[acts.length];
+				for (int i = 0; i < acts.length; i ++){
+					QXAction action = new QXAction();
+					if (action.create(contextMenu)){
+						
+						if (acts[i].equals("-")){
+							action.setSeparator(true);
+						}else{
+							action.setEnable(false);	
+							action.setText(acts[i]);
+							action.setOnEventListener(listener);
+						}
+					}
+					actions[i] = action;
+				}
+				parent.setContextMenuPolicy(ActionsContextMenu);
+				parent.addActions(actions);
+			}
+		}
+        
+        void enableAll(bool be){
+            int id = 0;
+            for (; id < actions.length; id++){
+                actions[id].setEnable(be);	
+            }
+        }
+	};
+    
+    void createContextMenu(){       
+		onEventListener menuListener = new onEventListener(){
+		   void onTrigger(QXObject obj) override{
+                int id = 0;
+                for (; id < _contextMenu.actions.length; id++){
+                    if (obj == _contextMenu.actions[id]){
+                        break;
+                    }
+                }
+				if (id < 3){
+                    copyToClipBoard(hexdata, sel_start, sel_end, id);
+                }
+		   }
+		};
+        
+		
+		
+		String []acts = {"复制十六进制数", "复制十六进制数(带空格)","复制Ascii内容"};
+        
+		_contextMenu.create(this, acts, menuListener);
+	}
+    
+    void copyToClipBoard(byte [] data, int start, int end, int format){
+        String text = "";
+        try{
+            if (data != nilptr && start >= 0 && start < data.length && end >= 0 && end < data.length){
+                switch(format){
+                    case 0:
+                        for (int i = start; i < end + 1; i++){
+                            text = text + String.format("%02X",data[i]);
+                        }
+                    break;
+                    case 1:
+                        
+                        for (int i = start; i < end + 1; i++){
+                            if (text.length() != 0){
+                                text = text + " ";
+                            }
+                            text = text + String.format("%02X",data[i]);
+                        }
+                    break;
+                    case 2:
+                        for (int i = start; i < end + 1; i++){
+                            if (text.length() != 0){
+                                text = text + " ";
+                            }
+                            text = new String(data, start, (end + 1) - start);
+                        }
+                    break;
+                }
+                setClipboardText(text);
+            }
+        }catch(Exception e){
+            
+        }
+
+
+    }
+    
 };

@@ -1,7 +1,7 @@
-//xlang Source, Name:ConfigMgr.xcsm 
-//Date: Tue Nov 11:29:36 2018 
+//xlang Source, Name:ConfigMgr.xcsm
+//Date: Tue Nov 11:29:36 2018
 
-class ConfigMgr : QXDialog{
+class ConfigMgr : QXDialog {
 
     QXTreeView _listview;
     QXPushButton btnClone;
@@ -9,130 +9,130 @@ class ConfigMgr : QXDialog{
     QXPushButton btnClose;
     XProperites proWnd;
     Project _curproject;
-    
-    void onAttach(){
-    
+
+    void onAttach() {
+
         setWindowFlags(CustomizeWindowHint | WindowMinMaxButtonsHint | WindowCloseButtonHint);
-        
+
         _listview = (QXTreeView)attachByName(new QXTreeView(), "listConfig");
-                
+
         btnClone = (QXPushButton)attachByName(new QXPushButton(), "btnClone");
         btnClone.setOnClickListener(
-        new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
-				long [] items = _listview.getSelectedItems();
-                if (items.length == 0){
-					QXMessageBox.Critical("错误", "请先选择一个现有配置", QXMessageBox.Ok, QXMessageBox.Ok);
-					return ;
+        new onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                long [] items = _listview.getSelectedItems();
+                if (items.length == 0) {
+                    QXMessageBox.Critical("错误", "请先选择一个现有配置", QXMessageBox.Ok, QXMessageBox.Ok);
+                    return ;
                 }
                 String oldConfigName = _listview.getItemText(items[0], 0);
-				InputDialog.requestInput(new InputDialog.onInputListener(){
-					bool onInputOk(String text)override{
-                    
-						if (Pattern.test(text, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true) == false){
-							QXMessageBox.Critical("错误", "配置名称不合法, 含有不允许的字符", QXMessageBox.Ok, QXMessageBox.Ok);
-							return false;
-						}
-						if (text.length() == 0){
-							QXMessageBox.Critical("错误", "配置名称不能为空", QXMessageBox.Ok, QXMessageBox.Ok);
-							return false;
-						}
+                InputDialog.requestInput(new InputDialog.onInputListener() {
+                    bool onInputOk(String text)override {
 
-						if (false == _curproject.cloneConfigure(oldConfigName, text)){
-							QXMessageBox.Critical("错误", "无法克隆配置, 同名配置已存在或者找不到原有配置.", QXMessageBox.Ok, QXMessageBox.Ok);
-                        }else{
-							loadConfigures();
+                        if (Pattern.test(text, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true) == false) {
+                            QXMessageBox.Critical("错误", "配置名称不合法, 含有不允许的字符", QXMessageBox.Ok, QXMessageBox.Ok);
+                            return false;
                         }
-                        
-						return true;
-					}
-					bool onInputCancel()override{
-						return true;
-					}
-					String getTitle()override{
-						return "克隆配置";
-					}
-					String getTips()override{
-						return "输入新配置名称:";
-					}
-					String getDefault()override{
-						return oldConfigName;
-					}
-				});
+                        if (text.length() == 0) {
+                            QXMessageBox.Critical("错误", "配置名称不能为空", QXMessageBox.Ok, QXMessageBox.Ok);
+                            return false;
+                        }
+
+                        if (false == _curproject.cloneConfigure(oldConfigName, text)) {
+                            QXMessageBox.Critical("错误", "无法克隆配置, 同名配置已存在或者找不到原有配置.", QXMessageBox.Ok, QXMessageBox.Ok);
+                        } else {
+                            loadConfigures();
+                        }
+
+                        return true;
+                    }
+                    bool onInputCancel()override {
+                        return true;
+                    }
+                    String getTitle()override {
+                        return "克隆配置";
+                    }
+                    String getTips()override {
+                        return "输入新配置名称:";
+                    }
+                    String getDefault()override {
+                        return oldConfigName;
+                    }
+                });
             }
         });
-        
+
         btnDel = (QXPushButton)attachByName(new QXPushButton(), "btnDel");
         btnDel.setOnClickListener(
-        new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
-				long [] items = _listview.getSelectedItems();
-                if (items.length == 0){
-					QXMessageBox.Critical("错误", "请先选择一个现有配置", QXMessageBox.Ok, QXMessageBox.Ok);
-					return ;
+        new onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                long [] items = _listview.getSelectedItems();
+                if (items.length == 0) {
+                    QXMessageBox.Critical("错误", "请先选择一个现有配置", QXMessageBox.Ok, QXMessageBox.Ok);
+                    return ;
                 }
-                
+
                 String oldConfigName = _listview.getItemText(items[0], 0);
-                
-                if (oldConfigName.equals(_curproject.currentConfig.getName())){
-					QXMessageBox.Critical("错误", "不能删除正在使用的配置", QXMessageBox.Ok, QXMessageBox.Ok);
-					return ;
+
+                if (oldConfigName.equals(_curproject.currentConfig.getName())) {
+                    QXMessageBox.Critical("错误", "不能删除正在使用的配置", QXMessageBox.Ok, QXMessageBox.Ok);
+                    return ;
                 }
-                
+
                 _curproject.removeConfigure(oldConfigName);
                 loadConfigures();
             }
         });
-        
+
         btnClose = (QXPushButton)attachByName(new QXPushButton(), "btnClose");
         btnClose.setOnClickListener(
-        new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
-				ConfigMgr.this.close();
+        new onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                ConfigMgr.this.close();
             }
         });
-        
+
         //_listview.setOnTreeViewItemEvent(listlistener);
-        
+
         String [] columns = {"名称"};
         _listview.setColumns(columns);
-        
-        loadConfigures();
-        
-        /*setOnLayoutEventListener(new onLayoutEventListener(){
-			void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
-				_listview.resize(w - 120, h -  20);
 
-				btnClone.move(w - 95, 20);
-				
-				btnDel.move(w - 95, 60);
-                
+        loadConfigures();
+
+        /*setOnLayoutEventListener(new onLayoutEventListener(){
+        	void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+        		_listview.resize(w - 120, h -  20);
+
+        		btnClone.move(w - 95, 20);
+
+        		btnDel.move(w - 95, 60);
+
                 btnClose.move(w - 95, h - 50);
-			}
+        	}
         });*/
-        
+
         setWindowTitle(_curproject.getName() + " - 配置");
         setWindowIcon("./res/toolbar/output.png");
         setModal(true);
         show();
     }
-    
-    void loadConfigures(){
-       /* _system_.consoleWrite("loadWindow");*/
 
-	   _listview.clear();
-       Map.Iterator<String, Configure> iter = _curproject.configures.iterator();
-       
-        while (iter.hasNext()){
+    void loadConfigures() {
+        /* _system_.consoleWrite("loadWindow");*/
+
+        _listview.clear();
+        Map.Iterator<String, Configure> iter = _curproject.configures.iterator();
+
+        while (iter.hasNext()) {
             //String key = iter.getKey();
             Configure cfg = iter.getValue();
             iter.next();
-            _listview.addItem(nilptr, cfg.getName());  
+            _listview.addItem(nilptr, cfg.getName());
         }
     }
-    
-    bool onClose()override{
-		proWnd.refreshConfigures();
+
+    bool onClose()override {
+        proWnd.refreshConfigures();
         XWorkspace.workspace.refreshConfigures();
         return true;
     }

@@ -19,6 +19,10 @@ class XWndOutput: QXDockWidget
     {
         outputWnd.output(text);
     }
+    
+    static bool inFocus(){
+        return outputWnd.hasFocus();
+    }
     void output(String text)
     {
 
@@ -303,6 +307,7 @@ class XWndOutput: QXDockWidget
 
         outputWnd = this;
         _sci.setIndicStyle(1, QXSci.INDIC_PLAIN);
+        _sci.sendEditor(QXSci.SCI_INDICSETFORE,1,0xfff0d964);
         _sci.setIndicCurrent(1);
 
         /*urlmon.schedule(new TimerTask(){
@@ -323,9 +328,11 @@ class XWndOutput: QXDockWidget
                 if (sciisHand) {
                     int pos = _sci.positionFromPoint(x, y);
                     int start = _sci.getIndicStart(1, pos);
-                    int end = _sci.getIndicEnd(1, pos);
-                    if (start != 0 && end != 0) {
+                    int end = _sci.getIndicEnd(1, start);
+                    int dic = _sci.IndicForPosition(start);
+                    if (dic != 0 && start != 0 && end != 0) {
                         _sci.setCursor(QXSci.cursorHand);
+                        showTips(pos, "按下鼠标左键在浏览器中访问链接.");
                     }
                 }
             }
@@ -334,8 +341,9 @@ class XWndOutput: QXDockWidget
                 if (sciisHand) {
                     int pos = _sci.positionFromPoint(x, y);
                     int start = _sci.getIndicStart(1, pos);
-                    int end = _sci.getIndicEnd(1, pos);
-                    if (start != 0 && end != 0) {
+                    int end = _sci.getIndicEnd(1, start);
+                    int dic = _sci.IndicForPosition(start);
+                    if (dic != 0 && start != 0 && end != 0) {
                         _sci.setSelect(start, end);
                         String current_Url = _sci.getSelectedText();
                         current_Url = current_Url.trim(true);
@@ -379,6 +387,11 @@ class XWndOutput: QXDockWidget
         });
     }
 
+    void showTips(int position, String content)
+    {
+        _sci.showTips(position, content);
+    }
+    
     void testUrl()
     {
         if (_sci.isModified()) {

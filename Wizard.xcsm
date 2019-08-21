@@ -515,13 +515,14 @@ class WizardDialog : QXDialog
         String type = objItem.getString("user");
 
         if (_propinterface.create(new WizardLoader() {
-        void loadProject(String file) {
-                _mdispace.loadProject(file);
-            }
-            void openTextFile(String file) {
-                _mdispace.openTextFile(file);
-            }
-        },project_name, project_path, uuid, _mdispace.getCurrentProject(), add_check.getChecked(), type)) {
+            void loadProject(String file) {
+                    _mdispace.loadProject(file);
+                }
+                void openTextFile(String file) {
+                    _mdispace.openTextFile(file);
+                }
+            },project_name, project_path, uuid, _mdispace.getCurrentProject(), add_check.getChecked(), type)) 
+        {
             close();
         } else {
             QXMessageBox.Critical("错误", "无法建立项目", QXMessageBox.Ok, QXMessageBox.Ok);

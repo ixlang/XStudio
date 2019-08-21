@@ -1,0 +1,33 @@
+//xlang Source, Name:QAbstractPrintDialog.xcsm 
+//Date: Sat Aug 13:22:38 2019 
+
+class QAbstractPrintDialog : QXDialog{
+
+    enum PrintDialogOption {
+        None                    = 0x0000, // obsolete
+        PrintToFile             = 0x0001,
+        PrintSelection          = 0x0002,
+        PrintPageRange          = 0x0004,
+        PrintShowPageSize       = 0x0008,
+        PrintCollateCopies      = 0x0010,
+        DontUseSheet            = 0x0020,
+        PrintCurrentPage        = 0x0040
+    };
+    
+    enum PrintRange {
+        AllPages,
+        Selection,
+        PageRange,
+        CurrentPage
+    };
+    
+    QAbstractPrintDialog(){
+    
+    }
+    
+    QAbstractPrintDialog(long handle){
+        super(handle);
+    }
+    
+    int exec();
+};

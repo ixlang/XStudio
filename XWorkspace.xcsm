@@ -17,7 +17,7 @@ class XWorkspace : QXMdiArea
     static XWorkspace workspace;
     QXComboBox cfgSel = new QXComboBox();
     bool bExternModifyAutoload = false;
-
+    QXSci.QSciPrinter g_printer = new QXSci.QSciPrinter();
     static ActionRecorder ar = new ActionRecorder();
 
     onDragListener draglistener = new onDragListener()
@@ -695,6 +695,9 @@ class XWorkspace : QXMdiArea
             XMenuManager.setProjectLoaded(false);
             ar.clear();
 
+            if (Setting.welcomeOnClose()){
+                openIndexPage();
+            }
             return true;
         } else {
             QXMessageBox.Critical("注意", "当前工作空间没有打开一个项目", QXMessageBox.Ok, QXMessageBox.Ok);
@@ -1208,6 +1211,10 @@ class XWorkspace : QXMdiArea
 
     void Copy()
     {
+        if (XWndOutput.inFocus()){
+            XWndOutput.outputWnd._sci.Copy();
+            return;
+        }
         XSourceEditor wnd = (XSourceEditor)currentSubWindow();
         if (wnd != nilptr) {
             wnd.Copy();
@@ -1858,7 +1865,7 @@ class XWorkspace : QXMdiArea
         }
         return nilptr;
     }
-
+    
     static void runAsAdministrator()
     {
         String filepath = _system_.getAppDirectory().appendPath("xdbg.server");
@@ -1876,7 +1883,101 @@ class XWorkspace : QXMdiArea
         } catch(Exception e) {
             QXMessageBox.Critical("失败", "无法写入调试文件:" + filepath + "请确认目录可写.", QXMessageBox.Ok, QXMessageBox.Ok);
         }
+    }
+    
+    void setUpper(){
+        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        if (wnd != nilptr) {
+            wnd.setUpper();
+        }
+    }
+    
+    void setLower(){
+        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        if (wnd != nilptr) {
+            wnd.setLower();
+        }
+    }
+    
+    void CursorUp(){
+        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        if (wnd != nilptr) {
+            wnd.CursorUp();
+        }
+    }
 
+    void CursorLeft(){
+        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        if (wnd != nilptr) {
+            wnd.CursorLeft();
+        }
+    }
+    
+    void CursorRight(){
+        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        if (wnd != nilptr) {
+            wnd.CursorRight();
+        }
+    }
 
+    void CursorDown(){
+        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        if (wnd != nilptr) {
+            wnd.CursorDown();
+        }
+    }
+ 
+    void CursorLineBegin(){
+        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        if (wnd != nilptr) {
+            wnd.CursorLineBegin();
+        }
+    } 
+ 
+    void CursorLineEnd(){
+        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        if (wnd != nilptr) {
+            wnd.CursorLineEnd();
+        }
+    }
+
+    void CursorPrevPage(){
+        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        if (wnd != nilptr) {
+            wnd.CursorPrevPage();
+        }
+    }
+
+    void CursorNextPage(){
+        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        if (wnd != nilptr) {
+            wnd.CursorNextPage();
+        }
+    }
+
+    void CursortoTop(){
+        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        if (wnd != nilptr) {
+            wnd.CursortoTop();
+        }
+    }
+
+    void CursortoBottom(){
+        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        if (wnd != nilptr) {
+            wnd.CursortoBottom();
+        }
+    }
+    
+    
+    void doPrint(){
+        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        if (wnd != nilptr) {
+            QPrintDialog printdlg = new QPrintDialog(this, g_printer);
+            if (printdlg.exec() != 0){
+                g_printer.printRange(wnd._sci, -1, -1);
+            }
+        }
     }
 };
+

@@ -7,7 +7,12 @@ class FileOutputStream : Stream{
             throw new IllegalArgumentException("file " + path + " can not open");
         }
 	}
-
+    FileOutputStream(String path, bool append){
+        filehandler = XPlatform.openSystemFile(path, append ? "a" : "w");
+        if (filehandler == 0){
+            throw new IllegalArgumentException("file " + path + " can not open");
+        }
+    }
 	bool attach(String path){
 		if (filehandler != 0){
 			_system_.closeFile(filehandler);

@@ -1,0 +1,77 @@
+//xlang Source, Name:QPrintDialog.xcsm 
+//Date: Sat Aug 13:20:50 2019 
+
+class QPrintDialog : QAbstractPrintDialog{
+    QPrintDialog(){
+    
+    }
+    
+    QPrintDialog(QPrinter pprinter){
+        if (false == create(nilptr, pprinter)){
+            throw new IllegalArgumentException("can not new QPrintDialog");
+        }
+    }
+        
+    QPrintDialog(QXWidget parent){
+        if (false == create(parent)){
+            throw new IllegalArgumentException("can not new QPrintDialog");
+        }
+    }
+    
+    QPrintDialog(QXWidget parent, QPrinter pprinter){
+        if (false == create(parent, pprinter)){
+            throw new IllegalArgumentException("can not new QPrintDialog");
+        }
+    }
+    
+    QPrintDialog(long handle){
+        super(handle);
+    }
+    
+    bool create(){
+        nativehandle = createQPObject(QType.qtPrintDialog, this, 0, 0, 0, 0, 0);
+        if (nativehandle == 0){
+            return false;
+        }
+        return true;
+    }
+    
+    bool create(QXWidget parent){
+        nativehandle = createQPObject(QType.qtPrintDialog, this, parent.nativehandle, 0, 0, 0, 0);
+        if (nativehandle == 0){
+            return false;
+        }
+        return true;
+    }    
+    bool create(QXWidget parent, QPrinter printer){
+        nativehandle = createQPObject(QType.qtPrintDialog, this, parent == nilptr ? 0 : parent.nativehandle, printer.nativehandle, 0, 0, 0);
+        if (nativehandle == 0){
+            return false;
+        }
+        return true;
+    }    
+    
+    int exec(){
+        return widget_get_int_value(nativehandle, PRTDLGEXEC);
+    }
+    
+    void done(int result){
+        widget_set_vint_value(nativehandle, PRTDLGDONE, result);
+    }
+    
+    void setOption(PrintDialogOption option, bool on){
+        widget_set_int_bool_value(nativehandle, PRTDLGSETOPT, option, on);
+    }
+    
+    bool testOption(PrintDialogOption option){
+        return widget_get_int_bool(nativehandle, PRTDLGTEST, option);
+    }
+    
+    void setOptions(int options){
+        widget_set_vint_value(nativehandle, PRTDLGSETOPTS, options);
+    }
+    
+    int options(){
+        return widget_get_int_value(nativehandle, PRTDLGGETOPTS);
+    }
+};

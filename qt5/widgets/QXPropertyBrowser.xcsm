@@ -558,7 +558,18 @@ class QXPropertyBrowser : QXWidget{
     void setRootIsDecorated(bool b){
         widget_set_bool_value(nativehandle, SRID, b);
     }
-    
+    void setItemExpand(QtBrowserItem item, bool bp){
+        object_get_long_int(nativehandle, QPB_SETEXPAND, item.nativehandle, bp ? 1 : 0);
+    }
+    void setItemSelected(QtBrowserItem item, bool bp){
+        object_get_long_int(nativehandle, QPB_SETEXPAND, item.nativehandle, bp ? 1 : 0);
+    }
+    void setItemVisible(QtBrowserItem item, bool bp){
+        object_get_long_int(nativehandle, QPB_SETEXPAND, item.nativehandle, bp ? 1 : 0);
+    }
+    void setItemBackColor(QtBrowserItem item, int color){
+        object_get_long_int(nativehandle, QPB_SETBACKCOLOR, item.nativehandle, color);
+    }
     void clear(){
         widget_get_bool_value(nativehandle, TREEPROPCLEAR);
     }

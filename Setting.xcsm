@@ -28,7 +28,9 @@ class Setting : QXDialog {
 		}
 		
 		bool setSetting(String key, String val){
-			root.remove(key);
+            while (root.has(key)){ 
+                root.remove(key);
+            }
 			root.put(key, val);
 			return true;
 		}
@@ -38,6 +40,7 @@ class Setting : QXDialog {
 			String file = XPlatform.getAppDirectory();
 			return file.appendPath("config").appendPath("preference.prop");
         }
+        
         void loadPreference(){
 
             String file = getPreferencePath();
@@ -149,14 +152,20 @@ class Setting : QXDialog {
     QXTreeView _listview;
     
     QXPropertyBrowser _propTable = new QXPropertyBrowser();
+    QXSci             _sci = new QXSci();
+    
     Vector<JsonObject> _propItems = new Vector<JsonObject>();
     
     Map<String, QXPropertyBrowser.QtVariantProperty> currentProps = new Map<String, QXPropertyBrowser.QtVariantProperty>();
 
 	int current_sel_setting = 0;
+    bool showSci = false;
+    
     onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
         void onItemClicked(QXTreeView list,long item, int column)override{
             current_sel_setting = list.getItemTag(item, 0);
+            String seltext = _listview.getItemText(item,0);
+            showSci = seltext.equals("文本编辑器配色");
             saveSetting();
 			reloadProperty();
         }
@@ -168,6 +177,22 @@ class Setting : QXDialog {
 		currentProps.clear();
 		if (current_sel_setting >=0 && current_sel_setting < _propItems.size()){
 			loadFeature((JsonObject)_propItems.get(current_sel_setting).child());
+            
+            int w = width(), h = height();
+            
+            if (showSci){
+                _sci.show();
+                // top = 40
+                _propTable.resize(w - 200, h - 290);
+                syntaxForXlang();
+                _sci.move(170,h - 230);
+                _sci.resize(w - 200,190);
+            }else{
+                _sci.hide();
+                _propTable.resize(w - 200, h - 90);
+            }
+            
+            //在这里注意
 		}
     }
     
@@ -223,6 +248,7 @@ class Setting : QXDialog {
         _propTable.move(170, 40);
         _propTable.resize(500, 410);
         
+     
         _propTable.setLables("项","值");
         _propTable.enableAdjust(true);
         _propTable.setHeaderWidths(200, 300);
@@ -231,6 +257,42 @@ class Setting : QXDialog {
         _listview.setColumns(columns);
         _listview.setOnTreeViewItemEvent(listlistener);
    
+        _sci.create(this);
+        _sci.move(170, 40);
+        _sci.resize(500, 410);
+        _sci.hide();
+        _sci.setText("//xlang " +
+                                "\npackage System{" +
+                                "\n	class out{" +
+                                "\n		static int println(String text){"	+
+                                "\n			return _system_.consoleWrite(text + \"\\n\");" +
+                                "\n		}"	+
+                                "\n		static int print(String text){"	+
+                                "\n			return _system_.consoleWrite(text);" +
+                                "\n		}"	+
+                                "\n	};" +
+                                "\n	"	+
+                                "\n	class Console{"	+
+                                "\n		Console(){"	+
+                                "\n			_system_.createConsole();" +
+                                "\n		}" +
+                                "\n	};" +
+                                "\n};" +
+                                "\n\n" +
+                                "\nusing { System; };"	+
+                                "\n\n" +
+                                "\nint main(String [] args){"	+
+                                "\n\n	new Console();"	+
+                                "\n\n	System.out.println(\"hello world\");" +
+                                "\n\n	Thread.sleep(3000);"	+
+                                "\n\n	return 0;"	+
+                                "\n}\n");
+        
+        _sci.sendEditor(QXSci.SCI_MARKERADD, 1, 8);
+        _sci.sendEditor(QXSci.SCI_MARKERADD, 2, 9);
+        _sci.sendEditor(QXSci.SCI_MARKERADD, 3, 12);
+        _sci.sendEditor(QXSci.SCI_MARKERADD, 4, 13);
+        
         if (loadSetting() == false){
             close();
             return ;
@@ -256,7 +318,16 @@ class Setting : QXDialog {
 					_listview.resize(141, h - 50);
 					btnClose.move(w - 100, h - 40);
 					//_propTable.move(170, 40);
-					_propTable.resize(w - 200, h - 90);
+                    
+                    if (showSci == false){
+                        _propTable.resize(w - 200, h - 90);
+                    }else{
+                        _propTable.resize(w - 200, h - 290);
+                        
+                        _sci.move(170,h - 230);
+                        _sci.resize(w - 200,190);
+                    }
+					
                 }
         });
 		
@@ -282,6 +353,9 @@ class Setting : QXDialog {
                 }else
                 if (type.equals("keysequence")){
                     loadKeySequence(variantManager, cfgName, confi);
+                }else
+                if (type.equals("color")){
+                    loadColor(variantManager, cfgName, confi);
                 }
 				confi = (JsonObject)confi.next();
             }
@@ -316,7 +390,7 @@ class Setting : QXDialog {
         item.setValue(getSetting(nilptr, kv[1]));
         currentProps.put(kv[1], item);
     }
-    
+        
     void loadKeySequence(QXPropertyBrowser.QtVariantPropertyManager manager, String name, JsonObject root){
         String [] kv = name.split(':');
         QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addProperty(new QXPropertyBrowser.QtVariantProperty(),QXVariant.KeySequence, kv[0]);
@@ -324,6 +398,80 @@ class Setting : QXDialog {
         item.setValue(getSetting(nilptr, kv[1]));
         currentProps.put(kv[1], item);
     }
+    
+    static String splitColor(String text){
+        if (text.startWith("#")){
+            if (text.length() == 7){
+                return "ff" + text.substring(5,7) + text.substring(3,5) + text.substring(1,3);
+            }
+            if (text.length() == 9){
+                return text.substring(1,3) + text.substring(7,9) + text.substring(5,7) + text.substring(3,5);
+            }
+            
+        }else
+        if (text.startWith("0x")){
+            return text.substring(2,text.length());
+        }
+        return "ff000000";
+    }
+    
+    static String getColor(String text, String prefix){
+        if (text.startWith(prefix)){
+            return text;
+        }
+        
+        if (text.startWith("#")){
+            if (prefix.equals("0x")){
+                return prefix + splitColor(text);
+            }
+            return "0xff000000";
+        }
+        if (text.startWith("0x")){
+            if (prefix.equals("#")){
+                return prefix + splitColor(text.replace("0x", prefix));
+            }
+            return "#ff000000";
+        }
+        text = text.replace("[", "").replace("]", "").replace("(", ",").replace(")", "");
+        String [] colors = text.split(',');
+        if (colors != nilptr && colors.length == 4){
+            for (int i = 0; i < 4; i++){
+                colors[i] = String.format("%02X", colors[i].trim(true).parseInt());
+            }
+                
+            String outcolor =  "";
+            if (prefix.equals("0x")){
+                outcolor = prefix + colors[3] + colors[2] + colors[1] + colors[0];
+            }else{
+                outcolor = prefix + colors[3] + colors[0] + colors[1] + colors[2];
+            }
+            
+            return outcolor;
+        }
+        return prefix + "00000000";
+    }
+    
+    void loadColor(QXPropertyBrowser.QtVariantPropertyManager manager, String name, JsonObject root){
+        String [] kv = name.split(':');
+        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addProperty(new QXPropertyBrowser.QtVariantProperty(),QXVariant.Color, kv[0]);
+        QXPropertyBrowser.QtBrowserItem pitem = _propTable.addProperty(item);
+        _propTable.setItemExpand(pitem,false);
+        
+        String strvalue = getSetting(nilptr, kv[1]);
+        item.setValue(getColor(strvalue, "#"));
+        currentProps.put(kv[1], item);
+        
+        manager.setPropertyEventListener(item,
+            new QXPropertyBrowser.PropertyManager.onPropertyEventListener(){
+				void onVariantPropertyValueChanged(long prop, int dataType, String stringValue)override{
+					if (stringValue != nilptr){
+                        preference.setSetting(kv[1], stringValue);
+                        syntaxForXlang();
+                    }
+				}
+            });
+    }
+
     
     void loadStringList(QXPropertyBrowser.QtVariantPropertyManager manager, String name, JsonObject root){
         String [] kv = name.split(':');
@@ -347,6 +495,26 @@ class Setting : QXDialog {
     }
     
     void onLoadList(QXPropertyBrowser.QtVariantPropertyManager manager,QXPropertyBrowser.QtVariantProperty item, String kv, String defaultValue){
+        if (kv.equals("style_color")){
+			manager.setPropertyEventListener(item,
+            new QXPropertyBrowser.PropertyManager.onPropertyEventListener(){
+				void onVariantPropertyValueChanged(long prop, int dataType, String stringValue)override{
+					if (stringValue != nilptr){
+                        if (stringValue.parseInt() > 1){
+							if (QXMessageBox.Question("注意","加载选择的配色方案后,现有自定义配色设置将丢失?",QXMessageBox.Yes,QXMessageBox.No) == QXMessageBox.Yes){
+								if (loadColorSet(stringValue.parseInt()) == false){
+									QXMessageBox.Critical("注意","配色方案文件丢失,不能加载配色设置",QXMessageBox.Ok,QXMessageBox.Ok);
+                                }
+								reloadProperty();
+								preference.setSetting("style_color", "自定义");
+                            }else{
+								item.setValue("1");
+                            }
+                        }
+                    }
+				}
+            });
+        }else
         if (kv.equals("shortkeystyle")){
 			manager.setPropertyEventListener(item,
             new QXPropertyBrowser.PropertyManager.onPropertyEventListener(){
@@ -410,6 +578,19 @@ class Setting : QXDialog {
         }
     }
     
+    
+    bool loadColorSet(int id){
+		switch(id){
+            case 2:
+				return loadKeyMapFromFile("./config/light.conf");
+            break;
+            case 3:
+				return loadKeyMapFromFile("./config/dark.conf");
+            break;
+        }
+        return false;
+    }
+    
     bool loadKeyMap(int id){
 		switch(id){
 			case 1:
@@ -447,6 +628,203 @@ class Setting : QXDialog {
             }
 		}
         return false;
+    }
+    
+    int current_modify_mark, reserve_modify_mark;
+    
+    static const int
+        MARK_BREAKPOINT = 9,
+        MARK_POINTER = 8,
+        MARK_MODIFIED = 12,
+        MARK_SAVED = 13;
+        
+    static const int BREAKPOINT_INDEX = 0,
+                 LINENUMBER_INDEX = 1,
+                 DEBUGPOINT_INDEX = 2,
+                 MARGIN_FOLD_INDEX = 3,
+                 MODIFIMARK_INDEX = 4;
+                 
+    String szKeywords1=
+        "break case catch char class " +
+        "const continue default do double else final finally cdecl for " +
+        "if import interface stdcall fastcall pascal operator " +
+        "new package include using require synchronized_read synchronized_write " +
+        "return static super switch synchronized this throw " +
+        "try void while @Declare override bool byte long char int long short String _system_ " +
+        "Thread nilptr Exception Vector Map List Iterator Timer TimerTask true false enum finalize" ;
+
+    String szKeywords2 = "";
+    
+    void syntaxForXlang() {
+        _sci.sendEditor(QXSci.SCI_CLEARDOCUMENTSTYLE, 0, 0);
+
+        _sci.sendEditor(QXSci.SCI_SETLEXER, QXSci.SCLEX_CPP, 0);
+        _sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);
+        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_DEFAULT, getColorRef("defaultbackcolor"));
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_DEFAULT, getColorRef("defaultforecolor"));
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, 75, getColorRef("defaultforecolor"));
+        //_sci.sendEditor(QXSci.STYLE_LINENUMBER, 1, 0);
+        //bool bmac = (_system_.getPlatformId() == 2);
+
+
+        _sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,Setting.getEditorFont());
+        _sci.sendEditor(QXSci.SCI_STYLESETSIZEFRACTIONAL, QXSci.STYLE_DEFAULT,Setting.getEditorFontSize());
+
+
+        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
+
+        _sci.sendEditor(QXSci.SCI_SETSELBACK,1,getColorRef("selectedbackcolor"));
+        _sci.sendEditor(QXSci.SCI_SETSELFORE,0,getColorRef("selectedforecolor"));
+        //C++语法解析
+        _sci.sendEditor(QXSci.SCI_SETLEXER, QXSci.SCLEX_CPP, 0);
+        _sci.sendEditor(QXSci.SCI_SETKEYWORDS, 0, szKeywords1);//设置关键字
+        _sci.sendEditor(QXSci.SCI_SETKEYWORDS, 1, szKeywords2);//设置关键字
+        // 下面设置各种语法元素风格
+        _sci.sendEditor(QXSci.SCI_SETEOLMODE, 1, 0);
+
+        _sci.sendEditor(QXSci.SCI_MARKERDEFINE, MARK_BREAKPOINT, 0);
+        _sci.sendEditor(QXSci.SCI_MARKERSETBACK, MARK_BREAKPOINT,getColorRef("breakpointbackcolor"));
+        _sci.sendEditor(QXSci.SCI_MARKERSETFORE, MARK_BREAKPOINT,getColorRef("breakpointforecolor"));
+
+        _sci.sendEditor(QXSci.SCI_MARKERDEFINE, MARK_POINTER,4);
+        _sci.sendEditor(QXSci.SCI_MARKERSETFORE, MARK_POINTER,getColorRef("markpointbackcolor"));
+        _sci.sendEditor(QXSci.SCI_MARKERSETBACK, MARK_POINTER,getColorRef("markpointforecolor"));
+
+        _sci.sendEditor(QXSci.SCI_MARKERDEFINE,MARK_MODIFIED,25);
+        _sci.sendEditor(QXSci.SCI_MARKERSETFORE,MARK_MODIFIED,getColorRef("modifiedmarkforecolor"));
+        _sci.sendEditor(QXSci.SCI_MARKERSETBACK,MARK_MODIFIED,getColorRef("modifiedmarkbackcolor"));
+
+        _sci.sendEditor(QXSci.SCI_MARKERDEFINE,MARK_SAVED,25);
+        _sci.sendEditor(QXSci.SCI_MARKERSETFORE,MARK_SAVED,getColorRef("savedmarkforecolor"));
+        _sci.sendEditor(QXSci.SCI_MARKERSETBACK,MARK_SAVED,getColorRef("savedmarkbackcolor"));
+
+        current_modify_mark = MARK_MODIFIED;
+        reserve_modify_mark = MARK_SAVED;
+
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,BREAKPOINT_INDEX, 15);
+        _sci.sendEditor(QXSci.SCI_SETMARGINSENSITIVEN,BREAKPOINT_INDEX, 1);
+
+        if (Setting.isIndentGuide()) {
+            _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_INDENTGUIDE, getColorRef("indentguidecolor"));
+            _sci.sendEditor(QXSci.SCI_SETINDENTATIONGUIDES, QXSci.SC_IV_LOOKBOTH);
+        } else {
+            _sci.sendEditor(QXSci.SCI_SETINDENTATIONGUIDES, QXSci.SC_IV_NONE);
+        }
+
+        if (Setting.isShowLineNumber()) {
+            _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,LINENUMBER_INDEX, 40);
+        } else {
+            _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,LINENUMBER_INDEX, 0);
+        }
+
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,DEBUGPOINT_INDEX, 15);
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,MODIFIMARK_INDEX, 3);
+        //_sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,4, 0);
+
+        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, BREAKPOINT_INDEX, QXSci.SC_MARGIN_SYMBOL);
+        _sci.sendEditor(QXSci.SCI_SETMARGINMASKN, BREAKPOINT_INDEX, 1 << MARK_BREAKPOINT);
+
+        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, LINENUMBER_INDEX, QXSci.SC_MARGIN_NUMBER);
+        _sci.sendEditor(QXSci.SCI_SETMARGINMASKN, LINENUMBER_INDEX, 0);
+
+        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, DEBUGPOINT_INDEX, QXSci.SC_MARGIN_SYMBOL);
+        _sci.sendEditor(QXSci.SCI_SETMARGINMASKN, DEBUGPOINT_INDEX, 1 << MARK_POINTER);
+
+        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, MODIFIMARK_INDEX, QXSci.SC_MARGIN_SYMBOL);
+        _sci.sendEditor(QXSci.SCI_SETMARGINMASKN, MODIFIMARK_INDEX, (1 << MARK_MODIFIED) | (1 << MARK_SAVED));
+
+
+        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_LINENUMBER, getColorRef("linenumberbackcolor"));
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_LINENUMBER, getColorRef("linenumberforecolor"));
+        _sci.sendEditor(QXSci.SCI_SETMARGINLEFT, 0, 0);
+
+        _sci.sendEditor(QXSci.SCI_STYLESETBOLD, QXSci.STYLE_BRACELIGHT, 1);
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_BRACELIGHT, getColorRef("matchedbraceforecolor"));
+        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_BRACEBAD, getColorRef("matchedbracebackcolor"));
+
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTDOCKEYWORD, getColorRef("doccommentkeyforecolor"));
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTDOCKEYWORDERROR, getColorRef("doccommenterrforeforecolor"));
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_GLOBALCLASS, getColorRef("globalclassforecolor"));
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_OPERATOR, getColorRef("operatorforecolor"));
+        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.SCE_C_STRINGEOL, getColorRef("stringeolcolor"));
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_WORD, getColorRef("wordforecolor"));
+
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_WORD2, getColorRef("word2forecolor"));
+        _sci.sendEditor(QXSci.SCI_STYLESETBOLD, QXSci.SCE_C_WORD2, 1);
+        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.SCE_C_WORD2, getColorRef("word2backcolor"));
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_STRING, getColorRef("stringforecolor"));
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_NUMBER, getColorRef("numberforecolor"));
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_CHARACTER, getColorRef("charforecolor"));
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_PREPROCESSOR, getColorRef("preprocessorforecolor"));
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENT, getColorRef("commentforecolor"));
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTLINE, getColorRef("commentlineforecolor"));
+        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTDOC, getColorRef("doccommentforecolor"));
+
+        _sci.sendEditor(QXSci.SCI_CALLTIPSETBACK, getColorRef("calltipsbackcolor"));
+        _sci.sendEditor(QXSci.SCI_CALLTIPSETFORE, getColorRef("calltipsforecolor"));
+
+        //_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTDOC, 0xff504f4f);
+
+        _sci.sendEditor(QXSci.SCI_SETCARETFORE,getColorRef("caretcolor"),0);
+
+        _sci.sendEditor(QXSci.SCI_SETCARETLINEVISIBLE, 1);
+        _sci.sendEditor(QXSci.SCI_SETCARETLINEBACK, getColorRef("caretlinebackcolor"));
+
+        _sci.sendEditor(QXSci.SCI_SETTABWIDTH, 4);
+        _sci.sendEditor(QXSci.SCI_SETEOLMODE, QXSci.SC_EOL_LF, 0);
+
+        _sci.setIndicForeColor(1, getColorRef("indicforecolor"));
+        _sci.setIndicUnderColor(1, getColorRef("indicbackcolor"));
+
+
+        _sci.sendEditor(QXSci.SCI_SETPROPERTY,"fold","1");
+        _sci.sendEditor(QXSci.SCI_SETPROPERTY,"fold.comment","1");
+
+        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, MARGIN_FOLD_INDEX, QXSci.SC_MARGIN_SYMBOL);//页边类型
+        _sci.sendEditor(QXSci.SCI_SETMARGINMASKN, MARGIN_FOLD_INDEX, QXSci.SC_MASK_FOLDERS); //页边掩码
+
+        _sci.sendEditor(QXSci.SCI_SETFOLDMARGINCOLOUR, 1, getColorRef("foldmargincolor"));
+        _sci.sendEditor(QXSci.SCI_SETFOLDMARGINHICOLOUR, 1, getColorRef("foldmarginhicolor"));
+
+        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, MARGIN_FOLD_INDEX, 11); //页边宽度
+        _sci.sendEditor(QXSci.SCI_SETMARGINSENSITIVEN, MARGIN_FOLD_INDEX, 1); //响应鼠标消息
+
+
+        // 折叠标签样式 //折叠页边颜色
+        _sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDER, QXSci.SC_MARK_BOXPLUS);
+        _sci.sendEditor(QXSci.SCI_MARKERSETFORE,QXSci.SC_MARKNUM_FOLDER,getColorRef("folderforecolor"));
+        _sci.sendEditor(QXSci.SCI_MARKERSETBACK,QXSci.SC_MARKNUM_FOLDER,getColorRef("folderbackcolor"));
+
+        _sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDEROPEN, QXSci.SC_MARK_BOXMINUS);
+        setMarginColor(QXSci.SC_MARKNUM_FOLDEROPEN,getColorRef("folderopenforecolor"), getColorRef("folderopenbackcolor"));
+
+        _sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDEREND,  QXSci.SC_MARK_BOXPLUSCONNECTED);
+        setMarginColor(QXSci.SC_MARKNUM_FOLDEREND,getColorRef("folderendforecolor"), getColorRef("folderendbackcolor"));
+
+        _sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDEROPENMID, QXSci.SC_MARK_BOXMINUSCONNECTED);
+        setMarginColor(QXSci.SC_MARKNUM_FOLDEROPENMID,getColorRef("foldermidforecolor"), getColorRef("foldermidbackcolor"));
+
+        _sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDERMIDTAIL, QXSci.SC_MARK_TCORNER);
+        setMarginColor(QXSci.SC_MARKNUM_FOLDERMIDTAIL,getColorRef("foldermidtailforecolor"), getColorRef("foldermidtailbackcolor"));
+
+        _sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDERSUB, QXSci.SC_MARK_VLINE);
+        setMarginColor(QXSci.SC_MARKNUM_FOLDERSUB,getColorRef("foldersubforecolor"), getColorRef("foldersubbackcolor"));
+
+        _sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDERTAIL, QXSci.SC_MARK_LCORNER);
+        setMarginColor(QXSci.SC_MARKNUM_FOLDERTAIL,getColorRef("foldertailforecolor"), getColorRef("foldertailbackcolor"));
+
+        // 折叠标签颜色
+        
+        _sci.setText(_sci.getText());
+        _sci.sendEditor(QXSci.SCI_MARKERADD, 1, 8);
+        _sci.sendEditor(QXSci.SCI_MARKERADD, 2, 9);
+        _sci.sendEditor(QXSci.SCI_MARKERADD, 3, 12);
+        _sci.sendEditor(QXSci.SCI_MARKERADD, 4, 13);
+    }
+
+    void setMarginColor(int id, int fore, int back) {
+        _sci.sendEditor(QXSci.SCI_MARKERSETFORE, id, fore);
+        _sci.sendEditor(QXSci.SCI_MARKERSETBACK, id, back);
     }
     
     static void applySetting(){
@@ -532,6 +910,12 @@ class Setting : QXDialog {
     static bool isIndentGuide(){
 		return get("indentguide").equals("开启");
     }
+    static bool welcomeOnStart(){
+		return get("welcomeonstart").equals("开启") ;
+    }
+    static bool welcomeOnClose(){
+		return get("welcomeonclose").equals("开启") ;
+    }
     
     static bool isShowBuildin(){
 		return get("showbuildin").equals("开启");
@@ -539,6 +923,16 @@ class Setting : QXDialog {
     
     static bool isUseTabstop(){
 		return get("tabstop").equals("制表符");
+    }
+    
+    static bool isCustomColor(){
+		return (get("style_color").equals("自动") == false);
+    }
+    
+    static int getColorRef(String key){
+        String strvalue = get(key);
+        String color = getColor(strvalue, "0x");
+        return color.parseHex();
     }
     
     static int getTabWidth(){

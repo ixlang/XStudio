@@ -3,7 +3,7 @@
 
 class MemoryLookupWnd : QXDockWidget{
 	QXLineEdit edtaddress;
-    QXPushButton btnLockup; 
+    QXPushButton btnLockup, dumpButton; 
 	HexEditor memcontent;
     static MemoryLookupWnd memlookupWnd;
     
@@ -137,15 +137,74 @@ class MemoryLookupWnd : QXDockWidget{
 			XWorkspace.workspace.debuggee.lookupMemory(address, 512);
 		}
     }
+    
+    void dumpFile(){
+		String addrtext = edtaddress.getText().replace(" ", "");
+		if (addrtext.length() > 0){
+			long address = caRegMixMath.calc(addrtext.lower());
+            
+            InputDialog.requestInput(new InputDialog.onInputListener() {
+                static String filePath = "";
+                bool onInputOk(String text)override {
+                    if (text.length() == 0 || text.isDigit() == false) {
+                        QXMessageBox.Critical("错误", "输入了不正确的长度", QXMessageBox.Ok, QXMessageBox.Ok);
+                        return false;
+                    }
+                    int length = text.parseInt();
+                    
+                    if (length < 0){
+                        QXMessageBox.Critical("错误", "输入了不正确的长度", QXMessageBox.Ok, QXMessageBox.Ok);
+                        return false;
+                    }
+                    
+                    String file = QXFileDialog.getSaveFileName("保存文件", filePath,  "All Files(*.*)", MemoryLookupWnd.this);
+                    if (file != nilptr && file.length() > 0) {
+                        filePath = file;
+                        dumpCore(file, address, length);
+                    }
+                    return true;
+                }
+                bool onInputCancel()override {
+                    return true;
+                }
+                String getTitle()override {
+                    return "转储内存";
+                }
+                String getTips()override {
+                    return "输入转存长度:";
+                }
+                String getDefault()override {
+                    return "";
+                }
+            });
+			XWorkspace.workspace.debuggee.lookupMemory(address, 512);
+		}
+    }
+    
+    void dumpCore(String localFile, long address, long length){
+        JsonObject json = new JsonObject();
+        json.put("file", localFile);
+        json.put("address", "" + address);
+        json.put("length", "" + length);
+		XWorkspace.workspace.debuggee.dumpMemory(address, 512, json.toString(false));
+    }
+    
 	void onAttach(){
 		memlookupWnd = this;
 		edtaddress = (QXLineEdit)attachByName(new QXLineEdit(), "edtaddress");
         btnLockup = (QXPushButton)attachByName(new QXPushButton(), "btnLockup");
+        dumpButton = (QXPushButton)attachByName(new QXPushButton(), "dumpButton");
         memcontent = (HexEditor)attachByName(new HexEditor(), "memcontent");
         
         btnLockup.setOnClickListener(new onClickListener(){
 			void onClick(QXObject obj, bool checked)override{
 				dump();
+			}
+        });
+        
+        dumpButton.setOnClickListener(new onClickListener(){
+			void onClick(QXObject obj, bool checked)override{
+				dumpFile();
 			}
         });
         
@@ -169,6 +228,14 @@ class MemoryLookupWnd : QXDockWidget{
         });
     }
     
+    static void SetDumpData(JsonObject json){
+		memlookupWnd.runOnUi(new Runnable(){
+			void run()override{
+				memlookupWnd.setDumpData(json);
+            }
+        });
+    }
+    
     static void reset(){
     	memlookupWnd.runOnUi(new Runnable(){
 			void run()override{
@@ -186,6 +253,61 @@ class MemoryLookupWnd : QXDockWidget{
         long offset = address.parseLong();
         byte[] data = Base64.decodeString(dataCont);
         memcontent.setData(data, offset, requestlen, responselen);
+    }
+    
+    void setDumpData(JsonObject json){
+		String dataCont = json.getString("content");
+        String address = json.getString("address");
+        String param = json.getString("param");
+        int requestlen = json.getInt("request");
+        int responselen = json.getInt("response");
+        
+        long offset = address.parseLong();
+        
+        
+        byte[] data = Base64.decodeString(dataCont);
+        FileOutputStream fos = nilptr;
+        bool bContinue_req = false;
+        bool dumpfailed = requestlen != responselen;
+        String localFile = "";
+        try{
+            JsonObject localInfo = new JsonObject(param);
+            localFile = localInfo.getString("file");
+            long start = localInfo.getString("address").parseLong();
+            long length = localInfo.getString("length").parseLong();
+            long end_ofst = start + length;
+            
+            long req_endofst = offset + responselen;
+            
+            fos = new FileOutputStream(localFile, true); 
+            
+            if (end_ofst < req_endofst){
+                fos.write(data, 0, end_ofst - offset);
+            }else{
+                fos.write(data);
+            }
+            
+            if (false == dumpfailed){
+                bContinue_req = (req_endofst < end_ofst);
+            }
+            
+        }catch(Exception e){
+            
+        }finally{
+            if (fos != nilptr){
+                fos.close();
+            }
+        }
+        
+        if (bContinue_req){
+            XWorkspace.workspace.debuggee.dumpMemory(offset + responselen, 512, param);
+        }else{
+            if (dumpfailed){
+                XWndOutput.Output("转储内存文件:" + localFile + " 仅完成部分(错误:无法访问内存)\n");
+            }else{
+                XWndOutput.Output("转储内存文件:" + localFile + " 已完成!\n");
+            }
+        }
     }
     
     void reconfig(){

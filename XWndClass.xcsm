@@ -439,14 +439,19 @@ class XWndClass : QXDockWidget
             if (type == 34) {
                 item = _treeview.insertItem(root, "res/toolbar/template.png", obj.getString("name"));
             } else if (type == 31) {
+                bool bpackage = false;
+                bool binterface = false;
+                
                 if (obj.has("template")) {
                     item = _treeview.insertItem(root, "res/toolbar/tempinst.png", obj.getString("name"));
                     long temp = _treeview.insertItem(item, "res/toolbar/template.png", "模板");
                     _treeview.insertItem(temp, "res/toolbar/template.png", obj.getString("template"));
                 } else if (obj.has("interface")) {
                     item = _treeview.insertItem(root, "res/toolbar/interface.png", obj.getString("name"));
+                    binterface = true;
                 } else if (obj.has("package")) {
                     item = _treeview.insertItem(root, "res/toolbar/package_icon.png", obj.getString("name"));
+                    bpackage = true;
                 } else {
                     item = _treeview.insertItem(root, "res/toolbar/class.png", obj.getString("name"));
                 }
@@ -455,14 +460,25 @@ class XWndClass : QXDockWidget
                     _treeview.insertItem(temp, "res/toolbar/class.png", obj.getString("base"));
                 }
 
-                long prop = _treeview.insertItem(item, "res/toolbar/member.png", "成员");
-                long static_prop = _treeview.insertItem(item, "res/toolbar/static.png", "静态成员");
-                long method = _treeview.insertItem(item, "res/toolbar/function.png", "方法");
-                long static_method = _treeview.insertItem(item, "res/toolbar/staticfunction.png", "静态方法");
-                expand_data.put(prop,new ItemLoader(insertLoad(prop), (JsonArray)obj.get("properites")));
-                expand_data.put(static_prop,new ItemLoader(insertLoad(static_prop),   (JsonArray)obj.get("static_properites")));
-                expand_data.put(method, new ItemLoader(insertLoad(method),  (JsonArray)obj.get("method")));
-                expand_data.put(static_method,new ItemLoader( insertLoad(static_method),  (JsonArray)obj.get("static_method")));
+                if (bpackage){
+                    long static_prop = _treeview.insertItem(item, "res/toolbar/static.png", "成员");
+                    expand_data.put(static_prop,new ItemLoader(insertLoad(static_prop),   (JsonArray)obj.get("static_properites")));
+                }else
+                if (binterface){
+                    long method = _treeview.insertItem(item, "res/toolbar/function.png", "抽象方法");
+                    long static_method = _treeview.insertItem(item, "res/toolbar/staticfunction.png", "静态接口方法");
+                    expand_data.put(method, new ItemLoader(insertLoad(method),  (JsonArray)obj.get("method")));
+                    expand_data.put(static_method,new ItemLoader( insertLoad(static_method),  (JsonArray)obj.get("static_method")));
+                }else{ 
+                    long prop = _treeview.insertItem(item, "res/toolbar/member.png", "成员");
+                    long static_prop = _treeview.insertItem(item, "res/toolbar/static.png", "静态成员");
+                    long method = _treeview.insertItem(item, "res/toolbar/function.png", "方法");
+                    long static_method = _treeview.insertItem(item, "res/toolbar/staticfunction.png", "静态方法");
+                    expand_data.put(prop,new ItemLoader(insertLoad(prop), (JsonArray)obj.get("properites")));
+                    expand_data.put(static_prop,new ItemLoader(insertLoad(static_prop),   (JsonArray)obj.get("static_properites")));
+                    expand_data.put(method, new ItemLoader(insertLoad(method),  (JsonArray)obj.get("method")));
+                    expand_data.put(static_method,new ItemLoader( insertLoad(static_method),  (JsonArray)obj.get("static_method")));
+                }
                 /*loadObject(prop, (JsonArray)obj.get("properites"));
                 loadObject(static_prop, (JsonArray)obj.get("static_properites"));
                 loadObject(method, (JsonArray)obj.get("method"));
