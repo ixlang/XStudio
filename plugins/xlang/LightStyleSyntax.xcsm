@@ -115,7 +115,7 @@ class LightStyleSyntax : SyntaxHighlighting{
     
     /** 操作符字体色*/
     int getOperatorForeColor()override{
-		return 0xffed286e;
+		return 0xff222827;
     }
     
     /** 字符串错误色*/

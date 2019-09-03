@@ -220,7 +220,6 @@ class PackageManager{
 			fos.close();
 			fis.close();
 				
-
 			return true;
         }catch(Exception e){
         
@@ -245,8 +244,8 @@ class PackageManager{
                 json.put("descr", pi.descr);
                 json.put("author", pi.author);
                 
-                json.put("file", install_path.toRelativePath(_system_.getAppDirectory(), true));
-                json.put("icon", install_icon.toRelativePath(_system_.getAppDirectory(), true));
+                json.put("file", install_path.toRelativePath(_system_.getAppDirectory(), false, true));
+                json.put("icon", install_icon.toRelativePath(_system_.getAppDirectory(), false, true));
                 list.put(json);
                 return save();
 			}

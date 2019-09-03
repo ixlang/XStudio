@@ -415,7 +415,7 @@ class Project
 
     bool addSource(String filePath)
     {
-        String rfp = filePath.toRelativePath(getProjectDir(), false);
+        String rfp = filePath.toRelativePath(getProjectDir(), false, false);
         /*_system_.consoleWrite(String.format(" %s toRelativePath %s = %s\n", filePath, getProjectDir(), rfp));*/
         if (rfp == nilptr || rfp.length() == 0) {
             QXMessageBox.Critical("注意", "无法将该文件转换为相对路径储存, 项目移植或者位置发生改动时将不能被正常编译!", QXMessageBox.Ok, QXMessageBox.Ok);
@@ -440,7 +440,7 @@ class Project
 
     String replaceSource(int index, String filePath)
     {
-        String rfp = filePath.toRelativePath(getProjectDir(), false);
+        String rfp = filePath.toRelativePath(getProjectDir(), false, false);
         /*_system_.consoleWrite(String.format(" %s toRelativePath %s = %s\n", filePath, getProjectDir(), rfp));*/
         if (rfp == nilptr || rfp.length() == 0) {
             QXMessageBox.Critical("注意", "无法将该文件转换为相对路径储存, 项目移植或者位置发生改动时将不能被正常编译!", QXMessageBox.Ok, QXMessageBox.Ok);
@@ -510,7 +510,7 @@ class Project
 
         for (int i = 0; i < c; i ++) {
             String source = String.formatPath(getSourcePath(i), false);
-            String filerelaPath = source.toRelativePath(projDir, true);
+            String filerelaPath = source.toRelativePath(projDir, false, true);
             String[] sp = filerelaPath.split(slash);
 
             String dir = "";

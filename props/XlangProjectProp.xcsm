@@ -973,7 +973,7 @@ class XlangProjectProp : ProjectPropInterface {
         }
 
         args.put("output",String.formatPath(map_variable(object, configure, configure.getOption("outpath").appendPath(configure.getOption("outname"))), false)
-                 .toRelativePath(workdir,true)
+                 .toRelativePath(workdir, false, true)
                  .replace("\\", "/"));
 
         JsonArray sources = object.getSources();
@@ -992,7 +992,7 @@ class XlangProjectProp : ProjectPropInterface {
 
             String fullsourcePath = String.formatPath(workdir.appendPath(srcname), false);
 
-            fullsourcePath = fullsourcePath.toRelativePath(workdir,true).replace("\\", "/");
+            fullsourcePath = fullsourcePath.toRelativePath(workdir, false, true).replace("\\", "/");
 
             if (ext != nilptr && (ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm") || ext.equalsIgnoreCase(".version")) ) {
                 if (fullsourcePath.indexOf(' ') != -1) {
