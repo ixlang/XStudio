@@ -277,7 +277,20 @@ class Utils{
         return vs;
     }
     
-    static String getAppMarjonVersion(){
+    static String getVersion(){
+		long vv = _system_.getAppVersion();
+		String vs = "v";
+		for (int i = 0; i < 3; i ++){
+			vs = vs + ((vv >> ((4 - (i + 1)) << 4)) & 0xffff);
+			if (i != 3){
+				vs = vs + ".";
+			}
+		}    
+        return vs;
+    }
+    
+    // 主版本
+    static String getAppMajorVersion(){
 		long vv = _system_.getAppVersion();
 		String vs = "v";
 		for (int i = 0; i < 2; i ++){
@@ -287,6 +300,17 @@ class Utils{
 			}
 		}    
         return vs;
+    }
+    
+    //次要版本
+    static int getAppMinorVersion(){
+		long vv = _system_.getAppVersion();
+        return ((vv >> 16) & 0xffff);
+    }
+    
+    //build版本
+    static int getAppBuildVersion(){
+		return _system_.getAppVersion() & 0xffff;
     }
     
     static long getVersionValue(String version){

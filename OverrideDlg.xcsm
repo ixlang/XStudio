@@ -57,7 +57,7 @@ class OverrideDlg : QXDialog {
             }
         });
          
-		setWindowTitle("添加重载方法");
+		setWindowTitle("重写方法");
 
         setModal(true);
         

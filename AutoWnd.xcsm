@@ -5,7 +5,7 @@ class AutoWnd : ListDockWidget{
 
 	static const int REFRESH_AUTO = 1, QUERYOBJECT = 2;
     
-	static int s_tid;
+	static long s_tid;
     static JsonObject s_root;
     Object serlock = new Object();
 	int serial = 0;
@@ -45,7 +45,7 @@ class AutoWnd : ListDockWidget{
         String caption = tree.getItemText(item, 0);
         String sztype = tree.getItemText(item, 1);
         
-        if (objectId != 0 && sztype.equals("String")){
+        if (objectId != 0 && (sztype.equals("String") || sztype.equals("JsonObject") || sztype.equals("JsonArray"))){
 			XWorkspace.workspace.debuggee.queryObject("detail:" + caption , "" + objectId, "auto" + serial, 0, 0);
         }else{
 			String text = tree.getItemText(item, column);
@@ -129,7 +129,7 @@ class AutoWnd : ListDockWidget{
 		auto_wnd = this;
     }
     
-    static void setFrameInfo(int tid, JsonObject json){
+    static void setFrameInfo(long tid, JsonObject json){
         synchronized(auto_wnd){
 			s_tid = tid;
 			s_root = json;
@@ -227,7 +227,7 @@ class AutoWnd : ListDockWidget{
 		}
     }
     
-    void parseFrameInfo(int tid, JsonObject json){
+    void parseFrameInfo(long tid, JsonObject json){
     
 		//_system_.output(json.toString(false));
 		JsonArray stack = (JsonArray)json.get("stack");
@@ -345,7 +345,7 @@ class AutoWnd : ListDockWidget{
                             .replace("\b", " ⇤ ") + " ...";
                             
                 list.setItemText(item, 2, text);
-                list.setItemText(item, 1, "String");    
+                list.setItemText(item, 1, "" + valueroot.getString("type"));    
                 list.setItemTag(item, 2, objectId.parseLong());
             }else{
 				long iditem = list.insertItem(item, nilptr, "id");

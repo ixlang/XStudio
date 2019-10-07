@@ -1,0 +1,27 @@
+//xlang Source, Name:qt5/widgets/QXDateEdit.xcsm 
+//Date: Thu Sep 20:21:28 2019 
+
+class QXDateEdit : QXDateTimeEdit{
+	QXDateEdit() {//构造
+	}
+
+	QXDateEdit(long h) {//构造
+		super(h);
+	}
+
+    bool create(){
+        nativehandle = createQObject(QType.qtDateEdit, this, 0);
+        if (nativehandle == 0){
+            return false;
+        }
+        return true;
+    }
+    
+    bool create(QXWidget parent){
+        nativehandle = createQObject(QType.qtDateEdit, this, parent.nativehandle);
+        if (nativehandle == 0){
+            return false;
+        }
+        return true;
+    }   
+};

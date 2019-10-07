@@ -19,10 +19,6 @@
 				"cmd":	"$(Output)",
 				"args":	"$(Output)",
 				"workdir":	"$(ProjectDir)",
-				"ignorewarning":	"",
-				"compdest":	"-z",
-				"debugable":	"-dbg",
-				"debugdatabase":	"",
 				"wtype":	"",
 				"ostype":	"",
 				"outname":	"$(ProjectName)$(Ext)",
@@ -30,7 +26,13 @@
 				"command":	"-slx -c",
 				"uaclevel":	"默认",
 				"libs":	[],
-				"links":	["XStudio1.xl"]
+				"links":	["XStudio1.xl"],
+				"depends":	[],
+				"ignorewarning":	"",
+				"compdest":	"",
+				"ignorewl":	"",
+				"debugable":	"-dbg",
+				"debugdatabase":	""
 			},
 			"release":	{
 				"path":	{
@@ -48,7 +50,7 @@
 				"workdir":	"$(ProjectDir)"
 			}
 		},
-		"versioninc":	"0",
-		"icofile":	""
+		"icofile":	"",
+		"versioninc":	"0"
 	}
 }

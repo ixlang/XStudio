@@ -168,6 +168,7 @@ class XWndSln : QXDockWidget
             }
         }
     };
+    
     onTreeViewItemEvent listlistener = new onTreeViewItemEvent()
     {
         void onItemClicked(QXTreeView tree,long item, int column)override {

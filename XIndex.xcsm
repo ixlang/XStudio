@@ -44,7 +44,7 @@ class XIndexWindow : QXMdiSubWindow
             lblnew = (QXLabel)indexPage.findByName("lblnew");
             lblopen = (QXLabel)indexPage.findByName("lblopen");
 
-            verslabel.setText("XStudio " + Utils.getAppMarjonVersion());
+            verslabel.setText("XStudio " + Utils.getAppMajorVersion());
             for (int i =0; i < 10; i ++) {
                 labels[i] = (QXLabel)indexPage.findByName("rl" + i);
                 labels[i].setOnMouseEventListener(recentlistener);

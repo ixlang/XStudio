@@ -208,8 +208,7 @@ class QxApp : QXApplication {
         mainWindow.show();
 
         Utils.chechUpdate(0);
-
-        mainWindow.setWindowTitle("XStudio");
+        
         mainWindow.setOnStatusListener(new onStatusListener() {
             bool onClose(QXObject obj) {
                 if (XSourceEditor.closeAllWindows()) {

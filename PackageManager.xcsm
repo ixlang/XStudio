@@ -12,7 +12,9 @@ class PackageManager{
         String iconFile;
         String descr;
         String author;
-        
+        String url;
+        long   dlsize;
+        String cacheFile;
         //String message;
         PackageInfo(int _id,JsonObject jo){
 			id = _id;
@@ -27,6 +29,30 @@ class PackageManager{
             filepath = String.formatPath(_system_.getAppDirectory().appendPath(jo.getString("file")), false);
         }
         
+        bool detectCache(){
+            cacheFile = XPlatform.getAppDirectory().appendPath("package_cache");
+            XPlatform.mkdir(cacheFile);
+            cacheFile = String.formatPath(cacheFile.appendPath(name + version),false);
+            
+            if (dlsize > 0){
+                try{
+                    return XPlatform.SystemFileSize(cacheFile) == dlsize;
+                }catch(Exception e){
+                    
+                }
+            }
+            return false;
+        }
+        
+        PackageInfo(JsonObject jo){
+            name = jo.getString("pkgid");
+            version = jo.getString("version");
+            descr = jo.getString("description");
+            dlsize = jo.getString("dlsize").parseLong();
+            url = jo.getString("url");
+            author = jo.getString("publisher");
+        }
+        
         PackageInfo(JsonObject jo, String file){
 			id = -1;
 			name = jo.getString("package");
@@ -37,6 +63,7 @@ class PackageManager{
         }
         
         bool extartIconTo(ZipArchive zs, String oufile){
+            XPlatform.deleteFile(oufile);
 			ZipEntry entry = zs.findEntry("icon.png");
             if (entry != nilptr){
 				ZipFile file = entry.getFile();
@@ -141,7 +168,7 @@ class PackageManager{
 		for (int i = 0, c = getCount(); i < c; i++){
 			PackageInfo pj = get(i);
             if (pj.name.equals(name)){
-				if (version == nilptr || pj.version.equals(version)){
+				if (version == nilptr || version.length() == 0 || pj.version.equals(version)){
 					return pj;
                 }
             }
@@ -182,7 +209,9 @@ class PackageManager{
                 if (jo != nilptr){
 					PackageInfo pi = new PackageInfo(jo, file);
                     pi.iconFile = String.formatPath(_system_.getAppDirectory().appendPath("packages/preview.png"), false);
-                    pi.extartIconTo(zs, pi.iconFile);
+                    if (false == pi.extartIconTo(zs, pi.iconFile)){
+                        pi.iconFile = nilptr;
+                    }
                     //pi.message = pi.extartReadME(zs);
                     return pi;
                 }

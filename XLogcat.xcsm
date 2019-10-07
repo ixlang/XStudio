@@ -40,7 +40,10 @@ class XLogcatWnd : QXDockWidget{
         void onItemDoubleClicked(QXTreeView tree,long item, int column){
 			TextDetail td = new TextDetail();
 			String text = tree.getItemText(item, column);
-			td.create("logcat", text.escape());
+			td.create("logcat", text.replace(" ↩ ", "\n")
+							.replace(" ↵ ", "\r")
+							.replace(" ⇥ ", "\t")
+                            .replace(" ⇤ ", "\b"));
         }
     };
     
@@ -52,7 +55,10 @@ class XLogcatWnd : QXDockWidget{
             msg = m;
             level = l;
             
-            msg = msg.replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t").replace("\b", "\\b");
+            msg = msg.replace("\n", " ↩ ")
+							.replace("\r", " ↵ ")
+							.replace("\t", " ⇥ ")
+                            .replace("\b", " ⇤ ");
         }
 		String time, thread, tag, msg;
         int level;

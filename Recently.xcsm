@@ -158,6 +158,16 @@ class Recently{
 		return recent.getCount();
     }
     
+    static String getLastPath(){
+        int c = count();
+        if (c > 0){
+            RecentlyObject ro = getItem(c - 1);
+            if (ro != nilptr){
+                return ro.path;
+            }
+        }
+        return nilptr;
+    }
     static RecentlyObject getItem(int i){
 		return recent.get(i);
     }

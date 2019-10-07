@@ -225,7 +225,7 @@ class XDebuggee{
         }
     }
     
-    void queryFrame(int thread, int frame){
+    void queryFrame(long thread, int frame){
 		JsonObject json = new JsonObject();
         json.put("frame", frame);
         String text = json.toString(false);
@@ -233,7 +233,7 @@ class XDebuggee{
         sendCommand(QueryFrame, thread, data, data.length);
     }
     
-    void updateWatch(JsonArray objects, int thread, int frame, bool delete){
+    void updateWatch(JsonArray objects, long thread, int frame, bool delete){
 		JsonObject root = new JsonObject();
         root.put("names", objects);
         root.put("frame", frame);
@@ -244,16 +244,16 @@ class XDebuggee{
         sendCommand(WatchObject, thread, data, data.length);
     }
     
-    void setBreak(int tid){
+    void setBreak(long tid){
 		sendCommand(Interrupt, tid, new byte[0], 0);
     }    
     
-    void stepin(int tid){
+    void stepin(long tid){
 		XStackInfor.clearBreak(tid);
 		sendCommand(StepIn, tid, new byte[0], 0);
     }
     
-    void continuerun(int tid){
+    void continuerun(long tid){
 		XStackInfor.clearBreak(tid);
 		sendCommand(Continue, tid, new byte[0], 0);
     }
@@ -372,7 +372,7 @@ class XDebuggee{
 		sendCommand(GC, 0, new byte[0], 0);
     }
     
-    void stepover(int tid){
+    void stepover(long tid){
 		XStackInfor.clearBreak(tid);
 		sendCommand(StepOver, tid, new byte[0], 0);
         
@@ -382,13 +382,13 @@ class XDebuggee{
 		sendCommand(Active, 0, new byte[0], 0);
     }
     
-    void stepout(int tid){
+    void stepout(long tid){
 		XStackInfor.clearBreak(tid);
 		sendCommand(StepOut, tid, new byte[0], 0);
     }
     
-    void sendCommand(int cmd, int tid, byte[] data, int length){
-		int buf_size = 12 + length;
+    void sendCommand(int cmd, long tid, byte[] data, int length){
+		int buf_size = 16 + length;
 		byte [] buffer = new byte[buf_size];
 
 		buffer[0] = 0xff;
@@ -400,13 +400,17 @@ class XDebuggee{
 		buffer[5] = (byte)((tid >> 8) & 0xff);
 		buffer[6] = (byte)((tid >> 16) & 0xff);
 		buffer[7] = (byte)((tid >> 24) & 0xff);
+        buffer[8] = (byte)((tid >> 32) & 0xff);
+        buffer[9] = (byte)((tid >> 40) & 0xff);
+        buffer[10] = (byte)((tid >> 48) & 0xff);
+        buffer[11] = (byte)((tid >> 56) & 0xff);
+            
+		buffer[12] = (byte)(length & 0xff);
+		buffer[13] = (byte)((length >> 8) & 0xff);
+		buffer[14] = (byte)((length >> 16) & 0xff);
+		buffer[15] = (byte)((length >> 24) & 0xff);
 
-		buffer[8] = (byte)(length & 0xff);
-		buffer[9] = (byte)((length >> 8) & 0xff);
-		buffer[10] = (byte)((length >> 16) & 0xff);
-		buffer[11] = (byte)((length >> 24) & 0xff);
-
-		_system_.arrayCopy(data, 0, buffer, 12, length);
+		_system_.arrayCopy(data, 0, buffer, 16, length);
                 
         new Thread(){
 			void run()override{
@@ -446,16 +450,16 @@ class XDebuggee{
 					length += rd;
 					XRegular.Result result = nilptr;
 				 
-					while(nilptr != (result = XRegular.Match(buffer, 0, length, "[FFFE]{c:LEBB}<len:2>{t:LEBB}<len:4>{l:LEBB}<len:4>*<len:l>"))){
+					while(nilptr != (result = XRegular.Match(buffer, 0, length, "[FFFE]{c:LEBB}<len:2>{t:LEBB}<len:8>{l:LEBB}<len:4>*<len:l>"))){
 						if (result != nilptr){
 							int cmd = result.getValue('c');
-							int tid = result.getValue('t');
+							long tid = result.getValue('t');
 							int conlen = result.getValue('l');
 							
 							JsonObject json;
 							
 							try{
-								json = new JsonObject(new String(buffer, 12, conlen));
+								json = new JsonObject(new String(buffer, 16, conlen));
 							}catch(Exception e){
 								_system_.consoleWrite("XDebuggee 181 Exception :" + e.getMessage());
 							}
@@ -489,7 +493,7 @@ class XDebuggee{
         }
     }
     
-    void onInterrupt(int tid, JsonObject json){
+    void onInterrupt(long tid, JsonObject json){
         ThreadManager.Update(json, tid == 0);
     }
     
@@ -530,10 +534,10 @@ class XDebuggee{
         BreakPointWnd.setBreakPoint(file, reqline, realine, set != 0, error);
     }
     
-    void onQueryFrame(int tid, JsonObject json){
+    void onQueryFrame(long tid, JsonObject json){
 		AutoWnd.setFrameInfo(tid, json);
     }
-    void analyzeCommand(int cmd, int tid, JsonObject json){
+    void analyzeCommand(int cmd, long tid, JsonObject json){
 		switch(cmd){
 			case Unknow:
             

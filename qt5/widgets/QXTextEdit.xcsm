@@ -1,0 +1,244 @@
+//xlang Source, Name:QXTextEdit.xcsm 
+//Date: Thu Sep 20:52:18 2019 
+
+class QXTextEdit : QXWidget{
+    enum Alignment {
+        AlignLeft = 0x0001,
+        AlignLeading = 0x0001,
+        AlignRight = 0x0002,
+        AlignTrailing = 0x0002,
+        AlignHCenter = 0x0004,
+        AlignJustify = 0x0008,
+        AlignAbsolute = 0x0010,
+
+
+        AlignTop = 0x0020,
+        AlignBottom = 0x0040,
+        AlignVCenter = 0x0080,
+        AlignBaseline = 0x0100,
+        // Note that 0x100 will clash with Qt::TextSingleLine = 0x100 due to what the comment above
+        // this enum declaration states. However, since Qt::AlignBaseline is only used by layouts,
+        // it doesn't make sense to pass Qt::AlignBaseline to QPainter::drawText(), so there
+        // shouldn't really be any ambiguity between the two overlapping enum values.
+
+
+        AlignCenter = 0x0080 | 0x0004
+    };
+    enum WrapMode {
+        NoWrap,
+        WordWrap,
+        ManualWrap,
+        WrapAnywhere,
+        WrapAtWordBoundaryOrAnywhere
+    };
+    enum LineWrapMode {
+        NoWrap,
+        WidgetWidth,
+        FixedPixelWidth,
+        FixedColumnWidth
+    };
+    enum AutoFormatting {
+        AutoNone = 0,
+        AutoBulletList = 0x00000001,
+        AutoAll = 0xffffffff
+    };
+	QXTextEdit() {//构造
+		//TODO:	
+	}
+
+	QXTextEdit(long h) {//构造
+		super(h);
+	}
+
+    bool create(){
+        nativehandle = createQObject(QType.qtTextEdit, this, 0);
+        if (nativehandle == 0){
+            return false;
+        }
+        return true;
+    }
+    
+    bool create(QXWidget parent){
+        nativehandle = createQObject(QType.qtTextEdit, this, parent.nativehandle);
+        if (nativehandle == 0){
+            return false;
+        }
+        return true;
+    }   
+    
+    static class onChangeListener{
+        void onTextChanged(QXTextEdit obj){
+        
+        }
+        
+        void onCursorPositionChanged(QXTextEdit obj){
+            
+        }
+        
+        void onSelectionChanged(QXTextEdit obj){
+            
+        }
+    };
+    
+    
+    onChangeListener lis = nilptr;
+    
+    void setOnChangeListener(onChangeListener l){
+        lis = l;
+    }
+    void onTextChanged(){
+        if (lis != nilptr){
+            lis.onTextChanged(this);
+        }
+    }
+    
+    void onCursorPositionChanged(){
+        if (lis != nilptr){
+            lis.onCursorPositionChanged(this);
+        }
+    }
+    
+    void onSelectionChanged(){
+        if (lis != nilptr){
+            lis.onSelectionChanged(this);
+        }
+    }
+    
+    void setReadOnly(bool breadOnly){
+        widget_set_bool_value(nativehandle, TESETREADONLY, breadOnly);
+    }
+    
+    bool isReadOnly(){
+        return widget_get_bool_value(nativehandle, TEGETREADONLY);
+    }
+    
+    Alignment alignment() {
+        return (Alignment)widget_get_int_value(nativehandle, TEGETALIGNMENT);
+    }
+    
+    WrapMode wordWrapMode() {
+        return (WrapMode)widget_get_int_value(nativehandle, TEGETWRAPMODE);
+    }
+    
+    void setWordWrapMode(WrapMode policy){
+        widget_set_vint_value(nativehandle, TESETWORDWRAPMODE, policy);
+    }
+    
+    String toHtml(){
+        return (String)core_getString(nativehandle, TETOHTML);
+    }
+    
+    String toPlainText(){
+        return (String)core_getString(nativehandle, TETOPLAINTEXT);
+    }
+    
+    void setFontPointSize(double s){
+        widget_set_double_value(nativehandle, TESETFONTPOINTSIZE, s);
+    }
+    void setFontFamily(String fontFamily){
+        widget_slot_string(nativehandle, TESETFONTFAMILY, fontFamily);
+    }
+    void setFontWeight(int w){
+        widget_set_vint_value(nativehandle, TESETFONTWEIGHT, w);
+    }
+    void setFontUnderline(bool b){
+        widget_set_bool_value(nativehandle, TESETFONTUNDERLINE, b);
+    }
+    void setFontItalic(bool b){
+        widget_set_bool_value(nativehandle, TESETFONTITALIC, b);
+    }
+    void setTextColor(int c){
+        widget_set_vint_value(nativehandle, TESETTEXTCOLOR, c);
+    }
+    void setTextBackgroundColor(int c){
+        widget_set_vint_value(nativehandle, TESETTEXTBACKGROUNDCOLOR, c);
+    }
+    void setCurrentFont(QXFont f){
+        widget_set_native_value(nativehandle, TESETCURRENTFONT, f.nativehandle);
+    }
+    void setAlignment(Alignment a){
+        widget_set_vint_value(nativehandle, TESETALIGNMENT, a);
+    }
+
+    void setPlainText(String text){
+        widget_slot_string(nativehandle, TESETPLAINTEXT, text);
+    }
+
+    void setHtml(String text){
+        widget_slot_string(nativehandle, TESETHTML, text);
+    }
+
+    void setText(String text){
+        widget_slot_string(nativehandle, TESETTEXT, text);
+    }
+
+
+    void cut(){
+        widget_slot(nativehandle, TECUT);
+    }
+    void copy(){
+        widget_slot(nativehandle, TECOPY);
+    }
+    void paste(){
+        widget_slot(nativehandle, TEPASTE);
+    }
+
+    AutoFormatting autoFormatting() {
+        return (AutoFormatting)widget_get_int_value(nativehandle, TEGETAUTOFORMATTING);
+    }
+    void setAutoFormatting(AutoFormatting features){
+        widget_set_vint_value(nativehandle, TESETAUTOFORMATTING, features);
+    }
+    bool tabChangesFocus() {
+        return widget_get_bool_value(nativehandle, TETABCHANGESFOCUS);
+    }
+    void setTabChangesFocus(bool b){
+        widget_set_bool_value(nativehandle, TESETTABCHANGESFOCUS, b);
+    }
+    void setPlaceholderText(String placeholderText){
+        widget_slot_string(nativehandle, TESETPLACEHOLDERTEXT, placeholderText);
+    }
+    String placeholderText() {
+        return (String)core_getString(nativehandle, TEGETPLACEHOLDERTEXT);
+    }
+    void undo(){
+        widget_slot(nativehandle, TEUNDO);
+    }
+    void redo(){
+        widget_slot(nativehandle, TEREDO);
+    }
+
+    void clear(){
+        widget_slot(nativehandle, TECLEAR);
+    }
+    void selectAll(){
+        widget_slot(nativehandle, TESELECTALL);
+    }
+
+    void insertPlainText(String text){
+        widget_slot_string(nativehandle, TEINSERTPLAINTEXT, text);
+    }
+
+    void insertHtml(String text){
+        widget_slot_string(nativehandle, TEINSERTHTML, text);
+    }
+
+
+    void append(String text){
+        widget_slot_string(nativehandle, TEAPPEND, text);
+    }
+
+    void scrollToAnchor(String name){
+        widget_slot_string(nativehandle, TESCROLLTOANCHOR, name);
+    }
+
+    void zoomIn(int range ){
+        widget_set_vint_value(nativehandle, TEZOOMIN, range);
+    }
+    void zoomOut(int range ){
+        widget_set_vint_value(nativehandle, TEZOOMOUT, range);
+    }
+    void setLineWrapMode(LineWrapMode mode){
+        widget_set_vint_value(nativehandle, TESETLINEWRAPMODE, mode);
+    }
+};

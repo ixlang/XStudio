@@ -1130,7 +1130,7 @@ class XSourceEditor : QXMdiSubWindow {
                 return false;
             }
             break;
-        case '{':
+        /*case '{':
             if (_sci.getChar(pos + 1) == '}') {
                 _sci.replaceRange(pos,pos + 2,"");
                 return false;
@@ -1141,7 +1141,7 @@ class XSourceEditor : QXMdiSubWindow {
                 _sci.replaceRange(pos - 1,pos + 1,"");
                 return false;
             }
-            break;
+            break;*/
         case '\'':
             if (_sci.getChar(pos + 1) == '\'') {
                 _sci.replaceRange(pos,pos + 2,"");
@@ -1616,6 +1616,8 @@ class XSourceEditor : QXMdiSubWindow {
                     loadAutoComplate(item);
                     return;
                 }
+                
+
                 String tips = autoWnd.getItemText(item, 2);
                 long curpos = _sci.currentPosition();
 
@@ -2685,8 +2687,8 @@ class XSourceEditor : QXMdiSubWindow {
         _sci.sendEditor(QXSci.SCI_LINEDELETE,0);
     }
 
-    static void clearBreakInfo(Map<int, XStackInfor.BreakPosition> breakList) {
-        Map.Iterator<int, XStackInfor.BreakPosition> iter = breakList.iterator();
+    static void clearBreakInfo(Map<long, XStackInfor.BreakPosition> breakList) {
+        Map.Iterator<long, XStackInfor.BreakPosition> iter = breakList.iterator();
         while (iter.hasNext()) {
             XStackInfor.BreakPosition bp = iter.getValue();
             XSourceEditor wnd = findDocumentWindow(nilptr, bp.file, false);

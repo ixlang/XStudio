@@ -88,6 +88,18 @@ class QXApplication : QXObject{
 		if (objectClass.equals("QFileSystemWatcher")){
             return new QXFileSystemWatcher(object);
         }
+        if (objectClass.equals("QDateTimeEdit")){
+            return new QXDateTimeEdit(object);
+        }
+        if (objectClass.equals("QDateEdit")){
+            return new QXDateEdit(object);
+        }
+        if (objectClass.equals("QTimeEdit")){
+            return new QXTimeEdit(object);
+        }
+        if (objectClass.equals("QTextEdit")){
+            return new QXTextEdit(object);
+        }
         return nilptr;
     }
 };

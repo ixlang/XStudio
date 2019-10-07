@@ -5,6 +5,7 @@ class XMenuManager
     QXMainWindow mainwindow;
     static XMenuManager _menuMgr;
     QXMenu [] mainMenus = new QXMenu[7];
+    
     XMenuManager()
     {
         _menuMgr = this;
@@ -31,6 +32,8 @@ class XMenuManager
                           "actionopenoutput",
                           "actiongenerateNativeSrc",
                           "actiongenmake",
+                          "actiondeploy",
+                          "actiondeployto",
                           "actiondebug",
                           "actionfile",
                           "actionclass",
@@ -463,7 +466,14 @@ class XMenuManager
                 app._mdispace.doPrint();
                 return ;
             }
-
+            if (name.equals("actiondeploy")){
+                app._mdispace.deploy();
+                return ;
+            }
+            if (name.equals("actiondeployto")){
+                app._mdispace.deployto();
+                return ;
+            }
             if (name.equals("actioninstcext")) {
                 app._mdispace.installCompileExt();
                 return ;
@@ -485,9 +495,9 @@ class XMenuManager
                 String buildtime = String.formatDate("%Y年%m月%d日", _system_.getAppTimestamp());
                 app.mainWindow.About("关于",
                                      "<Strong>XStudio(Xlang 集成开发环境) Release " + Utils.getAppVersion() + " </Strong><br /><br />" +
-                                     "开发语言: Xlang v2.5<br /><br />" +
+                                     "开发语言: Xlang v2.7<br /><br />" +
                                      "编译时间: " + buildtime + "<br /><br />" +
-                                     "<b>该软件使用xlang 2.5 开发, 软件全部源代码可在xlang的example中找到," +
+                                     "<b>该软件使用xlang 2.7 开发, 软件全部源代码可在xlang的example中找到," +
                                      "native部分为C++与Xlang的XNL项目(同样在example代码中), native项目仅有软件使用的部分调用," +
                                      "如需要用于其它开发需要修改native项目增加接口.</b><br /><br />" +
                                      "该软件的使用不受任何限制,可用于任意用途的修改或者发布.<br /><br />" +
@@ -500,8 +510,10 @@ class XMenuManager
                                      "<em>	pcre-8.37</em><br />" +
                                      "<em>	cJSON</em><br />" +
                                      "<em>	libmicrohttpd</em><br />" +
-                                     "<em>	rapidxml</em><br /><br />" +
-                                     "官方主页:<a href=\"http://xlang.link/\">http://xlang.link/</a><br /><br />" +
+                                     "<em>	rapidxml</em><br />" +
+                                     "<em>	lzma</em><br /><br />" +
+                                     "官方主页:<a href=\"http://xlang.link/\">http://xlang.link/</a><br />" +
+                                     "官方博客:<a href=\"http://blog.xlang.link/\">http://blog.xlang.link/</a><br /><br />" +
                                      "github项目首页:<a href=\"https://ixlang.github.io/\">https://ixlang.github.io/</a><br />" +
                                      "github项目仓库:<a href=\"https://github.com/ixlang/XStudio\">https://github.com/ixlang/XStudio</a><br />" +
                                      "github代码示例仓库:<a href=\"https://github.com/ixlang/examples\">https://github.com/ixlang/examples</a><br /><br />" +
@@ -597,7 +609,7 @@ class XMenuManager
             "menunewbreakpoint","actionbreak","actionstoprun","actiontest","actioncomment","actionexporttools","actionQTCreator","actionhelp","actionsendfeedback","actionsamples",
             "actionabout","sortwindows", "actionoverlapped","allwindows","actiontoback","actiontofront","actioninstcext","actioninstallplugin","actioncurup","actioncurleft",
             "actioncurright","actioncurdown","actionlinebegin","actionlineend","actionprepage","actionnextpage","actiontotop","actiontobottom","menukeyboard","actionupper",
-            "actionlower","actionprint"
+            "actionlower","actionprint", "actiondeploy", "actiondeployto"
         };
 
         for (int i = 0; i < actions.length; i++) {
@@ -619,10 +631,12 @@ class XMenuManager
         if (_system_.getPlatformId() == 0) {
             degpath = degpath + ".exe";
         }
+        
         String []args = new String[1];
         args[0] = degpath;
 
         Process designer = new Process(degpath, args);
+        
         try {
             designer.create(true, false, false, false);
         } catch(Exception e) {

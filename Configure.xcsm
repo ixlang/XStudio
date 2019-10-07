@@ -327,7 +327,7 @@ class Configure
         }
         return false;
     }
-    /*
+    
     bool removeDepend(String xpname){
     	JsonArray depends = (JsonArray)root.get("depends");
         if (depends == nilptr){
@@ -346,10 +346,61 @@ class Configure
                 }
             }
         }
-
         return false;
     }
 
+
+    String getDependsString(){
+        String strOut = "";
+        
+        JsonArray depends = (JsonArray)root.get("depends");
+        if (depends == nilptr){
+    		depends = new JsonArray();
+            root.put("depends", depends);
+            return strOut;
+        }
+        
+        for (int i = 0; i < depends.length(); i++){
+    		JsonObject depend = (JsonObject)depends.get(i);
+            if (depend != nilptr){
+    			String pname = depend.getString("name");
+                String pversion = depend.getString("version");
+                if (strOut.length() != 0){
+                    strOut = strOut + ";";
+                }
+                
+                strOut = strOut + pname;
+                if (pversion != nilptr){
+                    strOut = strOut + "-Ver:" + pversion;
+                }
+            }
+        }
+        return strOut;
+    }
+    
+    void setDependsString(String value){
+        String [] pkgs = value.split(';');
+        JsonArray depends = new JsonArray();
+        
+        for (int i = 0; i < pkgs.length; i++){
+            int pos = pkgs[i].lastIndexOf("-Ver:");
+            JsonObject depend = new JsonObject();
+            if (pos != -1){
+                String _name = pkgs[i].substring(0, pos);
+                String _version = pkgs[i].substring(pos + 5, pkgs[i].length());
+                
+                depend.put("name",_name);
+                depend.put("version",_version);
+            }else{
+                depend.put("name",pkgs[i]);
+            }
+            depends.put(depend);
+        }
+        
+        root.remove("depends");
+        root.put("depends", depends);
+    }
+    
     bool addDepends(String xpname, String version){
         JsonArray depends = (JsonArray)root.get("depends");
         if (depends == nilptr){
@@ -363,7 +414,7 @@ class Configure
     	depends.put(depend);
         return true;
     }
-    */
+    
     int getArchId()
     {
         String [] archs = {"", "-arch:x86", "-arch:x86_64", "-arch:arm", "-arch:arm64", "-arch:mips"};
@@ -494,8 +545,38 @@ class Configure
     }
 
 
-    /*bool deploy(Project project){
+    void dodeploy(Project project){
+        String out_path = getOption("outpath");
+        out_path = String.formatPath(XlangProjectProp.map_variable(project, this, out_path), false);
+        deploy(project, out_path);
+    }
+    
+    void dodeployto(Project project, String path){
+        if (path != nilptr && path.length() > 0) {
+            deploy(project, path);
+        }
+    }
+    
+    bool deploy(Project project, String deploy_path){
+    
+        String _deploy_arch = getDeployArch();
+        if (_deploy_arch == nilptr){
+            XWndOutput.Output("无效的处理器架构.");
+            return false;
+        }
+        
+        String _deploy_ostype = getDeployPlatform();
+        if (_deploy_ostype == nilptr){
+            XWndOutput.Output("无效的操作系统平台.");
+            return false;
+        }
+        
     	PackageManager pm = new PackageManager();
+        if (false == pm.load()){
+            XWndOutput.Output("无法载入包管理.");
+            return false;
+        }
+        
     	JsonArray depends = (JsonArray)root.get("depends");
 
         if (depends == nilptr){
@@ -504,30 +585,38 @@ class Configure
             return false;
         }
 
-        String deploy_path = getOption("deploypath");
         if (deploy_path == nilptr || deploy_path.length() == 0){
     		XWndOutput.Output("部署路径错误,请先设置部署路径.");
             return false;
         }
-    	deploy_path = String.formatPath(XlangProjectProp.map_variable(project, this , deploy_path), false);
+        
+    	/*deploy_path = String.formatPath(XlangProjectProp.map_variable(project, this , deploy_path), false);
         if (deploy_path == nilptr || deploy_path.length() == 0){
     		XWndOutput.Output("部署路径错误,请先设置部署路径.");
             return false;
-        }
+        }*/
+        
         for (int i = 0; i < depends.length(); i++){
     		JsonObject depend = (JsonObject)depends.get(i);
             if (depend != nilptr){
     			String pname = depend.getString("name");
                 String pversion = depend.getString("version");
 
-                PackageManager.PackageInfo pi = pm.findPackage(pname,pversion);
+                PackageManager.PackageInfo pi = pm.findPackage(pname, pversion);
 
                 if (pi != nilptr){
-    				if (false == deployPackage(deploy_path, project, pi)){
-    					XWndOutput.Output("部署包失败:" + pname + " ver:" + pversion);
+    				if (false == deployPackage(deploy_path, project, pi, _deploy_arch, _deploy_ostype)){
+    					XWndOutput.Output("部署包失败:" + pname + " ver:" + pversion + "\n");
                     }
                 }else{
-    				XWndOutput.Output("找不到依赖包:" + pname + " ver:" + pversion);
+                    pi = pm.findPackage(pname, nilptr);
+                    
+                    if (pi == nilptr){
+                        XWndOutput.Output("找不到依赖包:" + pname + " ver:" + pversion + "\n");
+                    }else{
+                        XWndOutput.Output("找不到依赖包:" + pname + " 版本:<" + pversion + "> ,但找到" + pname + " 版本:<" + pi.version + ">...\n如考虑使用不同版本,请打开[项目]->[属性] 修改 [项目设置]=>[依赖包] 项中的版本.\n");
+                    }
+	
                 }
             }
         }
@@ -535,16 +624,66 @@ class Configure
         return true;
     }
 
+    String getDeployArch() {
+        String [] archs = {"unknow", "x86", "x64", "arm", "arm64", "mips"};
 
-    bool deployPackage(String deploy_path, Project project,PackageManager.PackageInfo pi){
+        String arch = getOption("wtype");
+        if (arch.equals("")) {
+            return "" + _system_.getArchId();
+        } else {
+            if (arch.equals("-arch:x86")) {
+                return "1";
+            } else if (arch.equals("-arch:x86_64")) {
+                return "2";
+            } else if (arch.equals("-arch:arm")) {
+                return "3";
+            } else if (arch.equals("-arch:arm64")) {
+                return "4";
+            } else if (arch.equals("-arch:mips")) {
+                return "5";
+            } else if (arch.equals("-arch:mips64")) {
+                return "6";
+            } else {
+                if (arch.length() > 6) {
+                    return arch.substring(6,arch.length());
+                }
+                return arch;
+            }
+        }
+        return nilptr;
+    }
+    
+    String getDeployPlatform(){
+        String arch = getOption("ostype");
+        if (arch.equals("")) {
+            return "" + _system_.getPlatformId();
+        }else{
+            if (arch.length() > 8){
+                arch = arch.substring(8, arch.length());
+                
+                if (arch.equals("windows")){
+                    return "0";
+                }else
+                if (arch.equals("linux")){
+                    return "1";
+                }else
+                if (arch.equals("darwin")){
+                    return "2";
+                }
+                return arch;
+            }
+        }
+        return nilptr;
+    }
+    
+    bool deployPackage(String deploy_path, Project project,PackageManager.PackageInfo pi, String arch, String ostype){
     	bool rt = false;
-
-        String match = String.formatPath("" + getArchId() + "/" + _system_.getPlatformId(), false);
+        
+        String match = String.formatPath("" + arch + "/" + ostype, false);
 
     	try{
     		FileInputStream fis = new FileInputStream(pi.filepath);
     		ZipArchive zs = new ZipArchive();
-
 
             if (zs.open(fis)){
     			int c = zs.getEntriesCount();
@@ -554,20 +693,23 @@ class Configure
     				String name =  String.formatPath(entry.getName(), false);
     				if (name.startWith(match)){
     					ZipFile zf = entry.getFile();
+                        
     					if (zf != nilptr && zf.open()){
-
     						String newpath = String.formatPath(deploy_path.appendPath(name.substring(3, name.length())), false);
-    						XWndOutput.Output(newpath + "...");
+    						XWndOutput.Output(newpath + "...\n");
     						XlangProjectProp.mkdirs(newpath.findVolumePath());
 
-    						FileOutputStream fos ;
+    						FileOutputStream fos;
     						try{
     							fos = new FileOutputStream(newpath);
+                                
     							int rd = 0;
     							byte [] data = new byte[1024];
+                                
     							while ((rd = zf.read(data, 0, 1024)) > 0){
     								fos.write(data, 0, rd);
     							}
+                                
     							rt = true;
     						}catch(Exception e){
 
@@ -576,6 +718,7 @@ class Configure
     								fos.close();
     							}
     						}
+                            
     						zf.close();
     					}
     				}
@@ -587,9 +730,8 @@ class Configure
         }catch(Exception e){
 
         }
-
         return rt;
-    }*/
+    }
 
     bool importPkg(Project project, PackageManager.PackageInfo pi, ZipArchive zs, String lixname, String xpname, String version)
     {
@@ -601,12 +743,28 @@ class Configure
             }
         }
 
-        if (addLib(lixname, xpname, version)) {
-            if (project.intelliSense != nilptr) {
-                project.intelliSense.appendLib(lixname);
-            }
+        String ext = lixname.findExtension();
+        
+        if (ext == nilptr){ 
+            return false;        
         }
+        
+        if (ext.equals(".lix")){
+            if (addLib(lixname, xpname, version)) {
+                if (project.intelliSense != nilptr) {
+                    project.intelliSense.appendLib(lixname);
+                }
+            } 
+        }else{
+            if (addLink(lixname, xpname, version)) {
+                if (project.intelliSense != nilptr) {
+                    project.intelliSense.appendLink(lixname);
+                }
+            } 
+        }
+        
 
+        addDepends(xpname, version);
         /*if (addLink(lixname, xpname, version)){
         	if (project.intelliSense != nilptr){
         		project.intelliSense.appendLink(lixname);

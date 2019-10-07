@@ -5,7 +5,7 @@ class ThreadManager{
 
 	static Object threadLock = new Object();
     
-    static int currentThreadId = 0;
+    static long currentThreadId = 0;
     static int currentFrameId = 0;
     
     static const int XDBG_STATE_UPDATE	=	0;	//状态更新
@@ -15,24 +15,31 @@ class ThreadManager{
     static const int XDBG_STATE_REIGGEBP 	= 	8;	//触发断点
     
     static class StackFrame{
-    
 		int id;
 		String source;
         int ip;
         int line;
         int row;
-        
+        long moffset;
+        String method ;
+        String path ;
         StackFrame(int _id, JsonObject frame){
 			id = id;
 			source = frame.getString("source");
-			ip = frame.getInt("ip");
+            String tmofst = frame.getString("moffset");
+            if (tmofst != nilptr){
+                moffset = frame.getString("moffset").parseLong();
+            }
+			ip = frame.getLong("ip");
+            method = frame.getString("method");
+            path = frame.getString("path");
 			line = frame.getInt("line");
             row = frame.getInt("row");
         }
     };
     
     static class ThreadObject{
-		int id;
+		long id;
         bool bInterrupt;
         String name;
         bool bException;
@@ -48,7 +55,7 @@ class ThreadManager{
         }
         
         void parse(JsonObject thread){
-			id = thread.getInt("id");
+			id = thread.getLong("id");
 			name = thread.getString("name");
             if (name.length() == 0){
 				name = "Thread:" + id;
@@ -70,6 +77,9 @@ class ThreadManager{
         void parseException(JsonObject exception){
 			except_name = exception.getString("name");
             except_msg = exception.getString("msg");
+            if (except_msg == nilptr || except_msg.length() == 0){
+                except_msg = "<没有更多信息>";
+            }
             except_addr = exception.getString("address");
         }
         
@@ -85,7 +95,7 @@ class ThreadManager{
     };
     
     
-    static Map<int, ThreadObject> thread_list = new Map<int, ThreadObject>();
+    static Map<long, ThreadObject> thread_list = new Map<long, ThreadObject>();
     
     static void Update(JsonObject root, bool reset){
 		synchronized(threadLock){
@@ -93,7 +103,7 @@ class ThreadManager{
 			if (reset){
 				thread_list.clear();
             }
-            
+          
             JsonArray threads = (JsonArray)root.get("threads");
             int action = root.getInt("action");
             
@@ -103,39 +113,41 @@ class ThreadManager{
 				remove = true;
             }
 
-			int c = threads.length();
-			for (int i = 0; i < c; i++){
-				JsonObject thread = (JsonObject)threads.get(i);
-                int tid = 0;
-                
-                if (remove){
-					tid = thread.getInt("id");
-					thread_list.remove(tid);
-                }else{
-					ThreadObject to = new ThreadObject(thread);
-                    tid = to.id;
-					thread_list.put(tid, to);
+            if (threads != nilptr){ 
+                int c = threads.length();
+                for (int i = 0; i < c; i++){
+                    JsonObject thread = (JsonObject)threads.get(i);
+                    long tid = 0;
+                    
+                    if (remove){
+                        tid = thread.getLong("id");
+                        thread_list.remove(tid);
+                    }else{
+                        ThreadObject to = new ThreadObject(thread);
+                        tid = to.id;
+                        thread_list.put(tid, to);
+                    }
+                    
+                    XStackInfor.updateThread(tid, action);
                 }
-                
-                XStackInfor.updateThread(tid, action);
-			}
+            }
         }
     }
     
     static bool isCurrentInterrupt(){
 		bool bInterrupt = false;
 		synchronized(threadLock){
-			Map.Iterator<int,ThreadObject> iter = thread_list.find(currentThreadId);
+			Map.Iterator<long,ThreadObject> iter = thread_list.find(currentThreadId);
 			if (iter != nilptr){
 				bInterrupt = iter.getValue().bInterrupt;
 			}
 		}
         return bInterrupt;
     }
-    static void updateControlPane(int thread){
+    static void updateControlPane(long thread){
 		bool bInterrupt = false;
 		synchronized(threadLock){
-			Map.Iterator<int,ThreadObject> iter = thread_list.find(thread);
+			Map.Iterator<long,ThreadObject> iter = thread_list.find(thread);
 			if (iter != nilptr){
 				bInterrupt = iter.getValue().bInterrupt;
 			}
@@ -143,7 +155,7 @@ class ThreadManager{
         XWorkspace.workspace.refreshDebugControl(bInterrupt);
     }
     
-    static void setCurrentThread(int tid, int frame){
+    static void setCurrentThread(long tid, int frame){
 
 		synchronized(threadLock){
 			currentThreadId = tid;
@@ -154,9 +166,9 @@ class ThreadManager{
 		XWorkspace.workspace.debuggee.queryFrame(currentThreadId, currentFrameId);
     }
     
-    static ThreadObject getThread(int tid){
+    static ThreadObject getThread(long tid){
 		synchronized(threadLock){
-			Map.Iterator<int, ThreadObject> iterator = thread_list.find(tid);
+			Map.Iterator<long, ThreadObject> iterator = thread_list.find(tid);
             if (iterator != nilptr){
 				return iterator.getValue();
 			}

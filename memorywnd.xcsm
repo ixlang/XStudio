@@ -141,7 +141,6 @@ class XMemoryWnd : QXDockWidget{
             }else{
 				painter.drawText("峰值:" + formatByte(hmax),5,15, txtpaint);
             }
-            painter.restore();
 		}
         
         void addMemhistroy(long value){

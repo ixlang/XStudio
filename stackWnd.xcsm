@@ -51,12 +51,12 @@ class XStackInfor : QXDockWidget{
 			String fid = _listview.getItemText(item, 1);
             
             if (tid.length() > 0 && fid.length() > 0){
-				int threadId = tid.parseInt();
+				long threadId = tid.parseLong();
                 int frameId = fid.parseInt();
                 
                 ThreadManager.setCurrentThread(threadId, frameId);
                                 
-                String filepath = _listview.getItemText(item, 3);
+                String filepath = _listview.getItemText(item, 4);
                 String lr = _listview.getItemText(item, 2);
                 String []lrs = lr.split(',');
                 
@@ -67,7 +67,7 @@ class XStackInfor : QXDockWidget{
         }else{
 			String tid = _listview.getItemText(item, 1);
             if (tid.length() > 0){
-				int threadId = tid.parseInt();
+				long threadId = tid.parseLong();
                 if (threadId != 0){
 					ThreadManager.setCurrentThread(threadId, 0);
                 }
@@ -86,27 +86,54 @@ class XStackInfor : QXDockWidget{
                 }
         });*/
         
-        String [] columns = {"名称", "ID", "状态", "堆栈"};
+        String [] columns = {"名称", "ID", "状态", "位置", "源文件"};
         
         _listview.setColumns(columns);
         _listview.setColumnWidth(0, 100);
         _listview.setColumnWidth(1, 50);
         _listview.setColumnWidth(2, 50);
-        _listview.setColumnWidth(3, 700);
+        _listview.setColumnWidth(3, 300);
+        _listview.setColumnWidth(4, 400);
 		_listview.setOnTreeViewItemEvent(listlistener);
         
         stackWnd = this;
     }
     
-	static void updateThread(int tid, int action){
-		long nmsg = tid;
-        nmsg = (nmsg << 32) |action;
-        stackWnd.Notify(nmsg);
+	static void updateThread(long tid, int action){
+        stackWnd.runOnUi(new Runnable(){
+            void run()override{
+                stackWnd.onNotification(tid, action);
+            }
+        });
     }
     
+        
+    Map<long,long> threadlist = new Map<long,long>();
+    Map<long, BreakPosition> breakList = new Map<long, BreakPosition>();
     
-    Map<int,long> threadlist = new Map<int,long>();
-    Map<int, BreakPosition> breakList = new Map<int, BreakPosition>();
+    bool isWord(byte c){
+        return c >= 'a' && c <= 'z' ||c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c== '_';
+    }
+    
+    String convertPathToMethod(String path){
+        byte [] bppath = path.getBytes();
+        for (int i = 0; i < bppath.length; i++){
+            if (bppath[i] == '/'){
+                bool pw = false;
+                if (i > 0 ){
+                    pw = isWord(bppath[i - 1]);
+                }
+                bppath[i] = pw ? '.' : '`';
+            }else{
+                if (bppath[i] =='@'){
+                    bppath[i] = ' ';
+                }
+            }
+        }
+        return new String(bppath).trim(true).replace("`", "");
+    }
+    
+ 
     
     void updateToItem(long item, ThreadManager.ThreadObject to, bool bLocate){
 		_listview.setItemText(item, 0, to.name);
@@ -139,13 +166,31 @@ class XStackInfor : QXDockWidget{
 					_listview.setItemText(fitem, 3, ip + "<无调试信息>");
 				}else{
 					_listview.setItemText(fitem, 2, "" + sf.line + "," + sf.row);
-					_listview.setItemText(fitem, 3, sf.source);
+                    String path = sf.path;
+                    if (path != nilptr && path.length() > 0){
+                        path = convertPathToMethod(path);
+                    }
+                    if (path == nilptr){
+                        path = "<找不到方法>";
+                    }
+                    if (sf.method != nilptr){
+                        String shortname = sf.source.findFilenameAndExtension();
+                        if (shortname != nilptr){
+                            _listview.setItemText(fitem, 3,  sf.method + "  -  [" + path + "@" + shortname + " + " + String.format("0x%08X", sf.moffset) + "]");
+                        }else{
+                            _listview.setItemText(fitem, 3, sf.method);
+                        }
+                        
+                    }else{
+                        _listview.setItemText(fitem, 3, ip);
+                    }
+					_listview.setItemText(fitem, 4, sf.source);
 					
 					if (i == 0){
                         
 						BreakPosition bp = new BreakPosition(sf.source, sf.line, sf.row, bLocate);
 					
-						Map.Iterator<int, BreakPosition> iter = breakList.find(to.id);
+						Map.Iterator<long, BreakPosition> iter = breakList.find(to.id);
 						if (iter != nilptr){
 							BreakPosition old_bp = iter.getValue();
 							
@@ -170,9 +215,9 @@ class XStackInfor : QXDockWidget{
     }
     
     
-    void update(int tid, bool bLocate){
+    void update(long tid, bool bLocate){
 		long item = 0;
-		Map.Iterator<int,long> iter = threadlist.find(tid);
+		Map.Iterator<long,long> iter = threadlist.find(tid);
 		if (iter == nilptr){
 			item = _listview.addItem(nilptr, "");
 			threadlist.put(tid, item);
@@ -188,7 +233,7 @@ class XStackInfor : QXDockWidget{
 		}
     }
     
-    void createThread(int tid){
+    void createThread(long tid){
 
 		long item = _listview.addItem(nilptr, "");
 		
@@ -202,8 +247,8 @@ class XStackInfor : QXDockWidget{
         
     }
     
-    void exitThread(int tid){
-		Map.Iterator<int,long> iter = threadlist.find(tid);
+    void exitThread(long tid){
+		Map.Iterator<long,long> iter = threadlist.find(tid);
 		if (iter != nilptr){
 			_listview.removeItem(iter.getValue());
 			threadlist.remove(iter);
@@ -211,11 +256,11 @@ class XStackInfor : QXDockWidget{
 		}
     }
     
-    void onException(int tid){
+    void onException(long tid){
 		String msgInfo = nilptr;
 
 		long item = 0;
-		Map.Iterator<int,long> iter = threadlist.find(tid);
+		Map.Iterator<long,long> iter = threadlist.find(tid);
 		if (iter == nilptr){
 			item = _listview.addItem(nilptr, "");
 			threadlist.put(tid, item);
@@ -250,10 +295,8 @@ class XStackInfor : QXDockWidget{
 		bOutputThreadStatus = b;
     }
     
-    void onNotification(long id){
+    void onNotification(long tid, int action){
 		synchronized(threadlist){
-			int tid = (id >> 32) & 0xffffffff;
-			int action = id & 0xffffffff;
 			
 			
 			switch(action){
@@ -280,12 +323,12 @@ class XStackInfor : QXDockWidget{
 		}
     }
     
-    static void clearBreak(int tid){
+    static void clearBreak(long tid){
 		stackWnd.removeBreak(tid);
     }
     
-    void removeBreak(int tid){
-		Map.Iterator<int, BreakPosition> iter = breakList.find(tid);
+    void removeBreak(long tid){
+		Map.Iterator<long, BreakPosition> iter = breakList.find(tid);
         if (iter != nilptr){
 			XSourceEditor.removeBreak(iter.getValue());
             breakList.remove(iter);

@@ -56,5 +56,10 @@ class QType {
                      qtPrintDialog = 54,
                      qtPrintViewDialog = 55,
                      qtPrinter = 56,
-                     qtSciPrinter = 57;
+                     qtSciPrinter = 57,
+                     qtReportEngine = 58,
+                     qtDateEdit = 59,
+                     qtDateTimeEdit = 60,
+                     qtTimeEdit = 61,
+                     qtTextEdit = 62;
 };

@@ -56,6 +56,11 @@ require("widgets/QXEvent.xcsm",
 "widgets/QPrintPreviewDialog.xcsm",
 "widgets/QXFileSystemWatcher.xcsm",
 "widgets/QXTableWidget.xcsm",
+"widgets/ReportEngine.xcsm",
+"widgets/QXDateTimeEdit.xcsm",
+"widgets/QXDateEdit.xcsm",
+"widgets/QXTimeEdit.xcsm",
+"widgets/QXTextEdit.xcsm",
 "../uicomponent/ProgressView.xcsm",
 "../uicomponent/Switche.xcsm"
 )

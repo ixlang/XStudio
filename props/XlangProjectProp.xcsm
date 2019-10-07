@@ -165,6 +165,10 @@ class XlangProjectProp : ProjectPropInterface {
             configure.setLibsPath(value);
             return true;
         }
+        if (key.equals("depends")) {
+            configure.setDependsString(value);
+            return true;
+        }
         if (key.equals("libs")) {
             configure.setLibs(value);
             return true;
@@ -343,6 +347,9 @@ class XlangProjectProp : ProjectPropInterface {
         }
         if (key.equals("libspath")) {
             return configure.getLibsPath();
+        }
+        if (key.equals("depends")) {
+            return configure.getDependsString();
         }
         if (key.equals("libs")) {
             return configure.getLibs();

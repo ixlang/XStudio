@@ -19,7 +19,8 @@ class XWorkspace : QXMdiArea
     bool bExternModifyAutoload = false;
     QXSci.QSciPrinter g_printer = new QXSci.QSciPrinter();
     static ActionRecorder ar = new ActionRecorder();
-
+    static String strAppTitle = "XStudio " + Utils.getVersion() + " build:" + Utils.getAppBuildVersion() + " (" + _system_.getAppVersion() + ")";
+    
     onDragListener draglistener = new onDragListener()
     {
         bool onDragEnter(QXObject obj, int l,int t,int r,int b) {
@@ -274,6 +275,7 @@ class XWorkspace : QXMdiArea
             }
         });
     }
+
     void updateWindowTitle(int status)
     {
         String txtDebug = "";
@@ -286,9 +288,9 @@ class XWorkspace : QXMdiArea
         }
         Project _project = currentProject;
         if (_project != nilptr) {
-            mainWindow.setWindowTitle(_project.getName() + "[" + _project.getLanguage() +  "]" + txtDebug + " - XStudio");
+            mainWindow.setWindowTitle(_project.getName() + "[" + _project.getLanguage() +  "]" + txtDebug + " - " + strAppTitle);
         } else {
-            mainWindow.setWindowTitle("XStudio" + txtDebug);
+            mainWindow.setWindowTitle(strAppTitle + txtDebug);
         }
 
     }
@@ -395,6 +397,7 @@ class XWorkspace : QXMdiArea
 
     bool requestQuit()
     {
+        
         bool bclose = true;
         if (currentProject != nilptr) {
             if (currentProject.isModified()) {
@@ -410,6 +413,18 @@ class XWorkspace : QXMdiArea
             }
             if (bclose) {
                 bclose = closeProject();
+            }
+        }
+        
+        if (bclose){
+            if (PackageViewer.hasDownload()){
+                int rt = QXMessageBox.Question("提示","包管理中仍有任务在进行中,是否继续退出?",  QXMessageBox.Yes | QXMessageBox.No , QXMessageBox.No);
+                if (rt == QXMessageBox.Yes){
+                    PackageViewer.stopAlldownload();
+                }else{
+                    bclose = false;
+                    PackageViewer.Show();
+                }
             }
         }
         return bclose;
@@ -559,7 +574,8 @@ class XWorkspace : QXMdiArea
 
     void doOpen()
     {
-        String file = QXFileDialog.getOpenFileName("打开文件", nilptr,  "X 项目(*.xprj);;X 模块源文件(*.xcs *.xcsm);;Qt UI文件(*.ui);;X 模块源文件(*.xcs *.xcsm);;Make File(makefile);;C/C++ 源文件(*.cpp *.c *.cc *.cxx *.hpp *.h *.mm);;html 网页(*.htm *.html);;纯文本文件 (*.txt);;其他文件 (*.*)", this);
+        String file = Recently.getLastPath();
+        file = QXFileDialog.getOpenFileName("打开文件", file,  "X 项目(*.xprj);;X 模块源文件(*.xcs *.xcsm);;Qt UI文件(*.ui);;X 模块源文件(*.xcs *.xcsm);;Make File(makefile);;C/C++ 源文件(*.cpp *.c *.cc *.cxx *.hpp *.h *.mm);;html 网页(*.htm *.html);;纯文本文件 (*.txt);;其他文件 (*.*)", this);
         openFile(file);
     }
 
@@ -1168,6 +1184,7 @@ class XWorkspace : QXMdiArea
 
             }
         });
+        updateWindowTitle(0);
     }
 
     void toggleBreakpoint()
@@ -1653,7 +1670,44 @@ class XWorkspace : QXMdiArea
 
     void test()
     {
-
+        /*ReportEngine engine = new ReportEngine();
+        if (engine.create()){
+            
+            engine.registryDataSource("master",new ReportEngine.ICallbackDatasource(){
+            
+                Object getCallbackData(ReportEngine.DataType dataType,int index, String columnName)override{
+                    switch(dataType){
+                        case ReportEngine.DataType.IsEmpty:
+                            return false;
+                        break;
+                        case ReportEngine.DataType.HasNext:
+                            return true;
+                        break;
+                        case ReportEngine.DataType.ColumnHeaderData:
+                            return "" + (index + 1);
+                        break;
+                        case ReportEngine.DataType.ColumnData:
+                            return "dasdas";
+                        break;
+                        case ReportEngine.DataType.ColumnCount:
+                            return 3;
+                        break;
+                        case ReportEngine.DataType.RowCount:
+                            return 20;
+                        break;
+                    }
+                    return nilptr;
+                }
+                
+                bool changePos(ReportEngine.ChangePosType type)override{
+                    return true;
+                }
+                
+            });
+            
+            engine.loadFromFile("D:\\szxxy.lrxml");
+            engine.previewReport(ReportEngine.PreviewHint.ShowAllPreviewBars);
+        }*/
     }
 
     void matchbrace()
@@ -1977,6 +2031,70 @@ class XWorkspace : QXMdiArea
             if (printdlg.exec() != 0){
                 g_printer.printRange(wnd._sci, -1, -1);
             }
+        }
+    }
+    
+    void deploy(){
+        Project project = currentProject;
+        if (project != nilptr) {
+            project.deploy();
+        }
+    }
+    
+    void deployto(){
+        Project project = currentProject;
+        if (project != nilptr) {
+        
+            String deploy_path = QXFileDialog.getFolderPath("选择部署目录", nilptr, nilptr, XWorkspace.workspace);
+            if (deploy_path == nilptr || deploy_path .length() == 0){ 
+                return ;
+            }
+            
+            bool bNeedCompile = false;
+            String target = project.getOutputTarget();
+
+            if (Setting.isAutoSave()) {
+                bNeedCompile = saveAllFile();
+                if (bNeedCompile == false) {
+                    if ((XPlatform.existsSystemFile(target) == false) || project.detectSourcesModified()) {
+                        bNeedCompile = true;
+                    }
+                }
+            } else {
+                bNeedCompile = true;
+            }
+
+            bool build_success = false;
+            
+            if (bNeedCompile || (lastBuildSuccess == false)) {
+                build_project(_builder, new BuildListener() {
+                    void onBuild(bool b) {
+                        lastBuildSuccess = b;
+                        if (b){
+                            runOnUi(new Runnable(){
+                                void run()override{
+                                    _builder.OutputText("\n开始部署..\n");
+                                    String deploy_target = String.formatPath(deploy_path.appendPath(project.getOutputName()), false);
+                                    bool bcopyed = XlangProjectProp.copyFile(target, deploy_target);
+                                    _builder.OutputText("\n拷贝文件:" + target + "..." + bcopyed + "\n");
+                                    project.deployto(deploy_path);
+                                    _builder.OutputText("\已部署到位置:" + deploy_path + "\n");
+                                }
+                            });
+                        }
+                    }
+                }, nilptr);
+            } else {
+                _builder.OutputText(target + "\n自上次编译以来没有检测到任何改动,请使用[清理]命令后重新编译.\n");
+                _builder.OutputText("\n开始部署..\n");
+                String deploy_target = String.formatPath(deploy_path.appendPath(project.getOutputName()), false);
+                bool bcopyed = XlangProjectProp.copyFile(target, deploy_target);
+                _builder.OutputText("\n拷贝文件:" + target + "..." + bcopyed + "\n");
+                project.deployto(deploy_path);
+                _builder.OutputText("\已部署到位置:" + deploy_path + "\n");
+            }
+            
+
         }
     }
 };

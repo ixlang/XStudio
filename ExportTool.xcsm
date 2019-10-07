@@ -3,9 +3,9 @@
 
 class ExportTool : QXDialog{
 
-	QXLineEdit edtStaticLib ,nativefile, destfile, edtName, edtVersion, lelDescr, lblAuthor;
+	QXLineEdit edtStaticLib ,destfile, edtName, edtVersion, lelDescr, lblAuthor;
     QXComboBox cbbNative, cbbOs;
-    QXPushButton stBrowser, nativeBrowser, btnEmpty, btnAdd , brwExport, btnExport, btnReadme, btnIcon, btnsave, btnload;
+    QXPushButton stBrowser, btnEmpty, btnAdd , brwExport, btnExport, btnReadme, btnIcon, btnsave, btnload;
     QXTreeView  structView;
     QXProgressBar	prgExport;
     
@@ -140,7 +140,7 @@ class ExportTool : QXDialog{
 		Map<int, Arch> archs = new Map<int, Arch>();
         
         Package(){
-			
+			init();
         }
         
         void init(){
@@ -170,7 +170,13 @@ class ExportTool : QXDialog{
         
         bool build(ZipArchive zs){
             if (lixpath.length() > 0){
-				if (false == zs.createEntry(new ZipFile("major.lix", new FileInputStream(lixpath), false, _system_.currentTimeMillis()))){
+                String ext = lixpath.findExtension();
+                
+                bool isxl = false;
+                if (ext != nilptr && ext.upper().equals(".XL")){
+                    isxl = true;
+                }
+				if (false == zs.createEntry(new ZipFile(isxl ? "major.xl" : "major.lix", new FileInputStream(lixpath), false, _system_.currentTimeMillis()))){
 					QXMessageBox.Critical("错误", "添加文件 " + lixpath + " 时发生错误", QXMessageBox.Ok, QXMessageBox.Ok);
 					return false;
                 }
@@ -292,7 +298,7 @@ class ExportTool : QXDialog{
 		setFixedSize(width(), height());
         
 		edtStaticLib = (QXLineEdit)attachByName(new QXLineEdit(), "edtStaticLib");
-        nativefile = (QXLineEdit)attachByName(new QXLineEdit(), "nativefile");
+        
         destfile = (QXLineEdit)attachByName(new QXLineEdit(), "destfile");
         
         edtName = (QXLineEdit)attachByName(new QXLineEdit(), "edtName");
@@ -306,7 +312,7 @@ class ExportTool : QXDialog{
         btnload = (QXPushButton)attachByName(new QXPushButton(), "btnload");
         btnIcon = (QXPushButton)attachByName(new QXPushButton(), "btnIcon");
         stBrowser = (QXPushButton)attachByName(new QXPushButton(), "stBrowser");
-        nativeBrowser = (QXPushButton)attachByName(new QXPushButton(), "nativeBrowser");
+        
         btnEmpty = (QXPushButton)attachByName(new QXPushButton(), "btnEmpty");
         btnAdd = (QXPushButton)attachByName(new QXPushButton(), "btnAdd");
         brwExport = (QXPushButton)attachByName(new QXPushButton(), "brwExport");
@@ -330,8 +336,8 @@ class ExportTool : QXDialog{
         });
         prgExport = (QXProgressBar)attachByName(new QXProgressBar(), "prgExport");
         
-        stBrowser.setOnClickListener(new BrowserListener(edtStaticLib, false, "选择静态库", "X 静态链接库 (*.lix)"));
-        nativeBrowser.setOnClickListener(new BrowserListener(nativefile, false, "选择Native文件", "Windows 动态链接库 (*.dll);;Unix/Linux 动态链接库文件 (*.so);;Darwin 动态链接库文件 (*.dylib);;所有文件 (*.*)"));
+        stBrowser.setOnClickListener(new BrowserListener(edtStaticLib, false, "选择链接库", "X 链接库 (*.lix *.xl)"));
+        
         
 		brwExport.setOnClickListener(new onClickListener(){
 			void onClick(QXObject obj, bool checked)override{
@@ -459,33 +465,18 @@ class ExportTool : QXDialog{
         
         btnAdd.setOnClickListener(new onClickListener(){
 			void onClick(QXObject obj, bool checked)override{
-				String add_path = nativefile.getText();
-                if (add_path.length() == 0){
-					QXMessageBox.Critical("错误", "没有选择一个文件", QXMessageBox.Ok, QXMessageBox.Ok);
-                    return ;
-                }
-				int arch = cbbNative.getCurrentIndex() + 1;
-                int os = cbbOs.getCurrentIndex();
-                
-                try{
-					Vector<String > file = currentPackage.archs.get(arch).osFile.get(os).files;
-                    
-                    for (int i =0; i <file.size(); i++){
-						if (file.get(i).equals(add_path)){
-							return ;
-                        }
+                String [] files  = QXFileDialog.getOpenFileNames("添加运行时文件", nilptr,  "所有文件 (*.*)", ExportTool.this);
+				if (files != nilptr && files.length > 0){
+                    for (int i = 0; i < files.length; i++){
+                        addNativeFile(files[i]);
                     }
-					file.add(nativefile.getText());
-                    updatepreview();
-                }catch(Exception e){
-					QXMessageBox.Critical("错误", "添加文件时发生错误", QXMessageBox.Ok, QXMessageBox.Ok);
                 }
             }
         });
         
         btnEmpty.setOnClickListener(new onClickListener(){
 			void onClick(QXObject obj, bool checked)override{
-				int arch = cbbNative.getCurrentIndex();
+				int arch = cbbNative.getCurrentIndex() + 1;
                 int os = cbbOs.getCurrentIndex();
                 
                 try{
@@ -513,6 +504,25 @@ class ExportTool : QXDialog{
         setWindowIcon("./res/toolbar/wizard.png");
     }
 
+    void addNativeFile(String add_path){
+        int arch = cbbNative.getCurrentIndex() + 1;
+        int os = cbbOs.getCurrentIndex();
+        
+        try{
+            Vector<String > file = currentPackage.archs.get(arch).osFile.get(os).files;
+            
+            for (int i =0; i <file.size(); i++){
+                if (file.get(i).equals(add_path)){
+                    return ;
+                }
+            }
+            file.add(add_path);
+            updatepreview();
+        }catch(Exception e){
+            QXMessageBox.Critical("错误", "添加文件时发生错误", QXMessageBox.Ok, QXMessageBox.Ok);
+        }
+    }
+    
 	void updatepreview(){
 		structView.clear();
         
