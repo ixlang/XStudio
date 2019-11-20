@@ -14,13 +14,9 @@ class XSourceEditor : QXMdiSubWindow {
     bool bModified = false;
     bool intellisense_modified = false;
     QXTreeView autoWnd;
-
     bool bClosed = false;
-
     XIntelliSense.XIntelliResult[] current_autocmp;
-
     bool autoCompShow;
-
     long auto_position, last_autopos;
     XWorkspace _mdi_area;
     bool sciisHand = false;
@@ -32,9 +28,11 @@ class XSourceEditor : QXMdiSubWindow {
     Map<String, long> autoCompMap = new Map<String, long>();
     static Map<String, XSourceEditor> editorMgr = new Map<String, XSourceEditor>();
     XIntelliSense.XIntelliResult  []lastxis;
+    
     XSourceEditor(XWorkspace _mdi) {
         _mdi_area = _mdi;
     }
+    
     String szKeywords1=
         "break case catch char class " +
         "const continue default do double else final finally cdecl for " +
@@ -1716,6 +1714,7 @@ class XSourceEditor : QXMdiSubWindow {
         _sci.sendEditor(QXSci.SCI_SETTARGETSTART, start);
         _sci.sendEditor(QXSci.SCI_SETTARGETEND, start + len);
         _sci.sendEditor(QXSci.SCI_REPLACETARGET, text.length(), text);
+        setModified();
     }
 
 
@@ -2407,6 +2406,12 @@ class XSourceEditor : QXMdiSubWindow {
 
     }
 
+    void setModified(){
+        if (bModified == false){
+            bModified = true;
+            updateTitle();
+        }
+    }
     void updateTitle() {
         if (filePath.startWith("#") == false) {
             szTitle = filePath.findFilenameAndExtension();

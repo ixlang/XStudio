@@ -1,0 +1,33 @@
+//xlang Source, Name:TreeStateSaver.xcsm 
+//Date: Tue Nov 16:38:29 2019 
+
+class TreeStateSaver{
+
+    static JsonNode saveState(QXTreeView tree, long parent){
+        JsonArray jsonitem = new JsonArray();
+        
+        long [] items;
+        
+        if (parent == 0){
+            items = tree.getTopItems();
+        }else{
+            items = tree.getItemChildren(parent);
+        }
+        
+        for (int i = 0; i < items.length; i++){
+            JsonObject item = new JsonObject();
+            item.put("label", tree.getItemText(items[i], 0));
+            item.put("value", tree.getItemText(items[i], 2));
+            bool isExp = tree.isItemExpand(items[i]);
+            item.put("exp",isExp);
+            if (isExp){
+                item.put("child", saveState(tree, items[i]));
+            }
+            jsonitem.put(item);
+        }
+        
+        return jsonitem;
+    }
+    
+    
+};

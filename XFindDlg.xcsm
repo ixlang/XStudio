@@ -270,8 +270,9 @@ class XFindDlg : QXDialog
 
                     addFindHistory(str);
                     addReplaceHistory(replaceStr);
-                    while (wnd._sci.replace(str, regex.getCheck(), casematch.getCheck(), wholeword.getCheck(), warp.getCheck(), !forward.getCheck(), -1, -1,false, false, replaceStr)) {
-
+                    
+                    while (wnd._sci.replace(str, regex.getCheck(), casematch.getCheck(), wholeword.getCheck(), false, !forward.getCheck(), -1, -1,false, false, replaceStr)) {
+                        wnd.setModified();
                     }
                 }
             }

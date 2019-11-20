@@ -448,7 +448,8 @@ class QXCore : QXNative {
                         TEGETPLACEHOLDERTEXT = 445,
                         TETOPLAINTEXT = 446,
                         TETOHTML = 447,
-                        SETSTYLE = 448;
+                        SETSTYLE = 448,
+                        TREEITEMISEXPAND = 449;
 
     QXCore() {
     }

@@ -386,7 +386,7 @@ class QxApp : QXApplication {
         if (app.create()) {
             app.run();
         }
-
+        
         app = nilptr;
         return 0;
     }

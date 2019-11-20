@@ -156,7 +156,9 @@ class AddObjectDlg : QXDialog {
 						XWorkspace.workspace.openTextFile(sourceFile);
                     }
                 }catch(Exception E){
-					fos.close();
+                    if (fos != nilptr){
+                        fos.close();
+                    }
                     XPlatform.deleteFile(sourceFile);
                  	QXMessageBox.Critical("注意", "无法建立文件:" + sourceFile, QXMessageBox.Ok, QXMessageBox.Ok);
                     return ;

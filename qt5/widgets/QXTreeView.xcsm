@@ -190,4 +190,8 @@ class QXTreeView : QXWidget{
     bool isItemCheck(long item ,int column){
 		return widget_get_int_bool(item,TRITEMGETCHECK, column);
     }
+    
+    bool isItemExpand(long item){
+        return widget_get_int_bool(item,TREEITEMISEXPAND, 0);
+    }
 };

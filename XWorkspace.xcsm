@@ -1763,11 +1763,10 @@ class XWorkspace : QXMdiArea
     }
     bool XIntelliSense(XSourceEditor editor, String originalName,String content,long position)
     {
-
         QxApp.statusBar.statusBar.showMessage("正在运行 XIntelliSense...");
         synchronized(xintellisencelock) {
             Project project = currentProject;
-            if (_autoComp_thread == nilptr || project != nilptr) {
+            if ((_autoComp_thread == nilptr) && (project != nilptr)) {
                 updateAllOpenedFile(project, originalName);
                 _autoComp_thread = new Thread() {
                     void run()override {

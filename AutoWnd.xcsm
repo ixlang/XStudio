@@ -11,7 +11,7 @@ class AutoWnd : ListDockWidget{
 	int serial = 0;
 	static AutoWnd auto_wnd;
     Vector<JsonObject> queriedObjects = new Vector<JsonObject>();
-    
+    JsonNode saveState;
     class Range{
 		long start;
         long length;
@@ -59,7 +59,12 @@ class AutoWnd : ListDockWidget{
         }
 	}
     
+    
     void onListItemExpanded(QXTreeView tree,long item)override{
+        expandItem(tree, item);
+	}
+    
+    void expandItem(QXTreeView tree,long item){
 		if (expandArrays(item) == false){
 			long objectId = tree.getItemTag(item, 0);
 			if (objectId != 0){
@@ -78,14 +83,17 @@ class AutoWnd : ListDockWidget{
 				}catch(Exception e){
 				
 				}*/
-			}
+			}else{
+                querySaveState(item);
+            }
+        }else{
+            querySaveState(item);
         }
-	}
+    }
+    
     
     bool expandArrays(long item){
-		
 		Map.Iterator<long, Range> iter = array_objects.find(item);
-		
 		if (iter != nilptr){
 			QXTreeView list = getList();
 			Range rg = iter.getValue();
@@ -142,6 +150,7 @@ class AutoWnd : ListDockWidget{
 			 synchronized(auto_wnd){
 				if (s_root != nilptr){
 					parseFrameInfo(s_tid, s_root);
+                    applyState();
 				}
 			 }
         }else
@@ -159,13 +168,10 @@ class AutoWnd : ListDockWidget{
     void loadObject(JsonObject json){
 		synchronized(serlock){
 			QXTreeView list = getList();
-			
 			//long id = json.getString("id").parseLong();
-            
             String qid = json.getString("queryid");
             
             if (qid != nilptr){
-            
 				if (qid.startWith("detail:")){
 					try{
 						TextDetail td = new TextDetail();
@@ -188,7 +194,6 @@ class AutoWnd : ListDockWidget{
 					long seri = param.substring(4, param.length()).parseLong();
 					String szType  = json.getString("type");
 					if (seri == serial){
-					
 						String values = json.getString("value"); 
 						long loaditem = list.getItemTag(item, 1);
 						
@@ -211,6 +216,7 @@ class AutoWnd : ListDockWidget{
 							list.setItemText(item, 2, "<找不到调试数据>");
 						}
 					}
+                    querySaveState(item);
 				}
             }
         }
@@ -227,6 +233,78 @@ class AutoWnd : ListDockWidget{
 		}
     }
     
+    Map<long, JsonNode> expandTask = new Map<long, JsonNode>();
+    
+    void querySaveState(long item){
+        try{
+            JsonNode node = expandTask.get(item);
+            if (node != nilptr){
+                expandTask.remove(item);
+                QXTreeView list = getList();
+                long [] items = list.getItemChildren(item);
+                applyStateEx(items, (JsonArray)node);
+            }
+        }catch(Exception e){
+            
+        }
+    }
+    
+    void expandItem(long item, JsonNode child){
+        QXTreeView list = getList();
+        expandTask.put(item, child);
+        list.setExpand(item,true);
+        //expandItem(list, item);
+    }
+    
+    void applyState(){
+        if (saveState == nilptr){
+            return;
+        }
+        
+        QXTreeView list = getList();
+        JsonArray state = (JsonArray)saveState;
+        long [] items = list.getTopItems();
+        
+        if (items.length != state.length()){
+            saveState = nilptr;
+            return ;
+        }
+        
+        for (int i =0; i < items.length; i++){
+            String text = list.getItemText(items[i], 0);
+            JsonObject item = (JsonObject)state.get(i);
+            if (item.getString("label").equals(text) == false){
+                saveState = nilptr;
+                return ;
+            }
+        }
+        
+        applyStateEx(items, state);
+    }
+    
+    void applyStateEx(long [] items, JsonArray state){
+        QXTreeView list = getList();
+        int stlen = state.length();
+        for (int i = 0; i < items.length; i++){
+            if (i < stlen){
+                JsonObject item = (JsonObject)state.get(i);
+                bool exp = item.getBool("exp");
+                if (exp){
+                    expandItem(items[i], item.get("child"));
+                }else{
+                    String text = list.getItemText(items[i], 2);
+                    if (item.getString("value").equals(text) == false){
+                        list.setItemColor(items[i],0,0xffff0000);
+                        list.setItemColor(items[i],2,0xffff0000);
+                    }
+                }
+            }else{
+                list.setItemColor(items[i],0,0xffff0000);
+                list.setItemColor(items[i],2,0xffff0000);
+            }
+        }
+    }
+    
     void parseFrameInfo(long tid, JsonObject json){
     
 		//_system_.output(json.toString(false));
@@ -241,6 +319,8 @@ class AutoWnd : ListDockWidget{
 			QXTreeView list = getList();
             synchronized(serlock){
 				serial++;
+                saveState = TreeStateSaver.saveState(list,0);
+                expandTask.clear();
 				list.clear();
                 array_objects.clear();
             }

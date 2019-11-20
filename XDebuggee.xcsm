@@ -41,7 +41,8 @@ class XDebuggee{
         QueryByName = 29,
         ModuleLoaded = 30,
         LookupMemory = 31,
-        DumpMemory = 32;
+        DumpMemory = 32,
+        GCInfo = 33;
            
     bool isDebugging = false;
      
@@ -630,7 +631,10 @@ class XDebuggee{
 				//_system_.consoleWrite(json.toString(true));
                 WatchWnd.watchesWnd.showInfo(json);
             break;
-            
+            case GCInfo:
+            if (Setting.outputGCStat() == false){
+                break;
+            }
             case Debug:
 				String message = json.getString("message");
 				if (_system_.getPlatformId() == 0){
