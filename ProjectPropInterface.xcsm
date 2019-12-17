@@ -1,8 +1,5 @@
 
-interface WizardLoader{
-	void loadProject(String file);
-	void openTextFile(String file);
-};
+
 
 interface ProjectPropInterface{
     bool setValue(Project object, Configure configure, String key, String value);

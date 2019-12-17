@@ -176,8 +176,8 @@ class XWndInfor : QXDockWidget
         if (Setting.isSwitchToInfo()) {
             raise();
         }
-        XWndOutput.Output(String.format("\n (%d 建议, %d 警告, %d 错误.)\n", getCountOfTips(), getCountOfWarning(), getCountOfError()));
+        XWndOutput.Output(String.format("\n (%d 建议, %d 警告, %d 错误.)\n", getCountOfTips(), getCountOfWarning(), getCountOfError()), 0);
 
-        XWndOutput.Output("[" + String.formatDate("%c", _system_.currentTimeMillis()) + "] 编译完成.\n");
+        XWndOutput.Output("[" + String.formatDate("%c", _system_.currentTimeMillis()) + "] 编译完成.\n", 0);
     }
 };

@@ -107,6 +107,8 @@ class WizardDialog : QXDialog
         }
     };
 
+
+
     bool selected_is_file = false;
     Map<long, JsonArray> actionMap = new Map<long, JsonArray>();
 
@@ -130,15 +132,17 @@ class WizardDialog : QXDialog
         }
     };
 
-    void loadItem(long item)
-    {
-
+    void loadItem(long item){
         JsonArray content = nilptr;
         try {
             content = actionMap.get(item);
+            loadItemEx(item, content);
         } catch(Exception e) {
 
         }
+    }
+    void loadItemEx(long item ,JsonArray content)
+    {
         if (content != nilptr) {
             bool canadd = false;
             selected_is_file = false;
@@ -160,6 +164,7 @@ class WizardDialog : QXDialog
                 _listview.setItemTag(citem, 1,  item);
 
                 _listview.setItemText(citem, 2, objItem.getString("language"));
+               
             }
 
             add_check.setChecked(canadd, true);
@@ -169,17 +174,6 @@ class WizardDialog : QXDialog
 
     onTreeViewItemEvent devslistener = new onTreeViewItemEvent()
     {
-        /*void onItemClicked(QXTreeView list,long item, int column)override{
-            long selected_index = list.getItemTag(item, 0);
-            long typeitem = list.getItemTag(item, 1);
-
-            try{
-        		JsonArray typeobj = actionMap.get(typeitem);
-
-            }catch(Exception e){
-
-            }
-        }*/
         void onItemPressed(QXTreeView list, long item, int column)override {
             long selected_index = list.getItemTag(item, 0);
             long typeitem = list.getItemTag(item, 1);
@@ -511,17 +505,36 @@ class WizardDialog : QXDialog
             downloadProject(_propinterface, project_name, objItem.getString("url"));
             return ;
         }
-
+        
+        IProjectPlugin plugin ;
+        
+        if (objItem.has("plugin")) {
+            int pid = objItem.getInt("plugin");
+            if (pid >= 0 && pid < __proj_plugins.size()){
+                plugin = __proj_plugins.get(pid);
+            }
+        }
+        
         String type = objItem.getString("user");
-
-        if (_propinterface.create(new WizardLoader() {
-            void loadProject(String file) {
-                    _mdispace.loadProject(file);
+        
+        WizardLoader loader = new WizardLoader() {
+            IProject loadProject(String file) {
+                    return _mdispace.loadProject(file);
                 }
                 void openTextFile(String file) {
                     _mdispace.openTextFile(file);
                 }
-            },project_name, project_path, uuid, _mdispace.getCurrentProject(), add_check.getChecked(), type)) 
+            };
+            
+        bool ret = false;
+        
+        if (plugin != nilptr){
+            ret =plugin.createProject(loader,project_name,project_path,uuid,_mdispace.getCurrentProject(),add_check.getChecked());
+        }else{
+            ret = _propinterface.create(loader,project_name, project_path, uuid, _mdispace.getCurrentProject(), add_check.getChecked(), type);
+        }
+        
+        if (ret) 
         {
             close();
         } else {
@@ -632,8 +645,8 @@ class WizardDialog : QXDialog
     {
         String project_dir = projPath.getText();
         if (_propinterface.create(new WizardLoader() {
-        void loadProject(String file) {
-                _mdispace.loadProject(file);
+            IProject loadProject(String file) {
+                return _mdispace.loadProject(file);
             }
             void openTextFile(String file) {
                 _mdispace.openTextFile(file);
@@ -719,12 +732,123 @@ class WizardDialog : QXDialog
                 loadProject(itemfile, root.get("file"), "./res/toolbar/files.png");
                 _treeview.setExpand(itemfile, true);
             }
-
+            loadPlugins();
         } catch(Exception e) {
             /*_system_.consoleWrite("exception ");*/
         }
     }
 
+    long addItem(long item, String icon, String name){
+        long [] items;
+        if (item == 0){
+            items = _treeview.getTopItems();
+        }else{
+            items = _treeview.getItemChildren(item);
+        }
+        
+        if (items != nilptr){
+            for (int i =0 ;i < items.length; i++){
+                String lab = _treeview.getItemText(items[i], 0);
+                if (lab != nilptr && lab.equals(name)){
+                    return items[i];
+                }
+            }
+        }
+        
+        if (item != 0){
+            return _treeview.insertItem(item, icon, name);
+            
+        }
+        return _treeview.addItem(icon, name);
+    }
+    
+    Vector<IProjectPlugin> __proj_plugins = new Vector<IProjectPlugin>();
+    
+    void loadPlugins(){
+        __proj_plugins.clear();
+        List<IProjectPlugin> plugins = PluginsController.getProjectPluginList();
+        List.Iterator<IProjectPlugin> iter = plugins.iterator();
+        int id = 0;
+        while (iter.hasNext()){
+            IProjectPlugin plugin = iter.next();
+            
+            __proj_plugins.add(plugin);
+            loadPluginProject(plugin, id);
+            id++;
+        }
+    }
+    
+    void loadPluginProject(IProjectPlugin plugin, int id){
+        if (plugin != nilptr){
+            
+            bool hasExistProject = !_mdispace.isCurrentProjectEmpty();
+            String txt = plugin.getWizard(hasExistProject);
+            
+           try {
+                jsonWizard = new JsonObject(txt);
+                JsonObject root = (JsonObject)jsonWizard.get("Navigation");
+
+                if (hasExistProject == false) {
+                    long itemprj = addItem(0, nilptr, "项目");
+                    loadProjectPlugin(itemprj, root.get("project"), "./res/toolbar/projc.png", id);
+                    _treeview.setExpand(itemprj, true);
+                } else {
+                    long itemfile = addItem(0, nilptr, "文件");
+                    loadProjectPlugin(itemfile, root.get("file"), "./res/toolbar/files.png", id);
+                    _treeview.setExpand(itemfile, true);
+                }
+
+            } catch(Exception e) {
+                /*_system_.consoleWrite("exception ");*/
+            }
+        }
+    }
+    
+    void markId(JsonArray minor, int id){
+        for (int i = 0 ; i < minor.length(); i++){
+            JsonNode ji = minor.get(i);
+            if (ji.isArray()){
+                return;
+            }else{
+                ((JsonObject)ji).put("plugin", id);
+            }
+        }
+    }
+    void MegerArray(JsonArray major, JsonArray minor, int id){
+        for (int i = 0 ; i < minor.length(); i++){
+            JsonNode ji = minor.get(i);
+            if (ji.isArray()){
+                return;
+            }else{
+                ((JsonObject)ji).put("plugin", id);
+                major.put(ji);
+            }
+        }
+    }
+    void loadProjectPlugin(long root, JsonNode projectRoot, String icon, int pluginId)
+    {
+        JsonNode child = projectRoot.child();
+        while (child != nilptr) {
+            String name = child.getName();
+            long item ;
+            if (child.isArray()) {
+                item = addItem(root, icon, name);
+                try{
+                    JsonArray pchild = actionMap.get(item);
+                    MegerArray(pchild, (JsonArray)child, pluginId);
+                }catch(Exception e){
+                    markId((JsonArray)child, pluginId);
+                    actionMap.put(item, (JsonArray)child);/*.clone()*/
+                }
+                loadItemEx(item, (JsonArray)child);
+            } else {
+                item = _treeview.insertItem(root, icon, name);
+                loadProject(item, child, icon);
+            }
+            child = child.next();
+        }
+    }
+    
     void loadProject(long root, JsonNode projectRoot, String icon)
     {
         JsonNode child = projectRoot.child();

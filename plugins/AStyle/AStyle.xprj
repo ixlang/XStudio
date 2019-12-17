@@ -7,24 +7,26 @@
 			"debug":	{
 				"path":	{
 					"incpath":	[],
-					"libpath":	["libs"]
+					"libpath":	["../libs"]
 				},
 				"options":	"",
+				"libs":	["XPlatform_1.0.0.2.lix"],
+				"links":	["XStudio1.xl"],
+				"depends":	[],
+				"wtype":	"",
+				"ostype":	"",
+				"outname":	"$(ProjectName)$(Ext)",
+				"outpath":	"D:\\Programs\\windows_x64_dev\\plugins",
+				"command":	"-slx -c",
+				"uaclevel":	"默认",
 				"cmd":	"$(Output)",
 				"args":	"$(Output)",
 				"workdir":	"$(ProjectDir)",
 				"ignorewarning":	"",
 				"compdest":	"",
-				"debugable":	"-dbg",
-				"debugdatabase":	"",
-				"libs":	["XPlatform_1.0.0.2.lix", "FileStream_1.0.0.3.lix", "FileSystem_1.0.0.3.lix"],
-				"links":	["XStudio1.xl"],
-				"wtype":	"",
-				"ostype":	"",
-				"outname":	"$(ProjectName)$(Ext)",
-				"outpath":	"D:\\Programs\\windows_x64\\plugins",
-				"command":	"-slx -c",
-				"uaclevel":	"默认"
+				"ignorewl":	"",
+				"debugable":	"",
+				"debugdatabase":	""
 			},
 			"release":	{
 				"path":	{
@@ -42,7 +44,7 @@
 				"workdir":	"$(ProjectDir)"
 			}
 		},
-		"versioninc":	"0",
-		"icofile":	""
+		"icofile":	"",
+		"versioninc":	"0"
 	}
 }

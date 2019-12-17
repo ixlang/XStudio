@@ -73,7 +73,7 @@ class XIntelliSense{
 					String source = project.getSourcePath(i);
 					String ext = source.findExtension();
 					
-					if (ext != nilptr && (ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm") )){
+					if (ext != nilptr && (ext.equalsIgnoreCase(".x") || ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm") )){
 						addFile(handle, XPlatform.converToPlatformCharSet(source));
 					}
 				}

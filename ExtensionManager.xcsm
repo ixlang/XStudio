@@ -1,0 +1,162 @@
+//xlang Source, Name:ExtensionManager.xcsm 
+//Date: Mon Dec 22:38:01 2019 
+
+class ExtensionManager : QXDialog{
+    XWorkspace _workspace;
+    QXTreeView extlist;
+    QXPushButton btnenable, btnuninst, btnclose;
+    
+    static JsonObject extobj = new JsonObject();
+    
+    static void load(){
+        String confFile = "./config/extstat.conf";
+        FileInputStream fiss;
+        try {
+            fiss = new FileInputStream(confFile);
+            byte [] data = fiss.read();
+            fiss.close();
+            String extcontent = new String(data);
+            extobj = new JsonObject(extcontent);
+        } catch(Exception e) {
+            
+        }finally{
+            if (fiss != nilptr){
+                fiss.close();
+            }
+        }
+    }
+    
+    static bool isEnabled(String name){
+        if (extobj.has(name)){
+            JsonObject plobj = (JsonObject)extobj.get(name);
+            if (plobj != nilptr){
+                String eab = plobj.getString("enabled");
+                if (eab != nilptr){
+                    return eab.parseInt() != 0;
+                }
+            }
+        }
+        return true;
+    }
+    
+    static void setEnabled(String name, bool eab){
+        while  (extobj.has(name)){
+            extobj.remove(name);
+        }
+        JsonObject plobj = new JsonObject();
+        plobj.put("enabled", eab ? "1" : "0" );
+        extobj.put(name,plobj);
+        save();
+    }
+    
+    static void save(){
+        FileOutputStream fos;
+        
+        try{
+            String root = extobj.toString(false);
+            fos = new FileOutputStream("./config/extstat.conf");
+            fos.write(root.getBytes());
+            fos.close();
+        }catch(Exception e){
+        
+        }finally{
+            if (fos != nilptr){
+                fos.close();
+            }
+        }
+    }
+    
+	void onAttach() override {
+		//TODO:	
+        setWindowFlags(CustomizeWindowHint | WindowMinMaxButtonsHint | WindowCloseButtonHint);
+        setWindowIcon("./res/toolbar/dynamic.png");
+        
+        extlist = (QXTreeView)attachByName(new QXTreeView(), "extlist");
+        btnenable = (QXPushButton)attachByName(new QXPushButton(), "btnenable");
+        btnuninst = (QXPushButton)attachByName(new QXPushButton(), "btnuninst");
+        btnclose = (QXPushButton)attachByName(new QXPushButton(), "btnclose");
+        
+        btnenable.setOnClickListener(new onClickListener(){
+            void onClick(QXObject obj, bool checked) {
+                long [] items = extlist.getSelectedItems();
+                if (items != nilptr && items.length != 0){
+                    for (int i = 0; i < items.length ; i ++){
+                        String name = extlist.getItemText(items[i],0);
+                        String eab = extlist.getItemText(items[i],1);
+                        PluginsController.setPluginDisabled(name, eab.equals("启用"));
+                    }
+                    loadlist();
+                    save();
+                }
+            }
+        });
+        
+        btnuninst.setOnClickListener(new onClickListener(){
+            void onClick(QXObject obj, bool checked) {
+                long [] items = extlist.getSelectedItems();
+                if (items != nilptr && items.length != 0){
+                    for (int i = 0; i < items.length ; i ++){
+                        String name = extlist.getItemText(items[i],0);
+                        PluginsController.uninstallPlugin(name);
+                    }
+                    loadlist();
+                }
+            }
+        });
+        
+        btnclose.setOnClickListener(new onClickListener(){
+            void onClick(QXObject obj, bool checked) {
+                close();
+            }
+        });
+        
+        String [] columns = {"名称","状态", "版本", "描述", "发布者"};
+        
+        extlist.setColumns(columns);
+
+        extlist.setColumnWidth(0, 100);
+        extlist.setColumnWidth(1, 100);
+        extlist.setColumnWidth(2, 100);
+        extlist.setColumnWidth(3, 250);
+        
+        extlist.setOnTreeViewItemEvent( new onTreeViewItemEvent(){
+			void onItemClicked(QXTreeView tree,long item, int column){
+				if (column == 4){
+					String txt = tree.getItemText(item, column);
+                    if (txt.upper().startWith("HTTP")){
+						if (QXMessageBox.Question("提示","是否转到发布者网站: <b>" + txt + "</b> ?",QXMessageBox.Ok | QXMessageBox.No,QXMessageBox.Ok) == QXMessageBox.Ok){
+							openUrl(txt);
+                        }
+                    }
+                }
+			}
+        });
+        
+        setWindowTitle("扩展管理");
+        setModal(true);
+        show();
+        loadlist();
+	}
+    
+    
+    void loadlist(){
+        extlist.clear();
+        Map.Iterator<String, XPluginShell> iter = PluginsController.plugins_list.iterator();
+        while (iter.hasNext()) {
+            XPluginShell splug = iter.getValue();
+            if (splug._plugin != nilptr) {
+                String name = splug._plugin.getName();
+                long ver = splug._plugin.getVersion();
+                String description = splug._plugin.getDescrition();
+                String publisher = splug._plugin.publisher();
+                String icon = splug._plugin.getIcon();
+                long item = extlist.addItem(icon, name);
+                extlist.setItemText(item, 1, splug.disable ? "禁用" : "启用");
+                extlist.setItemText(item, 2,  Utils.convertVersion(ver));
+                extlist.setItemText(item, 3,  description);
+                extlist.setItemText(item, 4,  publisher);
+            }
+            iter.next();
+        }
+    }
+};

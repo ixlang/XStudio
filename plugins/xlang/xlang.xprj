@@ -7,7 +7,7 @@
 			"debug":	{
 				"path":	{
 					"incpath":	[],
-					"libpath":	["libs"]
+					"libpath":	["../libs"]
 				},
 				"options":	"",
 				"prebuild":	"",
@@ -19,20 +19,20 @@
 				"cmd":	"$(Output)",
 				"args":	"$(Output)",
 				"workdir":	"$(ProjectDir)",
-				"wtype":	"",
-				"ostype":	"",
-				"outname":	"$(ProjectName)$(Ext)",
-				"outpath":	"D:\\Programs\\windows_x64\\plugins",
-				"command":	"-slx -c",
-				"uaclevel":	"默认",
-				"libs":	[],
-				"links":	["XStudio1.xl"],
-				"depends":	[],
 				"ignorewarning":	"",
 				"compdest":	"",
 				"ignorewl":	"",
 				"debugable":	"-dbg",
-				"debugdatabase":	""
+				"debugdatabase":	"",
+				"libs":	[],
+				"links":	["XStudio1.xl"],
+				"depends":	[],
+				"wtype":	"",
+				"ostype":	"",
+				"outname":	"$(ProjectName)$(Ext)",
+				"outpath":	"D:\\Programs\\windows_x64_dev\\plugins",
+				"command":	"-slx -c",
+				"uaclevel":	"默认"
 			},
 			"release":	{
 				"path":	{
@@ -50,7 +50,7 @@
 				"workdir":	"$(ProjectDir)"
 			}
 		},
-		"icofile":	"",
-		"versioninc":	"0"
+		"versioninc":	"0",
+		"icofile":	""
 	}
 }

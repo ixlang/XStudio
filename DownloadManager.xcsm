@@ -1,0 +1,141 @@
+//xlang Source, Name:DownloadManager.xcsm 
+//Date: Thu Dec 00:33:00 2019 
+
+class DownloadManager : QXDialog{
+    QXTreeView listtask;
+    QXPushButton btncancel, btnclose;
+    QXLabel lblstat;
+    static DownloadManager _dlmgrwin;
+ 
+    
+    class ItemTask{
+        ItemTask(String k, String u, int p){
+            name = k;
+            url = u;
+            progress = p;
+        }
+        
+        long item;
+        String name;
+        String url;
+        int progress;
+        bool deleted = false;
+        
+        void update(int p){
+            progress = p;
+            deleted = false;
+        }
+    };
+    
+    Map<String, ItemTask> _tasklist = new Map<String, ItemTask>();
+    
+    void onAttach() override {
+        listtask = (QXTreeView)attachByName(new QXTreeView(), "listtask");
+        btncancel = (QXPushButton)attachByName(new QXPushButton(), "btncancel");
+        btnclose = (QXPushButton)attachByName(new QXPushButton(), "btnclose");
+        lblstat = (QXLabel)attachByName(new QXLabel(), "lblstat");
+        
+        String [] columns = {"任务", "地址", "进度"};
+        
+        listtask.setColumns(columns);
+        
+        listtask.setColumnWidth(0, 150);
+        listtask.setColumnWidth(1, 500);
+        listtask.setColumnWidth(2, 50);
+        
+        btncancel.setOnClickListener(
+        new QXDialog.onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                long item = listtask.getSelItem();
+                if (item != 0){
+                    String text = listtask.getItemText(item,0);
+                    DownloadCenter.cancelDownloadTask(text);
+                }
+            }
+        });
+        
+        btnclose.setOnClickListener(
+        new QXDialog.onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                close();
+            }
+        });
+        
+        listtask.setOnTreeViewItemEvent( new onTreeViewItemEvent(){
+			void onItemClicked(QXTreeView tree,long item, int column){
+				if (column == 1){
+					String txt = tree.getItemText(item, column);
+                    if (txt.upper().startWith("HTTP")){
+						if (QXMessageBox.Question("提示","是否在浏览器中打开: <b>" + txt + "</b> ?",QXMessageBox.Ok | QXMessageBox.No,QXMessageBox.Ok) == QXMessageBox.Ok){
+							openUrl(txt);
+                        }
+                    }
+                }
+			}
+        });
+        
+        setModal(true);
+        show();
+        _dlmgrwin = this;
+    }
+    
+    
+    void setAllDelete(){
+        Map.Iterator<String, ItemTask> iter = _tasklist.iterator();
+        while (iter.hasNext()){
+            iter.getValue().deleted = true;
+            iter.next();
+        }
+    }
+    
+    bool onClose()override{
+        _dlmgrwin = nilptr;
+        return true;
+    }
+    
+    void loadTask(){
+        setAllDelete();
+        List<String> keys = DownloadCenter.getKeys();
+        List.Iterator<String>  iter = keys.iterator();
+        while (iter.hasNext()){
+            String name = iter.next();
+            DownloadCenter.Downloader dl = DownloadCenter.getTask(name);
+            if (dl != nilptr){
+                Map.Iterator<String, ItemTask> taskiter = _tasklist.find(name);
+                if (taskiter == nilptr){
+                    _tasklist.put(name, new ItemTask(name, dl.url, dl.progress));
+                }else{
+                    taskiter.getValue().update(dl.progress);
+                }
+            }
+        }
+        updateListView();
+    }
+    
+    
+    
+    void updateListView(){
+        Map.Iterator<String, ItemTask> iter = _tasklist.iterator();
+        while (iter.hasNext()){
+            ItemTask it = iter.getValue();
+            iter.next();
+            if (it.deleted){
+                listtask.removeItem(it.item);
+                _tasklist.remove(it.name);
+            }else{
+                if (it.item == 0){
+                    it.item = listtask.addItem("res/toolbar/task.png",it.name);
+                }
+                listtask.setItemText(it.item,1,it.url);
+                listtask.setItemText(it.item,2,"" + it.progress + "%");
+            }
+            
+        }
+    }
+    
+    static void updateProgress(){
+        if (_dlmgrwin != nilptr){
+            _dlmgrwin.loadTask();
+        }
+    }
+};

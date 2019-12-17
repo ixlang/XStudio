@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Form</class>
- <widget class="QWidget" name="Form">
+ <class>indexForm</class>
+ <widget class="QWidget" name="indexForm">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -9,6 +9,9 @@
     <width>1085</width>
     <height>711</height>
    </rect>
+  </property>
+  <property name="acceptDrops">
+   <bool>true</bool>
   </property>
   <property name="windowTitle">
    <string>欢迎使用</string>
@@ -18,7 +21,7 @@
     <rect>
      <x>40</x>
      <y>30</y>
-     <width>231</width>
+     <width>500</width>
      <height>41</height>
     </rect>
    </property>
@@ -29,7 +32,7 @@
     </font>
    </property>
    <property name="text">
-    <string>XIDE beta v1.0</string>
+    <string>XStudio beta v1.11.25</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_2">
@@ -407,7 +410,7 @@
     <cursorShape>OpenHandCursor</cursorShape>
    </property>
    <property name="text">
-    <string>&lt;a style=&quot;color:#1684fb&quot;&gt;XPlayer(Windows)&lt;/a&gt;</string>
+    <string>&lt;a style=&quot;color:#1684fb&quot;&gt;XPlayer&lt;/a&gt;</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_21">
@@ -451,7 +454,7 @@
     <cursorShape>OpenHandCursor</cursorShape>
    </property>
    <property name="text">
-    <string>&lt;a style=&quot;color:#1684fb&quot;&gt;XIDE&lt;/a&gt;</string>
+    <string>&lt;a style=&quot;color:#1684fb&quot;&gt;XStudio&lt;/a&gt;</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_25">
@@ -560,7 +563,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>使用OpenGL和ffmpeg开发的Windows音频播放器</string>
+    <string>使用OpenGL和ffmpeg开发的音频播放器</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_17">
@@ -636,7 +639,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;xlang是一门支持多设备平台以及在java中运行的新生语言.能生成操作系统支持运行的可执行文件,也可以生成'一次编译,处处运行'的字节码文件...&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;xlang是一门支持多设备平台的新生语言.能生成操作系统支持运行的可执行文件,也可以生成'一次编译,处处运行'的字节码文件...&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="wordWrap">
     <bool>true</bool>

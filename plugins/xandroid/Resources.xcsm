@@ -1,0 +1,8 @@
+//xlang Source, Name:Resources.xcsm 
+//Date: Wed Dec 22:15:03 2019 
+
+class Resources{
+    static String thumb_png = String.formatPath(XPlatform.getAppDirectory().appendPath("plugins").appendPath("xandroid").appendPath("thumb.png"), false);
+    static String api_png = String.formatPath(XPlatform.getAppDirectory().appendPath("plugins").appendPath("xandroid").appendPath("sdk.png"), false);
+    static String sdk_setting = String.formatPath(XPlatform.getAppDirectory().appendPath("plugins").appendPath("xandroid").appendPath("sdk_setting.png"), false);
+};

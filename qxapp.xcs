@@ -63,7 +63,7 @@ class ArgsProcessor {
                               "--config=<Config Name>\n" +
                               "--targetdir=<target Directory>\n" +
                               "--xcross=<target OS:[windows|linux|darwin]>\n" +
-                              "--arch=<target OS:[x86|x86_64|arm|arm64|mips]>\n" +
+                              "--arch=<target ARCH:[x86|x86_64|arm|arm64|mips]>\n" +
                               "--project=<Project file : *.xprj>\n");
     }
 };
@@ -145,7 +145,12 @@ class QxApp : QXApplication {
         if (Setting.isDarkStyle()) {
             setStyleSheet("res/qss/black.qss");
         } else {
-            setStyleSheetString("#indexForm {background: #f0f0f0 }");
+            String style = Setting.getStyle();
+            if (style.equals("浅色")){
+                setStyleSheet("res/qss/light.qss");
+            }else{
+                setStyleSheetString("#indexForm {background: #f0f0f0 }");
+            }
         }
     }
 
@@ -153,7 +158,7 @@ class QxApp : QXApplication {
     void processArgs() {
         if (_appargs.length > 1) {
             if (_appargs[1].equals("uacdebug")) {
-                if (_mdispace.loadProject(_appargs[2])) {
+                if (nilptr != _mdispace.loadProject(_appargs[2])) {
                     _mdispace.debugRun();
                 }
             } else {
@@ -234,7 +239,11 @@ class QxApp : QXApplication {
                                 return false;
                             }
                         }
-
+                        
+                        if (PluginsController.exitPlugins() == false){
+                            
+                            return false;
+                        }
                         return true;
                     }
                 }
@@ -277,15 +286,14 @@ class QxApp : QXApplication {
     }
 
     void loadPlusins() {
-        FileSystem.File fp = new FileSystem.File(_system_.getAppDirectory().appendPath("plugins"));
-        List<FileSystem.File> plugins = fp.listFiles();
-
-        if (plugins != nilptr) {
-            List.Iterator<FileSystem.File> iter = plugins.iterator();
-
-            while (iter.hasNext()) {
-                FileSystem.File pfile = iter.next();
-
+        ExtensionManager.load();
+        
+        FSObject fp = new FSObject(_system_.getAppDirectory().appendPath("plugins"));
+        
+        long hfind = fp.openDir();
+        if (hfind !=0){
+            FSObject pfile = new FSObject();
+            while (fp.findObject(hfind, pfile)){
                 try {
                     if (pfile.isDir() == false) {
                         _system_.loadLibrary(pfile.getPath());
@@ -294,8 +302,9 @@ class QxApp : QXApplication {
 
                 }
             }
+            fp.closeDir(hfind);
         }
-
+        
         PluginsController.initPlugins(_xstudio_controller);
     }
 

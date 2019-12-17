@@ -60,7 +60,7 @@ class XWorkspace : QXMdiArea
 
     WorkspaceController _controller = new WorkspaceController()
     {
-        TextEditorController findTextEditor(String path, bool openIfNotFound) {
+        TextEditorController findTextEditor(String path, bool openIfNotFound) override{
             XSourceEditor editor = XSourceEditor.findDocumentWindow(XWorkspace.this,path,openIfNotFound);
             if (editor != nilptr) {
                 return editor.getController();
@@ -68,7 +68,7 @@ class XWorkspace : QXMdiArea
             return nilptr;
         }
 
-        TextEditorController openTextEditor(String path) {
+        TextEditorController openTextEditor(String path)override {
             XSourceEditor editor = XSourceEditor.findDocumentWindow(XWorkspace.this,path, true);
             if (editor != nilptr) {
                 setActiveSubWindow(editor);
@@ -77,7 +77,11 @@ class XWorkspace : QXMdiArea
             return nilptr;
         }
 
-        TextEditorController createTextEditor() {
+        bool installXep(String path)override{
+            return installCompilerExtension(path);
+        }
+        
+        TextEditorController createTextEditor()override {
             XSourceEditor editor = (XSourceEditor)createSubWnd(true);
             if (editor != nilptr) {
                 return editor.getController();
@@ -85,23 +89,43 @@ class XWorkspace : QXMdiArea
             return nilptr;
         }
 
-        bool saveFile(String path) {
+        bool saveFile(String path)override {
             return XSourceEditor.findSaveFile(path);
         }
 
-        bool toggleBreakpointAtLine(String path, long line, bool bSet) {
+        bool toggleBreakpointAtLine(String path, long line, bool bSet)override {
             XSourceEditor.toggleBreakPointOnFile(XWorkspace.this,path, line, bSet);
             return true;
         }
 
-        void output(String text) {
-            XWndOutput.Output(text);
+        void createDownloadTask(String key, String url, String local, long totalsize, DownloadListener ls, Object tag)override{
+            DownloadCenter.createDownload(key,url,local,totalsize,ls,tag);
         }
-        void setStatus(String text) {
-            QxApp.statusBar.statusBar.showMessage(text);
+        
+        int getDownloadTaskProgress(String key)override{
+            return DownloadCenter.getTaskProgress(key);
+        }
+        
+        bool hasDownloadTask(String key)override{
+            return DownloadCenter.hasDownloadTask(key);
+        }
+        
+        void cancelDownloadTask(String key)override{
+            DownloadCenter.cancelDownloadTask(key);
+        }
+        
+        void output(String text, int id) override{
+            XWndOutput.Output(text, id);
+        }
+        void setStatus(String text)override {
+            QxApp.statusBar.showStatusMessage(text);
         }
 
-        TextEditorController currentTextEditor() {
+        int registryOutput(String icon){
+            return XWndOutput.registryOutput(icon);
+        }
+        
+        TextEditorController currentTextEditor() override{
             XSourceEditor wnd = (XSourceEditor)currentSubWindow();
             if (wnd != nilptr) {
                 return wnd.getController();
@@ -109,24 +133,66 @@ class XWorkspace : QXMdiArea
             return nilptr;
         }
 
-        void setModifyMonitorAutoLoad() {
+        void setModifyMonitorAutoLoad()override {
             bExternModifyAutoload = true;
         }
 
-        void restoreModifyMonitorAutoLoad() {
+        void restoreModifyMonitorAutoLoad() override{
             bExternModifyAutoload = false;
         }
 
-        bool addMenu(int mainid, String name, String text, String icon,String shortcut, IXPlugin plugin) {
+        bool addMenu(int mainid, String name, String text, String icon,String shortcut, IXPlugin plugin) override{
             return QxApp._theApp.menuMgr.addMenu(mainid, name, text, icon, shortcut, plugin);
         }
 
-        void RunOnUi(UIRunnable r) {
+        void RunOnUi(UIRunnable r) override{
             runOnUi( new Runnable() {
                 void run() {
                     r.run();
                 }
             });
+        }
+        
+        bool createRemoteDebug(String ip, int port)override{
+            if (_debugThread != nilptr) {
+                return false;
+            }
+            return connectRemoteDebug(ip, port);
+        }
+        bool run()override{
+            return Run();
+        }
+        bool stopRun()override{
+            XWorkspace.this.stopRun();
+            return true;
+        }
+        
+        BuildListener.BuildState buildCurrentProject(BuildListener lis)override{
+            return XWorkspace.this.build(lis);
+        }
+        
+        QXMainWindow getMainWindow(){
+            return mainWindow;
+        }
+        
+        IProject getCurrentProject(){
+            return currentProject;
+        }
+        
+        void showStatusMessage(String text){
+            StatusBarMgr.showStatusMessage(text);
+        }
+        void showWaitProgress(String text){
+            StatusBarMgr.showWaitProgress(text);
+        }
+        void showProgress(String text, int value){
+            StatusBarMgr.showProgress(text,value);
+        }
+        void updateProgress(String text, int value){
+            StatusBarMgr.updateProgress(text,value);
+        }
+        void hideProgress(String text){
+            StatusBarMgr.hideProgress(text);
         }
     };
 
@@ -294,12 +360,12 @@ class XWorkspace : QXMdiArea
         }
 
     }
-    bool loadProject(String file)
+    Project loadProject(String file)
     {
         lastBuildSuccess = false;
         if (currentProject != nilptr) {
             QXMessageBox.Critical("注意", "当前工作空间已经打开一个项目, 请先关闭已有项目", QXMessageBox.Ok, QXMessageBox.Ok);
-            return false;
+            return nilptr;
         }
         Project project = new Project();
         if (project.loadWorkspace(file, false)) {
@@ -316,11 +382,11 @@ class XWorkspace : QXMdiArea
                 showComment();
             }
             Utils.chechUpdate(1);
-            return true;
+            return project;
         } else {
             QXMessageBox.Critical("失败", "不是有效的项目文件:" + file, QXMessageBox.Ok, QXMessageBox.Ok);
         }
-        return false;
+        return nilptr;
     }
 
 
@@ -397,7 +463,6 @@ class XWorkspace : QXMdiArea
 
     bool requestQuit()
     {
-        
         bool bclose = true;
         if (currentProject != nilptr) {
             if (currentProject.isModified()) {
@@ -417,13 +482,13 @@ class XWorkspace : QXMdiArea
         }
         
         if (bclose){
-            if (PackageViewer.hasDownload()){
-                int rt = QXMessageBox.Question("提示","包管理中仍有任务在进行中,是否继续退出?",  QXMessageBox.Yes | QXMessageBox.No , QXMessageBox.No);
+            if (DownloadCenter.hasDownload()){
+                int rt = QXMessageBox.Question("提示","有下载任务在进行中,是否继续退出?",  QXMessageBox.Yes | QXMessageBox.No , QXMessageBox.No);
                 if (rt == QXMessageBox.Yes){
-                    PackageViewer.stopAlldownload();
+                    DownloadCenter.stopAlldownload();
                 }else{
                     bclose = false;
-                    PackageViewer.Show();
+                    StatusBarMgr.showDLMgr();
                 }
             }
         }
@@ -432,7 +497,14 @@ class XWorkspace : QXMdiArea
     void openOutput()
     {
         if (currentProject != nilptr) {
-            String uri = currentProject.getOutputDir();
+            String uri = PluginsController.getProjectTargetPath(currentProject);
+            
+            if (uri == nilptr){
+                uri = currentProject.getOutputDir();
+            }else{
+                uri = uri.findVolumePath();
+            }
+            
             if (uri != nilptr) {
                 QXCore.openLocal(uri);
             }
@@ -527,7 +599,7 @@ class XWorkspace : QXMdiArea
             if (_debugThread == nilptr) {
                 XWorkspace.updateDebugStatus(true);
                 if (false == debuggee.createDebugServer(_builder, port)) {
-                    _builder.OutputText("\n无法创建调试端口!\n");
+                    _builder.OutputText("\n无法创建调试端口!\n", 1);
                 } else {
                     _debugThread = new Thread() {
                         void run() {
@@ -575,7 +647,7 @@ class XWorkspace : QXMdiArea
     void doOpen()
     {
         String file = Recently.getLastPath();
-        file = QXFileDialog.getOpenFileName("打开文件", file,  "X 项目(*.xprj);;X 模块源文件(*.xcs *.xcsm);;Qt UI文件(*.ui);;X 模块源文件(*.xcs *.xcsm);;Make File(makefile);;C/C++ 源文件(*.cpp *.c *.cc *.cxx *.hpp *.h *.mm);;html 网页(*.htm *.html);;纯文本文件 (*.txt);;其他文件 (*.*)", this);
+        file = QXFileDialog.getOpenFileName("打开文件", file,  "X 项目(*.xprj);;X 模块源文件(*.x *.xcs *.xcsm);;Qt UI文件(*.ui);;X 模块源文件(*.x *.xcs *.xcsm);;Make File(makefile);;C/C++ 源文件(*.cpp *.c *.cc *.cxx *.hpp *.h *.mm);;html 网页(*.htm *.html);;纯文本文件 (*.txt);;其他文件 (*.*)", this);
         openFile(file);
     }
 
@@ -702,7 +774,7 @@ class XWorkspace : QXMdiArea
             stopRun();
             cfgSel.clear();
             slnView.clear();
-            _builder.clear(false);
+            _builder.clearAll(false);
             XWndClass.wndClass.clear();
             currentProject.xintelliSenseMap = nilptr;
             currentProject.root = nilptr;
@@ -721,6 +793,16 @@ class XWorkspace : QXMdiArea
         return true;
     }
 
+    void openExtMgr(){
+        QXDialog newDlg = new QXDialog();
+        if (newDlg.load("ui/extmgr.ui") == false) {
+            return ;
+        }
+        ExtensionManager extmgrwin = new ExtensionManager();
+        extmgrwin._workspace = this;
+        extmgrwin.attach(newDlg);
+
+    }
     bool showAllWindows()
     {
         QXDialog newDlg = new QXDialog();
@@ -746,7 +828,7 @@ class XWorkspace : QXMdiArea
             for (int i =0, c = currentProject.getSourceFileCount(); i < c; i++) {
                 String file = currentProject.getSourcePath(i);
                 if (XSourceEditor.findSaveFile(file)) {
-                    QxApp.statusBar.statusBar.showMessage(file + "已保存.");
+                    QxApp.statusBar.showStatusMessage(file + "已保存.");
                     bSaveModified = true;
                 }
             }
@@ -764,7 +846,7 @@ class XWorkspace : QXMdiArea
 
     bool lastBuildSuccess = false;
 
-    void build()
+    BuildListener.BuildState build(BuildListener lis)
     {
         if (currentProject != nilptr) {
             bool bNeedCompile = false;
@@ -785,11 +867,18 @@ class XWorkspace : QXMdiArea
                 build_project(_builder, new BuildListener() {
                     void onBuild(bool b) {
                         lastBuildSuccess = b;
+                        if (lis != nilptr){
+                            lis.onBuild(b);
+                        }
                     }
                 }, nilptr);
+                return BuildListener.BuildState.BuildPending;
             } else {
-                _builder.OutputText(target + "\n自上次编译以来没有检测到任何改动,请使用[清理]命令后重新编译.\n");
+                _builder.OutputText(target + "\n自上次编译以来没有检测到任何改动,请使用[清理]命令后重新编译.\n", 0);
             }
+            return BuildListener.BuildState.BuildSkip;
+        }else{
+            return BuildListener.BuildState.BuildFailed;
         }
     }
 
@@ -826,7 +915,7 @@ class XWorkspace : QXMdiArea
             } catch(Exception e) {
                 QXMessageBox.Critical("错误","无法写入文件:" + file,QXMessageBox.Ok,QXMessageBox.Ok);
             }
-            XWndOutput.Output("已生成:" + file);
+            XWndOutput.Output("已生成:" + file, 0);
         }
     }
 
@@ -836,10 +925,10 @@ class XWorkspace : QXMdiArea
             closeIndexPage();
             for (int i = 0; i < files.length; i++) {
                 String file = String.formatPath(files[i], false);
-                _builder.OutputText("安装:" + file + " ...\n");
+                _builder.OutputText("安装:" + file + " ...\n", 0);
                 installPlugin(file);
             }
-            _builder.OutputText("已安装:" + files.length + "插件\n");
+            _builder.OutputText("已安装:" + files.length + "插件\n", 0);
             PluginsController.initPlugins(QxApp._theApp._xstudio_controller);
         }
     }
@@ -851,10 +940,10 @@ class XWorkspace : QXMdiArea
             closeIndexPage();
             for (int i = 0; i < files.length; i++) {
                 String file = String.formatPath(files[i], false);
-                _builder.OutputText("安装:" + file + " ...\n");
+                _builder.OutputText("安装:" + file + " ...\n", 0);
                 installCompilerExtension(file);
             }
-            _builder.OutputText("已安装:" + files.length + "个编译扩展包\n");
+            _builder.OutputText("已安装:" + files.length + "个编译扩展包\n", 0);
         }
     }
 
@@ -918,7 +1007,7 @@ class XWorkspace : QXMdiArea
                 FileOutputStream fos = new FileOutputStream(file);
                 fos.write(root.toString(true).getBytes());
                 fos.close();
-                _builder.OutputText("安装扩展: 操作系统支持:" + xcross.toString(false) + ", 架构支持:" + archs.toString(false) + "\n");
+                _builder.OutputText("安装扩展: 操作系统支持:" + xcross.toString(false) + ", 架构支持:" + archs.toString(false) + "\n", 0);
                 return true;
             }
         } catch(Exception e) {
@@ -1108,7 +1197,7 @@ class XWorkspace : QXMdiArea
     void build_project(IBuilder _builder, BuildListener l, XlangProjectProp.BuildParams params)
     {
         if (currentProject != nilptr) {
-
+            
             if (isDebugging() || _run_thread != nilptr) {
                 int rt = QXMessageBox.Question("注意", "程序正在运行, 是否关闭并继续?", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Cancel);
                 if (rt == QXMessageBox.Cancel) {
@@ -1229,7 +1318,7 @@ class XWorkspace : QXMdiArea
     void Copy()
     {
         if (XWndOutput.inFocus()){
-            XWndOutput.outputWnd._sci.Copy();
+            XWndOutput.outputWnd.Copy();
             return;
         }
         XSourceEditor wnd = (XSourceEditor)currentSubWindow();
@@ -1347,6 +1436,13 @@ class XWorkspace : QXMdiArea
             if (_run_thread != nilptr) {
                 XWorkspace.this.currentProject.stopRun();
             } else if (isDebugging()) {
+            
+                int rt = QXMessageBox.Question("提示","是否终止运行调试客户端程序?, 点 [No] 仅分离调试器, 客户端程序将继续运行.",  QXMessageBox.Yes | QXMessageBox.No , QXMessageBox.Yes);
+                
+                if (rt == QXMessageBox.Yes){
+                    debuggee.dbgSendExit();
+                    Thread.sleep(50);
+                }
                 debuggee.close();
             }
         }
@@ -1421,7 +1517,7 @@ class XWorkspace : QXMdiArea
                     void run() {
                         thread_updateWindowTitle(3);
                         if (false == debuggee.connect(_builder, ip, port)) {
-                            _builder.OutputText("\n无法连接到远程调试端口!\n");
+                            _builder.OutputText("\n无法连接到远程调试端口!\n", 1);
                         }
 
                         XWorkspace.updateDebugStatus(false);
@@ -1499,7 +1595,10 @@ class XWorkspace : QXMdiArea
                     _run_thread = new Thread() {
                         void run() {
                             thread_updateWindowTitle(1);
-                            XWorkspace.this.currentProject.debugRun(XWorkspace.this._builder);
+                            if (PluginsController.callProjectPlugin(currentProject,4)){
+                                XWorkspace.this.currentProject.debugRun(XWorkspace.this._builder);
+                                PluginsController.callProjectPlugin(currentProject,5);
+                            }
                             XWorkspace.this._run_thread = nilptr;
                             thread_updateWindowTitle(0);
                         }
@@ -1520,7 +1619,7 @@ class XWorkspace : QXMdiArea
             debuggee.continuerun(ThreadManager.currentThreadId);
         } else if (currentProject != nilptr) {
             String target = currentProject.getOutputTarget();
-            _builder.OutputText("正在检测代码改动...\n");
+            _builder.OutputText("正在检测代码改动...\n", 0);
             if (_run_thread == nilptr && (lastBuildSuccess == false || saveAllFile() || (XPlatform.existsSystemFile(target) == false) || currentProject.detectSourcesModified() )) {
                 build_project(_builder, new BuildListener() {
                     void onBuild(bool b) {
@@ -1547,7 +1646,10 @@ class XWorkspace : QXMdiArea
                         void run() {
                             thread_updateWindowTitle(2);
                             XWorkspace.updateRunStatus(true);
-                            XWorkspace.this.currentProject.Run(XWorkspace.this._builder);
+                            if (PluginsController.callProjectPlugin(currentProject,2)){
+                                XWorkspace.this.currentProject.Run(XWorkspace.this._builder);
+                                PluginsController.callProjectPlugin(currentProject,3);
+                            }
                             XWorkspace.this._run_thread = nilptr;
                             XWorkspace.updateRunStatus(false);
                             thread_updateWindowTitle(0);
@@ -1559,11 +1661,11 @@ class XWorkspace : QXMdiArea
         }
     }
 
-    void Run()
+    bool Run()
     {
         if (currentProject != nilptr) {
             String target = currentProject.getOutputTarget();
-            _builder.OutputText("正在检测代码改动...\n");
+            _builder.OutputText("正在检测代码改动...\n", 0);
             if (_run_thread == nilptr && (lastBuildSuccess == false || saveAllFile() || (XPlatform.existsSystemFile(target) == false) || currentProject.detectSourcesModified() )) {
                 build_project(_builder, new BuildListener() {
                     void onBuild(bool b) {
@@ -1578,7 +1680,9 @@ class XWorkspace : QXMdiArea
                     runApp();
                 }
             }
+            return true;
         }
+        return false;
     }
 
     static const int NOTIFY_DEBUG_START = 0x100;
@@ -1754,16 +1858,16 @@ class XWorkspace : QXMdiArea
         runOnUi(new Runnable() {
             void run()override {
                 if (Setting.isIntellisense()) {
-                    QxApp.statusBar.statusBar.showMessage("XIntelliSense 结束.");
+                    QxApp.statusBar.showStatusMessage("XIntelliSense 结束.");
                 } else {
-                    QxApp.statusBar.statusBar.showMessage("XIntelliSense 未启用.");
+                    QxApp.statusBar.showStatusMessage("XIntelliSense 未启用.");
                 }
             }
         });
     }
     bool XIntelliSense(XSourceEditor editor, String originalName,String content,long position)
     {
-        QxApp.statusBar.statusBar.showMessage("正在运行 XIntelliSense...");
+        QxApp.statusBar.showStatusMessage("正在运行 XIntelliSense...");
         synchronized(xintellisencelock) {
             Project project = currentProject;
             if ((_autoComp_thread == nilptr) && (project != nilptr)) {
@@ -1780,7 +1884,7 @@ class XWorkspace : QXMdiArea
                 return true;
             }
         }
-        //QxApp.statusBar.statusBar.showMessage("XIntelliSense 失败");
+        //QxApp.statusBar.showStatusMessage("XIntelliSense 失败");
         return false;
 
     }
@@ -1789,15 +1893,15 @@ class XWorkspace : QXMdiArea
     void addObject(int id)
     {
         if (id == 0) {
-            String []files = QXFileDialog.getOpenFileNames("添加已有文件", nilptr,  "X 模块源文件(*.xcs *.xcsm);;Qt UI文件(*.ui);;X 模块源文件(*.xcs *.xcsm);;Make File(makefile);;C/C++ 源文件(*.cpp *.c *.cc *.cxx *.hpp *.h *.mm);;html 网页(*.htm *.html);;纯文本文件 (*.txt);;其他文件 (*.*)", this);
+            String []files = QXFileDialog.getOpenFileNames("添加已有文件", nilptr,  "X 模块源文件(*.x *.xcs *.xcsm);;Qt UI文件(*.ui);;X 模块源文件(*.x *.xcs *.xcsm);;Make File(makefile);;C/C++ 源文件(*.cpp *.c *.cc *.cxx *.hpp *.h *.mm);;html 网页(*.htm *.html);;纯文本文件 (*.txt);;其他文件 (*.*)", this);
             if (files != nilptr && files.length > 0) {
 
                 for (int i =0; i < files.length; i++) {
                     String file = String.formatPath(files[i], false);
                     currentProject.addSource(file);
-                    _builder.OutputText("添加:" + file + "\n");
+                    _builder.OutputText("添加:" + file + "\n", 0);
                 }
-                _builder.OutputText("已添加:" + files.length + "个文件\n");
+                _builder.OutputText("已添加:" + files.length + "个文件\n", 0);
             }
         } else {
             AddObjectDlg.requestAddObject(currentProject, id);
@@ -1820,7 +1924,7 @@ class XWorkspace : QXMdiArea
                 return true;
             }
         }
-        //QxApp.statusBar.statusBar.showMessage("XIntelliSense 失败");
+        //QxApp.statusBar.showStatusMessage("XIntelliSense 失败");
         return false;
     }
 
@@ -1829,7 +1933,7 @@ class XWorkspace : QXMdiArea
     bool XIntelliSense()
     {
         if (currentProject != nilptr) {
-            QxApp.statusBar.statusBar.showMessage("正在运行 XIntelliSense...");
+            QxApp.statusBar.showStatusMessage("正在运行 XIntelliSense...");
             synchronized(xintellisencelock) {
                 if (_autoComp_thread == nilptr) {
                     _autoComp_thread = new Thread() {
@@ -1854,7 +1958,7 @@ class XWorkspace : QXMdiArea
                     return true;
                 }
             }
-            //QxApp.statusBar.statusBar.showMessage("XIntelliSense 失败");
+            //QxApp.statusBar.showStatusMessage("XIntelliSense 失败");
         }
         return false;
     }
@@ -2072,25 +2176,25 @@ class XWorkspace : QXMdiArea
                         if (b){
                             runOnUi(new Runnable(){
                                 void run()override{
-                                    _builder.OutputText("\n开始部署..\n");
+                                    _builder.OutputText("\n开始部署..\n", 0);
                                     String deploy_target = String.formatPath(deploy_path.appendPath(project.getOutputName()), false);
                                     bool bcopyed = XlangProjectProp.copyFile(target, deploy_target);
-                                    _builder.OutputText("\n拷贝文件:" + target + "..." + bcopyed + "\n");
+                                    _builder.OutputText("\n拷贝文件:" + target + "..." + bcopyed + "\n", 0);
                                     project.deployto(deploy_path);
-                                    _builder.OutputText("\已部署到位置:" + deploy_path + "\n");
+                                    _builder.OutputText("\已部署到位置:" + deploy_path + "\n", 0);
                                 }
                             });
                         }
                     }
                 }, nilptr);
             } else {
-                _builder.OutputText(target + "\n自上次编译以来没有检测到任何改动,请使用[清理]命令后重新编译.\n");
-                _builder.OutputText("\n开始部署..\n");
+                _builder.OutputText(target + "\n自上次编译以来没有检测到任何改动,请使用[清理]命令后重新编译.\n", 0);
+                _builder.OutputText("\n开始部署..\n", 0);
                 String deploy_target = String.formatPath(deploy_path.appendPath(project.getOutputName()), false);
                 bool bcopyed = XlangProjectProp.copyFile(target, deploy_target);
-                _builder.OutputText("\n拷贝文件:" + target + "..." + bcopyed + "\n");
+                _builder.OutputText("\n拷贝文件:" + target + "..." + bcopyed + "\n", 0);
                 project.deployto(deploy_path);
-                _builder.OutputText("\已部署到位置:" + deploy_path + "\n");
+                _builder.OutputText("\已部署到位置:" + deploy_path + "\n", 0);
             }
             
 

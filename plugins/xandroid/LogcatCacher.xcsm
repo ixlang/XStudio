@@ -1,0 +1,124 @@
+//xlang Source, Name:LogcatCacher.xcsm 
+//Date: Sun Dec 16:27:51 2019 
+
+class LogcatCacher{
+    static String [] locat_args = {"logcat", "-v", "threadtime","*:V"};
+    static int logcat_level = 0;
+    Process process;
+    Object exitlock = new Object();
+    bool bexit = false;
+    Thread logthread = nilptr;
+    
+    void run(){
+        synchronized(exitlock){
+            if (logthread == nilptr){
+                bexit = false;
+                logthread = new Thread(){
+                    void run()override{
+                        while (bexit == false){
+                            Thread.sleep(1000);
+                            start_logcat();
+                        }
+                        synchronized(exitlock){
+                            logthread = nilptr;
+                        }
+                    }
+                };
+                logthread.start();
+            }
+        }
+    }
+    
+    void start_logcat(){
+        ByteBuffer buffer = new ByteBuffer();
+        XAndroid.ProcessStream ps =  new XAndroid.ProcessStream(){
+            void onStreamOut(byte [] data, int pos, int len){
+                buffer.append(data, pos, len);
+                String line = buffer.getLine();
+                while ((line != nilptr) && (XAndroid.workspace != nilptr)){
+                    if (line.endWith("\r\n")){
+                        line = line.substring(0, line.length() - 2) + "\n";
+                    }
+                    XAndroid.workspace.output(line,XAndroid.output_id);
+                    line = buffer.getLine();
+                }
+            }
+        };
+        
+        String adbpath = XAndroid.getAdbPath();
+        if ((adbpath != nilptr) && (adbpath.length() > 0)){
+            String [] __args;
+            int ai = 0;
+            
+            if (XAndroid.defaultDevice != nilptr){
+                __args = new String[locat_args.length  +3];
+                __args[ai++] = "adb";
+                __args[ai++] = "-s";
+                __args[ai++] = XAndroid.defaultDevice;
+            }else{
+                __args = new String[locat_args.length  +1];
+                __args[ai++] = "adb";
+            }
+            
+            for (int i = 0; i < locat_args.length ;i++){
+                __args[ai++] = locat_args[i];
+            }
+            execute_logcat(adbpath, XPlatform.getAppDirectory(), __args,  ps);
+        }
+    }
+    
+    bool LogcatEnabled(){
+        return !bexit;
+    }
+    
+    void setLogcatEnabled(bool b){
+        if (b){
+            run();
+        }else{
+            Exit();
+        }
+    }
+    
+    
+    void setLogcatLevel(int level){
+        String [] strLevel = {"*:V", "*:D", "*:I", "*:W", "*:E", "*:F"};
+        if (level >= 0 && level < 6){
+            logcat_level = level;
+            String [] args = {"logcat", "-v", "threadtime",strLevel[level]};
+            locat_args = args;
+            rerun();
+        }
+    }
+    
+    void Exit(){
+        bexit = true;
+        if (process != nilptr){
+            process.exit(1);
+        }
+    }
+    
+    void rerun(){
+        if (process != nilptr){
+            process.exit(1);
+        }
+    }
+    
+    bool execute_logcat(String app,String workdir, String [] _args, XAndroid.ProcessStream ps){
+        process = new Process(app , _args);
+        process.setWorkDirectory(workdir);
+        try{
+            if (process.create(false, true, false, false)) {
+                XAndroid.readForProcess(ps, process);
+                process.waitFor(-1);
+                process = nilptr;
+                return true;
+            } else {
+                
+            }
+        }catch(Exception e){
+
+        }
+        return false;
+    }
+    
+};

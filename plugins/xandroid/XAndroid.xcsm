@@ -1,0 +1,1549 @@
+//xlang Source, Name:XAndroid.xcsm 
+//Date: Mon Dec 15:24:40 2019 
+
+class XAndroid : IXPlugin{
+    static String ADBNAME = (_system_.getPlatformId()== 0 ?  "adb.exe" : "adb");
+    static String AIDLNAME = (_system_.getPlatformId()== 0 ?  "aidl.exe" : "aidl");
+    static String AAPTNAME = (_system_.getPlatformId()== 0 ?  "aapt.exe" : "aapt");
+    static String DXTNAME = (_system_.getPlatformId()== 0 ?  "dx.bat" : "dx");
+    static String ANDROID_NAME = (_system_.getPlatformId()== 0 ?  "android.bat" : "android");
+    static String JARSIGNER = (_system_.getPlatformId()== 0 ?  "jarsigner.exe" : "jarsigner");
+    static String NDKBUILDNAME = (_system_.getPlatformId()== 0 ?  "ndk-build.cmd" : "ndk-build");
+    static String ZIPALIGNNAME = (_system_.getPlatformId()== 0 ?  "zipalign.exe" : "zipalign");
+    String JAVACNAME = (_system_.getPlatformId()== 0 ?  "javac.exe" : "javac");
+    String JAVANAME = (_system_.getPlatformId()== 0 ?  "java.exe" : "java");
+    static IXStudioController xcontroller;
+    static WorkspaceController workspace;
+    static QXMainWindow _mainWindow;
+    static String defaultDevice;
+    static JsonObject wizard ;
+    static int output_id = -1;
+    static String qxappuuid = "9fa3bf24-824a-5a4e-3b5c-916686b0ee05";
+    static String cocosandroid = "9c24b7d4-7c64-65c2-cf89-6146232d2754";
+    static LogcatCacher logcater = new LogcatCacher();
+    
+    static int port_serial = 30000;
+    static String java_sdk_root, android_sdk_root, android_ndk_root, api_level, build_tools;
+    ProjectPlugin _projplugin = new ProjectPlugin();
+    
+    String getName()override{
+        return "xandroid";
+    }
+    
+    static String checkBuildTools(){
+        if (java_sdk_root == nilptr || java_sdk_root.length() == 0){
+            return "未设置 JDK 路径";
+        }
+        if (android_sdk_root == nilptr || android_sdk_root.length() == 0){
+            return "未设置 Android SDK 路径";
+        }
+        if (api_level == nilptr || api_level.length() == 0){
+            return "没有选择用于构建安卓App的 Api";
+        }
+        if (build_tools == nilptr || build_tools.length() == 0){
+            return "找不到可用于构建安卓App的 BuildTools";
+        }
+        return nilptr;
+    }
+    
+    static void setLogcatEnable(bool b){
+        logcater.setLogcatEnabled(b);
+    }
+    
+    static bool LogcatEnabled(){
+        return logcater.LogcatEnabled();
+    }
+    
+    static void setLogcatLevel(int level){
+        logcater.setLogcatLevel(level);
+    }
+    
+    static bool copyFile(String dest, String src){
+        FileOutputStream fos;
+        FileInputStream fis ;
+        try{
+
+			fos = new FileOutputStream(dest);
+			fis = new FileInputStream(src);
+			
+			byte [] data = new byte[1024];
+			
+			int readed = 0;
+			while ((readed = fis.read(data, 0, 1024)) > 0){
+				fos.write(data, 0, readed);
+			}
+			
+			return true;
+        }catch(Exception e){
+        
+        }finally{
+            if (fos != nilptr){
+                fos.close();
+            }
+            if (fis != nilptr){
+                fis.close();
+            }
+        }
+        return false;
+    }
+    
+    class ProjectPlugin : IProjectPlugin{
+        String getWizard(bool projectExist){
+            return wizard.toString(false);
+        }
+        bool createProject(WizardLoader loader, String projectName, String projectDir, String uuid, IProject ownProject, bool addToProject){
+            if (uuid.equals(qxappuuid) || uuid.equals(cocosandroid) ){
+                showForNewProject(loader, projectName, projectDir, uuid, ownProject, addToProject);
+                return true;
+            }
+            return false;
+        }
+        bool onpreCompile(IProject project){
+            return true;
+        }
+        String getTargetPath(IProject project){
+            Configure cfg = project.getCurrentConfig();
+            String projName = project.getName(), configName = cfg.getName();
+            String key = cfg.getOption("ostype");
+            if (key != nilptr && key.equals("-xcross-androidapp")){
+                String prodir = project.getProjectDir().appendPath("android");
+                return String.formatPath(prodir.appendPath(configName).appendPath(projName + ".apk"), false);
+            }
+            return nilptr;
+        }
+        void onpostCompile(IProject project){
+            Configure cfg = project.getCurrentConfig();
+            String key = cfg.getOption("ostype");
+            String debugable = cfg.getOption("debugable");
+            if (key != nilptr && key.equals("-xcross-androidapp")){
+                String target = project.getOutputTarget();
+                if (XPlatform.existsSystemFile(target)){ 
+                    //String projName, String configName, String projectDir, int apilevel
+                    if (false == compileApk( project, project.getName(), cfg.getName(), project.getProjectDir().appendPath("android"), (debugable != nilptr) && debugable.equals("-dbg"))){
+                        new FSObject(target).remove();
+                    }
+                }
+            }
+        }
+        bool onpreRun(IProject project, bool debug){
+            Configure cfg = project.getCurrentConfig();
+            String key = cfg.getOption("ostype");
+            
+            if (key != nilptr && key.equals("-xcross-androidapp")){
+                installAndRunApk(project, project.getName(), cfg.getName(), project.getProjectDir().appendPath("android"), debug);
+                return false;
+            }
+            
+            return true;
+        }
+        void onpostRun(IProject project, bool debug){
+          
+        }
+    };
+    
+    void onTextEditorCreated(TextEditorController)override{
+        
+    }
+    
+    void onTextEditorClosed(TextEditorController)override{
+        
+    }
+    
+    static void setDefaultDevice(String serial){
+        defaultDevice = serial;
+        saveConfig();
+        logcater.rerun();
+    }
+    
+    static void saveConfig(){
+        String apppath = XPlatform.getAppDirectory().appendPath("plugins").appendPath("xandroid");
+        String sdkconf  = apppath.appendPath("sdk.conf");
+        
+        JsonObject root = new JsonObject();
+        
+        
+        if (java_sdk_root != nilptr){
+            root.put("java", java_sdk_root);
+        }
+        if (android_sdk_root != nilptr){
+            root.put("sdk", android_sdk_root);
+        }
+        if (android_ndk_root != nilptr){
+            root.put("ndk", android_ndk_root);
+        }
+        if (defaultDevice != nilptr){
+            root.put("device", defaultDevice);
+        }
+        if (api_level != nilptr){
+            root.put("api_level", api_level);
+        }
+        if (build_tools != nilptr){
+            root.put("build_tools", build_tools);
+        }
+        FileStream.FileOutputStream fos;
+        try{
+            fos = new FileStream.FileOutputStream(sdkconf);
+            fos.write(root.toString(false).getBytes());
+            fos.close();
+        }catch(Exception e){ 
+            QXMessageBox.Critical("注意","无法保存配置文件",QXMessageBox.Ok,QXMessageBox.Ok);
+        }finally{
+            if (fos != nilptr){
+                fos.close();
+            }
+        }
+    }
+    
+    static void loadConfig(){
+        String apppath = XPlatform.getAppDirectory().appendPath("plugins").appendPath("xandroid");
+        String sdkconf  = apppath.appendPath("sdk.conf");
+        try {
+            FileInputStream fis = new FileInputStream(sdkconf);
+            byte [] data = fis.read();
+            String args = new String(data);
+            JsonObject json = new JsonObject(args);
+            if (json.has("java")){
+                java_sdk_root = json.getString("java");
+            }
+            if (json.has("sdk")){
+                android_sdk_root = json.getString("sdk");
+            }
+            if (json.has("ndk")){
+                android_ndk_root = json.getString("ndk");
+            }
+            if (json.has("device")){
+                defaultDevice = json.getString("device");
+            }
+            if (json.has("api_level")){
+                api_level = json.getString("api_level");
+            }
+            if (json.has("build_tools")){
+                build_tools = json.getString("build_tools");
+            }
+            
+        } catch(Exception e) {
+
+        }
+    }
+    
+    
+    static bool extartToDir(String zfile, String dir, String projName, String appName, String packageName) {
+
+        FileInputStream fis;
+        
+        XPlatform.mkdir(dir);  
+        
+        try {
+            fis = new FileInputStream(zfile);
+        } catch(Exception e) {
+            return false;
+        }
+
+        bool bSuccess = true;
+        ZipArchive zs = new ZipArchive();
+        if (zs.open(fis)) {
+            int c = zs.getEntriesCount();
+            for (int i =0; i < c; i ++) {
+                ZipEntry entry = zs.getEntry(i);
+                if (bSuccess == false) {
+                    break;
+                }
+                String entryName = entry.getName();
+                entryName = entryName.replace("${ProjectName}", projName);
+
+                String path = String.formatPath(dir.appendPath(entryName), false);
+
+                if (entry.isDirectory() == false) {
+                    ZipFile file = entry.getFile();
+
+                    byte []buf = new byte[1024];
+                    int rd = 0;
+                    if (file.open()) {
+                        if (path.endWith("AndroidManifest.xml") || path.endWith("strings.xml") || path.endWith(".xprj")){
+                            ByteBuffer bf = new ByteBuffer();
+                            while ((rd = file.read(buf, 0, 1024)) != 0) {
+                                bf.append(buf, 0, rd);
+                            }
+                            
+                            String content = new String(bf.getData(), 0, bf.getLength());
+                            content = content.replace("${ProjectName}", projName).replace("${app_name}", appName).replace("${package_name}", packageName);
+                            
+                            long filehandler = XPlatform.openSystemFile(path, "w");
+                            if (filehandler != 0) {
+                                byte [] data_txt = content.getBytes();
+                               _system_.writeFile(filehandler, data_txt, 0, data_txt.length);
+                               _system_.closeFile(filehandler);
+                            } else {
+                                bSuccess = false;
+                            }
+                        }else{
+                            long filehandler = XPlatform.openSystemFile(path, "w");
+                            if (filehandler != 0) {
+                                while ((rd = file.read(buf, 0, 1024)) != 0) {
+                                    _system_.writeFile(filehandler, buf, 0, rd);
+                                }
+                                _system_.closeFile(filehandler);
+                            } else {
+                                bSuccess = false;
+                            }
+                        }
+                        file.close();
+                    } else {
+                        bSuccess = false;
+                    }
+                } else {
+                    XPlatform.mkdir(path);
+                }
+            }
+            zs.close();
+        } else {
+            bSuccess = false;
+        }
+
+        return bSuccess;
+    }
+    
+    static bool createQXAndroidApp(WizardLoader loader, String projectName, String projectDir, String uuid, IProject ownProject, bool addToProject,String appName, String packageName){
+        String apputemp = String.formatPath(XPlatform.getAppDirectory().appendPath("plugins").appendPath("xandroid").appendPath("androidapp.utmp"), false);
+        if (uuid.equals(cocosandroid)){
+            apputemp = String.formatPath(XPlatform.getAppDirectory().appendPath("plugins").appendPath("xandroid").appendPath("androidgame.utmp"), false);
+        }
+        String destDir = String.formatPath(projectDir.appendPath(projectName), false);
+        String xprojName = String.formatPath(projectDir.appendPath(projectName).appendPath(projectName + ".xprj"), false);
+        
+        if (extartToDir(apputemp, destDir, projectName, appName, packageName)){
+            IProject project = loader.loadProject(xprojName);
+            if (project != nilptr){
+                String packsimport =  uuid.equals(cocosandroid) ? "cocos2dx":"Qt5.9.1";
+                project.setOption("uuid", uuid);
+                if (false == project.importPackage(packsimport, nilptr)){
+                    workspace.output("没有找到包[" + packsimport + "], 请前往[工具]->[包管理]查看并安装.", 0);
+                }else{
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+    
+    void checkFirstRun(){
+        String apppath = XPlatform.getAppDirectory().appendPath("plugins").appendPath("xandroid");
+        String firstconf  = String.formatPath(apppath.appendPath("x.conf"), false);
+        String xepfile  = String.formatPath(apppath.appendPath("xandroid.xep"), false);
+        if (XPlatform.existsSystemFile(firstconf) == false){
+            workspace.installXep(xepfile);
+            try{
+                new FileOutputStream(firstconf).close();
+            }catch(Exception e){
+            }
+        }
+    }
+    bool onExit(){
+        logcater.Exit();
+        return true;
+    }
+    long getVersion(){
+        return 1000;
+    }
+    String getDescrition(){
+        return "用于安卓平台应用和基于Cocos-2dx安卓游戏的开发扩展.";
+    }
+    String publisher(){
+        return "https://github.com/ixlang/xlibraries";
+    }
+    String getIcon(){
+        return Resources.sdk_setting;
+    }
+    void uninstall(IXStudioController){
+        
+    }
+    bool initializPlusin(IXStudioController controller, bool enabled)override{
+        xcontroller = controller;
+        workspace = xcontroller.getWorkspace();
+        _mainWindow = workspace.getMainWindow();
+        if (enabled == false){
+            return true;
+        }
+        workspace.addMenu(4, "", "-", nilptr, nilptr, this);
+        workspace.addMenu(4, "xandroid_setting", "Android SDK设置", Resources.sdk_setting,nilptr, this);
+        workspace.addMenu(4, "_xandroid_devide", "Android 设备", Resources.thumb_png, nilptr, this);
+        workspace.addMenu(4, "", "-", nilptr, nilptr, this);
+        workspace.addMenu(4, "xandroid_manager", "Android SDK Manager", Resources.sdk_setting,nilptr, this);
+        workspace.addMenu(4, "", "-", nilptr, nilptr, this);
+        workspace.addMenu(4, "xandroid_addxnl", "增加 XNL 支持", "res/toolbar/class.png" ,nilptr, this);
+        output_id = workspace.registryOutput(Resources.sdk_setting);
+        wizard = new JsonObject();
+        JsonObject Navigation = new JsonObject();
+        JsonObject project = new JsonObject();
+        JsonArray Xlang = new JsonArray();
+        
+        JsonObject mobile = new JsonObject();
+        mobile.put("name", "QXAndroid App开发");
+        mobile.put("uuid", qxappuuid);
+        mobile.put("language", "xlang");
+        mobile.put("icon", "plugins/xandroid/sdk_setting.png");
+        mobile.put("platform", "Android(armeabi-va7, x86)");
+        mobile.put("details", "适用于安卓设备的应用");
+        Xlang.put(mobile);
+        
+        mobile = new JsonObject();
+        mobile.put("name", "Cocos2dx Android游戏开发");
+        mobile.put("uuid", cocosandroid);
+        mobile.put("language", "xlang");
+        mobile.put("icon", "plugins/xandroid/cocos2dx.png");
+        mobile.put("platform", "Android(armeabi-va7, x86)");
+        mobile.put("details", "适用于安卓设备的游戏应用");
+        Xlang.put(mobile);
+        
+        project.put("Xlang 移动应用" , Xlang);
+        Navigation.put("project" , project);
+        wizard.put("Navigation" , Navigation);
+        
+        loadConfig();
+        checkFirstRun();
+        logcater.run();
+        return true;
+    }
+    
+    IProjectPlugin getProjectPlugin()override{
+        return _projplugin;
+    }
+    
+    TextEditorPlugin getTextEditorPlugin()override{
+        return nilptr;
+    }
+    
+    IProject loadProject(JsonObject content, String lang)override{
+        return nilptr;
+    }
+    
+    void onMenuTrigged(String name)override{
+        if (name.equals("xandroid_setting")) {
+            openSettingDialog();
+        }
+        else
+        if (name.equals("_xandroid_devide")) {
+            openDeviceDialog();
+        }
+        else
+        if (name.equals("xandroid_manager")) {
+            openSdkManager();
+        }else
+        if (name.equals("xandroid_addxnl")) {
+            addXnlSupport();
+        }
+        
+    }
+    
+    static bool writeToFile(String file, String content){
+        FileOutputStream fos;
+        try{
+            fos = new FileOutputStream(file);
+            fos.write(content.getBytes());
+            return true;
+        }catch(Exception e){
+            
+        }finally{
+            if (fos != nilptr){
+                fos.close();
+            }
+        }
+        return false;
+    }
+    
+    static void addXnlSupport(){
+        IProject project = workspace.getCurrentProject();
+        if (project == nilptr){
+            QXMessageBox.Critical("注意", "工作区并未载入一个有效项目.", QXMessageBox.Ok, QXMessageBox.Ok);
+            return;
+        }
+        
+        String projectDir = project.getProjectDir();
+        String projName = project.getName();
+        if (projectDir != nilptr){
+            String androidPath = String.formatPath(projectDir.appendPath("android"), false);
+            if (XPlatform.existsSystemFile(androidPath)){
+                String jniPath = String.formatPath(androidPath.appendPath("jni"), false);
+                if (XPlatform.existsSystemFile(jniPath)){
+                    QXMessageBox.Critical("注意", "此项目已支持XNL,请勿重复添加支持.", QXMessageBox.Ok, QXMessageBox.Ok);
+                    return;
+                }else{
+                    String xnl_path = String.formatPath(XPlatform.getAppDirectory().appendPath("xnl").appendPath("xnl.h"), false);
+                    String dest_xnl_path = String.formatPath(jniPath.appendPath("xnl.h"), false);
+                    String android_mk = "LOCAL_PATH := $(call my-dir)\ninclude $(CLEAR_VARS)\nLOCAL_MODULE    := " + projName + "\nLOCAL_SRC_FILES := " + projName + ".cpp\ninclude $(BUILD_SHARED_LIBRARY)";
+                    String source_cpp = "#include <jni.h>\n#include <string.h>\n#include <typeinfo>\n#include \"xnl.h\"\n";
+                    String Application_mk = "TARGET_BUILD_TYPE=release\nAPP_OPTIM := release\nAPP_CPPFLAGS := -O2 -frtti -fPIC \nAPP_STL := c++_static\nAPP_ABI := armeabi-v7a x86\n";
+                    if (new FSObject(jniPath).mkdir()){ 
+                        if (false == writeToFile(jniPath.appendPath(projName + ".cpp"), source_cpp)){
+                            workspace.output("无法写入文件:" + jniPath.appendPath(projName + ".cpp"), 0);
+                            return;
+                        }
+                        if (false == writeToFile(jniPath.appendPath("Android.mk"), android_mk)){
+                            workspace.output("无法写入文件:" + jniPath.appendPath(projName + "Android.mk"), 0);
+                            return;
+                        }
+                        if (false == writeToFile(jniPath.appendPath("Application.mk"), Application_mk)){
+                            workspace.output("无法写入文件:" + jniPath.appendPath(projName + "Application.mk"), 0);
+                            return;
+                        }
+                        if (false == copyFile(dest_xnl_path, xnl_path)){
+                            workspace.output("无法写入文件:" + xnl_path, 0);
+                            return;
+                        }
+                        
+                        project.addSource(jniPath.appendPath(projName + ".cpp"));
+                        workspace.output("已增加jni支持", 0);
+                    }else{
+                        workspace.output("无法建立目录" + jniPath, 0);
+                    }
+                }
+            }else{
+                QXMessageBox.Critical("注意", "此项目不支持Android平台.", QXMessageBox.Ok, QXMessageBox.Ok);
+                return;
+            }
+        }
+    }
+    
+    static void openSdkManager(){
+        String errstr = checkBuildTools();
+        if (android_sdk_root == nilptr || android_sdk_root.length() == 0){    
+            workspace.RunOnUi(new UIRunnable(){
+               void run() override{
+                    QXMessageBox.Critical("注意", "未设置 Android SDK 路径.", QXMessageBox.Ok, QXMessageBox.Ok);
+                    openSettingDialog();
+               }
+            });
+            return ;
+        }
+        
+        String sdkmgr_path = String.formatPath(android_sdk_root.appendPath("tools").appendPath(ANDROID_NAME), false);
+        
+        String [] args = {"update", "sdk"};
+        exec(sdkmgr_path, android_sdk_root, args, false);
+    }
+    
+    static void showForNewProject(WizardLoader loader, String projectName, String projectDir, String uuid, IProject ownProject, bool addToProject){
+        QXDialog newDlg = new QXDialog();
+        newDlg.create();
+        byte [] buffer = __xPackageResource("reqireargs.ui");
+        QXBuffer qb = new QXBuffer();
+        qb.setBuffer(buffer, 0, buffer.length);
+        if (newDlg.load(qb)){
+            AppCreator.create(newDlg, loader, projectName, projectDir, uuid, ownProject, addToProject);
+        }else{
+            QXMessageBox.Critical("错误", "无法创建项目", QXMessageBox.Ok, QXMessageBox.Ok);
+        }
+    }
+    
+    static void openSettingDialog(){
+        QXDialog newDlg = new QXDialog();
+        newDlg.create();
+        byte [] buffer = __xPackageResource("sdk_setting.ui");
+        QXBuffer qb = new QXBuffer();
+        qb.setBuffer(buffer, 0, buffer.length);
+        if (newDlg.load(qb)){
+            AndroidSdkDialog.create(newDlg);
+        }
+    }
+    
+    static void openDeviceDialog(){
+        QXDialog newDlg = new QXDialog();
+        newDlg.create();
+        byte [] buffer = __xPackageResource("devlst.ui");
+        QXBuffer qb = new QXBuffer();
+        qb.setBuffer(buffer, 0, buffer.length);
+        if (newDlg.load(qb)){
+            DeviceListDialog.create(newDlg);
+        }
+    }
+    
+    static void setAndroidSdkFolder(String java, String sdk, String ndk, String apilevel, String buildTools){
+        java_sdk_root = java;
+        android_sdk_root = sdk;
+        android_ndk_root = ndk;
+        api_level = apilevel;
+        build_tools = buildTools;
+        saveConfig();
+    }
+    
+    static void installAndRunApk(IProject project, String projName, String configName, String projectDir, bool debug){
+        String apk_outpath = formatPath(projectDir.appendPath(configName).appendPath(projName + ".apk"));
+        AndroidInfo packageInfo = getPackageInfo(project);
+        if (packageInfo != nilptr && packageInfo.success()){
+            if (installApk (apk_outpath)){
+                if (debug){
+                    port_serial++;
+                    debugApk(packageInfo.getEntry(), nilptr, port_serial, port_serial + 9);
+                }else{
+                    runApk(packageInfo.getEntry(), nilptr);
+                }
+            }
+        }else{
+            workspace.output("获取包信息失败, 运行失败: " + apk_outpath + " ...\n", 0);
+        }
+    }
+    static bool installApk(String apk){
+        bool ret = false;
+        String [] arg;
+        workspace.showWaitProgress("正在安装...");
+        workspace.output("正在安装 " + apk + " ...\n", 0);
+        if (defaultDevice != nilptr){
+            String [] _arg = {"adb","-s", defaultDevice, "install" ,"-r", apk};
+            arg = _arg;
+        }else{
+            String [] _arg = {"adb", "install" ,"-r", apk};
+            arg = _arg;
+        }
+        
+        String rs = executeCmd(arg);
+        String [] ti = rs.split("\n");
+        if (ti.length > 0){
+            for (int i =0; i < ti.length; i++){
+                if (ti[i].startWith("Success")){
+                    ret = true;
+                }
+            }
+        }
+
+        if (rs.indexOf("INSTALL_FAILED_") != -1){
+            ret = false;
+            if (rs.indexOf("INSTALL_FAILED_NO_MATCHING_ABIS") != -1){
+                workspace.output("\n错误:项目处理器架构不匹配, 请前往菜单[项目]->[属性], 并在 [项目属性] 页面中选择与设备匹配的处理器架构.\n", 0);
+            }else
+            if (rs.indexOf("INSTALL_FAILED_USER_RESTRICTED") != -1){
+                workspace.output("\n错误:无法安装App到设备, 请在手机上开启Usb安装应用权限, 或者重启设备再试.\n", 0);
+            }else
+            if (rs.indexOf("INSTALL_FAILED_OLDER_SDK") != -1){
+                workspace.output("\n错误:编译此App时指定的最小SDK版本超过设备支持的版本, 可尝试将 AndroidManifest.xml 文件中的 minSdkVersion 改小以支持设备.\n", 0);
+            }
+            
+        }
+        workspace.output(rs, 0);
+        workspace.hideProgress(ret ? "已安装." : "安装失败");
+        return ret;
+    }
+    
+    static void runApk(String mainActivity, String args){
+        String [] arg;
+        workspace.output("\n正在运行 ...\n",0);
+        
+        List<String> __args = new List<String>();
+        __args.add("adb");
+        
+        
+        if (defaultDevice != nilptr){
+            __args.add("-s");
+            __args.add(defaultDevice);
+        }
+        __args.add("shell");
+        __args.add("am");
+        __args.add("start");
+        __args.add("-a");
+        __args.add("android.intent.action.MAIN");
+        __args.add("-n");
+        __args.add(mainActivity);
+        
+        if (args != nilptr){
+            __args.add("--es");
+            __args.add("args");
+            __args.add(args);
+        }
+
+        workspace.output(executeCmd(__args.toArray(new String[0])),0);
+    }
+    
+    static void  debugApk(String mainActivity, String args, int localPort, int debugPort){
+        String [] arg;
+        workspace.output("\n正在调试运行 ...\n",0);
+        workspace.showWaitProgress("正在启动调试...");
+        removeAllPort();
+        
+        List<String> __args = new List<String>();
+        __args.add("adb");
+        
+        
+        if (defaultDevice != nilptr){
+            __args.add("-s");
+            __args.add(defaultDevice);
+        }
+        __args.add("shell");
+        __args.add("am");
+        __args.add("start");
+        __args.add("-a");
+        __args.add("android.intent.action.MAIN");
+        __args.add("-n");
+        __args.add(mainActivity);
+        
+        if (args != nilptr){
+            __args.add("--es");
+            __args.add("args");
+            __args.add(args);
+        }
+        
+        __args.add("--es");
+        __args.add("xdbn");
+        __args.add("" + debugPort);
+            
+
+        String resp = executeCmd(__args.toArray(new String[0]));
+        workspace.showWaitProgress("准备调试器...");
+        if (forwardPort(localPort, debugPort)){
+            workspace.createRemoteDebug("127.0.0.1", localPort);
+            workspace.hideProgress("");
+        }else{
+            workspace.output("无法连接到调试器, 请检查设备与电脑的连接状态或者是否已锁定.",0);
+            workspace.hideProgress("无法连接到调试器.");
+        }
+    }
+    
+    static void removeAllPort(){
+        List<String> __args = new List<String>();
+        __args.add("adb");
+        
+        if (defaultDevice != nilptr){
+            __args.add("-s");
+            __args.add(defaultDevice);
+        }
+        
+        __args.add("forward");
+        __args.add("--remove-all");
+        
+        executeCmd(__args.toArray(new String[0]));
+    }
+    
+    static void removeDebugPort(int localPort){
+        List<String> __args = new List<String>();
+        __args.add("adb");
+        
+        if (defaultDevice != nilptr){
+            __args.add("-s");
+            __args.add(defaultDevice);
+        }
+        
+        __args.add("forward");
+        __args.add("--remove");
+        __args.add("tcp:" + localPort);
+        
+        executeCmd(__args.toArray(new String[0]));
+    }
+    
+    static bool forwardPort(int localPort, int port){
+        List<String> __args = new List<String>();
+        __args.add("adb");
+        workspace.output("\n正在等待调试端口...\n",0);
+        if (defaultDevice != nilptr){
+            __args.add("-s");
+            __args.add(defaultDevice);
+        }
+        
+        __args.add("forward");
+        __args.add("tcp:" + localPort);
+        __args.add("tcp:" + port);
+        
+        Thread.sleep(5000);
+       
+        String resp = executeCmd(__args.toArray(new String[0]));
+        
+        if (resp != nilptr){
+            //workspace.output(resp,0);
+            int maped_port = resp.trim(true).parseInt();
+            if (maped_port == localPort){
+                
+                int retry = 10;
+                while (retry-- > 0){
+                    StreamSocket socket = new StreamSocket();
+                    Thread.sleep(2000);
+                    if (retry < 3){
+                        workspace.output("\n正在重新尝试连接调试端口... (重试" + (retry + 1) + "次).\n",0);
+                    }
+                    if (socket.connect("127.0.0.1",localPort)){
+                        socket.setTimeout(1000);
+                        if (-1 == socket.read(new byte[1],0,1)){
+                            socket.close();
+                            workspace.output("\n正在连接调试端口 ...\n",0);
+                            Thread.sleep(3000);
+                            return true;
+                        }
+                        socket.close();
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    
+    static Device [] listDevice(){
+        String [] arg = {"adb", "devices"};
+        String resp = executeCmd(arg);
+        
+        List<Device> devlst = new List<Device>();
+        if (resp != nilptr){
+            String split = "List of devices attached";
+            int devices = resp.indexOf(split);
+            if (devices != -1){
+                String devcont = resp.substring(devices + split.length() + 1, resp.length());
+                String [] ds = devcont.split('\n');
+                
+                for (int i = 0; i < ds.length; i++){
+                    String devstr = ds[i].trim(true);
+                    if (devstr.length() > 0){
+                        try{
+                            Device dev = new Device(devstr);
+                            devlst.add(dev);
+                        }catch(Exception e){
+                            
+                        }
+                    }
+                }
+            }
+        }
+        
+        return devlst.toArray(new Device[0]);
+    }
+    
+    
+    static void queryDeviceModel(Device dev){
+        if (dev.type.equals("offline") || dev.type.equals("unknow")){
+            dev.model = "unknow";
+            return;
+        }
+        
+        String [] cmd = {"adb", "-s", dev.serial, "shell", "getprop", "ro.product.model"};
+        dev.model = executeCmd(cmd);
+        
+        if (dev.model != nilptr){
+            dev.model = dev.model.trim(true);
+            if (dev.model.startWith("error:")){
+                dev.model = "unknow";
+            }
+        }else{
+            dev.model = "unknow";
+        }
+    }
+    
+    static String executeCmd(String [] arg){
+        ByteBuffer buffer = new ByteBuffer();
+        ProcessStream ps =  new ProcessStream(){
+            void onStreamOut(byte [] data, int pos, int len){
+                buffer.append(data, pos, len);
+            }
+        };
+        if (executeAdb(arg, ps)){
+            return buffer.toString();
+        }
+        return "";
+    }
+    
+    static String executeDisplay(String app,String workdir,String [] arg, bool wait){
+        ByteBuffer buffer = new ByteBuffer();
+        ProcessStream ps =  new ProcessStream(){
+            void onStreamOut(byte [] data, int pos, int len){
+                buffer.append(data, pos, len);
+                String line = buffer.getLine();
+                while (line != nilptr){
+                    workspace.output(line,0);
+                    line = buffer.getLine();
+                }
+            }
+        };
+        execute(app, workdir,arg,  ps, wait);
+        workspace.output(buffer.toString(),0);
+        return buffer.toString();
+    }
+    
+    static class ProcessStream{
+        void onStreamOut(byte [] data, int pos, int len);
+    };
+    
+    static void readForProcess(ProcessStream out, Process _process){
+		try{
+			int rd = 0;
+			byte [] buffer = new byte[1024];
+			while ((rd = _process.read(buffer, 0, buffer.length)) > 0){
+                out.onStreamOut(buffer, 0, rd);
+			}
+		}catch(Exception e){
+
+		}    
+    }
+    
+    static bool execute(String app,String workdir, String [] args, ProcessStream ps, bool wait){
+        /*String cmds = app;
+        for (int i = 0 ; i < args.length; i++){
+            cmds = cmds + " " + args[i];
+        }
+        workspace.output("\n" + cmds + "\n",0);*/
+        Process process = new Process(app , args);
+        process.setWorkDirectory(workdir);
+        try{
+            if (process.create(false, true, false, false)) {
+                if (wait){
+                    readForProcess(ps, process);
+                    process.waitFor(-1);
+                }
+                return true;
+            } else {
+                
+            }
+        }catch(Exception e){
+            if (_system_.getPlatformId() == 0){
+                workspace.output("\n### " + new String(e.getMessage().getBytes(), "GB18030//IGNORE") + " ###\n",0);
+            }else{
+                workspace.output("\n### " + e.getMessage()+ " ###\n",0);
+            }
+        }
+        return false;
+    }
+    
+    static String getAdbPath(){
+        String adk_path = android_sdk_root;
+        if (adk_path == nilptr || adk_path.length() == 0){
+            return nilptr;
+        }
+        String adb_folder = String.formatPath(adk_path.appendPath("platform-tools"), false);
+        String adb_path = adb_folder.appendPath(ADBNAME);
+        if (XPlatform.existsSystemFile(adb_path)){
+            return adb_path;
+        }
+        return nilptr;
+    }
+    
+    static bool executeAdb(String [] args, ProcessStream ps){
+        if (android_sdk_root == nilptr){
+            return false;
+        }
+        String adb_folder = String.formatPath(android_sdk_root.appendPath("platform-tools"), false);
+        String adb_path = adb_folder.appendPath(ADBNAME);
+        
+        /*String cmds = adb_path;
+        for (int i = 0 ; i < args.length; i++){
+            cmds = cmds + " " + args[i];
+        }
+        workspace.output("\n" + cmds + "\n",0);*/
+        
+        Process process = new Process(adb_path , args);
+        process.setWorkDirectory(adb_folder);
+        try{
+            if (process.create(false, true, false, false)) {
+                readForProcess(ps, process);
+                process.waitFor(-1);
+                return true;
+            } else {
+                
+            }
+        }catch(Exception e){
+            if (_system_.getPlatformId() == 0){
+                workspace.output(new String(e.getMessage().getBytes(), "GB18030//IGNORE"),0);
+            }else{
+                workspace.output(e.getMessage(),0);
+            }
+        }
+        return false;
+    }
+    
+    
+     void findFile(FSObject parent, List<String> listout, String eext, bool recu){
+        long hfind = parent.openDir();
+        if (hfind != 0){
+            FSObject recv = new FSObject();
+            while (parent.findObject(hfind,recv)){
+                if (recv.isDir()){
+                    if (recu){
+                        findFile(recv, listout, eext, recu);
+                    }
+                }else{
+                    String ext = recv.getExtension();
+                    if (ext != nilptr && ext.equalsIgnoreCase(eext)){
+                        listout.add(recv.getPath());
+                    }
+                }
+            }
+            parent.closeDir(hfind);
+        }
+    }
+    
+    static class AndroidInfo{
+        String packageName;
+        String mainActivity;
+        
+        AndroidInfo(String p, String m){
+            packageName = p;
+            mainActivity = m;
+        }
+        
+        String getEntry(){
+            return packageName + "/" + mainActivity;
+        }
+        
+        bool success(){
+            return (packageName != nilptr) && (packageName.length() != 0) && (mainActivity != nilptr) && (mainActivity.length() != 0);
+        }
+    };
+    
+    static AndroidInfo getPackageInfo(IProject project){
+        String packagename ;
+        String xmlfile = project.getProjectDir().appendPath("android").appendPath("AndroidManifest.xml");
+        FileInputStream fis ;
+        try{
+            fis = new FileInputStream(xmlfile);
+            String content = new String(fis.read());
+            XDomNode root = new XDomNode(content);
+            XDomNode as = root.child("manifest").attribute("package");
+            String package_name = as.getValue();
+            
+            XDomNode activitys = root.child("manifest").child("application").child("activity");
+            
+            String ns ;
+            
+            while (activitys != nilptr){
+                
+                try{
+                    ns = activitys.child("intent-filter").child("action").attribute("android:name").getValue();
+                    if (ns != nilptr && ns.equals("android.intent.action.MAIN")){
+                        ns =  activitys.attribute("android:name").getValue();
+                        break;
+                    }
+                    
+                }catch(Exception e){
+                    
+                }
+                
+                activitys = activitys.next(nilptr);
+            }
+            
+            return new AndroidInfo(package_name, ns);
+        }catch(Exception e){
+            
+        }finally{
+            if (fis != nilptr){
+                fis.close();
+            }
+        }
+        
+        return nilptr;
+    }
+    
+    String formatArgs(String param) {
+        if (_system_.getPlatformId() == 0) {
+            if (param.indexOf(" ") != -1) {
+                return "\"" + param + "\"";
+            }
+        }
+        return param;
+    }
+    
+    static String formatPath(String param) {
+        param = String.formatPath(param,false);
+        if (_system_.getPlatformId() == 0) {
+            return "\"" + param + "\"";
+        }
+        return param;
+    }
+    
+    static void runbat(String batfile, String projectDir, String [] args, bool wait) {
+    
+        String content = "@echo off\r\n" + (batfile);
+        
+        if (args != nilptr){
+            for (int i =0; i < args.length; i++){
+                content = content + " " + (args[i]);
+            }
+        }
+        
+        String execute = Utils.getWindowsDir();
+        if (execute == nilptr) {
+            return;
+        }
+
+        String cmd_file = projectDir.appendPath("dex.bat");
+        FileOutputStream fos = new FileOutputStream(cmd_file);
+        byte [] content_bt = content.getBytes();
+        fos.write(content_bt, 0, content_bt.length);
+        fos.close();
+        
+        execute = String.formatPath(execute.appendPath("system32\\cmd.exe"), false);
+        
+        String [] arg = {"cmd", "/c" , formatPath(cmd_file)};
+        executeDisplay(execute, projectDir, arg, wait);
+    }
+
+    static void runsh(String shfile, String projectDir, String [] args, bool wait) {
+        String content = shfile;
+        
+        if (args != nilptr){
+            for (int i =0; i < args.length; i++){
+                content = content + " " + (args[i]);
+            }
+        }
+        
+        String cmd_file = projectDir.appendPath("dex.sh");
+        FileOutputStream fos = new FileOutputStream(cmd_file);
+        byte [] content_bt = content.getBytes();
+        fos.write(content_bt, 0, content_bt.length);
+        fos.close();
+        _system_.chmod(cmd_file,0777);
+        String [] arg = {"bash", "-c" , formatPath(cmd_file)};
+        executeDisplay("/bin/bash", projectDir, arg, wait);
+    }
+    
+    static void exec(String shfile, String projectDir, String [] args, bool wait){
+        if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
+            runbat(shfile, projectDir, args, wait);
+        }else{
+            runsh(shfile, projectDir, args, wait);
+        }
+    }
+    
+    static bool mkdirs(String path){
+        if (XPlatform.existsSystemFile(path) == false){
+            if (XPlatform.mkdir(path) == false){
+                mkdirs(path.findVolumePath());
+                return XPlatform.mkdir(path);
+            }
+        }
+        return true;
+    }
+    
+    static bool removeObjects(FSObject parent){
+        if (parent.isDir()){
+            long hfind = parent.openDir();
+            if (hfind != 0){
+                FSObject recv = new FSObject();
+                while (parent.findObject(hfind,recv)){
+                    if (removeObjects(recv) == false){
+                        return false;
+                    }
+                }
+                parent.closeDir(hfind);
+            }
+        }
+        return parent.remove();
+    }
+    
+    static bool copyObjects(FSObject src, FSObject destPath){
+        FSObject dst = new FSObject(destPath.getPath().appendPath(src.getName()));
+        if (src.isDir()){
+            if (dst.exists() == false){
+                if (dst.mkdir() == false){
+                    return false;
+                }
+            }
+            
+            long hfind = src.openDir();
+            if (hfind != 0){
+                FSObject recv = new FSObject();
+                while (src.findObject(hfind,recv)){
+                    if (copyObjects(recv, dst) == false){
+                        return false;
+                    }
+                }
+                src.closeDir(hfind);
+            }
+            return true;
+        }else{
+            return copyFile(dst.getPath(), src.getPath());
+        }
+    }
+    
+    static bool copyObjectsFrom(FSObject src, FSObject dst){
+        if (src.isDir()){
+            if (dst.exists() == false){
+                if (dst.mkdir() == false){
+                    return false;
+                }
+            }
+            
+            long hfind = src.openDir();
+            if (hfind != 0){
+                FSObject recv = new FSObject();
+                while (src.findObject(hfind,recv)){
+                    if (copyObjects(recv, dst) == false){
+                        return false;
+                    }
+                }
+                src.closeDir(hfind);
+            }
+            return true;
+        }else{
+            return copyFile(dst.getPath(), src.getPath());
+        }
+    }
+    
+    static bool decompressZip(String zipFile, String dir){
+		ZipArchive zs = new ZipArchive();        
+		FileInputStream fis = new FileInputStream(zipFile);
+		if (zs.open(fis)){
+			int compress_total = zs.getEntriesCount();
+			for (int compress_prog = 0; compress_prog < compress_total; compress_prog ++){
+				ZipEntry entry = zs.getEntry(compress_prog);
+  
+                String name = entry.getName();
+                         
+                String destPath = String.formatPath(dir.appendPath(name), false);
+                
+				if (entry.isDirectory()){  
+                    mkdirs(destPath);
+                }else{
+					mkdirs(destPath.findVolumePath());
+                    
+					ZipFile file = entry.getFile();
+					byte []buf = new byte[1024];
+					int rd = 0;
+					if (file.open()){
+						FileOutputStream fos = new FileOutputStream(destPath);
+						while ((rd = file.read(buf, 0, 1024)) != 0){
+							fos.write(buf, 0, rd);
+						}
+						fos.close();
+						file.close();
+					}
+                }
+                
+			}
+            return true;
+		}
+        return false;
+    }
+    
+    bool copyLibs(String projectDir, IProject project, bool buildDebug){
+        Configure cfg = project.getCurrentConfig();
+        String key = cfg.getOption("wtype");
+        String uuid = project.getOption("uuid");
+        String libs = projectDir.appendPath("libs");
+        
+        int api_int = 0;
+        if (api_level != nilptr){
+           api_int = api_level.parseInt();
+        }
+        
+        if (api_int < 28){
+            workspace.output("警告:使用的 Android SDK Platform 版本过低, 为避免生成出现问题,建议至少使用 API级别28 进行编译",0);
+        }
+        
+        bool bgame = false;
+        if (uuid != nilptr && uuid.equals(cocosandroid)){
+            bgame = true;
+
+             
+            if (api_int < 28){
+                workspace.output("\n编译此应用要求 SDK Platform 版本最低(API级别28), 请更新Android SDK Platform并重新选择API版本\n",0);
+                return false;
+            }
+        }
+        
+        if (key != nilptr){
+            if (key.equals("-arch:armv7a") || key.equals("-arch:all")){
+                String apputemp = String.formatPath(XPlatform.getAppDirectory().appendPath("plugins").appendPath("xandroid").appendPath(bgame ? "armv7ag.libs" : "armv7a.libs"), false);
+                libs = String.formatPath(libs, false);
+                XPlatform.mkdir(libs);
+                if (false == decompressZip(apputemp, libs)){
+                    workspace.output("\n部署库到:" + libs + "时发生错误\n",0);
+                    return false;
+                }
+                XPlatform.deleteFile(String.formatPath(libs.appendPath("armeabi-v7a").appendPath(buildDebug ? "libxrvm.so" : "libxrvmd.so"), false));
+            }else
+            if (key.equals("-arch:x86") || key.equals("-arch:all")){
+                String apputemp = String.formatPath(XPlatform.getAppDirectory().appendPath("plugins").appendPath("xandroid").appendPath(bgame ? "x86g.libs" : "x86.libs"), false);
+                libs = String.formatPath(libs, false);
+                XPlatform.mkdir(libs);
+                if (false == decompressZip(apputemp, libs)){
+                    workspace.output("\n部署库到:" + libs + "时发生错误\n",0);
+                    return false;
+                }
+                XPlatform.deleteFile(String.formatPath(libs.appendPath("x86").appendPath(buildDebug ? "libxrvm.so" : "libxrvmd.so"), false));
+            }else{
+                workspace.output("\n不支持的架构:" + key + "\n",0);
+                return false;
+            }
+        }
+        
+        String userlibs = String.formatPath(project.getProjectDir().appendPath("userlibs"), false);
+        String androidlibs = libs;
+        
+        if (XPlatform.existsSystemFile(userlibs)){
+            if (false == copyObjectsFrom(new FSObject(userlibs), new FSObject(androidlibs))){
+                workspace.output("\n拷贝用户库到:" + androidlibs + "时发生错误\n",0);
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    bool clearFolder(FSObject dir){
+        if (dir.exists()){
+            if (false == removeObjects(dir)){
+                workspace.output("\n无法清理路径:" + dir.getPath() + "\n",0);
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    bool compileApk(IProject project, String projName, String configName, String projectDir, bool buildDebug){
+
+        String errstr = checkBuildTools();
+        if (errstr != nilptr){
+            workspace.RunOnUi(new UIRunnable(){
+               void run() override{
+                    QXMessageBox.Critical("注意", errstr + ", 点击打开设置.", QXMessageBox.Ok, QXMessageBox.Ok);
+                    openSettingDialog();
+               }
+            });
+            return false;
+        }
+        
+        String target = project.getOutputTarget();
+        String originalProjectDir = project.getProjectDir();
+        
+        FSObject android_assets = new FSObject(projectDir.appendPath("assets"));
+        if (clearFolder(android_assets) == false){
+            return false;
+        }
+
+        String iconFile = project.getOption("icofile");
+        if (iconFile != nilptr){
+            iconFile = iconFile.trim(true);
+        }
+        if (iconFile != nilptr && iconFile.length() > 0){
+            iconFile = project.map_variable(iconFile);
+            
+            if (XPlatform.existsSystemFile(iconFile) == false){
+                iconFile = String.formatPath(originalProjectDir.appendPath(iconFile), false);
+            }
+            
+            if (XPlatform.existsSystemFile(iconFile)){
+                String destIconFile = String.formatPath(projectDir.appendPath("res").appendPath("drawable-mdpi").appendPath("ic_launcher.png"), false);
+                if (false == copyFile(destIconFile, iconFile)){
+                    workspace.output("\n无法写入文件:" + destIconFile + "\n",0);
+                    return false ;
+                }
+            }
+        }
+        
+        FSObject project_assets = new FSObject(originalProjectDir.appendPath("assets"));
+        if (project_assets.exists()){
+            if (false == copyObjects(project_assets, new FSObject(projectDir))){
+                workspace.output("\n拷贝资源:" + project_assets.getPath() + " 到 " + projectDir + "时出现错误. \n",0);
+                return false ;
+            }
+        }else{
+            if (false == android_assets.mkdir()){
+                workspace.output("\n无法建立资源目录:" + android_assets.getPath() + ". \n",0);
+                return false ;
+            }
+        }
+    
+        String destFile = String.formatPath(projectDir.appendPath("assets").appendPath("app.exc"), false);
+        
+        if (false == copyFile(destFile, target)){
+            workspace.output("\n无法写入文件:" + destFile + "\n",0);
+            return false ;
+        }
+ 
+        if (clearFolder(new FSObject(projectDir.appendPath("libs").appendPath("armeabi-v7a"))) == false){
+            return false ;
+        }
+        if (clearFolder(new FSObject(projectDir.appendPath("libs").appendPath("x86"))) == false){
+            return false ;
+        }
+        if (clearFolder(new FSObject(projectDir.appendPath("libs").appendPath("arm64-v8a"))) == false){
+            return false ;
+        }
+        
+
+        
+        int apilevel = api_level.parseInt();
+        String ndk_build;
+        if (android_ndk_root != nilptr && (android_ndk_root.length() != 0)){
+            ndk_build = String.formatPath(android_ndk_root.appendPath(NDKBUILDNAME), false);
+            if (XPlatform.existsSystemFile(ndk_build) == false){
+                ndk_build = nilptr;
+            }
+        }
+        String aapt_path = String.formatPath(android_sdk_root.appendPath("build-tools").appendPath(build_tools).appendPath(AAPTNAME), false);
+        String aidl_path = String.formatPath(android_sdk_root.appendPath("build-tools").appendPath(build_tools).appendPath(AIDLNAME), false);
+        String zipalign_path = String.formatPath(android_sdk_root.appendPath("build-tools").appendPath(build_tools).appendPath(ZIPALIGNNAME), false);
+        String dx_path = formatPath(android_sdk_root.appendPath("build-tools").appendPath(build_tools).appendPath(DXTNAME));
+        String javac_path = String.formatPath(java_sdk_root.appendPath("bin").appendPath(JAVACNAME), false);
+        String java_path = String.formatPath(java_sdk_root.appendPath("bin").appendPath(JAVANAME), false);
+        String jarsigner_path = String.formatPath(java_sdk_root.appendPath("bin").appendPath(JARSIGNER), false);
+        String key_store = formatPath(XPlatform.getAppDirectory().appendPath("plugins").appendPath("xandroid").appendPath("debug.keystore"));
+        
+        String genFolder = formatPath(projectDir.appendPath("gen"));
+        String binFolder = formatPath(projectDir.appendPath("bin"));
+        String jniFolder = String.formatPath(projectDir.appendPath("jni"), false);
+        
+        XPlatform.mkdir(String.formatPath(projectDir.appendPath("bin"), false));
+        String classesFolder = formatPath(projectDir.appendPath("bin").appendPath("classes"));
+        XPlatform.mkdir(String.formatPath(projectDir.appendPath("bin").appendPath("classes"), false));
+        String javaFolder = formatPath(projectDir.appendPath("java"));
+        String android_jar = formatPath(android_sdk_root.appendPath("platforms").appendPath(String.format("android-%d", apilevel)).appendPath("android.jar"));
+        String manifest_path = formatPath(projectDir.appendPath("AndroidManifest.xml"));
+        String framework_aidl = formatPath(android_sdk_root.appendPath("platforms").appendPath(String.format("android-%d", apilevel)).appendPath("framework.aidl"));
+        
+        XPlatform.mkdir(String.formatPath(projectDir.appendPath(configName), false));
+        String apk__outpath = formatPath(projectDir.appendPath(configName).appendPath(projName + "_.apk"));
+        String apk_outpath = formatPath(projectDir.appendPath(configName).appendPath(projName + ".apk"));
+        
+        String sdklib = String.formatPath(android_sdk_root.appendPath("tools").appendPath("lib").appendPath("sdklib.jar"), false);
+        
+        if (XPlatform.existsSystemFile(sdklib) == false){
+            sdklib = String.formatPath(android_sdk_root.appendPath("tools").appendPath("lib").appendPath("sdklib-26.0.0-dev.jar"), false);
+            if (XPlatform.existsSystemFile(sdklib) == false){
+                workspace.RunOnUi(new UIRunnable(){
+                   void run() override{
+                        QXMessageBox.Critical("注意", "不支持此版本 Android Sdk 请更换版本.", QXMessageBox.Ok, QXMessageBox.Ok);
+                        openSettingDialog();
+                   }
+                });
+                return false ;
+            }
+        }
+        
+        XPlatform.deleteFile(projectDir.appendPath(configName).appendPath(projName + "_.apk"));
+        XPlatform.deleteFile(projectDir.appendPath(configName).appendPath(projName + ".apk"));
+        String [] args = { "aapt", "package", "-f",  "-m", 
+            "-J" , genFolder,  "-S", "res", "-I", 
+            android_jar, 
+            "-M", manifest_path};
+        executeDisplay(aapt_path, projectDir, args, true);
+        
+        
+        List<String> aidls = new List<String>();
+        findFile(new FSObject(projectDir.appendPath("java")), aidls, ".aidl", true);
+
+        if (aidls.size() > 0){
+
+            List.Iterator<String> iter = aidls.iterator();
+            
+            while (iter.hasNext()){
+                String path = iter.next();
+                String outpath = path.toRelativePath(projectDir.appendPath("java"),true,true);
+                outpath = formatPath(projectDir.appendPath("gen").appendPath(outpath).replaceExtension(".java"));
+                String [] aidl_arg = {"aidl", 
+                     "-p"+ framework_aidl,
+                     "-I"+ javaFolder,
+                     "-I"+ genFolder,
+                     formatPath(path), 
+                     outpath
+                 };
+                executeDisplay(aidl_path, projectDir, aidl_arg, true);
+            }
+        }
+        
+        if(XPlatform.existsSystemFile(jniFolder)){
+            if (ndk_build == nilptr){
+                workspace.output("\n没有设置 NDK 路径,该项目中含有支持XNL需要编译的C/C++ Native部分, 无法进行编译, 生成失败!\n", 0);
+                return false;
+            }
+            exec(ndk_build, projectDir, new String[0], true);
+        }
+        
+        if (false == copyLibs(projectDir,project, buildDebug)){
+            return false;
+        }
+        
+        List<String> javas = new List<String>();
+        javas.add("javac");
+        javas.add("-encoding");
+        javas.add("UTF-8");
+        javas.add("-source");
+        javas.add("1.6");
+        javas.add("-target");
+        javas.add("1.6");
+        javas.add("-bootclasspath");
+        javas.add(android_jar);
+        javas.add("-d");
+        javas.add(classesFolder);
+        findFile(new FSObject(projectDir.appendPath("java")), javas, ".java", true);
+        findFile(new FSObject(projectDir.appendPath("gen")), javas, ".java", true);
+        
+        List<String> jars = new List<String>();
+        findFile(new FSObject(projectDir.appendPath("libs")), jars, ".jar", true);
+        
+        String separator = ":";
+        if (_system_.getPlatformId() == 0){
+            separator = ";";
+        }
+        if (jars.size() > 0){
+            javas.add("-classpath");
+            String jarfiles = "\"" ;
+            List.Iterator<String> iter = jars.iterator();
+            while (iter.hasNext()){
+                String path = formatPath(iter.next());
+                
+                if (jarfiles.length() > 0){
+                
+                    jarfiles = jarfiles + separator + path;
+                }else{
+                    jarfiles = path;
+                }
+            }
+            jarfiles = jarfiles + separator + "\"" ;
+            javas.add(jarfiles);
+        }
+        
+        executeDisplay(javac_path, projectDir, javas.toArray(new String[0]), true);
+        
+        
+        String [] dx_args = {"--dex", 
+                "--output=" + formatPath(projectDir.appendPath("bin").appendPath("classes.dex")),         
+                formatPath(projectDir.appendPath("bin").appendPath("classes")), 
+                formatPath(projectDir.appendPath("libs"))
+            };
+            
+        exec(dx_path, projectDir, dx_args, true);
+        
+        String [] args_ = { "aapt", "package", "-f", 
+            "-A", 
+            formatPath(projectDir.appendPath("assets")),  
+            "-S", "res", "-I", 
+            android_jar, 
+            "-M",             
+            manifest_path, "-F",          
+            formatPath(projectDir.appendPath("bin").appendPath("resources.ap_"))};
+            
+        executeDisplay(aapt_path, projectDir, args_, true);
+        
+        
+
+        String [] apk_args = {"java", "-cp", formatPath(sdklib), 
+                "com.android.sdklib.build.ApkBuilderMain" ,  
+                apk__outpath, 
+                "-v", "-u", 
+                "-nf", formatPath(projectDir.appendPath("libs")),
+                "-rj", formatPath(projectDir.appendPath("libs")),
+                "-z", formatPath(projectDir.appendPath("bin").appendPath("resources.ap_")),
+                "-f", formatPath(projectDir.appendPath("bin").appendPath("classes.dex"))};       
+                                         
+        executeDisplay(java_path, projectDir, apk_args, true);
+        
+        String [] zipalign_args = {"zipalign","-f", "-v", "4" , apk__outpath, apk_outpath};       
+                                         
+        executeDisplay(zipalign_path, projectDir, zipalign_args, true);
+        
+        String [] js_args = {"jarsigner",
+                                "-verbose",
+                                "-keystore", key_store, 
+                                "-storepass","android",
+                                "-keypass","android",
+                                "-digestalg", "SHA1", "-sigalg", "SHA1withRSA", 
+                                apk_outpath, 
+                                "androiddebugkey"};       
+                                         
+        executeDisplay(jarsigner_path, projectDir, js_args, true);
+        
+        XPlatform.deleteFile(projectDir.appendPath(configName).appendPath(projName + "_.apk"));
+        
+        if (XPlatform.existsSystemFile(String.formatPath(projectDir.appendPath(configName).appendPath(projName + ".apk"), false))){
+            workspace.output("\n已生成:" + apk_outpath + "\n", 0);
+        }else{
+            workspace.output("\n未能生成:" + apk_outpath + "\n\n请查看输出检查错误.\n", 0);
+            return false;
+        }
+        
+        return true;
+    }
+};

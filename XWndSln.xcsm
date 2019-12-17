@@ -93,7 +93,7 @@ class XWndSln : QXDockWidget
         void onTrigger(QXObject obj) override {
 
             if (obj == XWndSln.this._contextMenu.actions[0]) {
-                workspace.build();
+                workspace.build(nilptr);
                 return ;
             }
             if (obj == XWndSln.this._contextMenu.actions[9]) {
@@ -269,7 +269,8 @@ class XWndSln : QXDockWidget
                     QXMessageBox.Critical("错误", "重命名失败,文件可能正被其他程序使用.", QXMessageBox.Ok, QXMessageBox.Ok);
                     return true;
                 }
-                _treesln.setItemText(ps.item, 0, newname);
+                //_treesln.setItemText(ps.item, 0, newname);
+                reload();
                 return true;
             }
             bool onInputCancel()override {
@@ -346,45 +347,62 @@ class XWndSln : QXDockWidget
         String []acts = {"构建项目\tF7", "-", "移除文件(&R)", "删除文件(&D)","重命名(&R)","-", "添加项","-","运行\tF5", "项目属性(&P)", "打开所在目录(&F)", "UI设计器中打开(&U)"};
         _contextMenu.create(_treesln, acts, menuListener);
     }
-
+    
+    long addItem(long item, String icon, String name){
+        name = String.formatPath(name,false);
+        name = name.replace("\\","/");
+        String [] namesp = name.split('/');
+        
+        long myitem = item;
+        for (int i =0; i < namesp.length; i++){
+            if (i + 1 == namesp.length){
+                myitem = addItemex(myitem, icon, namesp[i]);
+            }else{
+                myitem = addItemex(myitem, "res/toolbar/sources.png", namesp[i]);
+            }
+        }
+        return myitem;
+    }
+    
+    long addItemex(long item, String icon, String name){
+        long [] items;
+        if (item == 0){
+            items = _treesln.getTopItems();
+        }else{
+            items = _treesln.getItemChildren(item);
+        }
+        
+        if (items != nilptr){
+            for (int i =0 ;i < items.length; i++){
+                String lab = _treesln.getItemText(items[i], 0);
+                if (lab != nilptr && lab.equals(name)){
+                    return items[i];
+                }
+            }
+        }
+        
+        if (item != 0){
+            return _treesln.insertItem(item, icon, name);
+        }
+        return _treesln.addItem(icon, name);
+    }
+    
     void loadProject(Project project)
     {
         String name = project.getName();
         project.viewItem = _treesln.addItem("res/toolbar/project.png", name);
         project.sourcesRoot = _treesln.insertItem(project.viewItem, "res/toolbar/sources.png", "源文件");
-        //project.extendsRoot = _treesln.insertItem(project.viewItem, "res/toolbar/sources.png", "外部文件");
 
         JsonArray sources = project.getSources();
         for (int i =0; i < sources.length(); i++) {
             String pathfile = sources.getString(i);
-            /*String extsion = pathfile.findExtension();*/
+            
             if (pathfile.startWith("./") || pathfile.startWith(".\\")) {
                 pathfile = pathfile.substring(2,pathfile.length());
             }
+            
             String iconFile = "res/toolbar/source.png";
-            /*if (extsion != nilptr){
-            	if (extsion.equalsIgnoreCase(".xcs")){
-            		iconFile = "res/toolbar/xcs.png";
-                 }else
-                 if (extsion.equalsIgnoreCase(".xcsm")){
-            		iconFile = "res/toolbar/xcsm.png";
-                 }else
-                 if (extsion.equalsIgnoreCase(".version")){
-            		iconFile = "res/toolbar/version.png";
-                 }else
-                 if (extsion.equalsIgnoreCase(".ui")){
-            		iconFile = "res/toolbar/ui.png";
-                 }
-             }
-
-            String fname = pathfile.findFilenameAndExtension();
-            if (fname != nilptr){
-            	if (fname.equalsIgnoreCase("makefile")){
-            		iconFile = "res/toolbar/make.png";
-            	}
-            }*/
-
-            long item = _treesln.insertItem(project.sourcesRoot, iconFile, pathfile);
+            long item = addItem(project.sourcesRoot, iconFile, pathfile);
             sourceItem.put(item, new ProjectSource(project,item, i));
         }
 
@@ -415,7 +433,7 @@ class XWndSln : QXDockWidget
             JsonArray sources = project.getSources();
             for (int i = 0; i < size; i ++) {
                 int id = sources.length() - (i + 1);
-                long item = _treesln.insertItem(project.sourcesRoot, "res/toolbar/source.png", sources.getString(id));
+                long item = addItem(project.sourcesRoot, "res/toolbar/source.png", sources.getString(id));
                 sourceItem.put(item, new ProjectSource(project,item, id));
             }
         }

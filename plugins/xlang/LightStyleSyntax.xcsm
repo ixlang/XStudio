@@ -10,12 +10,12 @@ class LightStyleSyntax : SyntaxHighlighting{
     
     /** 编辑器默认字体颜色*/
     int getDefaultForeColor()override{
-		return 0xff222827;
+		return 0xff424847;
     }
     
     /** 选中字体背景颜色*/
     int getSelectedBackColor()override{
-		return 0xfff1ebe5;
+		return 0xffc8c8c8;
     }
     
     /** 选中字体颜色*/
@@ -85,7 +85,7 @@ class LightStyleSyntax : SyntaxHighlighting{
     
     /** 行号前景色*/
     int getLineNumberForeColor()override{
-		return 0xffaf912b;
+		return 0xff999999;
     }
     
     /** 括号匹配背景色*/
@@ -115,7 +115,7 @@ class LightStyleSyntax : SyntaxHighlighting{
     
     /** 操作符字体色*/
     int getOperatorForeColor()override{
-		return 0xff222827;
+		return 0xff970201;
     }
     
     /** 字符串错误色*/
@@ -125,7 +125,7 @@ class LightStyleSyntax : SyntaxHighlighting{
     
     /** 关键字颜色*/
     int getWordForeColor()override{
-		return 0xffd69c56;
+		return 0xff970201;
     }
     
     /** 关键字背景颜色*/

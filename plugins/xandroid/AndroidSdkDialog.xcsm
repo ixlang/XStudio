@@ -1,0 +1,553 @@
+//xlang Source, Name:AndroidSdkDialog.xcsm 
+//Date: Mon Dec 15:58:10 2019 
+
+class AndroidSdkDialog : QXDialog{
+    //QXDialog _coredialog;
+    QXPushButton b0, b1, b2, btnok, btncan, btndljdk, btndladk, btndlndk;
+    QXLineEdit java ,sdk, ndk;
+    QXTreeView apilist, toolslist;
+    QXLabel labstat;
+    QXProgressBar pgbdl;
+    String buildtools;
+    String apilevel;
+    
+    String ANDROIDNAME = (_system_.getPlatformId()== 0 ?  "android.bat" : "android");
+    String JAVACNAME = (_system_.getPlatformId()== 0 ?  "javac.exe" : "javac");
+    String NDKBUILDNAME = (_system_.getPlatformId()== 0 ?  "ndk-build.cmd" : "ndk-build");
+    static Map<String, int> dllist = new Map<String, int>();
+    static AndroidSdkDialog _sdkdialog;
+    AndroidSdkDialog(QXDialog d){
+        attach(d);
+    }
+    
+    static void create(QXDialog d){
+        AndroidSdkDialog ad = new AndroidSdkDialog(d);
+        _sdkdialog = ad;
+        ad.show();
+    }
+    
+    static String []adk_url = {"https://dl.google.com/android/android-sdk_r24.4.1-windows.zip?utm_source=androiddevtools&utm_medium=website", 
+        "https://dl.google.com/android/android-sdk_r24.4.1-linux.tgz?utm_source=androiddevtools&utm_medium=website",
+        "https://dl.google.com/android/android-sdk_r24.4.1-macosx.zip?utm_source=androiddevtools&utm_medium=website"
+    };
+    
+    static String []adk_size = { "190M","311M","98M" };
+    
+    static String []ndk32_url = {"https://dl.google.com/android/repository/android-ndk-r20-windows-x86.zip", 
+        "https://dl.google.com/android/repository/android-ndk-r20-linux-x86_64.zip",
+        "https://dl.google.com/android/repository/android-ndk-r20-darwin-x86_64.zip"
+    };
+    
+    static String [] ndk_url = {
+        "https://dl.google.com/android/repository/android-ndk-r20-windows-x86_64.zip",
+        "https://dl.google.com/android/repository/android-ndk-r20-linux-x86_64.zip",
+        "https://dl.google.com/android/repository/android-ndk-r20-darwin-x86_64.zip"
+    };
+    
+    static String []ndk_size = { "780M","974M","960M" };
+    
+    void onAttach()override{
+        setWindowIcon(Resources.sdk_setting);
+        
+        pgbdl = (QXProgressBar)attachByName(new QXProgressBar(), "pgbdl");
+        labstat = (QXLabel)attachByName(new QXLabel(), "labstat");
+        
+        btndljdk = (QXPushButton)attachByName(new QXPushButton(), "btndljdk");
+        btndladk = (QXPushButton)attachByName(new QXPushButton(), "btndladk");
+        btndlndk = (QXPushButton)attachByName(new QXPushButton(), "btndlndk");
+        
+        btnok = (QXPushButton)attachByName(new QXPushButton(), "btnok");
+        btncan = (QXPushButton)attachByName(new QXPushButton(), "btncan");
+        apilist = (QXTreeView)attachByName(new QXTreeView(), "apilist");
+        toolslist = (QXTreeView)attachByName(new QXTreeView(), "toolslist");
+        
+        b0 = (QXPushButton)attachByName(new QXPushButton(), "b0");
+        b1 = (QXPushButton)attachByName(new QXPushButton(), "b1");
+        b2 = (QXPushButton)attachByName(new QXPushButton(), "b2");
+        
+        java = (QXLineEdit)attachByName(new QXLineEdit(), "edtjava");
+        sdk = (QXLineEdit)attachByName(new QXLineEdit(), "edtsdk");
+        ndk = (QXLineEdit)attachByName(new QXLineEdit(), "edtndk");
+        
+        pgbdl.setValue(0);
+        
+        btndljdk.setOnClickListener(
+        new QXDialog.onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                QXCore.openUrl("https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html?utm_source=androiddevtools&utm_medium=website");
+            }
+        });
+        
+        btndladk.setOnClickListener(
+        new QXDialog.onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                int osid = _system_.getPlatformId();
+                if (osid >= 0 && osid <= 2){
+                    String url = adk_url[osid];
+                    String size = adk_size[osid];
+                    
+                    bool bdl = XAndroid.workspace.hasDownloadTask("Android SDK");
+                    if (bdl){
+                        QXMessageBox.Critical("注意", "下载队列已经在执行中", QXMessageBox.Ok, QXMessageBox.Ok);
+                        return;
+                    }
+                    XPlatform.mkdir(String.formatPath(XPlatform.getAppDirectory().appendPath("download"), false));
+                    String dladkpath = String.formatPath(XPlatform.getAppDirectory().appendPath("download").appendPath("android_sdk.zip"), false);
+                    XAndroid.workspace.createDownloadTask("Android SDK", url, dladkpath, 0, new DownloadListener(){
+                        void onStatus(DownloadStatus status, int prog, Object tag)override{
+                            if ((status == DownloadStatus.DL_DONE) || (status == DownloadStatus.DL_CANCEL)){
+                                synchronized(dllist){
+                                    dllist.remove((String)tag);
+                                }
+                            }
+                            
+                            XAndroid.workspace.RunOnUi(new UIRunnable(){
+                                void run()override{
+                                    if (_sdkdialog != nilptr){
+                                        _sdkdialog.updateProgress();
+                                    }
+                                }
+                            });
+                            
+                            if (status == DownloadStatus.DL_DONE){
+                                installSDK(dladkpath, "Android SDK");
+                            }
+                        }
+                    }, "Android SDK");
+                    
+                    synchronized(dllist){
+                        dllist.put("Android SDK", 0);
+                    }
+                }
+            }
+        });
+        
+        
+        btndlndk.setOnClickListener(
+        new QXDialog.onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                int osid = _system_.getPlatformId();
+                if (osid >= 0 && osid <= 2){
+                    String url = ndk32_url[osid];
+                    if (_system_.getOSBit() == 64){
+                        url = ndk_url[osid];
+                    }
+                    String size = ndk_size[osid];
+                    
+                    bool bdl = XAndroid.workspace.hasDownloadTask("Android NDK");
+                    if (bdl){
+                        QXMessageBox.Critical("注意", "下载队列已经在执行中", QXMessageBox.Ok, QXMessageBox.Ok);
+                        return;
+                    }
+                    XPlatform.mkdir(String.formatPath(XPlatform.getAppDirectory().appendPath("download"), false));
+                    String dlndkpath = String.formatPath(XPlatform.getAppDirectory().appendPath("download").appendPath("android_ndk.zip"), false);
+                    XAndroid.workspace.createDownloadTask("Android NDK", url, dlndkpath, 0, new DownloadListener(){
+                        void onStatus(DownloadStatus status, int prog, Object tag)override{
+                           if ((status == DownloadStatus.DL_DONE) || (status == DownloadStatus.DL_CANCEL)){
+                                synchronized(dllist){
+                                    dllist.remove((String)tag);
+                                }
+                            }
+                            
+                            XAndroid.workspace.RunOnUi(new UIRunnable(){
+                                void run()override{
+                                    if (_sdkdialog != nilptr){
+                                        _sdkdialog.updateProgress();
+                                    }
+                                }
+                            });
+                            
+                            if (status == DownloadStatus.DL_DONE){
+                                installSDK(dlndkpath, "Android NDK");
+                            }
+                        }
+                    }, "Android NDK");
+                    
+                    synchronized(dllist){
+                        dllist.put("Android NDK", 0);
+                    }
+                }
+            }
+        });
+        
+        String [] columns = {"SDK", "Platform", "Android Platform", "Api", "License"};
+        
+        apilist.setColumns(columns);
+        
+        apilist.setColumnWidth(0, 150);
+        apilist.setColumnWidth(1, 100);
+        apilist.setColumnWidth(2, 300);
+        apilist.setColumnWidth(3, 150);
+        apilist.setColumnWidth(4, 150);
+        
+        String [] bcolumns = {"构建工具"};
+        
+        toolslist.setColumns(bcolumns);
+        
+        apilist.setOnTreeViewItemEvent(new QXWidget.onTreeViewItemEvent(){
+			void onItemExpanded(QXTreeView,long iitem)override{
+		
+			}
+            
+            void onItemChanged(QXTreeView _treeview, long item,int column)override{
+                bool checked = _treeview.isItemCheck(item, 0);
+                if (checked){
+                    apilevel = _treeview.getItemText(item, 3);
+                    long [] items = _treeview.getTopItems();
+                    for (int i = 0 ;i < items.length; i++){
+                        if (items[i] != item){
+                            _treeview.setItemCheck(items[i], 0, false);
+                        }
+                    }
+                }
+            }
+        });
+        
+        
+        toolslist.setOnTreeViewItemEvent(new QXWidget.onTreeViewItemEvent(){
+			void onItemExpanded(QXTreeView,long iitem)override{
+		
+			}
+            
+            void onItemChanged(QXTreeView _treeview, long item,int column)override{
+                bool checked = _treeview.isItemCheck(item, 0);
+                if (checked){
+                    buildtools = _treeview.getItemText(item, 0);
+                    long [] items = _treeview.getTopItems();
+                    for (int i = 0 ;i < items.length; i++){
+                        if (items[i] != item){
+                            _treeview.setItemCheck(items[i], 0, false);
+                        }
+                    }
+                }
+            }
+        });
+        
+        b0.setOnClickListener(
+        new QXDialog.onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                String sdk_path = QXFileDialog.getFolderPath("选择 JDK 目录", java.getText(), nilptr, AndroidSdkDialog.this);
+                if (sdk_path == nilptr  || sdk_path.length() == 0){ 
+                    return;
+                }
+                
+                String test_path = sdk_path.appendPath("bin").appendPath(JAVACNAME);
+                
+                if (XPlatform.existsSystemFile(test_path) == false){
+                    QXMessageBox.Critical("注意",sdk_path + " 不是有效的Java sdk目录",QXMessageBox.Ok,QXMessageBox.Ok);
+                }
+                java.setText(sdk_path);
+            }
+        });
+        
+        b1.setOnClickListener(
+        new QXDialog.onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                String sdk_path = QXFileDialog.getFolderPath("选择Android Sdk目录", sdk.getText(), nilptr, AndroidSdkDialog.this);
+                if (sdk_path == nilptr  || sdk_path.length() == 0){ 
+                    return;
+                }
+                setAdkDir(sdk_path);
+            }
+        });
+        
+        b2.setOnClickListener(
+        new QXDialog.onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                String sdk_path = QXFileDialog.getFolderPath("选择Android NDK目录", ndk.getText(), nilptr, AndroidSdkDialog.this);
+                if (sdk_path == nilptr || sdk_path.length() == 0){ 
+                    return;
+                }
+                
+                setNdkDir(sdk_path);
+            }
+        });
+        
+        btnok.setOnClickListener(
+        new QXDialog.onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                XAndroid.setAndroidSdkFolder(java.getText(), sdk.getText(), ndk.getText(), apilevel, buildtools);
+                close();
+            }
+        });
+        
+        
+        btncan.setOnClickListener(
+        new QXDialog.onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                close();
+            }
+        });
+        
+        setModal(true);
+        show();
+        
+        if (XAndroid.android_sdk_root != nilptr){
+            sdk.setText(String.formatPath(XAndroid.android_sdk_root, false));
+            loadAndroidSdk(XAndroid.android_sdk_root);
+        }
+        
+        if (XAndroid.android_ndk_root != nilptr){
+            ndk.setText(String.formatPath(XAndroid.android_ndk_root, false));
+        }
+        if (XAndroid.java_sdk_root != nilptr){
+            java.setText(String.formatPath(XAndroid.java_sdk_root, false));
+        }
+    }
+    
+    bool onClose()override{
+        _sdkdialog = nilptr;
+        return true;
+    }
+    static String decompressZipAndFind(String zipFile, String dir){
+        String outpath = nilptr;
+		ZipArchive zs = new ZipArchive();        
+		FileInputStream fis = new FileInputStream(zipFile);
+		if (zs.open(fis)){
+			int compress_total = zs.getEntriesCount();
+			for (int compress_prog = 0; compress_prog < compress_total; compress_prog ++){
+				ZipEntry entry = zs.getEntry(compress_prog);
+  
+                String name = entry.getName();
+                         
+                String destPath = String.formatPath(dir.appendPath(name), false);
+                
+
+				if (entry.isDirectory()){  
+                    XAndroid.mkdirs(destPath);
+                    if (outpath == nilptr){
+                        outpath = destPath;
+                    }
+                }else{
+					XAndroid.mkdirs(destPath.findVolumePath());
+                    
+					ZipFile file = entry.getFile();
+					byte []buf = new byte[1024];
+					int rd = 0;
+					if (file.open()){
+                    
+						FileOutputStream fos ;
+                        try{
+                            fos = new FileOutputStream(destPath);
+                            while ((rd = file.read(buf, 0, 1024)) != 0){
+                                fos.write(buf, 0, rd);
+                            }
+                            fos.close();
+                        }catch(Exception e){
+                            
+                        }finally{
+                            if (fos != nilptr){
+                                fos.close();
+                            }
+                        }
+						file.close();
+					}
+                }
+                
+			}
+            return outpath;
+		}
+        return nilptr;
+    }
+    static void installSDK(String localFile, String name){
+        String path = nilptr;
+        String syspath = String.formatPath(XPlatform.getAppDirectory().appendPath("android" ), false);
+        
+        showStatus("正在解压缩...");
+        
+        if (name.equals("Android SDK")){
+            path = decompressZipAndFind(localFile, syspath);
+            if (path != nilptr){
+                XAndroid.android_sdk_root = path;
+                XAndroid.saveConfig();
+            }
+        }else
+        if (name.equals("Android NDK")){
+            path = decompressZipAndFind(localFile, syspath);
+            if (path != nilptr){
+                XAndroid.android_ndk_root = path;
+                XAndroid.saveConfig();
+            }
+        }
+        
+        
+        XAndroid.workspace.RunOnUi(new UIRunnable(){
+            void run()override{
+                if (_sdkdialog != nilptr){
+                    if (path != nilptr){
+                        if (name.equals("Android SDK")){
+                            _sdkdialog.setAdkDir(path);
+                        }else
+                        if (name.equals("Android NDK")){
+                            _sdkdialog.setNdkDir(path);
+                        }
+                    }else{
+                        QXMessageBox.Information("注意", "已完成下载但不支持自动解压安装, 点OK打开文件夹", QXMessageBox.Ok,QXMessageBox.Ok );
+                        QXCore.openLocal(String.formatPath(XPlatform.getAppDirectory().appendPath("download"), false));
+                    }
+                }
+            }
+        });
+    }
+
+    static void showStatus(String text){
+        XAndroid.workspace.RunOnUi(new UIRunnable(){
+            void run()override{
+                if (_sdkdialog != nilptr){
+                    _sdkdialog.labstat.setText(text);
+                }
+            }
+        });
+    }
+    
+    void setAdkDir(String sdk_path){
+                
+        String test_path = sdk_path.appendPath("tools").appendPath(ANDROIDNAME);
+        
+        if (XPlatform.existsSystemFile(test_path) == false){
+            QXMessageBox.Critical("注意",sdk_path + " 不是有效的Android sdk目录",QXMessageBox.Ok,QXMessageBox.Ok);
+        }else{
+            loadAndroidSdk(sdk_path);
+        }
+        sdk.setText(sdk_path);
+    }
+    
+    void setNdkDir(String sdk_path){
+        String test_path = sdk_path.appendPath(NDKBUILDNAME);
+        
+        if (XPlatform.existsSystemFile(test_path) == false){
+            QXMessageBox.Critical("注意",sdk_path + " 不是有效的Android NDK目录",QXMessageBox.Ok,QXMessageBox.Ok);
+        }
+        ndk.setText(sdk_path);
+    }
+    
+    static class SDKDescr{
+        String descr;
+        String license;
+        String version;
+        String apivalue;
+        SDKDescr(String folder){
+            FileStream.FileInputStream fis = new FileStream.FileInputStream(folder.appendPath("source.properties"));
+            byte [] data = fis.read();
+            fis.close();
+            
+            String [] contents  = new String(data).split('\n');
+            for (int i =0; i < contents.length; i++){
+                if (contents[i].startWith("Pkg.Desc=")){
+                    descr = contents[i].substring(9,contents[i].length() ).trim(true);
+                }else
+                if (contents[i].startWith("Pkg.LicenseRef=")){
+                    license = contents[i].substring(15,contents[i].length() ).trim(true);
+                }else
+                if (contents[i].startWith("Platform.Version=")){
+                    version = contents[i].substring(17,contents[i].length() ).trim(true);
+                }else
+                if (contents[i].startWith("AndroidVersion.ApiLevel=")){
+                    apivalue = contents[i].substring(24,contents[i].length() ).trim(true);
+                }
+            }
+        }
+    };
+    
+    
+    void updateProgress(){
+        int total_prog = 0;
+        int task_count = 0;
+        
+        synchronized(dllist){
+            Map.Iterator<String, int> iter = dllist.iterator();
+            while (iter.hasNext()){
+                String key = iter.getKey();
+                total_prog += XAndroid.workspace.getDownloadTaskProgress(key);
+                task_count++;
+                iter.next();
+            }
+        }
+        
+        if (task_count != 0){
+            pgbdl.setValue(total_prog / task_count);
+        }else{
+            pgbdl.setValue(100);
+        }
+        
+        if (task_count > 0){
+            labstat.setText("共有 " + task_count + " 个任务正在进行中.");
+        }else{
+            labstat.setText("就绪.");
+        }
+        
+    }
+    
+    
+    void loadAndroidSdk(String sdk_path){
+        
+        apilist.clear();
+        
+        if (sdk_path != nilptr && sdk_path.length() > 0){
+            String platforms_path = sdk_path.appendPath("platforms");
+            FSObject fso = new FSObject(platforms_path);
+            long hfind = fso.openDir();
+            if (hfind != 0){
+                FSObject api_folder = new FSObject();
+                while (fso.findObject(hfind, api_folder)){
+                    String folder = api_folder.getName();
+                    try{
+                        SDKDescr sdd = new SDKDescr(api_folder.getPath());
+                        long item = apilist.addItem(Resources.api_png, folder);
+                        
+                        apilist.setItemText(item, 1, sdd.version);
+                        apilist.setItemText(item, 2, sdd.descr);
+                        if (XAndroid.api_level != nilptr && XAndroid.api_level.equals(sdd.apivalue)){
+                            apilist.setItemCheck(item, 0, true);
+                        }else{
+                            apilist.setItemCheck(item, 0, false);
+                        }
+                        apilist.setItemText(item, 3, sdd.apivalue);
+                        apilist.setItemText(item, 4, sdd.license);
+                    }catch(Exception e){
+                        
+                    }
+                    
+                }
+                fso.closeDir(hfind);
+                loadBuildTools(sdk_path);
+            }
+        }
+    }
+    
+    void checkSdkUpdate(){
+        if (apilist.getTopLevelCount() ==0 || toolslist.getTopLevelCount() == 0){
+            if (QXMessageBox.Information("注意", "找不到可用的 Build Tools 和 Platform SDK, 是否打开 SDK Manager 进行更新? ", QXMessageBox.Yes | QXMessageBox.No, QXMessageBox.Yes) == QXMessageBox.Yes){
+                XAndroid.openSdkManager();
+            }
+        }
+    }
+    void loadBuildTools(String sdk_path){
+        toolslist.clear();
+        if (sdk_path.length() > 0){
+            sdk_path = sdk_path.appendPath("build-tools");
+            FSObject fso = new FSObject(sdk_path);
+            long hfind = fso.openDir();
+            if (hfind != 0){
+                FSObject api_folder = new FSObject();
+                while (fso.findObject(hfind, api_folder)){
+                    String folder = api_folder.getName();
+                    if (folder.parseInt() != 0){
+                        try{
+                            long item = toolslist.addItem(nilptr, folder);
+                            if (XAndroid.build_tools != nilptr && XAndroid.build_tools.equals(folder)){
+                                toolslist.setItemCheck(item, 0, true);
+                            }else{
+                                toolslist.setItemCheck(item, 0, false);
+                            }
+                        }catch(Exception e){
+                            
+                        }
+                    }
+                }
+                fso.closeDir(hfind);
+            }
+        }
+        checkSdkUpdate();
+    }
+};

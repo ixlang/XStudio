@@ -1,9 +1,7 @@
 //xlang
 /** @AStyle 插件 for XStudio   */
 
-using {
-    FileStream;
-};
+
 
 class XLANGPlugManager
 {
@@ -21,21 +19,43 @@ class XLANGPlugManager
         {
 
         }
-
+		IProjectPlugin getProjectPlugin(){
+            return nilptr;
+        }
         void onTextEditorClosed(TextEditorController editor)
         {
 
         }
-
-        bool initializPlusin(IXStudioController controller)
+        bool onExit(){
+            return true;
+        }
+        bool initializPlusin(IXStudioController controller, bool enabled)
         {
             xcontroller = controller;
             workspace = xcontroller.getWorkspace();
+            if (!enabled){
+                return true; 
+            }
             workspace.addMenu(4, "astyle_single", "AStyle 格式化当前源文件", nilptr,"Ctrl+Shift+A", this);
             workspace.addMenu(4, "astyle_config", "AStyle 格式化设置", nilptr, nilptr, this);
             return true;
         }
-
+        String getIcon(){
+            return "plugins/AStyle/astyle.png";
+        }
+        long getVersion(){
+            return 1000;
+        }
+        String getDescrition(){
+            return "使用AStyle进行代码格式化的扩展组件.";
+        }
+        String publisher(){
+            return "https://github.com/ixlang/xlibraries";
+        }
+        void uninstall(IXStudioController){
+            
+        }
+        
         TextEditorPlugin getTextEditorPlugin()
         {
             return nilptr;
@@ -188,7 +208,7 @@ class XLANGPlugManager
     static void output(String text)
     {
         if (workspace != nilptr) {
-            workspace.output(text);
+            workspace.output(text, 0);
         }
     }
 };

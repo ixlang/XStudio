@@ -303,9 +303,9 @@ class MemoryLookupWnd : QXDockWidget{
             XWorkspace.workspace.debuggee.dumpMemory(offset + responselen, 512, param);
         }else{
             if (dumpfailed){
-                XWndOutput.Output("转储内存文件:" + localFile + " 仅完成部分(错误:无法访问内存)\n");
+                XWndOutput.Output("转储内存文件:" + localFile + " 仅完成部分(错误:无法访问内存)\n", 1);
             }else{
-                XWndOutput.Output("转储内存文件:" + localFile + " 已完成!\n");
+                XWndOutput.Output("转储内存文件:" + localFile + " 已完成!\n", 1);
             }
         }
     }

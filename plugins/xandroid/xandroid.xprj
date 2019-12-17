@@ -1,0 +1,62 @@
+{
+	"xandroid":	{
+		"version":	"1.2",
+		"language":	"xlang",
+		"sources":	["xandroid.xcs", ".\\XAndroid.xcsm", ".\\sdk_setting.ui", ".\\AndroidSdkDialog.xcsm", ".\\Device.xcsm", ".\\devlst.ui", ".\\DeviceListDialog.xcsm", ".\\ByteBuffer.xcsm", ".\\Resources.xcsm", ".\\reqireargs.ui", ".\\AppCreator.xcsm", ".\\LogcatCacher.xcsm"],
+		"configures":	{
+			"debug":	{
+				"path":	{
+					"incpath":	[],
+					"libpath":	["../libs", "libs"]
+				},
+				"options":	"",
+				"prebuild":	"",
+				"preclean":	"",
+				"makebuild":	"",
+				"makeclean":	"",
+				"afterbuild":	"",
+				"afterclean":	"",
+				"libs":	["XPlatform_1.0.0.2.lix", "FileStream_1.0.0.5.lix"],
+				"links":	["XStudio1.xl"],
+				"depends":	[{
+						"name":	"XPlatform",
+						"version":	"1.0.0.2"
+					}, {
+						"name":	"FileStream",
+						"version":	"1.0.0.5"
+					}],
+				"wtype":	"",
+				"ostype":	"",
+				"outname":	"$(ProjectName)$(Ext)",
+				"outpath":	"D:\\Programs\\windows_x64_dev\\plugins",
+				"command":	"-slx -c",
+				"uaclevel":	"默认",
+				"cmd":	"$(Output)",
+				"args":	"$(Output)",
+				"workdir":	"$(ProjectDir)",
+				"ignorewarning":	"",
+				"compdest":	"",
+				"ignorewl":	"",
+				"debugable":	"",
+				"debugdatabase":	""
+			},
+			"release":	{
+				"path":	{
+					"incpath":	[],
+					"libpath":	[]
+				},
+				"libs":	[],
+				"options":	"-nd",
+				"command":	"-ce",
+				"debugable":	"",
+				"outpath":	"$(ProjectDir)/$(Arch)/$(Configure)",
+				"outname":	"$(ProjectName)$(Ext)",
+				"cmd":	"$(Output)",
+				"args":	"$(Output)",
+				"workdir":	"$(ProjectDir)"
+			}
+		},
+		"icofile":	"",
+		"versioninc":	"0"
+	}
+}

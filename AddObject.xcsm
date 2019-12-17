@@ -194,7 +194,7 @@ class AddObjectDlg : QXDialog {
         
         edtName.setOnEditEventListener(new onEditEventListener(){
             void onTextChanged(QXObject, String text)override{
-				edtFile.setText(text + ".xcsm");
+				edtFile.setText(text + ".x");
             }
         });
         

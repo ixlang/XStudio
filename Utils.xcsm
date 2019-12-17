@@ -1,6 +1,40 @@
 //xlang Source, Name:Utils.xcsm 
 //Date: Thu Nov 09:02:46 2018 
 
+
+class XKernel32 : Library {
+
+    static bool loaded = false;
+
+    static bool load() {
+        if (loaded == false) {
+            try {
+                loadLibrary("kernel32.dll");
+                loaded = true;
+            } catch(Exception e) {
+
+            }
+        }
+        return loaded;
+    }
+
+    static String getWindowsDir() {
+        if (load()) {
+            byte [] dir = new byte[320];
+            int pathlen = GetWindowsDirectoryA(dir, 320);
+            return new String(dir, 0, pathlen);
+        }
+        return nilptr;
+    }
+
+    import{
+        int stdcall GetWindowsDirectoryA(
+            ObjectPtr lpBuffer,
+            int  uSize
+        );
+    };
+};
+
 class Utils{    
     
     static void readForProcess(IBuilder builder, Process _process){
@@ -19,7 +53,7 @@ class Utils{
 						oustr = new String(buffer, 0, pos);
 					}
 					pos = 0;
-					builder.OutputText(oustr);
+					builder.OutputText(oustr, 0);
 				}catch(Exception e){
 					byte [] newbuf = new byte[buffer.length + 1024];
 					_system_.arrayCopy(buffer, 0, newbuf, 0, pos);
@@ -30,7 +64,9 @@ class Utils{
 		
 		}    
     }
-     
+    static String getWindowsDir(){
+        return XKernel32.getWindowsDir();
+    }
     static void chechUpdate(int opid){
 		String fburl = String.format("http://112.124.120.113:8080/dcbinterface/api/checkupdate?osid=%d&version=%d&opid=%d&arch=%d", _system_.getPlatformId(), _system_.getAppVersion() , opid, _system_.getOSBit());
 		 
@@ -267,6 +303,17 @@ class Utils{
     
     static String getAppVersion(){
 		long vv = _system_.getAppVersion();
+		String vs = "v";
+		for (int i = 0; i < 4; i ++){
+			vs = vs + ((vv >> ((4 - (i + 1)) << 4)) & 0xffff);
+			if (i != 3){
+				vs = vs + ".";
+			}
+		}    
+        return vs;
+    }
+    
+    static String convertVersion(long vv){
 		String vs = "v";
 		for (int i = 0; i < 4; i ++){
 			vs = vs + ((vv >> ((4 - (i + 1)) << 4)) & 0xffff);

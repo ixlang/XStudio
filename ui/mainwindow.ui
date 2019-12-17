@@ -6,9 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1501</width>
-    <height>989</height>
+    <width>1864</width>
+    <height>990</height>
    </rect>
+  </property>
+  <property name="acceptDrops">
+   <bool>true</bool>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
@@ -21,46 +24,57 @@
    <property name="acceptDrops">
     <bool>true</bool>
    </property>
-   <widget class="QMdiArea" name="mdiArea">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>951</width>
-      <height>611</height>
-     </rect>
+   <layout class="QHBoxLayout" name="horizontalLayout_12">
+    <property name="spacing">
+     <number>0</number>
     </property>
-    <property name="acceptDrops">
-     <bool>true</bool>
+    <property name="leftMargin">
+     <number>0</number>
     </property>
-    <property name="sizeAdjustPolicy">
-     <enum>QAbstractScrollArea::AdjustToContents</enum>
+    <property name="topMargin">
+     <number>0</number>
     </property>
-    <property name="background">
-     <brush brushstyle="SolidPattern">
-      <color alpha="128">
-       <red>35</red>
-       <green>35</green>
-       <blue>35</blue>
-      </color>
-     </brush>
+    <property name="rightMargin">
+     <number>0</number>
     </property>
-    <property name="viewMode">
-     <enum>QMdiArea::TabbedView</enum>
+    <property name="bottomMargin">
+     <number>0</number>
     </property>
-    <property name="documentMode">
-     <bool>true</bool>
-    </property>
-    <property name="tabsClosable">
-     <bool>true</bool>
-    </property>
-    <property name="tabsMovable">
-     <bool>true</bool>
-    </property>
-    <property name="tabShape">
-     <enum>QTabWidget::Rounded</enum>
-    </property>
-   </widget>
+    <item>
+     <widget class="QMdiArea" name="mdiArea">
+      <property name="acceptDrops">
+       <bool>true</bool>
+      </property>
+      <property name="sizeAdjustPolicy">
+       <enum>QAbstractScrollArea::AdjustToContents</enum>
+      </property>
+      <property name="background">
+       <brush brushstyle="SolidPattern">
+        <color alpha="128">
+         <red>35</red>
+         <green>35</green>
+         <blue>35</blue>
+        </color>
+       </brush>
+      </property>
+      <property name="viewMode">
+       <enum>QMdiArea::TabbedView</enum>
+      </property>
+      <property name="documentMode">
+       <bool>true</bool>
+      </property>
+      <property name="tabsClosable">
+       <bool>true</bool>
+      </property>
+      <property name="tabsMovable">
+       <bool>true</bool>
+      </property>
+      <property name="tabShape">
+       <enum>QTabWidget::Rounded</enum>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="minimumSize">
@@ -93,7 +107,6 @@
    <addaction name="separator"/>
    <addaction name="actionOpen"/>
    <addaction name="separator"/>
-   <addaction name="actionFile_F"/>
    <addaction name="actionProject_P"/>
    <addaction name="separator"/>
    <addaction name="actionsave"/>
@@ -105,7 +118,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1501</width>
+     <width>1864</width>
      <height>23</height>
     </rect>
    </property>
@@ -113,14 +126,7 @@
     <property name="title">
      <string>文件(&amp;F)</string>
     </property>
-    <widget class="QMenu" name="menuNew_N">
-     <property name="title">
-      <string>新建(&amp;N)</string>
-     </property>
-     <addaction name="actionFile_F"/>
-     <addaction name="actionProject_P"/>
-    </widget>
-    <addaction name="menuNew_N"/>
+    <addaction name="actionProject_P"/>
     <addaction name="actionOpen"/>
     <addaction name="separator"/>
     <addaction name="actionclose"/>
@@ -130,6 +136,8 @@
     <addaction name="actionsaveas"/>
     <addaction name="separator"/>
     <addaction name="actionsaveproject"/>
+    <addaction name="separator"/>
+    <addaction name="actionprint"/>
     <addaction name="separator"/>
     <addaction name="actionsaveastemp"/>
     <addaction name="separator"/>
@@ -152,29 +160,59 @@
      <addaction name="actioninterface"/>
      <addaction name="actionpackage"/>
     </widget>
+    <widget class="QMenu" name="menukeyboard">
+     <property name="title">
+      <string>键盘操作</string>
+     </property>
+     <addaction name="actioncurup"/>
+     <addaction name="actioncurleft"/>
+     <addaction name="actioncurright"/>
+     <addaction name="actioncurdown"/>
+     <addaction name="separator"/>
+     <addaction name="actionlinebegin"/>
+     <addaction name="actionlineend"/>
+     <addaction name="separator"/>
+     <addaction name="actionprepage"/>
+     <addaction name="actionnextpage"/>
+     <addaction name="separator"/>
+     <addaction name="actiontotop"/>
+     <addaction name="actiontobottom"/>
+    </widget>
     <addaction name="menuaddition"/>
     <addaction name="separator"/>
     <addaction name="actionundo"/>
     <addaction name="actionredo"/>
+    <addaction name="separator"/>
+    <addaction name="actiontofront"/>
+    <addaction name="actiontoback"/>
     <addaction name="separator"/>
     <addaction name="actioncut"/>
     <addaction name="separator"/>
     <addaction name="actioncopy"/>
     <addaction name="actionpaste"/>
     <addaction name="separator"/>
+    <addaction name="actionnewlineup"/>
+    <addaction name="actionnewlinedown"/>
+    <addaction name="separator"/>
     <addaction name="actiondelete"/>
+    <addaction name="actiondelcurline"/>
     <addaction name="separator"/>
     <addaction name="actiongotodef"/>
+    <addaction name="separator"/>
+    <addaction name="actionupper"/>
+    <addaction name="actionlower"/>
     <addaction name="separator"/>
     <addaction name="actionfind"/>
     <addaction name="actionreplace"/>
     <addaction name="actionfindagain"/>
     <addaction name="separator"/>
+    <addaction name="actionmatchbrace"/>
     <addaction name="actionoverride"/>
     <addaction name="actionautocomplete"/>
     <addaction name="separator"/>
     <addaction name="actionlocalProblem"/>
     <addaction name="actiongoto"/>
+    <addaction name="menukeyboard"/>
    </widget>
    <widget class="QMenu" name="menuSln">
     <property name="title">
@@ -184,8 +222,15 @@
     <addaction name="actionclean"/>
     <addaction name="actiongenerateNativeSrc"/>
     <addaction name="separator"/>
+    <addaction name="actiondeploy"/>
+    <addaction name="actiondeployto"/>
+    <addaction name="separator"/>
+    <addaction name="actiongenmake"/>
+    <addaction name="separator"/>
     <addaction name="actioncomment"/>
     <addaction name="actionprop"/>
+    <addaction name="separator"/>
+    <addaction name="actionopenoutput"/>
    </widget>
    <widget class="QMenu" name="menuDebug">
     <property name="title">
@@ -212,14 +257,18 @@
     <addaction name="actionstoprun"/>
     <addaction name="separator"/>
     <addaction name="actiontest"/>
+    <addaction name="separator"/>
+    <addaction name="actionremotedbg"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
      <string>工具(&amp;T)</string>
     </property>
     <addaction name="actionQTCreator"/>
+    <addaction name="actionexporttools"/>
     <addaction name="separator"/>
     <addaction name="actionsetting"/>
+    <addaction name="actionpackmgr"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -239,6 +288,11 @@
     <addaction name="separator"/>
     <addaction name="actionstartup"/>
     <addaction name="actionsamples"/>
+    <addaction name="separator"/>
+    <addaction name="actioninstcext"/>
+    <addaction name="actioninstallplugin"/>
+    <addaction name="separator"/>
+    <addaction name="actionextmgr"/>
     <addaction name="separator"/>
     <addaction name="actionabout"/>
    </widget>
@@ -263,13 +317,427 @@
    <attribute name="dockWidgetArea">
     <number>8</number>
    </attribute>
-   <widget class="QWidget" name="dockWidgetContents_2"/>
+   <widget class="QWidget" name="dockWidgetContents_2">
+    <layout class="QHBoxLayout" name="horizontalLayout_13" stretch="0,1">
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_11" stretch="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0">
+       <property name="spacing">
+        <number>1</number>
+       </property>
+       <item>
+        <widget class="QPushButton" name="btnBuild">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>res/toolbar/console.png</normaloff>res/toolbar/console.png</iconset>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDebug">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>res/toolbar/debug.png</normaloff>res/toolbar/debug.png</iconset>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget_6" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>5</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDebug_2">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDebug_3">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDebug_4">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDebug_15">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDebug_14">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDebug_13">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDebug_12">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDebug_11">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDebug_10">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDebug_9">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDebug_8">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDebug_7">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDebug_6">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDebug_5">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget_5" native="true"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnCls">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>res/toolbar/error.png</normaloff>res/toolbar/error.png</iconset>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QWidget" name="edtarea" native="true">
+       <layout class="QHBoxLayout" name="horizontalLayout_14"/>
+      </widget>
+     </item>
+    </layout>
+   </widget>
   </widget>
   <widget class="QDockWidget" name="wnd_slnview">
    <property name="minimumSize">
     <size>
      <width>150</width>
-     <height>38</height>
+     <height>137</height>
     </size>
    </property>
    <property name="floating">
@@ -288,77 +756,104 @@
     <number>1</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents">
-    <widget class="QTreeWidget" name="tree_sln">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>20</y>
-       <width>271</width>
-       <height>391</height>
-      </rect>
+    <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0">
+     <property name="spacing">
+      <number>0</number>
      </property>
-     <property name="focusPolicy">
-      <enum>Qt::ClickFocus</enum>
+     <property name="leftMargin">
+      <number>0</number>
      </property>
-     <property name="contextMenuPolicy">
-      <enum>Qt::ActionsContextMenu</enum>
+     <property name="topMargin">
+      <number>0</number>
      </property>
-     <property name="sizeAdjustPolicy">
-      <enum>QAbstractScrollArea::AdjustIgnored</enum>
+     <property name="rightMargin">
+      <number>0</number>
      </property>
-     <property name="editTriggers">
-      <set>QAbstractItemView::NoEditTriggers</set>
+     <property name="bottomMargin">
+      <number>0</number>
      </property>
-     <property name="selectionMode">
-      <enum>QAbstractItemView::SingleSelection</enum>
-     </property>
-     <property name="selectionBehavior">
-      <enum>QAbstractItemView::SelectRows</enum>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>16</width>
-       <height>16</height>
-      </size>
-     </property>
-     <property name="verticalScrollMode">
-      <enum>QAbstractItemView::ScrollPerPixel</enum>
-     </property>
-     <property name="animated">
-      <bool>true</bool>
-     </property>
-     <property name="allColumnsShowFocus">
-      <bool>false</bool>
-     </property>
-     <property name="columnCount">
-      <number>1</number>
-     </property>
-     <attribute name="headerVisible">
-      <bool>false</bool>
-     </attribute>
-     <column>
-      <property name="text">
-       <string notr="true">1</string>
-      </property>
-     </column>
-    </widget>
-    <widget class="QLineEdit" name="editSearch">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>141</width>
-       <height>20</height>
-      </rect>
-     </property>
-    </widget>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <property name="leftMargin">
+        <number>2</number>
+       </property>
+       <property name="topMargin">
+        <number>2</number>
+       </property>
+       <property name="rightMargin">
+        <number>2</number>
+       </property>
+       <property name="bottomMargin">
+        <number>2</number>
+       </property>
+       <item>
+        <widget class="QLineEdit" name="editSearch">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="placeholderText">
+          <string>输入关键字搜索...</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QTreeWidget" name="tree_sln">
+       <property name="focusPolicy">
+        <enum>Qt::ClickFocus</enum>
+       </property>
+       <property name="contextMenuPolicy">
+        <enum>Qt::ActionsContextMenu</enum>
+       </property>
+       <property name="sizeAdjustPolicy">
+        <enum>QAbstractScrollArea::AdjustIgnored</enum>
+       </property>
+       <property name="editTriggers">
+        <set>QAbstractItemView::NoEditTriggers</set>
+       </property>
+       <property name="selectionMode">
+        <enum>QAbstractItemView::SingleSelection</enum>
+       </property>
+       <property name="selectionBehavior">
+        <enum>QAbstractItemView::SelectRows</enum>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>16</width>
+         <height>16</height>
+        </size>
+       </property>
+       <property name="verticalScrollMode">
+        <enum>QAbstractItemView::ScrollPerPixel</enum>
+       </property>
+       <property name="animated">
+        <bool>true</bool>
+       </property>
+       <property name="allColumnsShowFocus">
+        <bool>false</bool>
+       </property>
+       <property name="columnCount">
+        <number>1</number>
+       </property>
+       <attribute name="headerVisible">
+        <bool>false</bool>
+       </attribute>
+       <column>
+        <property name="text">
+         <string notr="true">1</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QDockWidget" name="wnd_classview">
    <property name="minimumSize">
     <size>
      <width>150</width>
-     <height>38</height>
+     <height>119</height>
     </size>
    </property>
    <property name="features">
@@ -374,33 +869,67 @@
     <number>1</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_5">
-    <widget class="QTreeWidget" name="tree_class">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>256</width>
-       <height>192</height>
-      </rect>
+    <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0">
+     <property name="spacing">
+      <number>0</number>
      </property>
-     <property name="verticalScrollMode">
-      <enum>QAbstractItemView::ScrollPerPixel</enum>
+     <property name="leftMargin">
+      <number>0</number>
      </property>
-     <property name="sortingEnabled">
-      <bool>false</bool>
+     <property name="topMargin">
+      <number>0</number>
      </property>
-     <property name="animated">
-      <bool>true</bool>
+     <property name="rightMargin">
+      <number>0</number>
      </property>
-     <attribute name="headerVisible">
-      <bool>false</bool>
-     </attribute>
-     <column>
-      <property name="text">
-       <string notr="true">1</string>
-      </property>
-     </column>
-    </widget>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_8">
+       <property name="leftMargin">
+        <number>2</number>
+       </property>
+       <property name="topMargin">
+        <number>2</number>
+       </property>
+       <property name="rightMargin">
+        <number>2</number>
+       </property>
+       <property name="bottomMargin">
+        <number>2</number>
+       </property>
+       <item>
+        <widget class="QLineEdit" name="classSearch">
+         <property name="placeholderText">
+          <string>输入关键字搜索...</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QTreeWidget" name="tree_class">
+       <property name="verticalScrollMode">
+        <enum>QAbstractItemView::ScrollPerPixel</enum>
+       </property>
+       <property name="sortingEnabled">
+        <bool>false</bool>
+       </property>
+       <property name="animated">
+        <bool>true</bool>
+       </property>
+       <attribute name="headerVisible">
+        <bool>false</bool>
+       </attribute>
+       <column>
+        <property name="text">
+         <string notr="true">1</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QToolBar" name="toolBar_2">
@@ -441,13 +970,15 @@
    <addaction name="actionpaste"/>
    <addaction name="actiondelete"/>
    <addaction name="separator"/>
-   <addaction name="actioncompile_project"/>
-   <addaction name="separator"/>
+   <addaction name="actionfind"/>
    <addaction name="actiongotodef"/>
    <addaction name="actionoverride"/>
+   <addaction name="actionclass"/>
+   <addaction name="actionfile"/>
    <addaction name="actiongenerateNativeSrc"/>
    <addaction name="actionautocomplete"/>
    <addaction name="separator"/>
+   <addaction name="actionQTCreator"/>
    <addaction name="actionprop"/>
   </widget>
   <widget class="QToolBar" name="toolBar_3">
@@ -484,6 +1015,10 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="separator"/>
+   <addaction name="actioncompile_project"/>
+   <addaction name="actionopenoutput"/>
+   <addaction name="separator"/>
    <addaction name="actiondebug"/>
    <addaction name="actionrun"/>
    <addaction name="separator"/>
@@ -519,6 +1054,8 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionstartup"/>
+   <addaction name="allwindows"/>
    <addaction name="actionhelp"/>
   </widget>
   <widget class="QDockWidget" name="wnd_info">
@@ -535,90 +1072,129 @@
     <number>8</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_3">
-    <widget class="QPushButton" name="btnError">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>270</y>
-       <width>81</width>
-       <height>23</height>
-      </rect>
+    <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,0">
+     <property name="spacing">
+      <number>4</number>
      </property>
-     <property name="text">
-      <string>错误</string>
+     <property name="leftMargin">
+      <number>0</number>
      </property>
-     <property name="icon">
-      <iconset>
-       <normaloff>res/toolbar/error.png</normaloff>res/toolbar/error.png</iconset>
+     <property name="topMargin">
+      <number>0</number>
      </property>
-     <property name="checkable">
-      <bool>true</bool>
+     <property name="rightMargin">
+      <number>0</number>
      </property>
-     <property name="checked">
-      <bool>true</bool>
+     <property name="bottomMargin">
+      <number>0</number>
      </property>
-    </widget>
-    <widget class="QPushButton" name="btnWarning">
-     <property name="geometry">
-      <rect>
-       <x>80</x>
-       <y>270</y>
-       <width>81</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>警告</string>
-     </property>
-     <property name="icon">
-      <iconset>
-       <normaloff>res/toolbar/warning_out.png</normaloff>res/toolbar/warning_out.png</iconset>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-     <property name="checked">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="btnTips">
-     <property name="geometry">
-      <rect>
-       <x>160</x>
-       <y>270</y>
-       <width>81</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>提示</string>
-     </property>
-     <property name="icon">
-      <iconset>
-       <normaloff>res/toolbar/tips.png</normaloff>res/toolbar/tips.png</iconset>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-     <property name="checked">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QTreeWidget" name="infoList">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>691</width>
-       <height>211</height>
-      </rect>
-     </property>
-     <column>
-      <property name="text">
-       <string notr="true">1</string>
-      </property>
-     </column>
-    </widget>
+     <item>
+      <widget class="QTreeWidget" name="infoList">
+       <column>
+        <property name="text">
+         <string notr="true">1</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0,0,1">
+       <property name="bottomMargin">
+        <number>4</number>
+       </property>
+       <item>
+        <widget class="QPushButton" name="btnWarning">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>75</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>警告</string>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>res/toolbar/warning_out.png</normaloff>res/toolbar/warning_out.png</iconset>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnTips">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>75</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>提示</string>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>res/toolbar/tips.png</normaloff>res/toolbar/tips.png</iconset>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnError">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>75</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>错误</string>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>res/toolbar/error.png</normaloff>res/toolbar/error.png</iconset>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget" native="true"/>
+       </item>
+      </layout>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QDockWidget" name="wnd_log">
@@ -635,87 +1211,116 @@
     <number>8</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_3">
-    <widget class="QPushButton" name="btnFilter">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>270</y>
-       <width>80</width>
-       <height>23</height>
-      </rect>
+    <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,1">
+     <property name="spacing">
+      <number>4</number>
      </property>
-     <property name="text">
-      <string>新建</string>
+     <property name="leftMargin">
+      <number>0</number>
      </property>
-     <property name="checkable">
-      <bool>false</bool>
+     <property name="topMargin">
+      <number>0</number>
      </property>
-     <property name="checked">
-      <bool>false</bool>
+     <property name="rightMargin">
+      <number>0</number>
      </property>
-    </widget>
-    <widget class="QTreeWidget" name="logList">
-     <property name="geometry">
-      <rect>
-       <x>60</x>
-       <y>0</y>
-       <width>111</width>
-       <height>211</height>
-      </rect>
+     <property name="bottomMargin">
+      <number>0</number>
      </property>
-     <column>
-      <property name="text">
-       <string notr="true">1</string>
-      </property>
-     </column>
-    </widget>
-    <widget class="QTreeWidget" name="filterlist">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>51</width>
-       <height>211</height>
-      </rect>
-     </property>
-     <column>
-      <property name="text">
-       <string notr="true">1</string>
-      </property>
-     </column>
-    </widget>
-    <widget class="QPushButton" name="btnClear">
-     <property name="geometry">
-      <rect>
-       <x>50</x>
-       <y>270</y>
-       <width>80</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>清除</string>
-     </property>
-     <property name="checkable">
-      <bool>false</bool>
-     </property>
-     <property name="checked">
-      <bool>false</bool>
-     </property>
-    </widget>
-    <widget class="QCheckBox" name="chkAutoScroll">
-     <property name="geometry">
-      <rect>
-       <x>60</x>
-       <y>220</y>
-       <width>73</width>
-       <height>18</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>自动滚动</string>
-     </property>
-    </widget>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_5" stretch="1,0,0">
+       <property name="spacing">
+        <number>4</number>
+       </property>
+       <item>
+        <widget class="QTreeWidget" name="filterlist">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>160</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>160</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <column>
+          <property name="text">
+           <string notr="true">1</string>
+          </property>
+         </column>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QPushButton" name="btnFilter">
+           <property name="text">
+            <string>新建</string>
+           </property>
+           <property name="checkable">
+            <bool>false</bool>
+           </property>
+           <property name="checked">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnClear">
+           <property name="text">
+            <string>清除</string>
+           </property>
+           <property name="checkable">
+            <bool>false</bool>
+           </property>
+           <property name="checked">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_6">
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <property name="leftMargin">
+          <number>4</number>
+         </property>
+         <property name="bottomMargin">
+          <number>2</number>
+         </property>
+         <item>
+          <widget class="QCheckBox" name="chkAutoScroll">
+           <property name="text">
+            <string>自动滚动</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QTreeWidget" name="logList">
+       <column>
+        <property name="text">
+         <string notr="true">1</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QDockWidget" name="stackinfo">
@@ -732,21 +1337,32 @@
     <number>8</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_8">
-    <widget class="QTreeWidget" name="stacklist">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>256</width>
-       <height>181</height>
-      </rect>
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <property name="spacing">
+      <number>0</number>
      </property>
-     <column>
-      <property name="text">
-       <string notr="true">1</string>
-      </property>
-     </column>
-    </widget>
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QTreeWidget" name="stacklist">
+       <column>
+        <property name="text">
+         <string notr="true">1</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QDockWidget" name="autoinfo">
@@ -763,21 +1379,32 @@
     <number>8</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_8">
-    <widget class="QTreeWidget" name="autolist">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>256</width>
-       <height>181</height>
-      </rect>
+    <layout class="QHBoxLayout" name="horizontalLayout_6">
+     <property name="spacing">
+      <number>0</number>
      </property>
-     <column>
-      <property name="text">
-       <string notr="true">1</string>
-      </property>
-     </column>
-    </widget>
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QTreeWidget" name="autolist">
+       <column>
+        <property name="text">
+         <string notr="true">1</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QDockWidget" name="watchinfo">
@@ -794,21 +1421,29 @@
     <number>8</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_8">
-    <widget class="QTreeWidget" name="watchlist">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>256</width>
-       <height>181</height>
-      </rect>
+    <layout class="QHBoxLayout" name="horizontalLayout_7">
+     <property name="leftMargin">
+      <number>0</number>
      </property>
-     <column>
-      <property name="text">
-       <string notr="true">1</string>
-      </property>
-     </column>
-    </widget>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QTreeWidget" name="watchlist">
+       <column>
+        <property name="text">
+         <string notr="true">1</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QDockWidget" name="findinfo">
@@ -825,21 +1460,32 @@
     <number>8</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_8">
-    <widget class="QTreeWidget" name="findlist">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>256</width>
-       <height>181</height>
-      </rect>
+    <layout class="QHBoxLayout" name="horizontalLayout_8">
+     <property name="spacing">
+      <number>0</number>
      </property>
-     <column>
-      <property name="text">
-       <string notr="true">1</string>
-      </property>
-     </column>
-    </widget>
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QTreeWidget" name="findlist">
+       <column>
+        <property name="text">
+         <string notr="true">1</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QDockWidget" name="bpinfo">
@@ -856,24 +1502,35 @@
     <number>8</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_8">
-    <widget class="QTreeWidget" name="bplist">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>256</width>
-       <height>181</height>
-      </rect>
+    <layout class="QHBoxLayout" name="horizontalLayout_9">
+     <property name="spacing">
+      <number>0</number>
      </property>
-     <column>
-      <property name="text">
-       <string notr="true">1</string>
-      </property>
-     </column>
-    </widget>
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QTreeWidget" name="bplist">
+       <column>
+        <property name="text">
+         <string notr="true">1</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="memoryinfo">
+  <widget class="QDockWidget" name="memlookup">
    <property name="features">
     <set>QDockWidget::DockWidgetClosable|QDockWidget::DockWidgetMovable</set>
    </property>
@@ -886,56 +1543,174 @@
    <attribute name="dockWidgetArea">
     <number>8</number>
    </attribute>
+   <widget class="QWidget" name="dockWidgetContents_8">
+    <layout class="QVBoxLayout" name="verticalLayout_10" stretch="0,1">
+     <property name="spacing">
+      <number>4</number>
+     </property>
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QWidget" name="widget_4" native="true">
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>地址:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="edtaddress"/>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btnLockup">
+          <property name="text">
+           <string>查看</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="dumpButton">
+          <property name="text">
+           <string>Dump</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QWidget" name="memcontent" native="true"/>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="memoryinfo">
+   <property name="features">
+    <set>QDockWidget::DockWidgetClosable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="allowedAreas">
+    <set>Qt::AllDockWidgetAreas</set>
+   </property>
+   <property name="windowTitle">
+    <string>实时内存</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
    <widget class="QWidget" name="dockWidgetContents_13">
-    <widget class="QPushButton" name="btnGc">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>270</y>
-       <width>81</width>
-       <height>23</height>
-      </rect>
+    <layout class="QVBoxLayout" name="verticalLayout_7" stretch="0,1,0">
+     <property name="spacing">
+      <number>4</number>
      </property>
-     <property name="text">
-      <string>GC</string>
+     <property name="leftMargin">
+      <number>0</number>
      </property>
-     <property name="icon">
-      <iconset>
-       <normaloff>res/toolbar/gc.png</normaloff>res/toolbar/gc.png</iconset>
+     <property name="topMargin">
+      <number>0</number>
      </property>
-    </widget>
-    <widget class="QPushButton" name="btnRefresh">
-     <property name="geometry">
-      <rect>
-       <x>80</x>
-       <y>270</y>
-       <width>81</width>
-       <height>23</height>
-      </rect>
+     <property name="rightMargin">
+      <number>0</number>
      </property>
-     <property name="text">
-      <string>刷新</string>
+     <property name="bottomMargin">
+      <number>0</number>
      </property>
-     <property name="icon">
-      <iconset>
-       <normaloff>res/toolbar/refresh.png</normaloff>res/toolbar/refresh.png</iconset>
-     </property>
-    </widget>
-    <widget class="QTreeWidget" name="memlist">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>691</width>
-       <height>211</height>
-      </rect>
-     </property>
-     <column>
-      <property name="text">
-       <string notr="true">1</string>
-      </property>
-     </column>
-    </widget>
+     <item>
+      <widget class="QWidget" name="memwidget" native="true">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>120</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QTreeWidget" name="memlist">
+       <column>
+        <property name="text">
+         <string notr="true">1</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_10" stretch="0,0,1">
+       <property name="spacing">
+        <number>4</number>
+       </property>
+       <property name="leftMargin">
+        <number>4</number>
+       </property>
+       <property name="bottomMargin">
+        <number>4</number>
+       </property>
+       <item>
+        <widget class="QPushButton" name="btnRefresh">
+         <property name="minimumSize">
+          <size>
+           <width>75</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>刷新</string>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>res/toolbar/refresh.png</normaloff>res/toolbar/refresh.png</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnGc">
+         <property name="minimumSize">
+          <size>
+           <width>75</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>GC</string>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>res/toolbar/gc.png</normaloff>res/toolbar/gc.png</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget_2" native="true"/>
+       </item>
+      </layout>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QDockWidget" name="gcinfo">
@@ -952,65 +1727,71 @@
     <number>8</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_13">
-    <widget class="QPushButton" name="btnUpdate">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>270</y>
-       <width>81</width>
-       <height>23</height>
-      </rect>
+    <layout class="QVBoxLayout" name="verticalLayout_9" stretch="1,0">
+     <property name="spacing">
+      <number>4</number>
      </property>
-     <property name="text">
-      <string>更新</string>
+     <property name="leftMargin">
+      <number>0</number>
      </property>
-     <property name="icon">
-      <iconset>
-       <normaloff>res/toolbar/refresh.png</normaloff>res/toolbar/refresh.png</iconset>
+     <property name="topMargin">
+      <number>0</number>
      </property>
-    </widget>
-    <widget class="QTreeWidget" name="objslist">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>691</width>
-       <height>211</height>
-      </rect>
+     <property name="rightMargin">
+      <number>0</number>
      </property>
-     <column>
-      <property name="text">
-       <string notr="true">1</string>
-      </property>
-     </column>
-    </widget>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QTreeWidget" name="objslist">
+       <column>
+        <property name="text">
+         <string notr="true">1</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_11" stretch="0,1">
+       <property name="leftMargin">
+        <number>4</number>
+       </property>
+       <property name="bottomMargin">
+        <number>4</number>
+       </property>
+       <item>
+        <widget class="QPushButton" name="btnUpdate">
+         <property name="minimumSize">
+          <size>
+           <width>75</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>更新</string>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>res/toolbar/refresh.png</normaloff>res/toolbar/refresh.png</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget_3" native="true"/>
+       </item>
+      </layout>
+     </item>
+    </layout>
    </widget>
   </widget>
-  <action name="actionFile_F">
-   <property name="icon">
-    <iconset>
-     <normaloff>res/toolbar/newfile.png</normaloff>res/toolbar/newfile.png</iconset>
-   </property>
-   <property name="text">
-    <string>文件(&amp;F)</string>
-   </property>
-   <property name="iconText">
-    <string>文件(F)</string>
-   </property>
-   <property name="toolTip">
-    <string>新建文件</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+N</string>
-   </property>
-  </action>
   <action name="actionProject_P">
    <property name="icon">
     <iconset>
      <normaloff>res/toolbar/newproj.png</normaloff>res/toolbar/newproj.png</iconset>
    </property>
    <property name="text">
-    <string>项目(&amp;P)</string>
+    <string>新建项目(&amp;P)</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+N</string>
@@ -1082,6 +1863,9 @@
    </property>
    <property name="text">
     <string>文件(&amp;F)</string>
+   </property>
+   <property name="toolTip">
+    <string>添加文件</string>
    </property>
   </action>
   <action name="actionclass">
@@ -1197,7 +1981,7 @@
      <normaloff>res/toolbar/override.png</normaloff>res/toolbar/override.png</iconset>
    </property>
    <property name="text">
-    <string>重载方法(&amp;O)</string>
+    <string>重写方法(&amp;O)</string>
    </property>
    <property name="shortcut">
     <string>Alt+V</string>
@@ -1228,6 +2012,9 @@
    </property>
   </action>
   <action name="actionclean">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>清理(&amp;C)</string>
    </property>
@@ -1330,11 +2117,17 @@
    </property>
   </action>
   <action name="actionfunction">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>函数断点(&amp;F)</string>
    </property>
   </action>
   <action name="actiondata">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>数据断点(&amp;D)</string>
    </property>
@@ -1345,8 +2138,12 @@
    </property>
   </action>
   <action name="actionQTCreator">
+   <property name="icon">
+    <iconset>
+     <normaloff>res/toolbar/qt.png</normaloff>res/toolbar/qt.png</iconset>
+   </property>
    <property name="text">
-    <string>QTCreator(UI设计器)</string>
+    <string>QT Designer(UI设计器)</string>
    </property>
   </action>
   <action name="actionhelp">
@@ -1453,6 +2250,10 @@
    </property>
   </action>
   <action name="allwindows">
+   <property name="icon">
+    <iconset>
+     <normaloff>res/toolbar/slnstr.png</normaloff>res/toolbar/slnstr.png</iconset>
+   </property>
    <property name="text">
     <string>窗口(&amp;W)</string>
    </property>
@@ -1466,7 +2267,7 @@
      <normaloff>res/toolbar/winoverlap.png</normaloff>res/toolbar/winoverlap.png</iconset>
    </property>
    <property name="text">
-    <string>重叠窗口(&amp;T)</string>
+    <string>层叠窗口(&amp;T)</string>
    </property>
   </action>
   <action name="actions">
@@ -1508,6 +2309,10 @@
    </property>
   </action>
   <action name="actionstartup">
+   <property name="icon">
+    <iconset>
+     <normaloff>res/toolbar/tips.png</normaloff>res/toolbar/tips.png</iconset>
+   </property>
    <property name="text">
     <string>起始页(&amp;S)</string>
    </property>
@@ -1520,6 +2325,209 @@
   <action name="actionsaveastemp">
    <property name="text">
     <string>保存为模板(&amp;T)</string>
+   </property>
+  </action>
+  <action name="actionremotedbg">
+   <property name="text">
+    <string>远程调试(&amp;R)</string>
+   </property>
+  </action>
+  <action name="actiontofront">
+   <property name="text">
+    <string>向前(&amp;F)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+Right</string>
+   </property>
+  </action>
+  <action name="actiontoback">
+   <property name="text">
+    <string>向后(&amp;B)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+Left</string>
+   </property>
+  </action>
+  <action name="actionopenoutput">
+   <property name="icon">
+    <iconset>
+     <normaloff>res/toolbar/opensln.png</normaloff>res/toolbar/opensln.png</iconset>
+   </property>
+   <property name="text">
+    <string>打开输出目录(&amp;O)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+O</string>
+   </property>
+  </action>
+  <action name="actionexporttools">
+   <property name="text">
+    <string>导出包工具(&amp;E)</string>
+   </property>
+  </action>
+  <action name="actionpackmgr">
+   <property name="icon">
+    <iconset>
+     <normaloff>res/toolbar/package16.png</normaloff>res/toolbar/package16.png</iconset>
+   </property>
+   <property name="text">
+    <string>包管理(&amp;P)</string>
+   </property>
+  </action>
+  <action name="actionmatchbrace">
+   <property name="icon">
+    <iconset>
+     <normaloff>res/toolbar/matchbrace.png</normaloff>res/toolbar/matchbrace.png</iconset>
+   </property>
+   <property name="text">
+    <string>匹配括号(&amp;M)</string>
+   </property>
+   <property name="shortcut">
+    <string>F2</string>
+   </property>
+  </action>
+  <action name="actiongenmake">
+   <property name="text">
+    <string>生成makefile</string>
+   </property>
+  </action>
+  <action name="actioninstcext">
+   <property name="text">
+    <string>安装编译器扩展(&amp;i)</string>
+   </property>
+  </action>
+  <action name="actiondelcurline">
+   <property name="text">
+    <string>删除当前行</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
+   </property>
+  </action>
+  <action name="actionnewlineup">
+   <property name="text">
+    <string>插入新行</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+O</string>
+   </property>
+  </action>
+  <action name="actionnewlinedown">
+   <property name="text">
+    <string>换行</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+Shift+O</string>
+   </property>
+  </action>
+  <action name="actioninstallplugin">
+   <property name="text">
+    <string>安装XStudio扩展</string>
+   </property>
+  </action>
+  <action name="actioncurup">
+   <property name="text">
+    <string>游标上移</string>
+   </property>
+  </action>
+  <action name="actioncurleft">
+   <property name="text">
+    <string>游标左移</string>
+   </property>
+  </action>
+  <action name="actioncurright">
+   <property name="text">
+    <string>游标右移</string>
+   </property>
+  </action>
+  <action name="actioncurdown">
+   <property name="text">
+    <string>游标下移</string>
+   </property>
+  </action>
+  <action name="actionprepage">
+   <property name="text">
+    <string>向上翻页</string>
+   </property>
+  </action>
+  <action name="actionnextpage">
+   <property name="text">
+    <string>向下翻页</string>
+   </property>
+  </action>
+  <action name="actiontotop">
+   <property name="text">
+    <string>到顶部</string>
+   </property>
+  </action>
+  <action name="actiontobottom">
+   <property name="text">
+    <string>到底部</string>
+   </property>
+  </action>
+  <action name="actionlinebegin">
+   <property name="text">
+    <string>游标至行首</string>
+   </property>
+  </action>
+  <action name="actionlineend">
+   <property name="text">
+    <string>游标至行尾</string>
+   </property>
+  </action>
+  <action name="actionupper">
+   <property name="text">
+    <string>转为大写(&amp;U)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+U</string>
+   </property>
+  </action>
+  <action name="actionlower">
+   <property name="text">
+    <string>转为小写(&amp;L)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+U</string>
+   </property>
+  </action>
+  <action name="actionprint">
+   <property name="icon">
+    <iconset>
+     <normaloff>res/toolbar/printer.png</normaloff>res/toolbar/printer.png</iconset>
+   </property>
+   <property name="text">
+    <string>打印(&amp;P)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
+   </property>
+  </action>
+  <action name="actionprintpreview">
+   <property name="text">
+    <string>打印预览</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+P</string>
+   </property>
+  </action>
+  <action name="actiondeploy">
+   <property name="text">
+    <string>部署依赖包</string>
+   </property>
+  </action>
+  <action name="actiondeployto">
+   <property name="text">
+    <string>部署到路径...</string>
+   </property>
+  </action>
+  <action name="actionextmgr">
+   <property name="icon">
+    <iconset>
+     <normaloff>res/toolbar/dynamic.png</normaloff>res/toolbar/dynamic.png</iconset>
+   </property>
+   <property name="text">
+    <string>扩展管理(&amp;E)</string>
    </property>
   </action>
  </widget>

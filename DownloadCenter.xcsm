@@ -1,0 +1,202 @@
+//xlang Source, Name:DownloadCenter.xcsm 
+//Date: Wed Dec 15:23:25 2019 
+
+class DownloadCenter{
+    static Map<String, Downloader> dltasks = new Map<String, Downloader> ();
+    
+    static bool cancelDownload = false;
+    
+    static void createDownload(String key, String url, String local, long totalsize, DownloadListener ls, Object tag){
+        new Downloader(key, url, local, totalsize, ls, tag);
+    }
+    
+    static int getTaskProgress(String key){
+        synchronized(dltasks){
+            try{
+                return dltasks.get(key).progress;
+            }catch(Exception e){
+                
+            }
+        }
+        return -1;
+    }
+    
+    static List<String> getKeys(){
+        List<String> keys = new List<String>();
+        synchronized(dltasks){
+            Map.Iterator<String, Downloader> iter = dltasks.iterator();
+            while (iter.hasNext()) {
+                keys.add(iter.getKey());
+                iter.next();
+            }
+        }
+        return keys;
+    }
+    static bool hasTask(){
+        return dltasks.size() != 0;
+    }
+    static Downloader getTask(String key){
+        try{
+            synchronized(dltasks){
+               return dltasks.get(key);
+            }
+        }catch(Exception e){
+            
+        }
+        return nilptr;
+    }
+    
+    static class Downloader : Thread{
+        DownloadListener lis ;
+        Object _tag;
+        bool bcancel = false;
+        String url, localfile;
+        long dltotalsize;
+        int progress = 0;
+        DownloadStatus state = DownloadStatus.DL_UNKNOW;
+        String key;
+        
+        Downloader(String _key, String _url, String _local, long _totalsize, DownloadListener dl, Object tag){
+            localfile = _local;
+            key = _key;
+            url = _url;
+            dltotalsize = _totalsize;
+            lis = dl;
+            _tag = tag;
+            start();
+        }
+        
+        void run()override{
+            synchronized(dltasks){
+                dltasks.put(key, this);
+            }
+            
+            long totallen = 0;
+            FileOutputStream fos;
+            try{
+                HttpRequest req = new HttpRequest();
+                fos = new FileOutputStream(localfile);
+                String _url = url;
+                state = DownloadStatus.DL_BEGIN;
+                progress = 0;
+                
+                updateProgress();
+
+                String proxy_type = Setting.get("proxy_type");
+                String proxy_host = Setting.get("proxy_host");
+                String proxy_port = Setting.get("proxy_port");
+                String proxy_user = Setting.get("proxy_user");
+                String proxy_pwd = Setting.get("proxy_pwd");
+                
+                if (proxy_type != nilptr && proxy_type.length() != 0 &&  
+                    proxy_host != nilptr && proxy_host.length() != 0 &&  
+                    proxy_port != nilptr && proxy_port.length() != 0)
+                {
+                    int proxytype = HttpRequest.PROXY_HTTP;
+                    
+                    switch(proxy_type){
+                        case "HTTP1.0":
+                        proxytype = HttpRequest.PROXY_HTTP_10;
+                        break;
+                        case "SOCKS4":
+                        proxytype = HttpRequest.PROXY_SOCKS4;
+                        break;
+                        case "SOCKS5":
+                        proxytype = HttpRequest.PROXY_SOCKS5;
+                        break;
+                        case "SOCKS4A":
+                        proxytype = HttpRequest.PROXY_SOCKS4A;
+                        break;
+                        case "SOCK5_HOSTNAME":
+                        proxytype = HttpRequest.PROXY_HTTP_SOCKS5_HOSTNAME;
+                        break;
+                        default :
+                        proxytype = HttpRequest.PROXY_HTTP;
+                        break;
+                    }
+                    if (proxy_user != nilptr && proxy_user.length() == 0){
+                        proxy_user = nilptr;
+                    }
+                    if (proxy_pwd != nilptr && proxy_pwd.length() == 0){
+                        proxy_pwd = nilptr;
+                    }
+                    req.setProxy(proxy_host,proxy_port.parseInt(),proxytype,proxy_user,proxy_pwd);
+                }
+                
+                if (req.get(_url, 0, _url.upper().startWith("HTTPS://"))){
+                    if (req.getResponseCode() >= 200){
+                        if (dltotalsize <= 0){
+                            dltotalsize = req.getLength();
+                        }
+                        byte [] data = new byte[4096];
+                        state = DownloadStatus.DL_INPROCESSING;
+                        while ((bcancel == false) && (req.available(true) > 0)){
+                            int readlen = req.readData(data,0,data.length);
+                            fos.write(data, 0, readlen);
+                            totallen += readlen;
+                            progress = (int)( (totallen * 100) / dltotalsize);
+                            updateProgress();
+                            if (cancelDownload){
+                                break;
+                            }
+                        }
+                    }
+                }
+            }catch(Exception e){
+                
+            }finally{
+                if (fos != nilptr){
+                    fos.close();
+                }
+            }
+            
+            progress = totallen == dltotalsize ? 100 : 0;
+            
+            if (!bcancel){
+                state = ( (totallen == dltotalsize) ? DownloadStatus.DL_DONE : DownloadStatus.DL_FAILED);
+            }else{
+                state = DownloadStatus.DL_CANCEL;
+            }
+
+            updateProgress();
+            
+            synchronized(dltasks){
+                dltasks.remove(key);
+            }
+        }
+        
+        void updateProgress(){
+            if (lis != nilptr){
+                lis.onStatus(state, progress, _tag);
+            }
+        }
+        
+        void setCancel(bool bc){
+            bcancel = bc;
+        }
+    };
+    
+    static void stopAlldownload(){
+        cancelDownload = true;
+    }
+    
+    static bool hasDownload(){
+        return dltasks.size() > 0;
+    }
+    
+    static bool hasDownloadTask(String key){
+        synchronized(dltasks){
+            return dltasks.containsKey(key);
+        }
+    }
+        
+    static void cancelDownloadTask(String key){
+        try{
+            synchronized(dltasks){
+                dltasks.get(key).setCancel(true);
+            }
+        }catch(Exception e){
+            
+        }
+    }
+};

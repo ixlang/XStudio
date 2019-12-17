@@ -365,7 +365,7 @@ class XSourceEditor : QXMdiSubWindow {
             String prekey = strpretext.upper();
             if (prekey.equals(".") == false) {
                 String patternkey = ".*";
-                for (int i = 0; i < prekey.length(); i++) {
+                for (int i = 0, c = prekey.length(); i < c; i++) {
                     patternkey = patternkey + prekey.substring(i, i + 1) + ".*";
                 }
                 for (int i = 0; i < _lastis.length; i++) {
@@ -621,7 +621,7 @@ class XSourceEditor : QXMdiSubWindow {
         int end = _sci.sendEditor(QXSci.SCI_WORDENDPOSITION, pos, 0);
         //int line = _sci.positionToLine(pos);
         String curKeyWord = _sci.getText(start, end).trim(true);
-
+    
         if (curKeyWord.length() > 0) {
             if (lastKey.equals(curKeyWord)) {
                 return ;
@@ -636,39 +636,39 @@ class XSourceEditor : QXMdiSubWindow {
             lastKey = "";
         }
 
-        synchronized(rtLock) {
-            if (rtThread == nilptr) {
-                rtThread = new Thread() {
-                    void run()override {
-
-                        Thread.sleep(500);
-
-                        if (lastKey.length() > 0) {
-                            JsonObject json = XWorkspace.workspace.debuggee.queryObjectByName(ThreadManager.currentThreadId, ThreadManager.currentFrameId, lastKey);
-
-                            if (json != nilptr) {
-                                JsonArray watches;
-                                try {
-                                    watches = (JsonArray)json.get("watch");
-                                } catch(Exception e) {
-
-                                }
-
-                                if (watches != nilptr) {
-                                    if (watches.length() > 0) {
-                                        showRtInfos(lastpos, watches);
+        if (lastKey != nilptr ){
+                synchronized(rtLock) {
+                    if (rtThread == nilptr) {
+                        rtThread = new Thread() {
+                            void run()override {
+                                Thread.sleep(500);
+                                String thekey = lastKey.trim(true);
+                                if (thekey.length() > 0) {
+                                    JsonObject json = XWorkspace.workspace.debuggee.queryObjectByName(ThreadManager.currentThreadId, ThreadManager.currentFrameId, thekey);
+                                    if (json != nilptr) {
+                                        JsonArray watches;
+                                        try {
+                                            watches = (JsonArray)json.get("watch");
+                                        } catch(Exception e) {
+                                        }
+                                        if (watches != nilptr) {
+                                            if (watches.length() > 0) {
+                                                showRtInfos(lastpos, watches);
+                                            }
+                                        }
                                     }
                                 }
+                                // _system_.output(obj.toString(true));
+                                synchronized(rtLock) {
+                                    rtThread = nilptr;
+                                }
                             }
-                            // _system_.output(obj.toString(true));
-                        }
-                        rtThread = nilptr;
+                        };
+                        rtThread.start();
                     }
-                };
-                rtThread.start();
-            }
+                }
+            
         }
-
     }
 
     void showRtInfos(int pos, JsonArray watches) {
@@ -690,10 +690,17 @@ class XSourceEditor : QXMdiSubWindow {
 
                             if (valueroot != nilptr) {
                                 //int valueType = valueroot.getInt("valuetype");
-                                values = valueroot.getString("value");
-
+                                if (valueroot.has("thumb")){
+                                    values = valueroot.getString("thumb");
+                                }else{
+                                    values = valueroot.getString("value");
+                                }
                                 if (values == nilptr) {
-                                    values = "nilptr";
+                                    if (valueroot.has("object_id")){
+                                        values = "[]";
+                                    }else{
+                                        values = "nilptr";
+                                    }
                                 }
                                 String tips = name + "\n" + "类型:" + stype + "\n" + "值:" + values;
 
@@ -1989,8 +1996,10 @@ class XSourceEditor : QXMdiSubWindow {
                     _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_OPERATOR, colorConfig.getOperatorForeColor()/* 0xff859dd6 0xffFEE7Bf*/);
                     _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.SCE_C_STRINGEOL, colorConfig.getStringEOLColor());
                     _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_WORD, colorConfig.getWordForeColor());
-
+                    
+                    _sci.sendEditor(QXSci.SCI_STYLESETBOLD, QXSci.SCE_C_WORD, 1);
                     _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_WORD2, colorConfig.getWord2ForeColor());
+                    
                     _sci.sendEditor(QXSci.SCI_STYLESETBOLD, QXSci.SCE_C_WORD2, 1);
                     _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.SCE_C_WORD2, colorConfig.getWord2BackColor());
                     _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_STRING, colorConfig.getStringForeColor());
@@ -2000,7 +2009,7 @@ class XSourceEditor : QXMdiSubWindow {
                     _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENT, colorConfig.getCommentForeColor());
                     _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTLINE, colorConfig.getCommentLineForeColor());
                     _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTDOC, colorConfig.getDocCommentForeColor());
-
+                    
                     _sci.sendEditor(QXSci.SCI_CALLTIPSETBACK, colorConfig.getCallTipsBackColor());
                     _sci.sendEditor(QXSci.SCI_CALLTIPSETFORE, colorConfig.getCallTipsForeColor());
 
@@ -2534,7 +2543,7 @@ class XSourceEditor : QXMdiSubWindow {
         while (saved == false) {
             if (savepath.startWith("#")) {
                 while (saved == false) {
-                    String file = QXFileDialog.getSaveFileName("保存文件", filePath,  "X Source (Module) (*.xcs *.xcsm)", this);
+                    String file = QXFileDialog.getSaveFileName("保存文件", filePath,  "X Source (Module) (*.x *.xcs *.xcsm)", this);
                     if (file != nilptr && file.length() > 0) {
                         //另存
                         saved = saveAs(file);
@@ -2560,7 +2569,7 @@ class XSourceEditor : QXMdiSubWindow {
                         saved = true;
                         String ext = savepath.findExtension();
                         if (ext != nilptr && ext.length() > 0) {
-                            if (ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm")) {
+                            if (ext.equalsIgnoreCase(".x") || ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm")) {
                                 _mdi_area.UpdateIntelliSense(savepath, content);
                             }
                         }
@@ -2588,7 +2597,7 @@ class XSourceEditor : QXMdiSubWindow {
     }
 
     void saveFileAs() {
-        String file = QXFileDialog.getSaveFileName("保存文件", filePath,  "X Source (Module) (*.xcs *.xcsm)", this);
+        String file = QXFileDialog.getSaveFileName("保存文件", filePath,  "X Source (Module) (*.x *.xcs *.xcsm)", this);
         if (file != nilptr && file.length() > 0) {
             saveAs(file);
         }
@@ -2723,7 +2732,7 @@ class XSourceEditor : QXMdiSubWindow {
                 if (filename == nilptr) {
                     filename = bp.file;
                 }
-                String file = QXFileDialog.getOpenFileName("打开文件:" + filename, bp.file,  "X Souerces Module(*.xcs *.xcsm)", XWorkspace.workspace);
+                String file = QXFileDialog.getOpenFileName("打开文件:" + filename, bp.file,  "X Souerces Module(*.x *.xcs *.xcsm)", XWorkspace.workspace);
                 if (file != nilptr && file.length() > 0) {
                     wnd = findDocumentWindow(XWorkspace.workspace, file, bp.active);
                     if (wnd != nilptr) {

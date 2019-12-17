@@ -54,9 +54,39 @@ class XMenuManager
                           //"actiondata",
                           "actionsaveproject"
                          };
+                         
         enabledMenus(names, b);
+        
+        String []names_ext = {
+          "actionstepin",
+          "actionstepover",
+          "actionstepout",
+          "actionbreak",
+          "actionbreakpoint",
+          "actionstoprun"
+        };
+        
+        if (b){
+            enabledMenus(names_ext, !b);
+        }
     }
 
+    static void setProjectBuilding(bool b)
+    {
+        String []names = {"actioncloseproject",
+                          "actioncompile_project",
+                          "actionclean",
+                          "actionprop",
+                          "actiongenerateNativeSrc",
+                          "actiongenmake",
+                          "actiondeploy",
+                          "actiondeployto",
+                          "actiondebug",
+                          "actionrun"
+                         };
+        enabledMenus(names, !b);
+    }
+    
     static void refreshDebugMenu(bool bDebug)
     {
         String []enable_names = {
@@ -145,6 +175,7 @@ class XMenuManager
                           "actiontobottom",
                           "actionnewlineup",
                           "actionnewlinedown",
+                          "actionbreakpoint",
                           "actionpaste",
                           "actiondelete",
                           "actiondelcurline",
@@ -221,7 +252,7 @@ class XMenuManager
                 return ;
             }
             if (name.equals("actioncompile_project")) {
-                app._mdispace.build();
+                app._mdispace.build(nilptr);
                 return ;
             }
             if (name.equals("actionclean")) {
@@ -273,6 +304,10 @@ class XMenuManager
             }
             if (name.equals("actioncut")) {
                 app._mdispace.Cut();
+                return ;
+            }
+            if (name.equals("actionextmgr")){
+                app._mdispace.openExtMgr();
                 return ;
             }
             if (name.equals("actioncopy")) {
@@ -495,9 +530,9 @@ class XMenuManager
                 String buildtime = String.formatDate("%Y年%m月%d日", _system_.getAppTimestamp());
                 app.mainWindow.About("关于",
                                      "<Strong>XStudio(Xlang 集成开发环境) Release " + Utils.getAppVersion() + " </Strong><br /><br />" +
-                                     "开发语言: Xlang v3.0<br /><br />" +
+                                     "开发语言: Xlang v3.1<br /><br />" +
                                      "编译时间: " + buildtime + "<br /><br />" +
-                                     "<b>该软件使用xlang 3.0 开发, 软件全部源代码可在xlang的example中找到," +
+                                     "<b>该软件使用xlang 3.1 开发, 软件全部源代码可在xlang的example中找到," +
                                      "native部分为C++与Xlang的XNL项目(同样在example代码中), native项目仅有软件使用的部分调用," +
                                      "如需要用于其它开发需要修改native项目增加接口.</b><br /><br />" +
                                      "该软件的使用不受任何限制,可用于任意用途的修改或者发布.<br /><br />" +
@@ -532,14 +567,14 @@ class XMenuManager
 
     class ExternMenuEvent : QXObject.onEventListener
     {
-        Map<String, IXPlugin> menu_plusin = new Map<String, IXPlugin>();
+        Map<String, IXPlugin> menu_plugin = new Map<String, IXPlugin>();
 
         void onTrigger(QXObject obj)override
         {
             String name = obj.getName();
             if (name != nilptr) {
                 try {
-                    IXPlugin plugin = menu_plusin.get(name);
+                    IXPlugin plugin = menu_plugin.get(name);
                     if (plugin != nilptr) {
                         plugin.onMenuTrigged(name);
                     }
@@ -551,19 +586,20 @@ class XMenuManager
 
         void addMenu(QXAction action, String name, IXPlugin plugin)
         {
-            menu_plusin.put(name, plugin);
+            menu_plugin.put(name, plugin);
             action.setOnEventListener(_externListener);
         }
 
         bool check(String name)
         {
-            return menu_plusin.containsKey(name);
+            return menu_plugin.containsKey(name);
         }
     };
 
     bool addMenu(int mainid, String name, String text, String icon, String shortcut, IXPlugin plugin)
     {
-        if (_externListener.check(name)) {
+        bool bSeparator = text.equals("-");
+        if (bSeparator == false && _externListener.check(name)) {
             return false;
         }
 
@@ -580,8 +616,12 @@ class XMenuManager
         } else {
             action = menu.addAction(text);
         }
-
-        if (action != nilptr) {
+    
+        if (bSeparator){
+            action.setSeparator(true);
+        }
+        
+        if (action != nilptr && !bSeparator) {
             action.setName(name);
             if (shortcut != nilptr) {
                 action.setShortcut(shortcut);
@@ -607,7 +647,7 @@ class XMenuManager
             "actionnewlinedown","actionpaste","actiondelete","actiondelcurline","actiongotodef","actionfind","actiongoto","actionreplace","actionfindagain","actionoverride",
             "actionautocomplete","actionopenoutput","actioncompile_project","actionclean","actiongenerateNativeSrc","actiongenmake","actionprop","actionfunction","actiondata",
             "actionlocalProblem","actionstartup","actionmatchbrace","actiondebug","actionremotedbg","actionrun","actionstepin","actionstepover","actionstepout","actionbreakpoint",
-            "menunewbreakpoint","actionbreak","actionstoprun","actiontest","actioncomment","actionexporttools","actionQTCreator","actionhelp","actionsendfeedback","actionsamples",
+            "menunewbreakpoint","actionbreak","actionstoprun","actiontest","actioncomment","actionexporttools","actionQTCreator","actionhelp","actionextmgr","actionsendfeedback","actionsamples",
             "actionabout","sortwindows", "actionoverlapped","allwindows","actiontoback","actiontofront","actioninstcext","actioninstallplugin","actioncurup","actioncurleft",
             "actioncurright","actioncurdown","actionlinebegin","actionlineend","actionprepage","actionnextpage","actiontotop","actiontobottom","menukeyboard","actionupper",
             "actionlower","actionprint", "actiondeploy", "actiondeployto"

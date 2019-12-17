@@ -165,6 +165,60 @@ interface SyntaxHighlighting
 };
 
 
+interface IProject
+{
+    bool cloneConfigure(String tempName, String newName);
+    void removeConfigure(String tempName);
+    bool detectSourcesModified();
+    void updateSourceModified();
+    bool setCurrentConfigure(String configName, bool btips);
+    Configure getConfigure(String name);
+    Configure getCurrentConfig();
+    String getOutputDir();
+    String getOutputTarget();
+    String getOutputName();
+    void setOption(String key, String text);
+    void deploy();
+    void deployto(String path);
+    String getOption(String key);
+    String readSlnFile(String file);
+    JsonArray getSources();
+    String getComment();
+    void setComment(String comment);
+    String map_variable(String text);
+    String getName();
+    String getLanguage();
+    bool addSource(String filePath);
+    String replaceSource(int index, String filePath);
+    bool save();
+    bool saveAs(String path);
+    String getSourcePath(int id);
+    String generateFullPath(String source_path);
+    String getFullPath(String source_path);
+    String getProjectDir();
+    int getSourceFileCount();
+    String getSourceItem(int id);
+    void removeSource(int id);
+    String rename(int sourceID, String newname);
+    bool isPathSeted();
+    void setPath(String path);
+    bool isModified();
+    void setTag(String key, Object obj);
+    Object getTag(String key);
+    bool importPackage(String packName, String ver);
+};
+
+class BuildListener{
+    enum BuildState{
+        BuildSuccess, 
+        BuildFailed, 
+        BuildSkip,
+        BuildPending
+    };
+    
+	void onBuild(bool success);
+};
+
 interface WorkspaceController
 {
     TextEditorController findTextEditor(String path, bool openIfNotFound);
@@ -175,16 +229,35 @@ interface WorkspaceController
     void restoreModifyMonitorAutoLoad();
     bool saveFile(String path);
     bool toggleBreakpointAtLine(String path, long line, bool bSet);
-    void output(String text);
+    void output(String text, int id);
     void setStatus(String text);
     bool addMenu(int mainid, String name, String text, String icon, String shortcut, IXPlugin plugin);
     void RunOnUi(UIRunnable);
+    bool createRemoteDebug(String ip, int port);
+    bool run();
+    bool stopRun();
+    IProject getCurrentProject();
+    BuildListener.BuildState buildCurrentProject(BuildListener lis);
+    QXMainWindow getMainWindow();
+    bool installXep(String path);
+    
+    void showStatusMessage(String text);
+    void showWaitProgress(String text);
+    void showProgress(String text, int value);
+    void updateProgress(String text, int value);
+    void hideProgress(String text);
+    int registryOutput(String icon);
+    void createDownloadTask(String key, String url, String local, long totalsize, DownloadListener ls, Object tag);
+    void cancelDownloadTask(String key);
+    bool hasDownloadTask(String key);
+    int getDownloadTaskProgress(String key);
 };
 
 interface IXStudioController
 {
     WorkspaceController getWorkspace();
 };
+
 
 interface TextEditorController
 {
@@ -222,15 +295,37 @@ interface TextEditorPlugin
     String getIconFile();
 };
 
-interface IXPlugin
+interface WizardLoader{
+	IProject loadProject(String file);
+	void openTextFile(String file);
+};
+
+interface IProjectPlugin{
+    String getWizard(bool projectExist);
+    bool createProject(WizardLoader loader, String projectName, String projectDir, String uuid, IProject ownProject, bool addToProject);
+    bool onpreCompile(IProject project);
+    void onpostCompile(IProject project);
+    bool onpreRun(IProject project, bool debug);
+    void onpostRun(IProject project, bool debug);
+    String getTargetPath(IProject project);
+};
+
+interface IXPlugin 
 {
     String getName();
     void onTextEditorCreated(TextEditorController);
     void onTextEditorClosed(TextEditorController);
-    bool initializPlusin(IXStudioController );
+    bool initializPlusin(IXStudioController , bool enabled);
     TextEditorPlugin getTextEditorPlugin();
     IProject loadProject(JsonObject content, String lang);
     void onMenuTrigged(String id);
+    IProjectPlugin getProjectPlugin();
+    bool onExit();
+    long getVersion();
+    String getDescrition();
+    String publisher();
+    void uninstall(IXStudioController);
+    String getIcon();
 };
 
 interface UIRunnable
@@ -238,68 +333,28 @@ interface UIRunnable
     void run();
 };
 
-
-
-interface IProject
-{
-    IConfigure getConfigure(String name);
-    String getOutputDir();
-    JsonObject getContent();
-    String getProjectPath();
-    String getOutputTarget();
-    bool cloneConfigure(String tempName, String newName);
-    void setOption(String key, String text);
-    String getOption(String key);
-    String getName();
-    String getLanguage();
-    bool addSource(String filePath);
-    bool save();
-    String getSourcePath(int id);
-    String getProjectDir();
-    int getSourceFileCount();
-    String getSourceItem(int id);
-    bool detectSourcesModified();
-    void removeSource(int id);
-    void removeConfigure(String tempName);
-    String rename(int sourceID, String newname);
-    void setPath(String path);
-    bool isModified();
-    bool setCurrentConfigure(String configName, bool btips);
-    int getConfigureCount();
-    IConfigure getConfigure(int index);
-    String getComment();
-    IXPlugin getPlugin();
-    void setComment(String );
-    void close();
-    bool build(Builder _builder, BuildListener l, XlangProjectProp. BuildParams params);
-    bool cleanup(Builder _builder);
-    void stopRun();
-    bool debugRun(Builder _builder);
-    bool Run(Builder _builder);
-    XIntelliSense.XIntelliResult [] XISQueryM(String sourcePath,int line);
-    XIntelliSense.XIntelliResult [] getIntelliSenseObject(String sourcePath,int line,String keyWord);
-    bool updateIntelliSenseFile(String path, String content);
-    bool updateXintelliSense();
-    XIntelliSense.XIntelliResult [] getIntelliSense(String sourcePath,String content,long position);
-    XIntelliSense.XIntelliResult [] getIntelliSenseL(String sourcePath,int line);
-    void setSlnViewLong(long id);
-    void setFileViewLong(long id);
-
-    long getSlnViewLong();
-    long getFileViewLong();
-};
-
 interface IConfigure
 {
     void setOption(String key, String text);
-    IConfigure clone(String newName);
+    void save();
+    bool isModified();
     void setLibs(String text);
     void setLinks(String text);
     String getLibs();
     String getLinks();
     void setLibsPath(String text);
+    bool addLib(String lib, String xpname, String xpver);
+    bool addLink(String lib, String xpname, String xpver);
     bool addPathToLibpath(String path);
-    bool createConfigure(String projName,JsonObject project, String configName);
+    bool removeDepend(String xpname);
+    String getDependsString();
+    void setDependsString(String value);
+    bool addDepends(String xpname, String version);
+    int getArchId();
+    String getLibsPath();
+    String getIncsPath();
+    void setIncsPath(String text);
+    String getOption(String key);
     String getName();
 };
 
@@ -312,46 +367,180 @@ static class XPluginShell
     }
     IXPlugin _plugin;
     bool inited = false;
+    bool disable = false;
 };
 
+enum DownloadStatus{
+    DL_UNKNOW,
+    DL_BEGIN,
+    DL_INPROCESSING,
+    DL_DONE,
+    DL_CANCEL,
+    DL_FAILED
+};
+
+interface DownloadListener{
+    void onStatus(DownloadStatus status, int prog, Object tag);
+};
+    
 class PluginsController
 {
-
     static Map<String, XPluginShell> plugins_list = new Map<String, XPluginShell>();
-
     static void initPlugins(IXStudioController ic)
     {
         Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
         while (iter.hasNext()) {
             XPluginShell splug = iter.getValue();
-            if ((splug._plugin != nilptr) && (splug.inited == false)) {
-                splug._plugin.initializPlusin(ic);
+            
+            if ((splug._plugin != nilptr) && (splug.inited == false) && (splug.disable == false)) {
+                splug.disable = !ExtensionManager.isEnabled(iter.getKey());
+                splug._plugin.initializPlusin(ic, !splug.disable);
                 splug.inited = true;
             }
             iter.next();
         }
     }
 
+    static bool exitPlugins()
+    {
+        Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
+        while (iter.hasNext()) {
+            XPluginShell splug = iter.getValue();
+            if ((splug._plugin != nilptr) && (splug.inited)) {
+                if (false == splug._plugin.onExit()){
+                    return false;
+                }
+            }
+            iter.next();
+        }
+        return true;
+    }
+    
     static IXPlugin getPlugin(String language)
     {
         Map.Iterator<String, XPluginShell> iter = plugins_list.find(language);
+        
         if (iter != nilptr) {
-            return iter.getValue()._plugin;
-        }
-        return nilptr;
-    }
-
-    static IProject openProject(String language, JsonObject content)
-    {
-        Map.Iterator<String, XPluginShell> iter = plugins_list.find(language);
-        if (iter != nilptr) {
-            IXPlugin plug = iter.getValue()._plugin;
-            if (plug != nilptr) {
-                return plug.loadProject(content, language);
+            XPluginShell splug = iter.getValue();
+            if (splug.disable == false){
+                return iter.getValue()._plugin;
             }
         }
         return nilptr;
     }
+
+
+    static bool callProjectPlugin(Project project, int step)
+    {
+        
+        Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
+        while (iter.hasNext()) {
+            XPluginShell splug = iter.getValue();
+            if (splug.disable == false){
+                IProjectPlugin pplugin = splug._plugin.getProjectPlugin();
+                if (pplugin != nilptr){
+                    switch(step){
+                        case 0:
+                        if (pplugin.onpreCompile(project) == false){
+                            return false;
+                        }
+                        break;
+                        case 1:
+                        pplugin.onpostCompile(project);
+                        break;
+                        case 2:
+                        if (pplugin.onpreRun(project, false) == false){
+                            return false;
+                        }
+                        break;
+                        case 3:
+                        pplugin.onpostRun(project, false);
+                        break;
+                        case 4:
+                        if (pplugin.onpreRun(project, true) == false){
+                            return false;
+                        }
+                        break;
+                        case 5:
+                        pplugin.onpostRun(project, true);
+                        break;
+                    }
+                }
+            }
+            iter.next();
+        }
+        return true;
+    }
+    
+    static IProject openProject(String language, JsonObject content)
+    {
+        Map.Iterator<String, XPluginShell> iter = plugins_list.find(language);
+        if (iter != nilptr) {
+            XPluginShell splug = iter.getValue();
+            if (splug._plugin != nilptr&& (splug.disable == false)) {
+                return splug._plugin.loadProject(content, language);
+            }
+        }
+        return nilptr;
+    }
+    
+    static List<IProjectPlugin> getProjectPluginList(){
+        List<IProjectPlugin> list = new List<IProjectPlugin>();
+        Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
+        while (iter.hasNext()) {
+            XPluginShell splug = iter.getValue();
+            if ( (splug.disable == false)){
+                IProjectPlugin pplugin = splug._plugin.getProjectPlugin();
+                if (pplugin != nilptr){
+                    list.add(pplugin);
+                }
+            }
+            iter.next();
+        }
+        return list;
+    }
+    
+    static String getProjectTargetPath(IProject project){
+        String target;
+        Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
+        while (iter.hasNext()) {
+            XPluginShell splug = iter.getValue();
+            if ( (splug.disable == false)){
+                IProjectPlugin pplugin = splug._plugin.getProjectPlugin();
+                if (pplugin != nilptr){
+                    target = pplugin.getTargetPath(project);
+                    if (target != nilptr){
+                        break;
+                    }
+                }
+            }
+            iter.next();
+        }
+        return target;
+    }
+    
+    static bool setPluginDisabled(String plugins, bool disabled)
+    {
+        try{
+            ExtensionManager.setEnabled(plugins, !disabled);
+            plugins_list.get(plugins).disable = disabled;
+            return true;
+        }catch(Exception e){
+            
+        }
+        return false;
+    }
+    static bool uninstallPlugin(String plugins)
+    {
+        try{
+            plugins_list.get(plugins)._plugin.uninstall(QxApp._theApp._xstudio_controller);
+            return true;
+        }catch(Exception e){
+            
+        }
+        return false;
+    }
+    
 };
 
 class PluginManager
@@ -360,6 +549,16 @@ class PluginManager
     {
         if (plugin != nilptr) {
             PluginsController.plugins_list.put(plugin.getName(), new XPluginShell(plugin));
+        }
+    }
+    static void unregistryPlugins(String name)
+    {
+        if (name != nilptr) {
+            try{
+                PluginsController.plugins_list.remove(name);
+            }catch(Exception e){
+                
+            }
         }
     }
 };

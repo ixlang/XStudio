@@ -2,25 +2,142 @@
 //Date: Sat Aug 11:30:44 2018 
 class StatusBarMgr{
 	QXMainWindow mainWindow;
-	QXStatusBar statusBar;
+	static QXStatusBar statusBar;
     static StatusBarMgr statusmgr;
-	//QXProgressBar progressBar = new QXProgressBar();
-	//QXLabel []status = new QXLabel[3];
+	static QXProgressBar progressBar;
+	static QXLabel status;
+    static QXPushButton background_task;
+    
+    static Timer task_timer = new Timer();
+    
 	bool create(QXMainWindow win){  
 		mainWindow = win; 
 		statusBar = mainWindow.getStatusBar();
         statusmgr = this;
-		/*progressBar.create();
-		statusBar.addPermanentWidget(progressBar, 0);
-		for (int i =0; i < 3; i ++){
-			status[i] = new QXLabel();
-			status[i].create();
-			statusBar.addPermanentWidget(status[i], 0);
-		}*/
-		return false;
+		
+        status = new QXLabel();
+        status.create();
+        statusBar.addWidget(status, 1);
+        status.setText("已就绪");
+                
+        background_task = new QXPushButton();
+        background_task.create();
+        background_task.hide();
+        background_task.resize(20,20);
+        background_task.setFixedWidth(20);
+        statusBar.addPermanentWidget(background_task, 0);
+        
+        background_task.setOnClickListener(new QXWidget.onClickListener(){
+            void onPress(QXObject obj) override{
+                showDLMgr();
+            }
+        });
+        
+        progressBar = new QXProgressBar();
+        progressBar.create();
+        progressBar.resize(200,16);
+        progressBar.hide();
+        statusBar.addPermanentWidget(progressBar, 0);
+        
+        task_timer.schedule(
+        new TimerTask(){
+            int step = 0;
+            bool showed = false;
+            
+            void run()override{
+                bool bmust_update = false;
+                bool hasTask = DownloadCenter.hasTask();
+                if (showed != hasTask){
+                    showed = !showed;
+                    bmust_update = true;
+                    mainWindow.runOnUi(new Runnable(){
+                       void run()override{
+                           background_task.setVisible(showed);
+                       } 
+                    });
+                }
+                
+                if (showed || bmust_update){
+                    mainWindow.runOnUi(new Runnable(){
+                       void run()override{
+                           background_task.setStyleSheetString(String.format( "border:0; background-image:url(res/toolbar/dlstat_%d.png);background-repeat:no-repeat; background-position:center;background-attachment:fixed;", step++));
+                           DownloadManager.updateProgress();
+                       } 
+                    });
+                    if (step > 5){
+                        step = 0;
+                    }
+                }
+
+            }
+        },300,-1);
+        
+        return false;
 	}
     
     static void showStatusMessage(String text){
-		statusmgr.statusBar.showMessage(text);
+        statusBar.runOnUi(new Runnable(){
+            void run()override{
+                status.setText(text);
+            }
+        });
+    }
+    
+    static bool showDLMgr()
+    {
+        QXDialog newDlg = new QXDialog();
+        if (newDlg.load("ui/dlmgr.ui") == false) {
+            return false;
+        }
+        DownloadManager dlmgr = new DownloadManager();
+        dlmgr.attach(newDlg);
+        return true;
+    }
+    
+    static void showWaitProgress(String text){
+        statusBar.runOnUi(new Runnable(){
+            void run()override{
+                progressBar.setMinimum(0);
+                progressBar.setMaximum(0);
+                progressBar.show();
+                if (text != nilptr){
+                    status.setText(text);
+                }
+            }
+        });
+    }
+    
+    static void showProgress(String text, int value){
+        statusBar.runOnUi(new Runnable(){
+            void run()override{
+                progressBar.setMinimum(0);
+                progressBar.setMaximum(100);
+                progressBar.show();
+                progressBar.setValue(value);
+                if (text != nilptr){
+                    status.setText(text);
+                }
+            }
+        });
+    }
+    static void updateProgress(String text, int value){
+        statusBar.runOnUi(new Runnable(){
+            void run()override{
+                progressBar.setValue(value);
+                if (text != nilptr){
+                    status.setText(text);
+                }
+            }
+        });
+    }
+    static void hideProgress(String text){
+        statusBar.runOnUi(new Runnable(){
+            void run()override{
+                progressBar.hide();
+                if (text != nilptr){
+                    status.setText(text);
+                }
+            }
+        });
     }
 };

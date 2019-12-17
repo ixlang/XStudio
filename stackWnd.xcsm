@@ -307,13 +307,13 @@ class XStackInfor : QXDockWidget{
 				case XDBG_STATE_CREATE:
 					createThread(tid);
                     if (bOutputThreadStatus){
-						XWndOutput.Output("线程:" + tid + " 已创建/启动.\n");
+						XWndOutput.Output("线程:" + tid + " 已创建/启动.\n", 1);
                     }
 				break;
 				case XDBG_STATE_EXIT:
 					exitThread(tid);
                     if (bOutputThreadStatus){
-						XWndOutput.Output("线程:" + tid + " 已退出/休眠.\n");
+						XWndOutput.Output("线程:" + tid + " 已退出/休眠.\n", 1);
                     }
 				break;
 				case XDBG_STATE_EXCEPTION:

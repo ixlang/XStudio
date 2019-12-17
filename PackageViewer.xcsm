@@ -13,110 +13,23 @@ class PackageViewer : QXDialog{
     
     static PackageViewer _viewer = nilptr;
     static Object prog_lock = new Object();
-    static bool cancelDownload = false;
-    enum DownloadStatus{
-        DL_UNKNOW,
-        DL_BEGIN,
-        DL_INPROCESSING,
-        DL_DONE
-    };
     
-    interface DownloadListener{
-        void onStatus(DownloadStatus status, int prog, Object tag);
-    };
+    static Map<String, int> dllist = new Map<String, int>();
     
-    static Map<String, Downloader> dltasks = new Map<String, Downloader> ();
-    
-    static class Downloader : Thread{
-        DownloadListener lis ;
-        Object _tag;
-        PackageManager.PackageInfo dlpkg;
-        int progress = 0;
-        DownloadStatus state = DownloadStatus.DL_UNKNOW;
-        
-        Downloader(PackageManager.PackageInfo pkg, DownloadListener dl, Object tag){
-            dlpkg = pkg;
-            lis = dl;
-            _tag = tag;
-            start();
-        }
-        
-        void run()override{
-            synchronized(dltasks){
-                dltasks.put(dlpkg.name, this);
-            }
-            
-            long totallen = 0;
-            FileOutputStream fos;
-            try{
-                HttpRequest req = new HttpRequest();
-                fos = new FileOutputStream(dlpkg.cacheFile);
-                String _url = dlpkg.url;
-                state = DownloadStatus.DL_BEGIN;
-                progress = 0;
-                updateProgress();
-                
-                
-                
-                if (req.get(_url, 0, _url.upper().startWith("HTTPS://"))){
-                    if (req.getResponseCode() >= 200){
-                        byte [] data = new byte[4096];
-                        state = DownloadStatus.DL_INPROCESSING;
-                        while (req.available(true) > 0){
-                            int readlen = req.readData(data,0,data.length);
-                            fos.write(data, 0, readlen);
-                            totallen += readlen;
-                            progress = (int)( (totallen * 100) / dlpkg.dlsize);
-                            updateProgress();
-                            if (cancelDownload){
-                                break;
-                            }
-                        }
-                    }
-                }
-            }catch(Exception e){
-                
-            }finally{
-                if (fos != nilptr){
-                    fos.close();
-                }
-            }
-            
-            progress = totallen == dlpkg.dlsize ? 100 : 0;
-            state = DownloadStatus.DL_DONE;
-
-            synchronized(dltasks){
-                dltasks.remove(dlpkg.name);
-            }
-            
-            updateProgress();
-        }
-        
-        void updateProgress(){
-            if (lis != nilptr){
-                lis.onStatus(state, progress, _tag);
-            }
-        }
-    };
-    
-    static void stopAlldownload(){
-        cancelDownload = true;
-    }
-    static bool hasDownload(){
-        return dltasks.size() > 0;
-    }
     void updateProgress(){
         int total_prog = 0;
         int task_count = 0;
-        synchronized(dltasks){
-            Map.Iterator<String, Downloader> iter = dltasks.iterator();
+        
+        synchronized(dllist){
+            Map.Iterator<String, int> iter = dllist.iterator();
             while (iter.hasNext()){
-                Downloader dl = iter.getValue();
-                total_prog += dl.progress;
+                String key = iter.getKey();
+                total_prog += DownloadCenter.getTaskProgress(key);
                 task_count++;
                 iter.next();
             }
         }
+        
         if (task_count != 0){
             progressBar.setValue(total_prog / task_count);
         }else{
@@ -396,7 +309,7 @@ class PackageViewer : QXDialog{
         if (items.length > 0){
             for (int i =0; i < items.length; i++){
                 long dlid = pcklist.getItemTag(items[i], 3);
-                if (dlid > 0){
+                if (dlid > 0 && dlid < net_cache_pis.length){
                     int nid = dlid - 1;
                     PackageManager.PackageInfo pinfo = net_cache_pis[nid];
                     if (pinfo.detectCache()){
@@ -421,22 +334,30 @@ class PackageViewer : QXDialog{
                     if (pinfo.detectCache()){
                         install(pinfo.cacheFile);
                     }else{ 
-                        Downloader dler = new Downloader(net_cache_pis[nid], new DownloadListener(){
+                        DownloadCenter.createDownload(net_cache_pis[nid].name, net_cache_pis[nid].url, net_cache_pis[nid].cacheFile, net_cache_pis[nid].dlsize, new DownloadListener(){
                             void onStatus(DownloadStatus status, int prog, Object tag){
-                                        synchronized(prog_lock){
-                                            if (_viewer != nilptr){
-                                                _viewer.runOnUi(new Runnable(){
-                                                    void run() override{
-                                                        synchronized(prog_lock){
-                                                            _viewer.onUpdateProgress(status, prog, tag);
-                                                        }
-                                                    }
-                                                });
+                                synchronized(prog_lock){
+                                    if (_viewer != nilptr){
+                                        _viewer.runOnUi(new Runnable(){
+                                            void run() override{
+                                                synchronized(prog_lock){
+                                                    _viewer.onUpdateProgress(status, prog, tag);
+                                                }
                                             }
-                                        }
-                                   
+                                        });
+                                    }
+                                }
+                                if ((status == DownloadStatus.DL_DONE) || (status == DownloadStatus.DL_CANCEL)){
+                                    synchronized(dllist){
+                                        dllist.remove(net_cache_pis[nid].name);
+                                    }
+                                }
                             }
                         },net_cache_pis[nid]);
+                        
+                        synchronized(dllist){
+                            dllist.put(net_cache_pis[nid].name, 0);
+                        }
                     }
                 }
             }
@@ -470,6 +391,7 @@ class PackageViewer : QXDialog{
                     
                     break;
                 }
+                break;
             }
         }
         updateProgress();
@@ -660,10 +582,13 @@ class PackageViewer : QXDialog{
             }else
             if (bUpgrade){
 				if (QXMessageBox.Question("升级包","是否删除旧版包?",QXMessageBox.Yes | QXMessageBox.Cancel,QXMessageBox.Yes) == QXMessageBox.Yes){
-					PackageManager.PackageInfo pe = pm.findPackage(pi.name, pi.version);
+					PackageManager.PackageInfo pe = pm.findPackage(pi.name, nilptr);
 					
 					while (pe != nilptr){
-						pm.deletePackage(pe);
+                        long v = Utils.getVersionValue(pe.version);
+                        if (v < newVersion){
+                            pm.deletePackage(pe);
+                        }
 						pe = pm.findPackage(pi.name, pi.version);
 					}
                 }
@@ -719,10 +644,10 @@ class PackageViewer : QXDialog{
 						
 						PackageManager.PackageInfo pi = pis[i];
 						if (pi != nilptr){
-							XWndOutput.Output("\n导入 " + pi.name + " 版本:" + pi.version  + " ....\n");
+							XWndOutput.Output("\n导入 " + pi.name + " 版本:" + pi.version  + " ....\n", 0);
 							XWorkspace.workspace.currentProject.importPkg(pi);
 						}else{
-							XWndOutput.Output("\n第 " + (i + 1) + " 是无效的包.\n");
+							XWndOutput.Output("\n第 " + (i + 1) + " 是无效的包.\n", 0);
 						}
 						pv.EnableProgress(true,  (double)i + 1 / (double)items.length);
 					}
@@ -730,7 +655,7 @@ class PackageViewer : QXDialog{
 					pv.showResult(true, true);
 					pv.setTitleText("已导入");
 					pv.dismissAfter(2000);
-					XWndOutput.Output("\n已全部导入完毕\n");
+					XWndOutput.Output("\n已全部导入完毕\n", 0);
                     
                     runOnUi(new Runnable(){
 						void run()override{
@@ -794,7 +719,7 @@ class PackageViewer : QXDialog{
             }
             
             pcklist.setItemText(item, 4, pi.author);
-            pcklist.setItemTag(item, 0, 0);
+            pcklist.setItemTag(item, 0, -1);
         }
     }
     

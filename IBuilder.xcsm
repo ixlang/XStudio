@@ -14,9 +14,6 @@ class ICompileInfo{
 class IBuilder{
     String build(String compilerPath, String []args, String workDir);
     void setCompileInfor(Vector<ICompileInfo> infos);
-    void OutputText(String text);
+    void OutputText(String text, int id);
 }; 
  
-class BuildListener{
-	void onBuild(bool success);
-};

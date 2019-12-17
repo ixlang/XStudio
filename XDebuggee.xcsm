@@ -42,7 +42,8 @@ class XDebuggee{
         ModuleLoaded = 30,
         LookupMemory = 31,
         DumpMemory = 32,
-        GCInfo = 33;
+        GCInfo = 33,
+        DBGExit = 34;
            
     bool isDebugging = false;
      
@@ -135,10 +136,10 @@ class XDebuggee{
     
     bool connect(IBuilder builder, String host, int port){
 		StreamSocket _socket = new StreamSocket();
-        builder.OutputText("\n正在连接到调试端口:" + port + "...\n");
+        builder.OutputText("\n正在连接到调试端口:" + port + "...\n", 1);
                 
 		if (_socket.connect(host, port)){
-			builder.OutputText("\n已连接调试器!\n");
+			builder.OutputText("\n已连接调试器!\n", 1);
 			if (_socket.write(debug_helo, 0, debug_helo.length) > 0){
 				byte []recvdata = new byte[22];
 
@@ -148,7 +149,7 @@ class XDebuggee{
 					int rd = _socket.read(recvdata, readed, 22 - readed) ;
                     if (rd <=0){
 						_socket.close();
-                        builder.OutputText("\无法连接到远程调试端口!\n");
+                        builder.OutputText("\无法连接到远程调试端口!\n", 1);
                         return false;
                     }
 					readed += rd;
@@ -263,6 +264,10 @@ class XDebuggee{
 		sendCommand(GcDump, 0, new byte[0], 0);
     }
     
+    void dbgSendExit(){
+		sendCommand(DBGExit, 0, new byte[0], 0);
+    }
+    
     static class QueryThread{
 		JsonObject object;
         bool cancel = false;
@@ -327,7 +332,7 @@ class XDebuggee{
 		String module = json.getString("module");
         bool bSymbol = json.getBool("symbol");
         
-        XWndOutput.Output(module + (bSymbol ? " 已加载调试信息.\n" : " 未找到调试信息.\n"));
+        XWndOutput.Output(module + (bSymbol ? " 已加载调试信息.\n" : " 未找到调试信息.\n"), 1);
         
 		BreakPointWnd.SendBreakPoint();
         sendCommand(ModuleLoaded, 0, new byte[0], 0);
@@ -645,7 +650,7 @@ class XDebuggee{
 						message = new String(data, 0, data.length);
                     }
 				}
-				XWndOutput.Output(message + "\n");
+				XWndOutput.Output(message + "\n", 1);
             break;
             
             case Active:

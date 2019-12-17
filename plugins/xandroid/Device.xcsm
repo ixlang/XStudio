@@ -1,0 +1,19 @@
+//xlang Source, Name:Device.xcsm 
+//Date: Mon Dec 18:13:22 2019 
+
+class Device{
+    String serial;
+    String model;
+    String type;
+    
+    Device(String devStr){
+        int ip = devStr.indexOf('\t');
+        if (ip != -1){
+            serial = devStr.substring(0, ip).trim(true);
+            type = devStr.substring(ip, devStr.length()).trim(true);
+            XAndroid.queryDeviceModel(this);
+        }else{
+            throw new Exception();
+        }
+    }
+};

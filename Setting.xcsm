@@ -99,7 +99,7 @@ class Setting : QXDialog {
 							Map.Iterator<String,String> iter = keyMap.find(shortkey);
                             if (iter != nilptr){
 								String oldKey = iter.getValue();
-                                XWndOutput.outputWnd.Output("加速键 [" + names[0] + "] 与 [" + oldKey + "] 存在冲突:" + shortkey + "\n");
+                                XWndOutput.outputWnd.Output("加速键 [" + names[0] + "] 与 [" + oldKey + "] 存在冲突:" + shortkey + "\n", 0);
                                 bConflict = true;
                             }else{
 								keyMap.put(shortkey, names[0]);
@@ -305,7 +305,7 @@ class Setting : QXDialog {
             void onClick(QXObject obj, bool checked)override{
                 saveSetting();
                 applySetting();
-                //QxApp.statusBar.statusBar.showMessage("部分设置需要在XStudio重新开启后生效.");
+                //QxApp.statusBar.showStatusMessage("部分设置需要在XStudio重新开启后生效.");
                 if (oldbuildinsetting != isShowBuildin()){
 					XWndClass.refresh();
 				}
@@ -862,6 +862,10 @@ class Setting : QXDialog {
     
     static bool isDarkStyle(){
 		return get("style").equals("深色");
+    }
+    
+    static String getStyle(){
+		return get("style");
     }
     
     static bool isIntellisense(){

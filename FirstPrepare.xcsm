@@ -29,7 +29,7 @@ class FirstPrepare : QXDialog{
                 if (dark.getChecked()){
 					Setting.setSetting("style", "深色");
                 }else{
-					Setting.setSetting("style", "操作系统默认");
+					Setting.setSetting("style", "浅色");
                 }
                 
                 QXMessageBox.Information("提示", "如需再次更改外观请至菜单 <a style=\"color:#ffff0000\">[工具] ->[选项]</a> 进行操作.", QXMessageBox.Ok, QXMessageBox.Ok);

@@ -1,5 +1,5 @@
 
-class Project
+class Project : IProject
 {
     static const int XPROJECT_VERSION = 1;
 
@@ -19,9 +19,27 @@ class Project
     Thread build_thread;
     bool bModified = false;
 
+
+    Configure getCurrentConfig()override{
+        return currentConfig;
+    }
+    Map<String, Object> _tagList;
     Map<String, Configure> configures = new Map<String, Configure>();
 
-    bool cloneConfigure(String tempName, String newName)
+    void setTag(String key, Object obj){
+        _tagList.put(key, obj);
+    }
+    
+    Object getTag(String key){
+        try{
+            return _tagList.get("key");
+        }catch(Exception e){
+            
+        }
+        return nilptr;
+    }
+    
+    bool cloneConfigure(String tempName, String newName) override
     {
         if (configures.containsKey(newName) == false) {
             Configure cfgs = getConfigure(tempName);
@@ -42,7 +60,7 @@ class Project
         return false;
     }
 
-    void removeConfigure(String tempName)
+    void removeConfigure(String tempName)override
     {
         configures.remove(tempName);
         try {
@@ -54,7 +72,7 @@ class Project
     }
 
 
-    bool detectSourcesModified()
+    bool detectSourcesModified()override
     {
         Configure configure = currentConfig;
 
@@ -74,7 +92,7 @@ class Project
         return false;
     }
 
-    void updateSourceModified(){
+    void updateSourceModified()override{
         Configure configure = currentConfig;
 
         if (configure != nilptr) {
@@ -97,7 +115,7 @@ class Project
          }
      }*/
 
-    bool setCurrentConfigure(String configName, bool btips)
+    bool setCurrentConfigure(String configName, bool btips)override
     {
         if (configName.length() > 0) {
             try {
@@ -115,7 +133,7 @@ class Project
         return false;
     }
 
-    Configure getConfigure(String name)
+    Configure getConfigure(String name)override
     {
         if (name.length() > 0) {
             try {
@@ -127,7 +145,7 @@ class Project
         return nilptr;
     }
 
-    String getOutputDir()
+    String getOutputDir()override
     {
         if (currentConfig != nilptr) {
             String out_path = currentConfig .getOption("outpath");
@@ -137,7 +155,7 @@ class Project
         return nilptr;
     }
 
-    String getOutputTarget()
+    String getOutputTarget()override
     {
         if (currentConfig != nilptr) {
             return String.formatPath(XlangProjectProp.map_variable(this, currentConfig, currentConfig.getOption("outpath").appendPath(currentConfig.getOption("outname"))), false);
@@ -145,7 +163,7 @@ class Project
         return nilptr;
     }
 
-    String getOutputName()
+    String getOutputName()override
     {
         if (currentConfig != nilptr) {
             return String.formatPath(XlangProjectProp.map_variable(this, currentConfig, currentConfig.getOption("outname")), false);
@@ -153,31 +171,38 @@ class Project
         return nilptr;
     }
     
-    void setOption(String key, String text)
+    void setOption(String key, String text)override
     {
         root.remove(key);
         root.put(key, text);
         bModified = true;
     }
 
-    bool importPackage(PackageManager.PackageInfo pi)
+    bool importPackage(String packName, String ver)override
     {
-        return true;
+        PackageManager pm = new PackageManager();
+        if (pm.load()){
+            PackageManager.PackageInfo pi = pm.findPackage(packName,ver);
+            if (pi != nilptr){
+                return importPkg(pi);
+            }
+        }
+        return false;
     }
 
-    void deploy(){
+    void deploy()override{
     	if (currentConfig != nilptr){
     		currentConfig.dodeploy(this);
         }
     }
     
-    void deployto(String path){
+    void deployto(String path)override{
     	if (currentConfig != nilptr){
     		currentConfig.dodeployto(this, path);
         }
     }
     
-    String getOption(String key)
+    String getOption(String key)override
     {
         String value = nilptr;
         try {
@@ -211,7 +236,13 @@ class Project
     void thread_build(Builder _builder, BuildListener l, XlangProjectProp. BuildParams params)
     {
         if (_propinterface != nilptr) {
-            bool succ = _propinterface.build(_builder, this, currentConfig, params);
+            bool succ = true;
+            
+            if (PluginsController.callProjectPlugin(this,0)){
+                succ = _propinterface.build(_builder, this, currentConfig, params);
+                PluginsController.callProjectPlugin(this,1);
+            }
+            
             build_thread = nilptr;
             if (l != nilptr) {
                 l.onBuild(succ);
@@ -233,25 +264,17 @@ class Project
 
     bool cleanup(Builder _builder)
     {
-        Builder.clear(true);
+        Builder.clearComm(true);
 
         synchronized(buildlock) {
             if (build_thread == nilptr) {
-
-                ProgressView pv = ProgressView.showWait(-1);
-
-                pv.centerScreen();
-
-                pv.setTitleText("正在清理...");
-
-                _builder.OutputText("[" + String.formatDate("%c", _system_.currentTimeMillis()) + "] 已启动清理...\n");
+                StatusBarMgr.showWaitProgress("正在清理...");
+                _builder.OutputText("[" + String.formatDate("%c", _system_.currentTimeMillis()) + "] 已启动清理...\n", 0);
 
                 build_thread = new Thread() {
                     void run() {
                         thread_cleanup(_builder);
-                        pv.showResult(true, true);
-                        pv.setTitleText("清理完成");
-                        pv.dismissAfter(1000);
+                        StatusBarMgr.hideProgress("清理完成");
                     }
                 };
                 build_thread.start();
@@ -268,23 +291,22 @@ class Project
         synchronized(buildlock) {
             if (build_thread == nilptr) {
 
-                Builder.clear(true);
+                Builder.clearComm(true);
 
-                ProgressView pv = ProgressView.showWait(-1);
 
-                pv.centerScreen();
-
-                pv.setTitleText("正在编译...");
-
-                _builder.OutputText("[" + String.formatDate("%c", _system_.currentTimeMillis()) + "] 已启动编译...\n");
-
+                StatusBarMgr.showWaitProgress("正在编译...");
+                _builder.OutputText("[" + String.formatDate("%c", _system_.currentTimeMillis()) + "] 已启动编译...\n", 0);
+                XMenuManager.setProjectBuilding(true);
                 build_thread = new Thread() {
                     void run() {
                         thread_build(_builder, l, params);
-                        pv.showResult(true, true);
-                        pv.setTitleText("编译完成");
+                        StatusBarMgr.hideProgress("编译完成");
                         updateSourceModified();
-                        pv.dismissAfter(1000);
+                        XWorkspace.workspace.runOnUi(new Runnable(){
+                            void run(){
+                                XMenuManager.setProjectBuilding(false);
+                            }
+                        });
                     }
                 };
                 build_thread.start();
@@ -298,12 +320,12 @@ class Project
         return true;
     }
 
-    JsonArray getSources()
+    JsonArray getSources()override
     {
         return root.getArray("sources");
     }
 
-    String getComment()
+    String getComment()override
     {
         String text = root.getString("comment");
         if (text == nilptr) {
@@ -312,7 +334,7 @@ class Project
         return text;
     }
 
-    void setComment(String comment)
+    void setComment(String comment)override
     {
         bModified = true;
         if (comment == nilptr) {
@@ -411,21 +433,21 @@ class Project
         return true;
     }
 
-    String map_variable(String text)
+    String map_variable(String text)override
     {
         return variables.map_variable(text);
     }
-    String getName()
+    String getName()override
     {
         return projectName;
     }
 
-    String getLanguage()
+    String getLanguage()override
     {
         return languageConf;
     }
 
-    bool addSource(String filePath)
+    bool addSource(String filePath)override
     {
         String rfp = filePath.toRelativePath(getProjectDir(), false, false);
         /*_system_.consoleWrite(String.format(" %s toRelativePath %s = %s\n", filePath, getProjectDir(), rfp));*/
@@ -450,7 +472,7 @@ class Project
         return false;
     }
 
-    String replaceSource(int index, String filePath)
+    String replaceSource(int index, String filePath)override
     {
         String rfp = filePath.toRelativePath(getProjectDir(), false, false);
         /*_system_.consoleWrite(String.format(" %s toRelativePath %s = %s\n", filePath, getProjectDir(), rfp));*/
@@ -473,7 +495,7 @@ class Project
         return nilptr;
     }
 
-    bool save()
+    bool save()override
     {
         FileOutputStream fos = nilptr;
         try {
@@ -652,7 +674,7 @@ class Project
 
         }
     }
-    bool saveAs(String path)
+    bool saveAs(String path)override
     {
         FileOutputStream fos = nilptr;
         try {
@@ -669,7 +691,7 @@ class Project
         return false;
     }
 
-    String getSourcePath(int id)
+    String getSourcePath(int id)override
     {
         String path = getSourceItem(id);
         if (path != nilptr) {
@@ -681,13 +703,13 @@ class Project
     	String source_path = getSource(id);
     	return getFullPath(source_path);
     }*/
-    String generateFullPath(String source_path)
+    String generateFullPath(String source_path)override
     {
         String fullpath = source_path.toAbsolutePath(getProjectDir());
         return String.formatPath(fullpath, false);
     }
 
-    String getFullPath(String source_path)
+    String getFullPath(String source_path)override
     {
         String fullpath = String.formatPath(source_path.toAbsolutePath(getProjectDir()), false).replace("\\", "/");
 
@@ -701,21 +723,21 @@ class Project
 
         return String.formatPath(finalpath, false);
     }
-    String getProjectDir()
+    String getProjectDir()override
     {
         return projpath.findVolumePath();
     }
 
-    int getSourceFileCount()
+    int getSourceFileCount()override
     {
         return root.getArray("sources").length();
     }
 
-    String getSourceItem(int id)
+    String getSourceItem(int id)override
     {
         return root.getArray("sources").getString(id);
     }
-    void removeSource(int id)
+    void removeSource(int id)override
     {
         String szFile = getSourcePath(id);
         if (intelliSense != nilptr) {
@@ -730,7 +752,7 @@ class Project
 
     }
 
-    String rename(int sourceID, String newname)
+    String rename(int sourceID, String newname)override
     {
         String path = getSourcePath(sourceID);
         if ( _system_.rename(path, newname)) {
@@ -746,17 +768,17 @@ class Project
         return nilptr;
     }
 
-    bool isPathSeted()
+    bool isPathSeted()override
     {
         return projpath != nilptr;
     }
 
-    void setPath(String path)
+    void setPath(String path)override
     {
         projpath = path;
     }
 
-    bool isModified()
+    bool isModified()override
     {
         if (bModified == false) {
             Map.Iterator<String, Configure> iter = configures.iterator();
@@ -810,14 +832,14 @@ class Project
                     text = text + (new String(data, 0, rd));
                 }
                 text = text + "\n################################# README.END #################################\n\n\n";
-                XWndOutput.Output(text);
+                XWndOutput.Output(text, 0);
                 zf.close();
             }
         }
     }
 
 
-    void importPkg(PackageManager.PackageInfo pi)
+    bool importPkg(PackageManager.PackageInfo pi)
     {
         try {
             FileInputStream fis = new FileInputStream(pi.filepath);
@@ -835,10 +857,10 @@ class Project
                 }
                 
                 if (entry == nilptr){
-                    XWndOutput.Output("注意:无效的包:" + pi.name + ".\n");
+                    XWndOutput.Output("注意:无效的包:" + pi.name + ".\n", 0);
                     zs.close();
                     fis.close();
-                    return ;
+                    return false;
                 }
                 String lixName = pi.name + "_" + pi.version + (isxl ? ".xl" : ".lix");
 
@@ -848,7 +870,7 @@ class Project
 
                 String destlix = destpath.appendPath(lixName);
 
-                XWndOutput.Output("生成引用库: " + destlix + " ....   ");
+                XWndOutput.Output("生成引用库: " + destlix + " ....   ", 0);
 
                 int rd = 0;
                 ZipFile zfile = entry.getFile();
@@ -862,9 +884,9 @@ class Project
 
                     zfile.close();
                     fos.close();
-                    XWndOutput.Output("成功.\n");
+                    XWndOutput.Output("成功.\n", 0);
                     if (currentConfig.importPkg(this, pi, zs, lixName, pi.name, pi.version)) {
-                        XWndOutput.Output("注意:此包含有运行时文件, 项目目标程序运行位置发生改变时可能需要依赖.\n");
+                        XWndOutput.Output("注意:此包含有运行时文件, 项目目标程序运行位置发生改变时可能需要依赖.\n", 0);
                     }
                 }
                 zs.close();
@@ -872,8 +894,10 @@ class Project
 
             fis.close();
             save();
+            return true;
         } catch(Exception e) {
 
         }
+        return false;
     }
 };

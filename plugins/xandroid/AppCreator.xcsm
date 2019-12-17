@@ -1,0 +1,102 @@
+//xlang Source, Name:AppCreator.xcsm 
+//Date: Thu Dec 21:10:02 2019 
+
+class AppCreator : QXDialog{
+    QXPushButton btnok, btncancel;
+    QXLineEdit edtappname ,edtpackage;
+
+    
+     WizardLoader loader;
+     String  projectName,  projectDir,  uuid;
+     IProject ownProject;
+     bool addToProject;
+    
+    AppCreator(QXDialog d, WizardLoader _loader, String _projectName, String _projectDir, String _uuid, IProject _ownProject, bool _addToProject){
+        loader = _loader;
+        projectName = _projectName;
+        projectDir = _projectDir; 
+        uuid = _uuid;
+        ownProject = _ownProject;
+        addToProject = _addToProject;
+        attach( d);
+    }
+    
+    static void create(QXDialog d, WizardLoader _loader, String _projectName, String _projectDir, String _uuid, IProject _ownProject, bool _addToProject){
+        AppCreator ad = new AppCreator(d, _loader, _projectName, _projectDir, _uuid, _ownProject, _addToProject);
+        ad.show();
+    }
+    
+    bool checkPackageName(String packageName){
+        byte[]data = packageName.getBytes();
+        bool isDot = false;
+        
+        for (int i = 0; i < data.length; i++){
+            byte c = data[i];
+            if (false == ( (c >= 'a' && c <= 'z') || ((isDot == false) && (c >='0' && c <= '9')) || (c =='_') ||(c =='.'))){
+                return false;
+            }
+            
+            if (c =='.'){
+                if (isDot){
+                    return false;
+                }
+                isDot = true;
+            }else{
+                isDot = false;
+            }
+            
+            if (i == 0 && isDot){
+                return false;
+            }
+        }
+        
+        return !isDot;
+    }
+    void onAttach()override{
+        setWindowIcon(Resources.sdk_setting);
+        setWindowFlags(QXDialog.WindowCloseButtonHint);
+        setFixedSize(width(), height());
+        btnok = (QXPushButton)attachByName(new QXPushButton(), "btnok");
+        btncancel = (QXPushButton)attachByName(new QXPushButton(), "btncancel");
+        
+        edtappname = (QXLineEdit)attachByName(new QXLineEdit(), "edtappname");
+        edtpackage = (QXLineEdit)attachByName(new QXLineEdit(), "edtpackage");
+        
+        btnok.setOnClickListener(
+        new QXDialog.onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                String appName = edtappname.getText().trim(true);
+                if (appName.length() == 0){
+                    QXMessageBox.Critical("注意","应用名称不合法",QXMessageBox.Ok,QXMessageBox.Ok);
+                    return ;
+                }
+                
+                String packageName = edtpackage.getText();
+                if (checkPackageName(packageName) == false){
+                    QXMessageBox.Critical("注意","不合法的包名,包名应由小写字母、数字和下划线_以及.构成, 但不能以下划线_和数字以及.为开头., 请参考下方示例.",QXMessageBox.Ok,QXMessageBox.Ok);
+                    return ;
+                }
+                
+                btnok.setEnabled(false);
+                if (false == XAndroid.createQXAndroidApp(loader, projectName, projectDir, uuid, ownProject, addToProject, appName, packageName)){
+                    QXMessageBox.Critical("注意","无法创建项目.",QXMessageBox.Ok,QXMessageBox.Ok);
+                }else{
+                    
+                }
+                
+                close();
+            }
+        });
+        
+        
+        btncancel.setOnClickListener(
+        new QXDialog.onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                close();
+            }
+        });
+        
+        setModal(true);
+        show();
+    }
+};

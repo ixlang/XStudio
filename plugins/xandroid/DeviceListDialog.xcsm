@@ -1,0 +1,152 @@
+//xlang Source, Name:DeviceListDialog.xcsm 
+//Date: Mon Dec 19:27:20 2019 
+
+class DeviceListDialog : QXDialog{
+    QXPushButton btnref, btndef, btnclose;
+    QXCheckBox chklogcat;
+    QXComboBox cbbloglvl;
+    QXTreeView list;
+    Device [] devices;
+    long defitem = 0;
+    Thread refthread;
+    
+    DeviceListDialog(QXDialog d){
+        attach (d);
+    }
+    
+    static void create(QXDialog d){
+        DeviceListDialog ad = new DeviceListDialog(d);
+        ad.show();
+    }
+    
+
+    
+    void onAttach(){
+        setWindowIcon(Resources.thumb_png);
+
+        chklogcat = (QXCheckBox)attachByName(new QXCheckBox(), "chklogcat");
+        cbbloglvl = (QXComboBox)attachByName(new QXComboBox(), "cbbloglvl");
+        
+        btnref = (QXPushButton)attachByName(new QXPushButton(), "btnref");
+        btndef = (QXPushButton)attachByName(new QXPushButton(), "btndef");
+        btnclose = (QXPushButton)attachByName(new QXPushButton(), "btnclose");
+        
+        list = (QXTreeView)attachByName(new QXTreeView(), "devlist");
+        
+        String [] columns = {"设备", "序号", "类型"};
+        
+        list.setColumns(columns);
+        
+        list.setColumnWidth(0, 200);
+        list.setColumnWidth(1, 200);
+        list.setColumnWidth(2, 100);
+        
+        String[] lvlitems = {"详细", "调试", "信息", "警告", "错误", "致命"};
+            
+        cbbloglvl.addItems(lvlitems);
+        cbbloglvl.setCurrentIndex(LogcatCacher.logcat_level);
+        chklogcat.setOnClickListener(
+        new QXDialog.onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                XAndroid.setLogcatEnable(checked);
+            }
+        });
+        
+        btnref.setOnClickListener(
+        new QXDialog.onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                refreshDevice();
+            }
+        });
+        
+        btndef.setOnClickListener(
+        new QXDialog.onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                long item = list.getSelItem();
+                if (item != 0){
+                    String defdev = list.getItemText(item, 1);
+                    if (defitem != 0){
+                        list.setItemBackColor(defitem, 0, 0);
+                    }
+                    list.setItemBackColor(item, 0, 0xff7fe22a);
+                    defitem = item;
+                    XAndroid.setDefaultDevice(defdev);
+                }else{
+                    QXMessageBox.Critical("注意","选择的设备无效",QXMessageBox.Ok,QXMessageBox.Ok);
+                }
+            }
+        });
+        
+        btnclose.setOnClickListener(
+        new QXDialog.onClickListener() {
+            void onClick(QXObject obj, bool checked)override {
+                close();
+            }
+        });
+        
+        cbbloglvl.setOnComboBoxEventListener(
+            new onComboBoxEventListener() {
+                void onItemSelected(QXObject obj, int id) {
+                    XAndroid.setLogcatLevel(id);
+                }
+            }
+        );
+        
+        chklogcat.setCheck(XAndroid.LogcatEnabled());
+        
+        setModal(true);
+        show();
+        refreshDevice();
+        
+    }
+    bool onClose()override {
+       synchronized(DeviceListDialog.this){
+            if (refthread != nilptr){
+                return false;
+            }
+            return true;
+       }
+    }
+    void refreshDevice(){
+        synchronized(this){
+            if (refthread == nilptr){ 
+                list.clear();
+                defitem = 0;
+                btnref.setText("正在加载");
+                btnref.setEnabled(false);
+                new Thread(){
+                    void run(){
+                        devices = XAndroid.listDevice();
+                        XAndroid.workspace.RunOnUi(new UIRunnable(){
+                           void run() override{
+                               
+                               if (devices != nilptr){
+                                   for (int i =0; i < devices.length; i++){
+                                        long item = list.addItem(Resources.thumb_png,devices[i].model);
+                                        
+                                        if (XAndroid.defaultDevice != nilptr){
+                                            if (XAndroid.defaultDevice.equals(devices[i].serial)){
+                                                list.setItemBackColor(item, 0, 0xff7fe22a);
+                                                defitem = item;
+                                            }
+                                        }
+                                        
+                                        list.setItemText(item, 1, devices[i].serial);
+                                        list.setItemText(item, 2, devices[i].type);
+                                   }
+                               }
+                               synchronized(DeviceListDialog.this){
+                                    refthread = nilptr;
+                               }
+                               if (btnref.isValid()){
+                                btnref.setText("刷新");
+                                btnref.setEnabled(true);
+                               }
+                           }
+                        });
+                    }
+                }.start();
+            }
+        }
+    }
+};

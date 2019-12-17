@@ -479,19 +479,19 @@ class XlangProjectProp : ProjectPropInterface {
 
         String statusoutput = "/usr/bin/make " + args;
 
-        builder.OutputText(statusoutput + "\n");
+        builder.OutputText(statusoutput + "\n", 0);
 
         try {
             if (_mprocess.create(false, true, false, false)) {
                 Utils.readForProcess(builder, _mprocess);
                 _mprocess.waitFor(-1);
             } else {
-                builder.OutputText("\nmakefile失败.\n");
+                builder.OutputText("\nmakefile失败.\n", 0);
             }
 
         } catch(Exception e) {
             String str = e.getMessage();
-            builder.OutputText("\n错误:" + str + "\n");
+            builder.OutputText("\n错误:" + str + "\n", 0);
         }
     }
 
@@ -517,19 +517,19 @@ class XlangProjectProp : ProjectPropInterface {
 
         String statusoutput = "/usr/bin/make " + args;
 
-        builder.OutputText(statusoutput + "\n");
+        builder.OutputText(statusoutput + "\n", 0);
 
         try {
             if (_mprocess.create(false, true, false, false)) {
                 Utils.readForProcess(builder, _mprocess);
                 _mprocess.waitFor(-1);
             } else {
-                builder.OutputText("\nmakefile失败.\n");
+                builder.OutputText("\nmakefile失败.\n", 0);
             }
 
         } catch(Exception e) {
             String str = e.getMessage();
-            builder.OutputText("\n错误:" + str + "\n");
+            builder.OutputText("\n错误:" + str + "\n", 0);
         }
     }
 
@@ -593,11 +593,11 @@ class XlangProjectProp : ProjectPropInterface {
 
                     XWorkspace.workspace.qfsw.addPath(file);
 
-                    builder.OutputText("修订版本为:" + filever + "\n");
+                    builder.OutputText("修订版本为:" + filever + "\n", 0);
                 }
             }
         } catch(Exception e) {
-            builder.OutputText("修订版本时发生异常:" + e.getMessage() + "\n");
+            builder.OutputText("修订版本时发生异常:" + e.getMessage() + "\n", 0);
         }
     }
 
@@ -627,7 +627,7 @@ class XlangProjectProp : ProjectPropInterface {
                 //String fname = srcname.findFilenameAndExtension();
 
                 String fullsourcePath = String.formatPath(workDir.appendPath(srcname), false);
-                if (ext != nilptr && (ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm") || ext.equalsIgnoreCase(".version") || ext.equalsIgnoreCase(".xdef")) ) {
+                if (ext != nilptr && (ext.equalsIgnoreCase(".x") || ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm") || ext.equalsIgnoreCase(".version") || ext.equalsIgnoreCase(".xdef")) ) {
                     if (fixver) {
                         if (ext.equalsIgnoreCase(".version")) {
                             versionIncrement(builder, fullsourcePath);
@@ -648,7 +648,7 @@ class XlangProjectProp : ProjectPropInterface {
                 if (fname.equalsIgnoreCase("makefile")) {
                     makefile(builder, object, configure, workDir);
                 }
-                if (ext != nilptr && (ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm") || ext.equalsIgnoreCase(".version")) ) {
+                if (ext != nilptr && (ext.equalsIgnoreCase(".x") || ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm") || ext.equalsIgnoreCase(".version")) ) {
                     if (fixver) {
                         if (ext.equalsIgnoreCase(".version")) {
                             versionIncrement(builder, fullsourcePath);
@@ -1001,7 +1001,7 @@ class XlangProjectProp : ProjectPropInterface {
 
             fullsourcePath = fullsourcePath.toRelativePath(workdir, false, true).replace("\\", "/");
 
-            if (ext != nilptr && (ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm") || ext.equalsIgnoreCase(".version")) ) {
+            if (ext != nilptr && (ext.equalsIgnoreCase(".x") ||ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm") || ext.equalsIgnoreCase(".version")) ) {
                 if (fullsourcePath.indexOf(' ') != -1) {
                     fullsourcePath = "\"" + fullsourcePath + "\"";
                 }
@@ -1216,52 +1216,19 @@ class XlangProjectProp : ProjectPropInterface {
 
         String target = getTarget(object, configure);
 
-        builder.OutputText(target + "... \n");
+        builder.OutputText(target + "... \n", 0);
 
         if (XPlatform.existsSystemFile(target)) {
             if (false == XPlatform.deleteFile(target)) {
-                builder.OutputText("文件正在使用中,清理失败\n");
+                builder.OutputText("文件正在使用中,清理失败\n", 0);
             }
         }
 
         batchbuild(builder, object, configure, "afterclean");
 
-        builder.OutputText("[" + String.formatDate("%c", _system_.currentTimeMillis()) + "] 清理完成.\n");
+        builder.OutputText("[" + String.formatDate("%c", _system_.currentTimeMillis()) + "] 清理完成.\n", 0);
     }
 
-
-    class XKernel32 : Library {
-
-        static bool loaded = false;
-
-        static bool load() {
-            if (loaded == false) {
-                try {
-                    loadLibrary("kernel32.dll");
-                    loaded = true;
-                } catch(Exception e) {
-
-                }
-            }
-            return loaded;
-        }
-
-        static String getWindowsDir() {
-            if (load()) {
-                byte [] dir = new byte[320];
-                int pathlen = GetWindowsDirectoryA(dir, 320);
-                return new String(dir, 0, pathlen);
-            }
-            return nilptr;
-        }
-
-        import{
-            int stdcall GetWindowsDirectoryA(
-                ObjectPtr lpBuffer,
-                int  uSize
-            );
-        };
-    };
 
 
     void runbat(IBuilder builder, String batfile, String projectDir) {
@@ -1278,19 +1245,19 @@ class XlangProjectProp : ProjectPropInterface {
 
         String statusoutput = "bat scripts " + batfile;
 
-        builder.OutputText(statusoutput + "\n");
+        builder.OutputText(statusoutput + "\n", 0);
 
         try {
             if (_mprocess.create(false, true, false, false)) {
                 Utils.readForProcess(builder, _mprocess);
                 _mprocess.waitFor(-1);
             } else {
-                builder.OutputText("\n build scripts失败.\n");
+                builder.OutputText("\n build scripts失败.\n", 0);
             }
 
         } catch(Exception e) {
             String str = e.getMessage();
-            builder.OutputText("\n错误:" + XPlatform.converPlatformCharSetTo(str) + "\n");
+            builder.OutputText("\n错误:" + XPlatform.converPlatformCharSetTo(str) + "\n", 0);
         }
     }
 
@@ -1301,19 +1268,19 @@ class XlangProjectProp : ProjectPropInterface {
 
         String statusoutput = "bash scripts " + shfile;
 
-        builder.OutputText(statusoutput + "\n");
+        builder.OutputText(statusoutput + "\n", 0);
 
         try {
             if (_mprocess.create(false, true, false, false)) {
                 Utils.readForProcess(builder, _mprocess);
                 _mprocess.waitFor(-1);
             } else {
-                builder.OutputText("\n build scripts失败.\n");
+                builder.OutputText("\n build scripts失败.\n", 0);
             }
 
         } catch(Exception e) {
             String str = e.getMessage();
-            builder.OutputText("\n错误:" + XPlatform.converPlatformCharSetTo(str) + "\n");
+            builder.OutputText("\n错误:" + XPlatform.converPlatformCharSetTo(str) + "\n", 0);
         }
     }
 
@@ -1344,7 +1311,7 @@ class XlangProjectProp : ProjectPropInterface {
 
         if (XPlatform.existsSystemFile(target)) {
             if (false == XPlatform.deleteFile(target)) {
-                builder.OutputText("无法删除文件:" + target + " ,文件正在使用中\n");
+                builder.OutputText("无法删除文件:" + target + " ,文件正在使用中\n", 0);
                 return false;
             }
         }
@@ -1481,7 +1448,7 @@ class XlangProjectProp : ProjectPropInterface {
 
     void debugRun(IBuilder builder, Project proj, Configure conf)override {
         if (XWorkspace.isDebugging()) {
-            builder.OutputText("\调试器已在运行中,请等待当前调试工作结束.\n");
+            builder.OutputText("\调试器已在运行中,请等待当前调试工作结束.\n", 0);
             return ;
         }
         int debugSerial = getDebugSerial();
@@ -1491,10 +1458,10 @@ class XlangProjectProp : ProjectPropInterface {
         if (_system_.getPlatformId() != 2) {
             if (checkDebugFlag(exePath) == false) {
                 if (XPlatform.existsSystemFile(exePath) == false) {
-                    builder.OutputText("\n没有找到目标程序:" + exePath + ",请先编译生成.\n");
+                    builder.OutputText("\n没有找到目标程序:" + exePath + ",请先编译生成.\n", 0);
                     XWorkspace.workspace.executeNotExists();
                 } else {
-                    builder.OutputText("\n目标程序:" + exePath + "不支持调试,请在[项目]->[属性]->[编译选项]中开启调试后重新编译\n");
+                    builder.OutputText("\n目标程序:" + exePath + "不支持调试,请在[项目]->[属性]->[编译选项]中开启调试后重新编译\n", 0);
                     XWorkspace.workspace.notSupportDebug();
                 }
 
@@ -1522,16 +1489,16 @@ class XlangProjectProp : ProjectPropInterface {
             statusoutput = statusoutput + args.get(i) + " ";
         }
 
-        builder.OutputText(statusoutput + "\n");
+        builder.OutputText(statusoutput + "\n", 0);
 
         try {
             if (XWorkspace.workspace.debugPrepare("127.0.0.1", debugSerial)) {
                 bool readforstdout = Setting.isRelocalStdout();
                 if (process.create(true, readforstdout, false, false)) {
-                    builder.OutputText("\n已创建进程 ID: " + process.id() + "\n");
+                    builder.OutputText("\n已创建进程 ID: " + process.id() + "\n", 0);
 
                     if (XWorkspace.workspace.debug() == false) {
-                        builder.OutputText("\n调试器失败.\n");
+                        builder.OutputText("\n调试器失败.\n", 0);
                         process.exit(0);
                     }
                     if (readforstdout) {
@@ -1539,13 +1506,13 @@ class XlangProjectProp : ProjectPropInterface {
                     }
                     process.waitFor(-1);
                     //XWorkspace.workspace.debugClose();
-                    builder.OutputText("\n退出代码: " + process.getExitCode() + "\n");
+                    builder.OutputText("\n退出代码: " + process.getExitCode() + "\n", 0);
                 } else {
 
-                    builder.OutputText("\n运行失败.\n");
+                    builder.OutputText("\n运行失败.\n", 0);
                 }
             } else {
-                builder.OutputText("\n调试器正忙.\n");
+                builder.OutputText("\n调试器正忙.\n", 0);
             }
         } catch(Exception e) {
 
@@ -1562,9 +1529,9 @@ class XlangProjectProp : ProjectPropInterface {
             String str = e.getMessage();
 
             if (_system_.getPlatformId() == 0) {
-                builder.OutputText("\n错误:" + new String(str.getBytes(), "GB18030//IGNORE") + "\n");
+                builder.OutputText("\n错误:" + new String(str.getBytes(), "GB18030//IGNORE") + "\n", 0);
             } else {
-                builder.OutputText("\n错误:" + str + "\n");
+                builder.OutputText("\n错误:" + str + "\n", 0);
             }
         }
         finally{
@@ -1577,7 +1544,7 @@ class XlangProjectProp : ProjectPropInterface {
         String exePath = getExecuteCmd(proj, conf);/*getBuildFile(proj, conf);*/
 
         if (XPlatform.existsSystemFile(exePath) == false) {
-            builder.OutputText("\n没有找到目标程序:" + exePath + ",请先编译生成.\n");
+            builder.OutputText("\n没有找到目标程序:" + exePath + ",请先编译生成.\n", 0);
             return ;
         }
 
@@ -1595,7 +1562,7 @@ class XlangProjectProp : ProjectPropInterface {
         process = new Process(XPlatform.converToPlatformCharSet(exePath), args__);
         process.setWorkDirectory(XPlatform.converToPlatformCharSet(getExecuteWd(proj, conf)));
 
-        builder.OutputText("\n运行: " + exePath + "\n");
+        builder.OutputText("\n运行: " + exePath + "\n", 0);
 
         try {
             bool readforstdout = Setting.isRelocalStdout();
@@ -1604,16 +1571,16 @@ class XlangProjectProp : ProjectPropInterface {
                     Utils.readForProcess(builder, process);
                 }
                 process.waitFor(-1);
-                builder.OutputText("\n退出代码: " + process.getExitCode() + "\n");
+                builder.OutputText("\n退出代码: " + process.getExitCode() + "\n", 0);
             } else {
-                builder.OutputText("\n运行失败.\n");
+                builder.OutputText("\n运行失败.\n", 0);
             }
         } catch(Exception e) {
             String str = e.getMessage();
             if (_system_.getPlatformId() == 0) {
-                builder.OutputText("\n错误:" + new String(str.getBytes(), "GB18030//IGNORE") + "\n");
+                builder.OutputText("\n错误:" + new String(str.getBytes(), "GB18030//IGNORE") + "\n", 0);
             } else {
-                builder.OutputText("\n错误:" + str + "\n");
+                builder.OutputText("\n错误:" + str + "\n", 0);
             }
         }
     }
@@ -1642,10 +1609,14 @@ class XlangProjectProp : ProjectPropInterface {
 
         if (extartToDir(confFile, projectDir, projectName)) {
             generateProjectFile(destProj, projectName);
-            generateLibs(projectDir, uuid);
         }
 
-        loader.loadProject(destProj);
+        IProject _project = loader.loadProject(destProj);
+        if (uuid.equals("0ef0fe5d-5ab9-4d62-ab6a-ee78f059ad1e") || uuid.equals("5e5ab583-973f-41cd-98cb-ac5208557f8b")){
+            if (_project != nilptr){
+                _project.importPackage("Qt5.9.1", nilptr);
+            }
+        }
         return true;
     }
 
@@ -1687,7 +1658,7 @@ class XlangProjectProp : ProjectPropInterface {
         copyFile(source, dest);
     }
 
-    bool generateLibs(String projectDir, String uuid) {
+    /*bool generateLibs(String projectDir, String uuid) {
         String [] qtprojs = {"0ef0fe5d-5ab9-4d62-ab6a-ee78f059ad1e", "5e5ab583-973f-41cd-98cb-ac5208557f8b"};
 
         for (int i =0; i < qtprojs.length; i++) {
@@ -1698,7 +1669,7 @@ class XlangProjectProp : ProjectPropInterface {
         }
 
         return true;
-    }
+    }*/
 
     bool generateProjectFile(String destFile, String projectName) {
         try {
@@ -1718,39 +1689,6 @@ class XlangProjectProp : ProjectPropInterface {
         return true;
     }
 
-    bool createTemplateProject(WizardLoader loader,String projectName, String projectDir, String uuid) {
-        XPlatform.mkdir(projectDir);
-
-
-        String confFile = "./config/" + uuid + ".prop";
-        String destProj = projectDir.appendPath(projectName + ".xprj");
-        try {
-            FileInputStream fis = new FileInputStream(confFile);
-            byte [] data = fis.read();
-            String content = new String(data);
-            content = content.replace("${ProjectName}", projectName);
-
-
-            FileOutputStream fos = new FileOutputStream(destProj);
-            byte [] odata = content.getBytes();
-            fos.write(odata);
-            fos.close();
-            String mainFile = projectDir.appendPath(projectName + ".xcs");
-            fos = new FileOutputStream(mainFile);
-
-            confFile = "./config/" + uuid + ".temp";
-            fis = new FileInputStream(confFile);
-            data = fis.read();
-            content = new String(data);
-            fos.write(content.getBytes());
-            fos.close();
-        } catch(Exception e) {
-            return false;
-        }
-        loader.loadProject(destProj);
-        return true;
-
-    }
 
     bool createNormalProject(WizardLoader loader,String projectName, String projectDir, String uuid) {
         XPlatform.mkdir(projectDir);
@@ -1767,7 +1705,7 @@ class XlangProjectProp : ProjectPropInterface {
             byte [] odata = content.getBytes();
             fos.write(odata);
             fos.close();
-            String mainFile = projectDir.appendPath(projectName + ".xcs");
+            String mainFile = projectDir.appendPath(projectName + ".x");
             fos = new FileOutputStream(mainFile);
             String out_class = 	"//xlang " +
                                 "\npackage System{" +
@@ -2099,6 +2037,9 @@ class XlangProjectProp : ProjectPropInterface {
             return createZTemplateProject(loader, projectName, priject_dir, uuid);
         }
 
+        if (uuid.equals("c54f477d-4d91-464f-88db-d462cce8bc12")) {
+            return createNormalFileToProject(loader, projectName, projectDir, uuid, ownProject, addToProject, ".x");
+        }
         if (uuid.equals("262b6f61-478a-4968-b800-1f22520ef0bf")) {
             return createNormalFileToProject(loader, projectName, projectDir, uuid, ownProject, addToProject, ".xcs");
         }

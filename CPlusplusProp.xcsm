@@ -10,19 +10,19 @@ class CPlusplusProp : ProjectPropInterface{
         
         String statusoutput = "/usr/bin/make";
             
-        builder.OutputText(statusoutput + "\n");
+        builder.OutputText(statusoutput + "\n", 0);
         
         try{
 			if (_mprocess.create(false, true, false, false)){
 				Utils.readForProcess(builder, _mprocess);
 				_mprocess.waitFor(-1);
 			}else{
-				builder.OutputText("\nmakefile失败.\n");
+				builder.OutputText("\nmakefile失败.\n", 0);
 			}
 
         }catch(Exception e){
 			String str = e.getMessage();
-			builder.OutputText("\n错误:" + str + "\n");
+			builder.OutputText("\n错误:" + str + "\n", 0);
         }
     }
     

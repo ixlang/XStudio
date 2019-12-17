@@ -1,4 +1,4 @@
-class Configure
+class Configure : IConfigure
 {
     String name;
     JsonObject root;
@@ -104,19 +104,19 @@ class Configure
         root = _root;
     }
 
-    void setOption(String key, String text)
+    void setOption(String key, String text)override
     {
         root.remove(key);
         root.put(key, text);
         bModified = true;
     }
 
-    void save()
+    void save()override
     {
         bModified = false;
     }
 
-    bool isModified()
+    bool isModified()override
     {
         return bModified;
     }
@@ -130,7 +130,7 @@ class Configure
         return new Configure(newName, newobj);
     }
     //----------------------------------------
-    void setLibs(String text)
+    void setLibs(String text)override
     {
         String [] paths = text.split(';');
         JsonArray libpath = new JsonArray();
@@ -144,7 +144,7 @@ class Configure
         bModified = true;
     }
 
-    void setLinks(String text)
+    void setLinks(String text)override
     {
         String [] paths = text.split(';');
         JsonArray libpath = new JsonArray();
@@ -158,7 +158,7 @@ class Configure
         bModified = true;
     }
 
-    String getLibs()
+    String getLibs()override
     {
         JsonArray libpath = (JsonArray)root.get("libs");
         if (libpath == nilptr) {
@@ -179,7 +179,7 @@ class Configure
         return out;
     }
 
-    String getLinks()
+    String getLinks()override
     {
         JsonArray libpath = (JsonArray)root.get("links");
         if (libpath == nilptr) {
@@ -201,7 +201,7 @@ class Configure
     }
 
     //--------------------------------------------------------------------
-    void setLibsPath(String text)
+    void setLibsPath(String text)override
     {
         String [] paths = text.split(';');
         JsonArray libpath = new JsonArray();
@@ -222,7 +222,7 @@ class Configure
         bModified = true;
     }
 
-    bool addLib(String lib, String xpname, String xpver)
+    bool addLib(String lib, String xpname, String xpver)override
     {
         bool isHas = false;
 
@@ -260,7 +260,7 @@ class Configure
         return false;
     }
 
-    bool addLink(String lib, String xpname, String xpver)
+    bool addLink(String lib, String xpname, String xpver)override
     {
         bool isHas = false;
 
@@ -298,7 +298,7 @@ class Configure
         return false;
     }
 
-    bool addPathToLibpath(String path)
+    bool addPathToLibpath(String path)override
     {
         JsonObject pathObj = (JsonObject)root.get("path");
 
@@ -328,7 +328,7 @@ class Configure
         return false;
     }
     
-    bool removeDepend(String xpname){
+    bool removeDepend(String xpname)override{
     	JsonArray depends = (JsonArray)root.get("depends");
         if (depends == nilptr){
     		depends = new JsonArray();
@@ -350,7 +350,7 @@ class Configure
     }
 
 
-    String getDependsString(){
+    String getDependsString()override{
         String strOut = "";
         
         JsonArray depends = (JsonArray)root.get("depends");
@@ -378,7 +378,7 @@ class Configure
         return strOut;
     }
     
-    void setDependsString(String value){
+    void setDependsString(String value)override{
         String [] pkgs = value.split(';');
         JsonArray depends = new JsonArray();
         
@@ -401,7 +401,7 @@ class Configure
         root.put("depends", depends);
     }
     
-    bool addDepends(String xpname, String version){
+    bool addDepends(String xpname, String version)override{
         JsonArray depends = (JsonArray)root.get("depends");
         if (depends == nilptr){
     		depends = new JsonArray();
@@ -415,7 +415,7 @@ class Configure
         return true;
     }
     
-    int getArchId()
+    int getArchId()override
     {
         String [] archs = {"", "-arch:x86", "-arch:x86_64", "-arch:arm", "-arch:arm64", "-arch:mips"};
         String arch = getOption("wtype");
@@ -433,7 +433,7 @@ class Configure
         return archid;
     }
 
-    String getLibsPath()
+    String getLibsPath()override
     {
 
         JsonObject pathObj = (JsonObject)root.get("path");
@@ -460,7 +460,7 @@ class Configure
         return out;
     }
 
-    String getIncsPath()
+    String getIncsPath()override
     {
         JsonObject pathObj = (JsonObject)root.get("path");
         if (pathObj == nilptr) {
@@ -486,7 +486,7 @@ class Configure
         return out;
     }
 
-    void setIncsPath(String text)
+    void setIncsPath(String text)override
     {
         String [] paths = text.split(';');
         JsonArray incpath = new JsonArray();
@@ -506,7 +506,7 @@ class Configure
         bModified = true;
     }
 
-    String getOption(String key)
+    String getOption(String key)override
     {
         String value = root.getString(key);
         if (value == nilptr) {
@@ -515,7 +515,7 @@ class Configure
         return value;
     }
 
-    String getName()
+    String getName()override
     {
         return name;
     }
@@ -561,19 +561,19 @@ class Configure
     
         String _deploy_arch = getDeployArch();
         if (_deploy_arch == nilptr){
-            XWndOutput.Output("无效的处理器架构.");
+            XWndOutput.Output("无效的处理器架构.", 0);
             return false;
         }
         
         String _deploy_ostype = getDeployPlatform();
         if (_deploy_ostype == nilptr){
-            XWndOutput.Output("无效的操作系统平台.");
+            XWndOutput.Output("无效的操作系统平台.", 0);
             return false;
         }
         
     	PackageManager pm = new PackageManager();
         if (false == pm.load()){
-            XWndOutput.Output("无法载入包管理.");
+            XWndOutput.Output("无法载入包管理.", 0);
             return false;
         }
         
@@ -586,7 +586,7 @@ class Configure
         }
 
         if (deploy_path == nilptr || deploy_path.length() == 0){
-    		XWndOutput.Output("部署路径错误,请先设置部署路径.");
+    		XWndOutput.Output("部署路径错误,请先设置部署路径.", 0);
             return false;
         }
         
@@ -606,15 +606,15 @@ class Configure
 
                 if (pi != nilptr){
     				if (false == deployPackage(deploy_path, project, pi, _deploy_arch, _deploy_ostype)){
-    					XWndOutput.Output("部署包失败:" + pname + " ver:" + pversion + "\n");
+    					XWndOutput.Output("部署包失败:" + pname + " ver:" + pversion + "\n", 0);
                     }
                 }else{
                     pi = pm.findPackage(pname, nilptr);
                     
                     if (pi == nilptr){
-                        XWndOutput.Output("找不到依赖包:" + pname + " ver:" + pversion + "\n");
+                        XWndOutput.Output("找不到依赖包:" + pname + " ver:" + pversion + "\n", 0);
                     }else{
-                        XWndOutput.Output("找不到依赖包:" + pname + " 版本:<" + pversion + "> ,但找到" + pname + " 版本:<" + pi.version + ">...\n如考虑使用不同版本,请打开[项目]->[属性] 修改 [项目设置]=>[依赖包] 项中的版本.\n");
+                        XWndOutput.Output("找不到依赖包:" + pname + " 版本:<" + pversion + "> ,但找到" + pname + " 版本:<" + pi.version + ">...\n如考虑使用不同版本,请打开[项目]->[属性] 修改 [项目设置]=>[依赖包] 项中的版本.\n", 0);
                     }
 	
                 }
@@ -696,7 +696,7 @@ class Configure
                         
     					if (zf != nilptr && zf.open()){
     						String newpath = String.formatPath(deploy_path.appendPath(name.substring(3, name.length())), false);
-    						XWndOutput.Output(newpath + "...\n");
+    						XWndOutput.Output(newpath + "...\n", 0);
     						XlangProjectProp.mkdirs(newpath.findVolumePath());
 
     						FileOutputStream fos;
@@ -773,7 +773,7 @@ class Configure
 
         bool rt = false;
 
-        XWndOutput.Output("为 " + this.name + " 配置引用...\n");
+        XWndOutput.Output("为 " + this.name + " 配置引用...\n", 0);
 
         int c = zs.getEntriesCount();
 
@@ -782,7 +782,7 @@ class Configure
 
         String match = String.formatPath("" + getArchId() + "/" + _system_.getPlatformId(), false);
 
-        XWndOutput.Output("为 " + this.name + " 部署运行时文件...\n");
+        XWndOutput.Output("为 " + this.name + " 部署运行时文件...\n", 0);
 
         for (int i = 0; i < c; i ++) {
             ZipEntry entry = zs.getEntry(i);
@@ -792,7 +792,7 @@ class Configure
                 if (zf != nilptr && zf.open()) {
 
                     String newpath = String.formatPath(out_path.appendPath(name.substring(3, name.length())), false);
-                    XWndOutput.Output(newpath + "...");
+                    XWndOutput.Output(newpath + "...", 0);
                     XlangProjectProp.mkdirs(newpath.findVolumePath());
 
                     FileOutputStream fos ;
@@ -803,7 +803,7 @@ class Configure
                         while ((rd = zf.read(data, 0, 1024)) > 0) {
                             fos.write(data, 0, rd);
                         }
-                        XWndOutput.Output("成功.\n");
+                        XWndOutput.Output("成功.\n", 0);
                         rt = true;
                     } catch(Exception e) {
 
@@ -817,7 +817,7 @@ class Configure
                 }
             }
         }
-        XWndOutput.Output("\n");
+        XWndOutput.Output("\n", 0);
         return rt;
     }
 };

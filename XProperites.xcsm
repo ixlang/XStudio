@@ -138,7 +138,7 @@ class XProperites : QXDialog {
     
     bool loadExtision(JsonObject marjon, String language){
 		String file = _system_.getAppDirectory();
-		file = file.appendPath("config").appendPath(getLanguage() + ".ext");
+		file = file.appendPath("config").appendPath(language + ".ext");
 		String content = readSlnPropFile(file);
         if (content != nilptr){
 			JsonObject _extroot = new JsonObject(content);
@@ -174,7 +174,6 @@ class XProperites : QXDialog {
     }
     
     void onAttach(){
-        //setWindowFlags(CustomizeWindowHint | WindowMinMaxButtonsHint | WindowCloseButtonHint  | Tool);
         _listview = (QXTreeView)attachByName(new QXTreeView(), "listProp");
         listConfigures = (QXComboBox)attachByName(new QXComboBox(), "configures");
         
@@ -331,7 +330,11 @@ class XProperites : QXDialog {
     void saveProp(){
         Map.Iterator<String, QXPropertyBrowser.QtVariantProperty> iter = currentProps.iterator();
         for (; iter.hasNext(); iter.next()){
-            if (false == _prop.setValue(_project, _curconfig, iter.getKey(), iter.getValue().getValue())){
+            String value = iter.getValue().getValue();
+            while (value.endWith("(未安装)")){
+                value = value.substring(0, value.length() - "(未安装)".length());
+            } 
+            if (false == _prop.setValue(_project, _curconfig, iter.getKey(), value)){
                 QXMessageBox.Critical("错误", iter.getKey() + "字段更改失败.", QXMessageBox.Ok, QXMessageBox.Ok);
             }
         }

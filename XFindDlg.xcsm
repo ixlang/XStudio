@@ -139,7 +139,7 @@ class XFindDlg : QXDialog
                     }
                     sci = wnd._sci;
                 } else {
-                    sci = XWndOutput.outputWnd._sci;
+                    sci = XWndOutput.outputWnd.getCurrentSci();
                 }
 
                 if (sci != nilptr) {
@@ -212,7 +212,7 @@ class XFindDlg : QXDialog
                     }
                     sci = wnd._sci;
                 } else {
-                    sci = XWndOutput.outputWnd._sci;
+                    sci = XWndOutput.outputWnd.getCurrentSci();
                 }
 
                 if (sci != nilptr) {
