@@ -1,22 +1,74 @@
 
+
+class DebuggeeManager{
+    Map<String, ProjectPropInterface> debuggees = new Map<String, ProjectPropInterface>();
+    public Vector<String > namelist = new Vector<String >();
+    
+    public ProjectPropInterface getDefault(){
+        if (debuggees.size() > 0){
+            return debuggees.iterator().getValue();
+        }
+        return nilptr;
+    }
+    
+    public ProjectPropInterface get(String name){
+        try{
+            return debuggees.get(name);
+        }catch(Exception e){
+            
+        }
+        return nilptr;
+    }
+    
+    public void add(String key, ProjectPropInterface pi){
+        if (key == nilptr || debuggees.containsKey(key)){
+            return ;
+        }
+        namelist.add(key);
+        debuggees.put(key ,pi);
+    }
+};
+    
 class ProjectPropManager{
      
     static Map<String, ProjectPropInterface> _props = new Map<String, ProjectPropInterface>();
-        
-    static bool registryAllProp(){
+    static CPlusplusProp cppp = new CPlusplusProp();
+    public static bool registryAllProp(){
         _props.put("xlang", new XlangProjectProp());
-        
-        CPlusplusProp cppp = new CPlusplusProp();
         _props.put("C/C++", cppp);
         _props.put("C", cppp);
         return true;
     }
      
-    static ProjectPropInterface getForProject(String projLnaguageConf){
+    public static ProjectPropInterface getForProject(String projLnaguageConf){
 		try{
 			return _props.get(projLnaguageConf);
 		}catch(Exception e){
 		}
         return nilptr;
     }
+    
+    public static bool registryProp(String name, ProjectPropInterface prop){
+        if (name.equals("C/C++")){
+            cppp.setBridge(prop);
+        }else{
+            _props.put(name, prop);
+        }
+        return true;
+    }
+    
+
+    
+    public static DebuggeeManager getDebuggeeManager(){
+        DebuggeeManager dc = new DebuggeeManager();
+        
+        Map.Iterator<String, ProjectPropInterface> iter = _props.iterator();
+        while (iter.hasNext()){
+            ProjectPropInterface pi = iter.getValue();
+            dc.add(pi.getDebuggeeDescription(), pi);
+            iter.next();
+        }
+        return dc;
+    }
+    
 };

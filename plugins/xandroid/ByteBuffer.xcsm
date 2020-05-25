@@ -5,7 +5,7 @@ class ByteBuffer{
     int length = 0;
     byte [] data = new byte[0];
     
-    void append(byte[] buffer, int pos, int len){
+    public void append(byte[] buffer, int pos, int len){
         if (length + len > data.length){
             byte [] new_buffer = new byte[(length + len) * 2];
             _system_.arrayCopy(data, 0, new_buffer, 0, length);
@@ -17,15 +17,15 @@ class ByteBuffer{
         length += len;
     }
     
-    byte [] getData(){
+    public byte [] getData(){
         return data;
     }
     
-    int getLength(){
+    public int getLength(){
         return length;
     }
     
-    String getLine(){
+    public String getLine(){
         String out;
         for (int i = 0; i < length; i++){
             if (data[i] == '\n'){
@@ -47,7 +47,7 @@ class ByteBuffer{
         return out;
     }
     
-    String toString(){
+    public String toString(){
         try{
             if (_system_.getPlatformId() == 0){
                 return new String(data, 0, length, "GB18030//IGNORE");

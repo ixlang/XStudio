@@ -16,11 +16,11 @@ class AndroidSdkDialog : QXDialog{
     String NDKBUILDNAME = (_system_.getPlatformId()== 0 ?  "ndk-build.cmd" : "ndk-build");
     static Map<String, int> dllist = new Map<String, int>();
     static AndroidSdkDialog _sdkdialog;
-    AndroidSdkDialog(QXDialog d){
+    public AndroidSdkDialog(QXDialog d){
         attach(d);
     }
     
-    static void create(QXDialog d){
+    public static void create(QXDialog d){
         AndroidSdkDialog ad = new AndroidSdkDialog(d);
         _sdkdialog = ad;
         ad.show();
@@ -422,11 +422,11 @@ class AndroidSdkDialog : QXDialog{
     }
     
     static class SDKDescr{
-        String descr;
-        String license;
-        String version;
-        String apivalue;
-        SDKDescr(String folder){
+        public String descr;
+        public String license;
+        public String version;
+        public String apivalue;
+        public SDKDescr(String folder){
             FileStream.FileInputStream fis = new FileStream.FileInputStream(folder.appendPath("source.properties"));
             byte [] data = fis.read();
             fis.close();

@@ -1,0 +1,257 @@
+//xlang Source, Name:CPPProjectPlugin.x 
+//Date: Thu Feb 15:23:58 2020 
+
+class CPPProjectPlugin : IProjectPlugin{
+    JsonObject wizard;
+    
+	bool onpreRun(IProject project, bool debug) override {
+		//TODO:	1
+        return true;
+	}
+
+	String getWizard(bool projectExist) override {
+		//TODO:	
+        return wizard.toString(false);
+	}
+
+	void onpostRun(IProject project, bool debug) override {
+		//TODO:	
+        
+	}
+
+	bool onpreCompile(IProject project) override {
+		//TODO:	
+        return true;
+	}
+
+    static bool mkdirs(String path) {
+        if (XPlatform.existsSystemFile(path) == false) {
+            if (XPlatform.mkdir(path) == false) {
+                mkdirs(path.findVolumePath());
+                return XPlatform.mkdir(path);
+            }
+        }
+        return true;
+    }
+    
+	bool createProject(WizardLoader loader, String projectName, String projectDir, String uuid, IProject ownProject, bool addToProject) override {
+		//TODO:	
+        
+        if (Pattern.test(projectName, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true) == false) {
+            QXMessageBox.Critical("错误", "项目名称不合法", QXMessageBox.Ok, QXMessageBox.Ok);
+            return false;
+        }
+        
+        String priject_dir = CDEProjectPropInterface.appendPath(projectDir, projectName);
+        if (XPlatform.existsSystemFile(priject_dir)) {
+            QXMessageBox.Critical("错误", "该位置已存在同名项目, 请重新选择路径或者改变项目名", QXMessageBox.Ok, QXMessageBox.Ok);
+            return false;
+        } else {
+            if (mkdirs(priject_dir) == false) {
+                QXMessageBox.Critical("错误", "无法在此位置建立新目录, 请重新选择路径", QXMessageBox.Ok, QXMessageBox.Ok);
+                return false;
+            }
+        }
+            
+        String configure = CDEProjectPropInterface.appendPath(XPlatform.getAppDirectory(), "plugins/cde");
+        
+        String tempfile = nilptr;
+        String projfile = CDEProjectPropInterface.appendPath(configure, "cdext.temp");
+        
+        String projectType = "";
+        String nostdinc__ = "";
+        String nostdinc = "";
+        String subsystem = "";
+        String otherlink = "";
+        
+        String [] headers = 
+        {
+            "/usr/include/gtk-3.0",
+            "/usr/include/glib-2.0",
+            "/usr/lib64/glib-2.0/include",
+            "/usr/include/pango-1.0",
+            "/usr/include/cairo",
+            "/usr/include/gdk-pixbuf-2.0",
+            "/usr/include/atk-1.0"
+        };
+        
+        JsonArray headerArray = new JsonArray();
+        
+        switch(uuid){
+            case cpp_guiuuid:
+            tempfile = CDEProjectPropInterface.appendPath(configure, "gtkgui.temp");
+            projectType = "-execute";
+            if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
+                subsystem = "-mwindows";
+                otherlink = "[\\\"-lgtk-3 \\\", \\\"-lgdk-3 \\\", \\\"-lgdi32 \\\", \\\"-lgobject-2.0\\\"]";
+            }else{
+                if (_system_.getOSBit() == 64){
+                    otherlink = "[\\\"-lgobject-2.0\\\", \\\"/usr/lib64/libgtk-3.so\\\"]";
+                    for (int i =0; i < headers.length; i++){
+                        headerArray.put(headers[i]);
+                    }   
+                }else{
+                    otherlink = "[\\\"-lgobject-2.0\\\", \\\"/usr/lib/libgtk-3.so\\\"]";
+                    for (int i = 0; i < headers.length; i++){
+                        headerArray.put(headers[i].replace("lib64", "lib"));
+                    }
+                }
+                
+                
+            }
+            
+            break;
+            case cpp_winuuid:
+            tempfile = CDEProjectPropInterface.appendPath(configure, "win32.temp");
+            projectType = "-execute";
+            if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
+                subsystem = "-mwindows";
+            }
+            break;
+            case cpp_conuuid:
+            tempfile = CDEProjectPropInterface.appendPath(configure, "console.temp");
+            projectType = "-execute";
+            break;
+            case cpp_stauuid:
+            tempfile = CDEProjectPropInterface.appendPath(configure, "stlib.temp");
+            projectType = "-staticlib";
+            break;
+            case cpp_dynuuid:
+            tempfile = CDEProjectPropInterface.appendPath(configure, "stlib.temp");
+            projectType = "-shared";
+            break;
+            case cpp_drvuuid:
+            tempfile = CDEProjectPropInterface.appendPath(configure, "lindrv.temp");
+            projectType = "-driver";
+            nostdinc__ = "-nostdinc++";
+            nostdinc = "-nostdinc";
+            break;
+        }
+        
+        String project_file = CPPGPlugManager.CPPLangPlugin.readFileContent(projfile);
+        String source_file = CPPGPlugManager.CPPLangPlugin.readFileContent(tempfile);
+        
+        project_file = project_file.replace("${ProjectName}", projectName)
+            .replace("${ProjectType}", projectType)
+            .replace("${nostdinc__}", nostdinc__)
+            .replace("${nostdinc}", nostdinc)
+            .replace("${LinkOptions}", otherlink)
+            .replace("${SubSystem}", subsystem)
+            .replace("${Headers}", headerArray.toString(true).replace("\"", "\\\""));
+        
+        String outFile = CDEProjectPropInterface.appendPath(priject_dir, projectName + ".xprj");
+        String srcFile = CDEProjectPropInterface.appendPath(priject_dir, projectName + ".cpp");
+        
+        try{
+            FileOutputStream fos = new FileOutputStream(outFile);
+            fos.write(project_file.getBytes());
+            fos.close();
+            
+            fos = new FileOutputStream(srcFile);
+            fos.write(source_file.getBytes());
+            fos.close();
+            
+            loader.loadProject(outFile);
+            
+            return true;
+        }catch(Exception e){
+            
+        }
+        
+        
+        return false;
+	}
+
+	String getTargetPath(IProject project) override {
+        if (project != nilptr){
+            Configure configure = project.getCurrentConfig();
+            String out_path = CDEProjectPropInterface.appendPath(configure.getOption("outpath"), configure.getOption("outname"));
+            return String.formatPath(CDEProjectPropInterface.map_variable((Project)project, configure, out_path), false);
+        }
+        return nilptr;
+	}
+
+	void onpostCompile(IProject project) override {
+		//TODO:	
+	
+	}
+    
+    public static const String cpp_guiuuid = "3498cf8d-bd36-4730-88ba-20ba12dadedd";
+    public static const String cpp_winuuid = "f2138bdd-5474-4609-8383-99d5f82c3d64";
+    public static const String cpp_conuuid = "4041e9ad-b6ee-4b04-961e-65c6eee00a04";
+    public static const String cpp_stauuid = "661c2c22-5cca-4556-a01c-f2c9ca0495b6";
+    public static const String cpp_dynuuid = "8f75b511-8c85-4a7d-8951-9f5e8735cf7b";
+    public static const String cpp_drvuuid = "19f532bc-a23d-4e23-ae65-3a420374aa7a";
+
+
+    public void createWizard(){
+        wizard = new JsonObject();
+        JsonObject Navigation = new JsonObject();
+        JsonObject project = new JsonObject();
+        JsonArray Xlang = new JsonArray();
+        
+        JsonObject mobile;
+        
+        mobile = new JsonObject();
+        mobile.put("name", "GUI (Gtk)程序");
+        mobile.put("uuid", cpp_guiuuid);
+        mobile.put("language", "C/C++");
+        mobile.put("icon", "config/sys.png");
+        mobile.put("platform", "支持C/C++开发的目的平台");
+        mobile.put("details", "适用于windows linux macos等任何特定的支持平台");
+        Xlang.put(mobile);
+        
+        if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
+            mobile = new JsonObject();
+            mobile.put("name", "GUI (WinSdk)程序");
+            mobile.put("uuid", cpp_winuuid);
+            mobile.put("language", "C/C++");
+            mobile.put("icon", "config/sys.png");
+            mobile.put("platform", "支持C/C++开发的目的平台");
+            mobile.put("details", "适用于 windows 平台");
+            Xlang.put(mobile);
+        }
+        
+        mobile = new JsonObject();
+        mobile.put("name", "控制台程序");
+        mobile.put("uuid", cpp_conuuid);
+        mobile.put("language", "C/C++");
+        mobile.put("icon", "config/xlang.png");
+        mobile.put("platform", "支持C/C++开发的目的平台");
+        mobile.put("details", "适用于windows linux macos等任何特定的支持平台");
+        Xlang.put(mobile);
+        
+        mobile = new JsonObject();
+        mobile.put("name", "静态库");
+        mobile.put("uuid", cpp_stauuid);
+        mobile.put("language", "C/C++");
+        mobile.put("icon", "config/xlang.png");
+        mobile.put("platform", "支持C/C++开发的目的平台");
+        mobile.put("details", "适用于windows linux macos等任何特定的支持平台");
+        Xlang.put(mobile);
+        
+        mobile = new JsonObject();
+        mobile.put("name", "共享库(动态链接库)");
+        mobile.put("uuid", cpp_dynuuid);
+        mobile.put("language", "C/C++");
+        mobile.put("icon", "config/xlang.png");
+        mobile.put("platform", "支持C/C++开发的目的平台");
+        mobile.put("details", "适用于windows linux macos等任何特定的支持平台");
+        Xlang.put(mobile);
+        
+        if (_system_.getPlatformId() == _system_.PLATFORM_LINUX){
+            mobile = new JsonObject();
+            mobile.put("name", "Linux 驱动程序");
+            mobile.put("uuid", cpp_drvuuid);
+            mobile.put("language", "C/C++");
+            mobile.put("icon", "config/sys.png");
+            mobile.put("platform", "支持C/C++开发的目的平台");
+            mobile.put("details", "适用于 Linux 平台");
+            Xlang.put(mobile);
+        }
+        
+        project.put("C/C++" , Xlang);
+        Navigation.put("project" , project);
+        wizard.put("Navigation" , Navigation);
+    }
+};

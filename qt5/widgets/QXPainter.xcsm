@@ -3,11 +3,11 @@
 
 class QXPainter {
 
-    long hpaint;
+    public long hpaint;
     bool bneed_delloc = false;
 
-    static class RenderHint {
-        static const int
+    public static class RenderHint {
+        public static const int
         Antialiasing = 0x01,
         TextAntialiasing = 0x02,
         SmoothPixmapTransform = 0x04,
@@ -16,7 +16,7 @@ class QXPainter {
         Qt4CompatiblePainting = 0x20;
     };
 
-    enum CompositionMode {
+    public enum CompositionMode {
         CompositionMode_SourceOver,
         CompositionMode_DestinationOver,
         CompositionMode_Clear,
@@ -61,38 +61,38 @@ class QXPainter {
         RasterOp_NotDestination
     };
 
-    static class Paint {
-        static const int
+    public static class Paint {
+        public static const int
         FILL = 2,
         STROKE = 1,
         FILL_AND_STROKE = 3;
-        int style;
-        int color;
-        double width;
-        int textSize = -1;
+        public int style;
+        public int color;
+        public double width;
+        public int textSize = -1;
 
-        void setColor(int c) {
+        public void setColor(int c) {
             color = c;
         }
 
-        void setTextSize(double ts) {
+        public void setTextSize(double ts) {
             textSize = ts;
         }
 
-        void setAlpha(int a) {
+        public void setAlpha(int a) {
             color = ((a & 0xff) << 24) | (color & 0x00ffffff);
         }
 
-        void setStrokeWidth(double sw) {
+        public void setStrokeWidth(double sw) {
             width = sw;
         }
 
-        void setStyle(int s) {
+        public void setStyle(int s) {
             style = s;
         }
     };
 
-    enum PenStyle {
+    public enum PenStyle {
         /** @pen style
 
         */
@@ -108,7 +108,7 @@ class QXPainter {
     /** @bgm mode
 
     */
-    static class BackgroundMode {
+    public static class BackgroundMode {
         static const int
         TransparentMode = 0,
         OpaqueMode = 1;
@@ -117,7 +117,7 @@ class QXPainter {
 
     /** @ImageConversionFlag
     */
-    static class ImageConversionFlag {
+    public static class ImageConversionFlag {
 
         static const int
         ColorMode_Mask          = 0x00000003,
@@ -147,25 +147,25 @@ class QXPainter {
         NoFormatConversion      = 0x00000200;
     };
 
-    QXPainter(long handle) {
+    public QXPainter(long handle) {
         hpaint = handle;
     }
 
-    QXPainter(QXImage img) {
+    public QXPainter(QXImage img) {
         hpaint = QXNative.long_get(img.himage, QXCore.PAINTERFROMIMG);
         if (hpaint == 0) {
             throw new IllegalArgumentException("paint is null");
         }
         bneed_delloc = true;
     }
-    QXPainter(QPaintDevice device) {
+    public QXPainter(QPaintDevice device) {
         hpaint = QXNative.long_get(device.nativehandle, QXCore.PAINTERFROMDEVICE);
         if (hpaint == 0) {
             throw new IllegalArgumentException("paint is null");
         }
         bneed_delloc = true;
     }
-    void setPaint(Paint p) {
+    public void setPaint(Paint p) {
         if ((p.style & Paint.FILL) != 0) {
             setBrush(p.color, QXBrush.Style.SolidPattern);
         }
@@ -179,144 +179,144 @@ class QXPainter {
         }
     }
 
-    void setFontPointSize(int size) {
+    public void setFontPointSize(int size) {
         QXNative.widget_set_vint_value(hpaint, QXCore.PAINTFONTPTSIZE, size);
     }
 
-    void setFontPixelSize(int size) {
+    public void setFontPixelSize(int size) {
         QXNative.widget_set_vint_value(hpaint, QXCore.PAINTFONTPXSIZE, size);
     }
 
-    void setPen(int color, PenStyle penStyle, double width) {
+    public void setPen(int color, PenStyle penStyle, double width) {
         QXNative.widget_set_v2int_double_value(hpaint, QXCore.SETPEN, color, width, penStyle);
     }
 
-    void setBrush(int color, QXBrush.Style brushStyle) {
+    public void setBrush(int color, QXBrush.Style brushStyle) {
         QXNative.widget_set_v2int_value(hpaint, QXCore.SETBRUSH, color, brushStyle);
     }
 
-    void setBrush(QXBrush brush) {
+    public void setBrush(QXBrush brush) {
         QXNative.widget_set_native_value(hpaint, QXCore.SETBRUSH, brush.nativehandle);
     }
 
-    void drawLine(int start_x, int start_y, int end_x, int end_y) {
+    public void drawLine(int start_x, int start_y, int end_x, int end_y) {
         QXNative.native_int4(hpaint, QXCore.QXPAINTDRAWLINE, start_x, start_y, end_x, end_y);
     }
 
-    void drawRect(int x, int y, int w, int h) {
+    public void drawRect(int x, int y, int w, int h) {
         QXNative.native_int4(hpaint, QXCore.QXPAINTDRAWRECT, x, y, w, h);
     }
 
-    void drawRect(QXRect r) {
+    public void drawRect(QXRect r) {
         QXNative.native_int4(hpaint, QXCore.QXPAINTDRAWRECT, r.left, r.top, r.width(), r.height());
     }
 
-    void fillRect(int x,int y, int w,int h, int color, int brushStyle) {
+    public void fillRect(int x,int y, int w,int h, int color, int brushStyle) {
         QXNative.long_long_int9(hpaint, QXCore.FILLRECT, 0, x, y, w, h, color, brushStyle, 0, 0, 0);
     }
 
-    void save() {
+    public void save() {
         QXNative.widget_slot(hpaint, QXCore.PAINTERSAVE);
     }
 
-    void restore() {
+    public void restore() {
         QXNative.widget_slot(hpaint, QXCore.PAINTERRESTORE);
     }
 
-    void resetMatrix() {
+    public void resetMatrix() {
         QXNative.widget_slot(hpaint, QXCore.PAINTRESETMATRIX);
     }
 
-    QXMatrix getMatrix() {
+    public QXMatrix getMatrix() {
         return new QXMatrix(QXNative.long_get(hpaint, QXCore.PAINTERGETMATRIX));
     }
 
-    void setMatrix(QXMatrix m) {
+    public void setMatrix(QXMatrix m) {
         QXNative.widget_set_native_value(hpaint, QXCore.PAINTSETMATRIX, m.nativehandle);
     }
 
-    void resetTransform() {
+    public void resetTransform() {
         QXNative.widget_slot(hpaint, QXCore.PAINTRESETTRANSFORM);
     }
 
-    void drawText(String text, int x,int y) {
+    public void drawText(String text, int x,int y) {
         QXNative.widget_set_intintstring_value(hpaint, QXCore.DRAWTEXT, x, y,text);
     }
 
-    void drawText(String text, int x,int y, Paint p) {
+    public void drawText(String text, int x,int y, Paint p) {
         if (p != nilptr) {
             setPen(p.color, PenStyle.SolidLine, p.width);
         }
         QXNative.widget_set_intintstring_value(hpaint, QXCore.DRAWTEXT, x, y,text);
     }
 
-    void fillRect(QXRect r, int color, int brushStyle) {
+    public void fillRect(QXRect r, int color, int brushStyle) {
         QXNative.long_long_int9(hpaint, QXCore.FILLRECT, 0, r.left, r.top, r.width(), r.height(), color, brushStyle, 0, 0, 0);
     }
 
-    void drawLines(int [] points) {
+    public void drawLines(int [] points) {
         if ((points.length & 1) == 1 || points.length < 4) {
             throw new IllegalArgumentException("points length must be Even numbers");
         }
         QXNative.array_int2(hpaint, QXCore.QXPAINTDRAWLINE, points, 0, 0);
     }
 
-    void setBackgroundBrush(int color, int brushStyle) {
+    public void setBackgroundBrush(int color, int brushStyle) {
         QXNative.widget_set_v2int_value(hpaint, QXCore.SETBKBRUSH, color, brushStyle);
     }
 
-    void setOpacity(double fopacity) {
+    public void setOpacity(double fopacity) {
         QXNative.widget_set_double_value(hpaint, QXCore.QXPAINTOPACITY, fopacity);
     }
 
-    void setBackMode(int mode) {
+    public void setBackMode(int mode) {
         QXNative.widget_set_vint_value(hpaint, QXCore.QXPAINTBGMMODE, mode);
     }
 
-    void drawImage(QXImage image, QXRect dest, QXRect source, int converFlags) {
+    public void drawImage(QXImage image, QXRect dest, QXRect source, int converFlags) {
         QXNative.long_long_int9(hpaint, QXCore.DRAWIMAGE, image.himage,
                                 dest.left, dest.top, dest.width(), dest.height(),
                                 source.left, source.top, source.width(), source.height(),
                                 converFlags);
     }
 
-    void drawImage(QXImage image, int x,int y) {
+    public void drawImage(QXImage image, int x,int y) {
         QXNative.widget_set_intlongint_value(hpaint, QXCore.DRAWIMAGE, image.himage,x, y);
     }
 
-    void drawRoundRect(int x,int y, int w,int h, int rx, int ry, Paint p) {
+    public void drawRoundRect(int x,int y, int w,int h, int rx, int ry, Paint p) {
         if (p != nilptr) {
             setPaint(p);
         }
         QXNative.long_long_int9(hpaint, QXCore.ROUNDRECT, 0, x, y, w, h, rx, ry, 0, 0, 0);
     }
 
-    void drawRoundedRect(int x,int y, int w,int h, int rx, int ry, Paint p) {
+    public void drawRoundedRect(int x,int y, int w,int h, int rx, int ry, Paint p) {
         if (p != nilptr) {
             setPaint(p);
         }
         QXNative.long_long_int9(hpaint, QXCore.ROUNDEDRECT, 0, x, y, w, h, rx, ry, 0, 0, 0);
     }
 
-    void drawRoundRect(QXRect r, int rx, int ry, Paint p) {
+    public void drawRoundRect(QXRect r, int rx, int ry, Paint p) {
         if (p != nilptr) {
             setPaint(p);
         }
         QXNative.long_long_int9(hpaint, QXCore.ROUNDRECT, 0, r.left, r.top, r.width(), r.height(), rx, ry, 0, 0, 0);
     }
 
-    void drawRoundedRect(QXRect r, int rx, int ry, Paint p) {
+    public void drawRoundedRect(QXRect r, int rx, int ry, Paint p) {
         if (p != nilptr) {
             setPaint(p);
         }
         QXNative.long_long_int9(hpaint, QXCore.ROUNDEDRECT, 0, r.left, r.top, r.width(), r.height(), rx, ry, 0, 0, 0);
     }
 
-    void drawPath(QXPath path) {
+    public void drawPath(QXPath path) {
         QXNative.widget_set_native_value(hpaint, QXCore.DRAWPATH, path.nativehandle);
     }
 
-    void rotate(double r, double cx, double cy) {
+    public void rotate(double r, double cx, double cy) {
         QXMatrix m = getMatrix();
         m.translate(cx, cy);
         m.rotate(r);
@@ -324,38 +324,38 @@ class QXPainter {
         setMatrix(m);
     }
 
-    void translate(double cx, double cy) {
+    public void translate(double cx, double cy) {
         QXMatrix m = getMatrix();
         m.translate(cx, cy);
         setMatrix(m);
     }
-    int ascent() {
+    public int ascent() {
         return QXNative.widget_get_int_value(hpaint, QXCore.PAINTFONTASCENT);
     }
-    int descent() {
+    public int descent() {
         return QXNative.widget_get_int_value(hpaint, QXCore.PAINTFONTDESCENT);
     }
-    void setCompositionMode(CompositionMode flag) {
+    public void setCompositionMode(CompositionMode flag) {
         QXNative.widget_set_int_bool_value(hpaint, QXCore.SETCOMPOSITIONMODE, flag, false);
     }
 
-    void setRenderHint(int flag, bool on) {
+    public void setRenderHint(int flag, bool on) {
         QXNative.widget_set_int_bool_value(hpaint, QXCore.SETRENDERHINT, flag, on);
     }
 
-    QXFont getFont() {
+    public QXFont getFont() {
         return new QXFont(QXNative.long_get(hpaint, QXCore.PAINTERGETFCONT));
     }
 
-    void setFont(QXFont f) {
+    public void setFont(QXFont f) {
         QXNative.widget_set_native_value(hpaint, QXCore.PAINTERSETFONT, f.nativehandle);
     }
 
-    void setAntialiasing(bool ba) {
+    public void setAntialiasing(bool ba) {
         setRenderHint(RenderHint.Antialiasing, ba);
     }
 
-    void drawCircle(int x,int y,int r, Paint p) {
+    public void drawCircle(int x,int y,int r, Paint p) {
         if (p != nilptr) {
             setPaint(p);
         }
@@ -363,12 +363,12 @@ class QXPainter {
         QXNative.native_int4(hpaint, QXCore.DRAWELLIPSE, x - r, y - r, r *2, r * 2);
     }
 
-    QXRect measureText(int x, int y, String text) {
+    public QXRect measureText(int x, int y, String text) {
         long pt= QXNative.long_longstring(hpaint, QXCore.PAINTMEASURETEXT, 0, text);
         return new QXRect(x, y, x + ((pt >> 32) & 0xffffffff), y + (pt & 0xffffffff));
     }
 
-    void finalize() {
+    public void finalize() {
         if (bneed_delloc) {
             QXNative.widget_slot(hpaint, QXCore.DELLOCPAINTER);
             bneed_delloc = false;

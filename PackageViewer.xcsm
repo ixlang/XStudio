@@ -16,7 +16,7 @@ class PackageViewer : QXDialog{
     
     static Map<String, int> dllist = new Map<String, int>();
     
-    void updateProgress(){
+    public void updateProgress(){
         int total_prog = 0;
         int task_count = 0;
         
@@ -44,7 +44,7 @@ class PackageViewer : QXDialog{
         
     }
     
-    void loadPackages(){
+    public void loadPackages(){
         
         JsonObject root;
         try{
@@ -109,12 +109,12 @@ class PackageViewer : QXDialog{
     }
     
     
-    void onloadSuccess(PackageManager.PackageInfo [] pkgs){
+    public void onloadSuccess(PackageManager.PackageInfo [] pkgs){
         loadList();
         loadNetList(pkgs);
     }
     
-	void onAttach() override {
+	public void onAttach() override {
 		//setFixedSize(width(), height());
 		pcklist = (QXTreeView)attachByName(new QXTreeView(), "pcklist");
         pcklist.setWhatsThis("显示当前开发环境中已安装的包");
@@ -244,18 +244,23 @@ class PackageViewer : QXDialog{
                 long [] items = pcklist.getTopItems();
                 int c = pcklist.getTopLevelCount();
                 
-                for (int i = 0; i < c; i++){
-                    bool visible = false;
-                    
-                    for (int x = 0; x < 5; x ++){
-                        String itemtext = pcklist.getItemText(items[i],x);
-                        if (Pattern.test(itemtext.upper(), key, 0, false)){
-                            visible = true;
-                            break;
+                try{
+                    for (int i = 0; i < c; i++){
+                        bool visible = false;
+                        
+                        for (int x = 0; x < 5; x ++){
+                            String itemtext = pcklist.getItemText(items[i],x);
+                            if (Pattern.test(itemtext.upper(), key, 0, false)){
+                                visible = true;
+                                break;
+                            }
                         }
+                        
+                        pcklist.setItemVisible(items[i],visible);
                     }
                     
-                    pcklist.setItemVisible(items[i],!visible);
+                }catch(Exception e){
+                    
                 }
             }
         });
@@ -267,7 +272,7 @@ class PackageViewer : QXDialog{
         loadNetinfo();
 	}
     
-    void loadNetinfo(){
+    public void loadNetinfo(){
         new Thread(){
                 void run()override{
                     labstatus.setText("正在从 " + pkgSource + " 加载包信息...");
@@ -276,7 +281,7 @@ class PackageViewer : QXDialog{
         }.start();
     }
     
-    void editSrcaddress()
+    public void editSrcaddress()
     {
         InputDialog.requestInput(new InputDialog.onInputListener() {
             bool onInputOk(String text)override {
@@ -303,7 +308,7 @@ class PackageViewer : QXDialog{
         });
     }
     
-    void installSelPkgs(){
+    public void installSelPkgs(){
        long []items = pcklist.getSelectedItems();
         
         if (items.length > 0){
@@ -322,7 +327,7 @@ class PackageViewer : QXDialog{
         } 
     }
     
-    void downloadSelPkgs(){
+    public void downloadSelPkgs(){
        long []items = pcklist.getSelectedItems();
         
         if (items.length > 0){
@@ -364,7 +369,7 @@ class PackageViewer : QXDialog{
         } 
     }
     
-    void onUpdateProgress(DownloadStatus status, int prog, Object tag){
+    public void onUpdateProgress(DownloadStatus status, int prog, Object tag){
     
         long [] items = pcklist.getTopItems();
         int c = pcklist.getTopLevelCount();
@@ -399,7 +404,7 @@ class PackageViewer : QXDialog{
     
 
     
-	void exportPackage(){
+	public void exportPackage(){
 		long []items = pcklist.getSelectedItems();
         
         if (items.length > 0){
@@ -417,11 +422,11 @@ class PackageViewer : QXDialog{
         }
     }
     
-    static class ContextMenu{
-		QXMenu contextMenu = new QXMenu();
-		QXAction [] actions;
+    public static class ContextMenu{
+		public QXMenu contextMenu = new QXMenu();
+		public QXAction [] actions;
 		
-		void create(QXWidget parent, String [] acts, onEventListener listener){
+		public void create(QXWidget parent, String [] acts, onEventListener listener){
 			if (contextMenu.create(parent)){
 				actions = new QXAction[acts.length];
 				for (int i = 0; i < acts.length; i ++){
@@ -443,22 +448,22 @@ class PackageViewer : QXDialog{
 			}
 		}
         
-        void setEnable(int n, bool be){
+        public void setEnable(int n, bool be){
             if (n >= 0 && n < actions.length){
                 actions[n].setEnable(be);
             }
         }
 	};
     
-    ContextMenu _contextMenu = new ContextMenu();
+    public ContextMenu _contextMenu = new ContextMenu();
 
 
 	
-    void createContextMenu(){
+    public void createContextMenu(){
 		QXTreeView list = pcklist;
         
 		onEventListener menuListener = new onEventListener(){
-		   void onTrigger(QXObject obj) override{
+		   public void onTrigger(QXObject obj) override{
 				if (obj == _contextMenu.actions[0]){
                     if (btnInstall._clicklistener != nilptr){
                         btnInstall._clicklistener.onClick(btnInstall,false);
@@ -494,7 +499,7 @@ class PackageViewer : QXDialog{
         }
 	}
     
-	void deletePackage(){
+	public void deletePackage(){
 		long []items = pcklist.getSelectedItems();
         
         String tips = "将删除包:\n";
@@ -526,7 +531,7 @@ class PackageViewer : QXDialog{
         }
     }
 
-	void install(String file){
+	public void install(String file){
 		PackageManager.PackageInfo pi = pm.previewPackage(file);
         if (pi == nilptr){
 			QXMessageBox.Critical("错误", file + " 不是一个有效的X包.", QXMessageBox.Ok, QXMessageBox.Ok);
@@ -617,7 +622,7 @@ class PackageViewer : QXDialog{
         }
     }
     
-    void importToProject(){
+    public void importToProject(){
         if (XWorkspace.workspace.isCurrentProjectEmpty()){
             QXMessageBox.Critical("错误","当前工作区没有载入一个有效的项目",QXMessageBox.Ok,QXMessageBox.Ok);
             return ;
@@ -645,7 +650,7 @@ class PackageViewer : QXDialog{
 						PackageManager.PackageInfo pi = pis[i];
 						if (pi != nilptr){
 							XWndOutput.Output("\n导入 " + pi.name + " 版本:" + pi.version  + " ....\n", 0);
-							XWorkspace.workspace.currentProject.importPkg(pi);
+							XWorkspace.workspace.getCurrentProject().importPkg(pi);
 						}else{
 							XWndOutput.Output("\n第 " + (i + 1) + " 是无效的包.\n", 0);
 						}
@@ -668,13 +673,13 @@ class PackageViewer : QXDialog{
         }
     }
     
-    void reloadList(){
+    public void reloadList(){
         loadList();
         if (net_cache_pis != nilptr){
             loadNetList(net_cache_pis);
         }
     }
-	void loadList(){
+	public void loadList(){
 		pcklist.clear();
 		int c = pm.getCount();
 		for (int i =0; i < c; i++){
@@ -694,7 +699,7 @@ class PackageViewer : QXDialog{
     }
     
     
-    void loadNetList(PackageManager.PackageInfo [] pis){
+    public void loadNetList(PackageManager.PackageInfo [] pis){
 		int c = pis.length;
         net_cache_pis = pis;
 		for (int i =0; i < c; i++){
@@ -723,14 +728,14 @@ class PackageViewer : QXDialog{
         }
     }
     
-    bool onClose()override{
+    public bool onClose()override{
         synchronized(prog_lock){
             _viewer = nilptr;
         }
         return true;
     }
     
-	static bool Show(){
+	public static bool Show(){
     
         QXDialog newDlg = new QXDialog();
         
@@ -746,7 +751,7 @@ class PackageViewer : QXDialog{
         return true;
     }
     
-	static bool Install(String file){
+	public static bool Install(String file){
     
         QXDialog newDlg = new QXDialog();
         

@@ -1,18 +1,18 @@
 class Configure : IConfigure
 {
-    String name;
-    JsonObject root;
+    public String name;
+    public JsonObject root;
     bool bModified = false;
 
     Map<String, String> filemd5s = new Map<String, String>();
 
     // Map<String, String> newfilemd5s = new Map<String, String>();
 
-    Configure()
+    public Configure()
     {
     }
 
-    String getCachedMd5(String path)
+    public String getCachedMd5(String path)
     {
         String md5 = nilptr;
         try {
@@ -27,7 +27,7 @@ class Configure : IConfigure
         return md5;
     }
 
-    bool isModified(String srcpath)
+    public bool isModified(String srcpath)
     {
         String md5 = getFileMd5(srcpath);
         String cached = getCachedMd5(srcpath);
@@ -39,7 +39,7 @@ class Configure : IConfigure
         return false;
     }
 
-    void resetCache()
+    public void resetCache()
     {
         filemd5s.clear();
     }
@@ -52,7 +52,7 @@ class Configure : IConfigure
         }
     }*/
 
-    static String getFileMd5(String file)
+    public static String getFileMd5(String file)
     {
 
         String md5 = "unknow";
@@ -98,30 +98,59 @@ class Configure : IConfigure
         return md5;
     }
 
-    Configure(String _name, JsonObject _root)
+    public Configure(String _name, JsonObject _root)
     {
         name = _name;
         root = _root;
     }
 
-    void setOption(String key, String text)override
+    public bool setOption(String key, String text)override
     {
-        root.remove(key);
-        root.put(key, text);
         bModified = true;
+        if (key.indexOf('.') == -1){
+            root.remove(key);
+            root.put(key, text);
+            return true;
+        }else{
+            String [] sec = key.split('.');
+            JsonObject parent = root;
+            try{
+                for (int i = 0; i < sec.length && parent != nilptr; i++ ){
+                    String _key = sec[i].trim(true);
+                    
+                    if (i + 1 == sec.length){
+                        while (parent.has(_key)){
+                            parent.remove(_key);
+                        }
+                        parent.put(_key, text);
+                        return true;
+                    }else{
+                        parent = (JsonObject)parent.get(_key);
+                        if (parent == nilptr){
+                            JsonObject _newnode = new JsonObject();
+                            parent.put(_key, _newnode);
+                            parent = _newnode;
+                        }
+                    }
+                }
+            }catch(Exception e){
+                
+            }
+        }
+        return false;
     }
 
-    void save()override
+    public void save()override
     {
         bModified = false;
     }
 
-    bool isModified()override
+    public bool isModified()override
     {
         return bModified;
     }
 
-    Configure clone(String newName)
+    public Configure clone(String newName)
     {
         String txt = root.toString(false);
         JsonObject newobj = new JsonObject(txt);
@@ -130,7 +159,7 @@ class Configure : IConfigure
         return new Configure(newName, newobj);
     }
     //----------------------------------------
-    void setLibs(String text)override
+    public void setLibs(String text)override
     {
         String [] paths = text.split(';');
         JsonArray libpath = new JsonArray();
@@ -144,7 +173,7 @@ class Configure : IConfigure
         bModified = true;
     }
 
-    void setLinks(String text)override
+    public void setLinks(String text)override
     {
         String [] paths = text.split(';');
         JsonArray libpath = new JsonArray();
@@ -158,7 +187,7 @@ class Configure : IConfigure
         bModified = true;
     }
 
-    String getLibs()override
+    public String getLibs()override
     {
         JsonArray libpath = (JsonArray)root.get("libs");
         if (libpath == nilptr) {
@@ -179,7 +208,7 @@ class Configure : IConfigure
         return out;
     }
 
-    String getLinks()override
+    public String getLinks()override
     {
         JsonArray libpath = (JsonArray)root.get("links");
         if (libpath == nilptr) {
@@ -201,7 +230,7 @@ class Configure : IConfigure
     }
 
     //--------------------------------------------------------------------
-    void setLibsPath(String text)override
+    public void setLibsPath(String text)override
     {
         String [] paths = text.split(';');
         JsonArray libpath = new JsonArray();
@@ -222,7 +251,7 @@ class Configure : IConfigure
         bModified = true;
     }
 
-    bool addLib(String lib, String xpname, String xpver)override
+    public bool addLib(String lib, String xpname, String xpver)override
     {
         bool isHas = false;
 
@@ -260,7 +289,7 @@ class Configure : IConfigure
         return false;
     }
 
-    bool addLink(String lib, String xpname, String xpver)override
+    public bool addLink(String lib, String xpname, String xpver)override
     {
         bool isHas = false;
 
@@ -298,7 +327,7 @@ class Configure : IConfigure
         return false;
     }
 
-    bool addPathToLibpath(String path)override
+    public bool addPathToLibpath(String path)override
     {
         JsonObject pathObj = (JsonObject)root.get("path");
 
@@ -328,7 +357,7 @@ class Configure : IConfigure
         return false;
     }
     
-    bool removeDepend(String xpname)override{
+    public bool removeDepend(String xpname)override{
     	JsonArray depends = (JsonArray)root.get("depends");
         if (depends == nilptr){
     		depends = new JsonArray();
@@ -350,7 +379,7 @@ class Configure : IConfigure
     }
 
 
-    String getDependsString()override{
+    public String getDependsString()override{
         String strOut = "";
         
         JsonArray depends = (JsonArray)root.get("depends");
@@ -378,7 +407,7 @@ class Configure : IConfigure
         return strOut;
     }
     
-    void setDependsString(String value)override{
+    public void setDependsString(String value)override{
         String [] pkgs = value.split(';');
         JsonArray depends = new JsonArray();
         
@@ -401,7 +430,7 @@ class Configure : IConfigure
         root.put("depends", depends);
     }
     
-    bool addDepends(String xpname, String version)override{
+    public bool addDepends(String xpname, String version)override{
         JsonArray depends = (JsonArray)root.get("depends");
         if (depends == nilptr){
     		depends = new JsonArray();
@@ -415,7 +444,7 @@ class Configure : IConfigure
         return true;
     }
     
-    int getArchId()override
+    public int getArchId()override
     {
         String [] archs = {"", "-arch:x86", "-arch:x86_64", "-arch:arm", "-arch:arm64", "-arch:mips"};
         String arch = getOption("wtype");
@@ -433,7 +462,7 @@ class Configure : IConfigure
         return archid;
     }
 
-    String getLibsPath()override
+    public String getLibsPath()override
     {
 
         JsonObject pathObj = (JsonObject)root.get("path");
@@ -460,7 +489,7 @@ class Configure : IConfigure
         return out;
     }
 
-    String getIncsPath()override
+    public String getIncsPath()override
     {
         JsonObject pathObj = (JsonObject)root.get("path");
         if (pathObj == nilptr) {
@@ -486,7 +515,9 @@ class Configure : IConfigure
         return out;
     }
 
-    void setIncsPath(String text)override
+    
+    
+    public void setIncsPath(String text)override
     {
         String [] paths = text.split(';');
         JsonArray incpath = new JsonArray();
@@ -506,21 +537,41 @@ class Configure : IConfigure
         bModified = true;
     }
 
-    String getOption(String key)override
+    public String getOption(String key)override
     {
-        String value = root.getString(key);
+        String value = nilptr;
+        
+        if (key.indexOf('.') == -1){
+            value = root.getString(key);
+        }else{
+            String [] sec = key.split('.');
+            JsonObject parent = root;
+            try{
+                for (int i = 0; i < sec.length && parent != nilptr; i++ ){
+                    if (i + 1 == sec.length){
+                        value = parent.getString(sec[i]);
+                    }else{
+                        parent = (JsonObject)parent.get(sec[i]);
+                    }
+                }
+            }catch(Exception e){
+                
+            }
+        }
+        
         if (value == nilptr) {
             return "";
         }
+        
         return value;
     }
 
-    String getName()override
+    public String getName()override
     {
         return name;
     }
 
-    bool createConfigure(String projName,JsonObject project, String configName)
+    public bool createConfigure(String projName,JsonObject project, String configName)
     {
         root = new JsonObject();
 
@@ -545,19 +596,19 @@ class Configure : IConfigure
     }
 
 
-    void dodeploy(Project project){
+    public void dodeploy(Project project){
         String out_path = getOption("outpath");
         out_path = String.formatPath(XlangProjectProp.map_variable(project, this, out_path), false);
         deploy(project, out_path);
     }
     
-    void dodeployto(Project project, String path){
+    public void dodeployto(Project project, String path){
         if (path != nilptr && path.length() > 0) {
             deploy(project, path);
         }
     }
     
-    bool deploy(Project project, String deploy_path){
+    public bool deploy(Project project, String deploy_path){
     
         String _deploy_arch = getDeployArch();
         if (_deploy_arch == nilptr){
@@ -624,7 +675,7 @@ class Configure : IConfigure
         return true;
     }
 
-    String getDeployArch() {
+    public String getDeployArch() {
         String [] archs = {"unknow", "x86", "x64", "arm", "arm64", "mips"};
 
         String arch = getOption("wtype");
@@ -653,7 +704,7 @@ class Configure : IConfigure
         return nilptr;
     }
     
-    String getDeployPlatform(){
+    public String getDeployPlatform(){
         String arch = getOption("ostype");
         if (arch.equals("")) {
             return "" + _system_.getPlatformId();
@@ -676,7 +727,7 @@ class Configure : IConfigure
         return nilptr;
     }
     
-    bool deployPackage(String deploy_path, Project project,PackageManager.PackageInfo pi, String arch, String ostype){
+    public bool deployPackage(String deploy_path, Project project,PackageManager.PackageInfo pi, String arch, String ostype){
     	bool rt = false;
         
         String match = String.formatPath("" + arch + "/" + ostype, false);
@@ -733,13 +784,14 @@ class Configure : IConfigure
         return rt;
     }
 
-    bool importPkg(Project project, PackageManager.PackageInfo pi, ZipArchive zs, String lixname, String xpname, String version)
+    public bool importPkg(Project project, PackageManager.PackageInfo pi, ZipArchive zs, String lixname, String xpname, String version)
     {
         resetCache();
-
+        
+        IXIntelliSense __IntelliSense = project.getIntelliSense();
         if (addPathToLibpath("libs")) {
-            if (project.intelliSense != nilptr) {
-                project.intelliSense.appendLibpath("libs");
+            if (__IntelliSense != nilptr) {
+                __IntelliSense.appendLibpath("libs");
             }
         }
 
@@ -751,15 +803,13 @@ class Configure : IConfigure
         
         if (ext.equals(".lix")){
             if (addLib(lixname, xpname, version)) {
-                if (project.intelliSense != nilptr) {
-                    project.intelliSense.appendLib(lixname);
-                }
+                    __IntelliSense.appendLib(lixname);
+                
             } 
         }else{
             if (addLink(lixname, xpname, version)) {
-                if (project.intelliSense != nilptr) {
-                    project.intelliSense.appendLink(lixname);
-                }
+                    __IntelliSense.appendLink(lixname);
+                
             } 
         }
         

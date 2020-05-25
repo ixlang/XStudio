@@ -2,10 +2,10 @@
 //Date: Fri Sep 12:25:16 2018 
 class FilterEdit : QXDialog {
 
-	FilterEdit(){
+	public FilterEdit(){
     
     }
-    FilterEdit(XLogcatWnd.Filter filter){
+    public FilterEdit(XLogcatWnd.Filter filter){
 		modifyFilter = filter;
     }
     
@@ -19,7 +19,7 @@ class FilterEdit : QXDialog {
     
     String [] chkLvlNames = {"chkEmerg", "chkAlert", "chkCrit", "chkErr", "chkWarning", "chkNotice", "chkInfo", "chkDebug"};
     
-    void onAttach(){ 
+    public void onAttach(){ 
     
         setWindowFlags(CustomizeWindowHint | WindowCloseButtonHint );
         
@@ -115,7 +115,7 @@ class FilterEdit : QXDialog {
         show();
     }
     
-    void complete(){
+    public void complete(){
 		String []key = new String[3];
         
 		int type = 0;

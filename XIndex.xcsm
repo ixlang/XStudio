@@ -3,15 +3,15 @@
 
 class XIndexWindow : QXMdiSubWindow
 {
-    QXWidget indexPage;
+    public QXWidget indexPage;
     QXLabel [] labels = new QXLabel[10];
     QXLabel lblnew, lblopen, verslabel;
-    QXLabel lblhelp, lblrule, lblexamples;
-    QXLabel []label_simples = new QXLabel[5];
+    QXLabel lblhelp, lblrule;
+    
 
     Object state;
     Recently.RecentlyObject [] objects = new Recently.RecentlyObject[10];
-    bool create(QXWidget parent)
+    public bool create(QXWidget parent)
     {
         if (super.create(parent)) {
             indexPage = new QXWidget();
@@ -19,7 +19,7 @@ class XIndexWindow : QXMdiSubWindow
                 return false;
             }
 
-            if (_system_.getPlatformId() == 2) {
+            if (_system_.getPlatformId() == _system_.PLATFORM_MACOSX) {
                 //qt在macos下有widget背景和别的平台不一致的情况，所以这里手动设置一下风格
                 String wqss = "#Form{background-color:#3e3e42;}";
                 if (Setting.isDarkStyle() == false) {
@@ -31,15 +31,9 @@ class XIndexWindow : QXMdiSubWindow
             indexPage.show();
             setMaximized(true);
             verslabel = (QXLabel)indexPage.findByName("label");
-            label_simples[0] = (QXLabel)indexPage.findByName("label_24");
-            label_simples[1] = (QXLabel)indexPage.findByName("label_25");
-            label_simples[2] = (QXLabel)indexPage.findByName("label_21");
-            label_simples[3] = (QXLabel)indexPage.findByName("label_27");
-            label_simples[4] = (QXLabel)indexPage.findByName("label_20");
 
             lblrule = (QXLabel)indexPage.findByName("label_22");
             lblhelp = (QXLabel)indexPage.findByName("label_17");
-            lblexamples = (QXLabel)indexPage.findByName("label_18");
 
             lblnew = (QXLabel)indexPage.findByName("lblnew");
             lblopen = (QXLabel)indexPage.findByName("lblopen");
@@ -50,18 +44,8 @@ class XIndexWindow : QXMdiSubWindow
                 labels[i].setOnMouseEventListener(recentlistener);
             }
 
-            for (int i =0; i < 5; i ++) {
-                label_simples[i].setOnMouseEventListener(simpleListener);
-            }
             loadRecent();
             state = XWorkspace.hideDocks();
-            lblexamples.setOnMouseEventListener(new onMouseEventListener() {
-                void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source) {
-                    if (Button == 1) {
-                        QXCore.openUrl("http://xlang.link/examples.html");
-                    }
-                }
-            });
 
             lblhelp.setOnMouseEventListener(new onMouseEventListener() {
                 void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source) {
@@ -119,72 +103,21 @@ class XIndexWindow : QXMdiSubWindow
     };
 
 
-    int getSimpleId(QXObject obj)
-    {
-        for (int i =0; i < 5; i ++) {
-            if (label_simples[i] == obj) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    onMouseEventListener simpleListener =  new onMouseEventListener()
-    {
-        void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source) {
-            if (Button == 1) {
-                String simple_path = nilptr;
-
-                int sid = getSimpleId(obj);
-
-                switch(sid) {
-                case 0:
-                    simple_path = "examples/XStudio/XStudio.xprj";
-                    break;
-                case 1:
-                    simple_path = "examples/SimpleGameServer/SimpleGameServer.xprj";
-                    break;
-                case 2:
-                    simple_path = "examples/chess/chess.xprj";
-                    break;
-                case 3:
-                    simple_path = "examples/ZipBrowser/ZipBrowser.xprj";
-                    break;
-                case 4:
-                    simple_path = "examples/audio_player/XPlayer.xprj";
-                    break;
-                }
-
-                if (simple_path != nilptr) {
-                    simple_path = String.formatPath(XPlatform.getAppDirectory().appendPath(simple_path), false);
-                    if (XPlatform.existsSystemFile(simple_path)) {
-                        XWorkspace.workspace.loadProject(simple_path);
-                    } else {
-                        QXMessageBox.Critical("提示", "未安装此示例代码, 请下载相关示例项目并安装到软件目录下的 example 文件夹.", QXMessageBox.Ok, QXMessageBox.Ok);
-                    }
-                    return ;
-                }
-
-            }
-        }
-    };
-
-
-    bool onClose()override
+    public bool onClose()override
     {
         XWorkspace.workspace.indexPage = nilptr;
         restore();
         return true;
     }
 
-    void restore()
+    public void restore()
     {
         if (state != nilptr) {
             XWorkspace.showDocks(state);
         }
     }
 
-    void loadRecent()
+    public void loadRecent()
     {
         int c = Recently.count();
         int rl = 0;

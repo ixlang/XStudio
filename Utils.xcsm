@@ -6,7 +6,7 @@ class XKernel32 : Library {
 
     static bool loaded = false;
 
-    static bool load() {
+    public static bool load() {
         if (loaded == false) {
             try {
                 loadLibrary("kernel32.dll");
@@ -18,7 +18,7 @@ class XKernel32 : Library {
         return loaded;
     }
 
-    static String getWindowsDir() {
+    public static String getWindowsDir() {
         if (load()) {
             byte [] dir = new byte[320];
             int pathlen = GetWindowsDirectoryA(dir, 320);
@@ -37,7 +37,7 @@ class XKernel32 : Library {
 
 class Utils{    
     
-    static void readForProcess(IBuilder builder, Process _process){
+    public static void readForProcess(IBuilder builder, Process _process){
 		try{
 			int rd = 0;
 			byte [] buffer = new byte[1024];
@@ -64,10 +64,10 @@ class Utils{
 		
 		}    
     }
-    static String getWindowsDir(){
+    public static String getWindowsDir(){
         return XKernel32.getWindowsDir();
     }
-    static void chechUpdate(int opid){
+    public static void chechUpdate(int opid){
 		String fburl = String.format("http://112.124.120.113:8080/dcbinterface/api/checkupdate?osid=%d&version=%d&opid=%d&arch=%d", _system_.getPlatformId(), _system_.getAppVersion() , opid, _system_.getOSBit());
 		 
 		new Thread(){
@@ -90,7 +90,7 @@ class Utils{
 		}.start();
     }
     
-    static void parseUpdate(String text){
+    public static void parseUpdate(String text){
 		try{
 			JsonObject root = new JsonObject(text);
             String err = root.getString("error");
@@ -119,7 +119,7 @@ class Utils{
         }
     }
     
-    static void showError(String errinfo){
+    public static void showError(String errinfo){
 		XWorkspace.workspace.runOnUi(new Runnable(){
 			void run(){
 				QXMessageBox.Critical("错误", errinfo, QXMessageBox.Ok , QXMessageBox.Ok);
@@ -127,7 +127,7 @@ class Utils{
 		});
     }
     
-    static void showNewVersion(String version, String url, String detailUrl, String descr, long packsize){
+    public static void showNewVersion(String version, String url, String detailUrl, String descr, long packsize){
     
 		if (packsize > 0){
 			int res = QXMessageBox.Question("新版本" + version, 
@@ -144,7 +144,7 @@ class Utils{
 	}    
     
     
-    static void update(String ver, String url, long size){
+    public static void update(String ver, String url, long size){
 		String appdir = _system_.getAppDirectory().appendPath("update");
         
         _system_.mkdir(appdir);
@@ -213,7 +213,7 @@ class Utils{
         }
     }
     
-    static void applyUpdate(String zipFile, String url, String version){
+    public static void applyUpdate(String zipFile, String url, String version){
     
 		FileInputStream fis ;
     
@@ -285,14 +285,14 @@ class Utils{
 		}
     }
     
-    static void runUpdate(String updater, String updatefile, String version){
+    public static void runUpdate(String updater, String updatefile, String version){
         String []args = new String[2];
         args[0] = updater;
 		args[1] = version;
         
 		Process designer = new Process(updater, args);
         try{
-			if (designer.create(true, false, false, false) == false){
+			if (designer.create(Process.Visible) == false){
 				showError("无法应用更新,请尝试手动解压 " + updatefile + ", 覆盖旧版本文件");
 			}
         }catch(Exception e){
@@ -301,7 +301,7 @@ class Utils{
     }
     
     
-    static String getAppVersion(){
+    public static String getAppVersion(){
 		long vv = _system_.getAppVersion();
 		String vs = "v";
 		for (int i = 0; i < 4; i ++){
@@ -313,7 +313,7 @@ class Utils{
         return vs;
     }
     
-    static String convertVersion(long vv){
+    public static String convertVersion(long vv){
 		String vs = "v";
 		for (int i = 0; i < 4; i ++){
 			vs = vs + ((vv >> ((4 - (i + 1)) << 4)) & 0xffff);
@@ -324,7 +324,7 @@ class Utils{
         return vs;
     }
     
-    static String getVersion(){
+    public static String getVersion(){
 		long vv = _system_.getAppVersion();
 		String vs = "v";
 		for (int i = 0; i < 3; i ++){
@@ -337,7 +337,7 @@ class Utils{
     }
     
     // 主版本
-    static String getAppMajorVersion(){
+    public static String getAppMajorVersion(){
 		long vv = _system_.getAppVersion();
 		String vs = "v";
 		for (int i = 0; i < 2; i ++){
@@ -350,17 +350,17 @@ class Utils{
     }
     
     //次要版本
-    static int getAppMinorVersion(){
+    public static int getAppMinorVersion(){
 		long vv = _system_.getAppVersion();
         return ((vv >> 16) & 0xffff);
     }
     
     //build版本
-    static int getAppBuildVersion(){
+    public static int getAppBuildVersion(){
 		return _system_.getAppVersion() & 0xffff;
     }
     
-    static long getVersionValue(String version){
+    public static long getVersionValue(String version){
 		String [] bs = version.split('.');
         
         long ov = 0;

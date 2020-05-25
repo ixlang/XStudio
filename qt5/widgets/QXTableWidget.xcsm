@@ -2,15 +2,15 @@
 //Date: Mon Feb 18:20:25 2019 
 
 class QXTableWidget : QXWidget{
-    QXTableWidget(){
+    public QXTableWidget(){
     
     }
     
-    QXTableWidget(long handle){
+    public QXTableWidget(long handle){
         super(handle);
     }
     
-	bool create() override {
+	public bool create() override {
         nativehandle = createQObject(QType.qtTableWidget, this, 0);
         if (nativehandle == 0){
             return false;
@@ -18,7 +18,7 @@ class QXTableWidget : QXWidget{
         return true;
 	}
 
-	bool create(QXWidget parent) override {
+	public bool create(QXWidget parent) override {
         nativehandle = createQObject(QType.qtTableWidget, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
@@ -26,97 +26,97 @@ class QXTableWidget : QXWidget{
         return true;
 	}
 
-	long setItem(int row, int column, String icon, String text){
+	public long setItem(int row, int column, String icon, String text){
 		return long_long_string2(nativehandle, TABLESETITEM, ((long)row) << 32 | column, icon, text);
     }
     
-    void setColumnCount(int c){
+    public void setColumnCount(int c){
 		widget_set_vint_value(nativehandle, TABLESETCOLUMNCNT, c);
     }
     
-    void setRowCount(int c){
+    public void setRowCount(int c){
 		widget_set_vint_value(nativehandle, TABLESETROWCNT, c);
     }
     
-    void removeRow(int n){
+    public void removeRow(int n){
 		widget_set_vint_value(nativehandle, TABLEREMOVEROW, n);
     }
     
-    void removeColumn(int n){
+    public void removeColumn(int n){
 		widget_set_vint_value(nativehandle, TABLEREMOVECOLUMN, n);
     }
     
-    void selectRow(int n){
+    public void selectRow(int n){
 		widget_set_vint_value(nativehandle, TABLESELECTROW, n);
     }
     
-    void modifyItemFlags(long item, int add, int remove){
+    public void modifyItemFlags(long item, int add, int remove){
 		widget_set_v2int_value(item, TABLEITEMFLAG, add, remove);
     }
     
-    void setItemTag(long item, long tag){
+    public void setItemTag(long item, long tag){
         object_set_long_int_long(nativehandle, TABLESETTAG, item, 0, tag);
     }
     
-    long getTag(long item){
+    public long getTag(long item){
 		return object_get_long_int(0, TABLEGETTAG, item, 0);
     }
     
-    void setHHStretchLastSection(bool b){
+    public void setHHStretchLastSection(bool b){
 		widget_set_bool_value(nativehandle, TABLESETHHLS, b);
     }
-    void setVHResizeMode(int b){
+    public void setVHResizeMode(int b){
 		widget_set_vint_value(nativehandle, TABLESETVHRM, b);
     }
-    void setVHDefaultSectionSize(int b){
+    public void setVHDefaultSectionSize(int b){
 		widget_set_vint_value(nativehandle, TABLESETVHDSS, b);
     }
-    void setShowGrid(bool s){
+    public void setShowGrid(bool s){
 		widget_set_bool_value(nativehandle, TABLESETSG, s);
     }
-    void setVHVisible(bool bv){
+    public void setVHVisible(bool bv){
 		widget_set_bool_value(nativehandle, TABLESETVHV, bv);
     }
-    void setSelectionMode(int sm){
+    public void setSelectionMode(int sm){
 		widget_set_vint_value(nativehandle, TABLESETSM, sm);
     }
-    void setSelectionBehavior(int sb){
+    public void setSelectionBehavior(int sb){
 		widget_set_vint_value(nativehandle, TABLESETSB, sb);
     }
-    void setEditTriggers(int et){
+    public void setEditTriggers(int et){
 		widget_set_vint_value(nativehandle, TABLESETET, et);
     }
-    void resizeHHSection(int row, int size){
+    public void resizeHHSection(int row, int size){
 		widget_set_v2int_value(nativehandle, TABLESETHHRS, row, size);
     }
-    void setHHFixedHeight(int h){
+    public void setHHFixedHeight(int h){
 		widget_set_vint_value(nativehandle, TABLESETHHFH, h);
     }
-    void setHHColumns(String [] columns){
+    public void setHHColumns(String [] columns){
 		widget_set_object_value(nativehandle, SETTABHHCOLUMNS, columns);
     }
-    void setVHColumns(String [] columns){
+    public void setVHColumns(String [] columns){
 		widget_set_object_value(nativehandle, SETTABVHCOLUMNS, columns);
     }
-    String getText(int x, int y){
+    public String getText(int x, int y){
 		return (String)core_getStringlongint(nativehandle, TABLEGETTEXTBYRC, x, y);
     }
-    String getItemText(long item){
+    public String getItemText(long item){
 		return (String)core_getStringlongint(item, TABLEGETTEXTBYITEM, 0, 0);
     }
-    void clear(){
+    public void clear(){
 		widget_slot(nativehandle, TABLECLEAR);
     }
-    void clearContent(){
+    public void clearContent(){
 		widget_slot(nativehandle, TABLECLEARCONTENT);
     }
-	long[] getSelectedItems(){
+	public long[] getSelectedItems(){
 		return (long[])widget_get_object(nativehandle, TABLEGETSELITEM);
 	}
-    long getItem(int row, int column){
+    public long getItem(int row, int column){
 		return object_get_long_int(nativehandle, TABLEGETITEM, row, column);
     }
-    QXRect [] getSelectedRanges(){
+    public QXRect [] getSelectedRanges(){
 		long [] rs = (long[])widget_get_object(nativehandle, TABLEGETSELRANGE);
         
         QXRect []rgs = new QXRect[rs.length / 2];
@@ -128,35 +128,35 @@ class QXTableWidget : QXWidget{
         
         return rgs;
     }
-    void setItemText(long item, String text){
+    public void setItemText(long item, String text){
 		widget_set_intlongstring_value(0, SETTABLEITEMTEXT, item, 0, text);
     }
-    void setItemIcon(long item , String iconFile){
+    public void setItemIcon(long item , String iconFile){
 		widget_set_intlongstring_value(0, SETTABLEITEMICON, item, 0, iconFile);
     }
-    void setItemColor(long item, int color){
+    public void setItemColor(long item, int color){
         widget_set_intlongint_value(nativehandle, SETTABLEITEMCOLOR, item, 0, color);
     }
-    void setItemBackColor(long item, int color){
+    public void setItemBackColor(long item, int color){
         widget_set_intlongint_value(nativehandle, SETTABLEITEMBACKCOLOR, item, 0, color);
     }
-    void setItemCheck(long item , bool checked){
+    public void setItemCheck(long item , bool checked){
 		widget_set_int_bool_value(item,TABITEMSETCHECK, 0, checked);
     }
     
-    bool isItemCheck(long item){
+    public bool isItemCheck(long item){
 		return widget_get_int_bool(item,TABITEMGETCHECK, 0);
     }
     
-    int getItemFlags(long item){
+    public int getItemFlags(long item){
 		return widget_get_int_value(item, TABITEMGETFLAG);
     }
     
-    void setCellWidget(int x,int y, QXWidget w){
+    public void setCellWidget(int x,int y, QXWidget w){
 		widget_set_intlongint_value(nativehandle, TABLESETCELLWIDGET, w.nativehandle, x, y);
     }
     
-    QXWidget getCellWidget(int x,int y){
+    public QXWidget getCellWidget(int x,int y){
 		return (QXWidget)object_get_handle2(nativehandle, TABLEGETCELLWIDGET, x, y);
     }
 };

@@ -1,38 +1,38 @@
 class QXApplication : QXObject{
-    QXApplication(){
+    public QXApplication(){
     }
     
-    bool createQXApplication(){
+    public bool createQXApplication(){
         nativehandle = createQxApplication(this);
         return nativehandle != 0;
     }
-    void run(){
+    public void run(){
         ApplicationRun(nativehandle);
     }
     
-    bool onNotify(QXObject object ,String objectName, String objectClass, long event, int eventId){
+    public bool onNotify(QXObject object ,String objectName, String objectClass, long event, int eventId){
         //_system_.consoleWrite(objectName + "class:" + objectClass + "Event:" + eventId + "\n");
         return true;
     }
     
-	void setStyleSheet(String file){
+	public void setStyleSheet(String file){
 		widget_slot_string(nativehandle, STYLESHEET, file);
 	}
-	void setStyleSheetString(String stylesheet){
+	public void setStyleSheetString(String stylesheet){
 		widget_slot_string(nativehandle, STYLESHEETSTRING, stylesheet);
 	}
-	void setPaletteColor(String file){
+	public void setPaletteColor(String file){
 		widget_slot_string(nativehandle, PALETTECOLOR, file);
 	}
-    void setFont(QXFont font){
+    public void setFont(QXFont font){
         widget_set_native_value(nativehandle, SETAPPFONT, font.nativehandle);
     }
     
-    void loadTranslator(String file){
+    public void loadTranslator(String file){
 		widget_slot_string(nativehandle, LOADTRANSLATE, file);
     }
     
-    Object onCreateXObject(long object, String objectClass){
+    public Object onCreateXObject(long object, String objectClass){
         //_system_.consoleWrite("QXApplication request class :" + objectClass + "\n");
         if (objectClass.equals("QMdiArea")){
             return new QXMdiArea(object);

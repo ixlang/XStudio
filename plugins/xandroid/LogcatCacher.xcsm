@@ -3,13 +3,13 @@
 
 class LogcatCacher{
     static String [] locat_args = {"logcat", "-v", "threadtime","*:V"};
-    static int logcat_level = 0;
+    public static int logcat_level = 0;
     Process process;
     Object exitlock = new Object();
     bool bexit = false;
     Thread logthread = nilptr;
     
-    void run(){
+    public void run(){
         synchronized(exitlock){
             if (logthread == nilptr){
                 bexit = false;
@@ -29,7 +29,7 @@ class LogcatCacher{
         }
     }
     
-    void start_logcat(){
+    public void start_logcat(){
         ByteBuffer buffer = new ByteBuffer();
         XAndroid.ProcessStream ps =  new XAndroid.ProcessStream(){
             void onStreamOut(byte [] data, int pos, int len){
@@ -67,11 +67,11 @@ class LogcatCacher{
         }
     }
     
-    bool LogcatEnabled(){
+    public bool LogcatEnabled(){
         return !bexit;
     }
     
-    void setLogcatEnabled(bool b){
+    public void setLogcatEnabled(bool b){
         if (b){
             run();
         }else{
@@ -80,7 +80,7 @@ class LogcatCacher{
     }
     
     
-    void setLogcatLevel(int level){
+    public void setLogcatLevel(int level){
         String [] strLevel = {"*:V", "*:D", "*:I", "*:W", "*:E", "*:F"};
         if (level >= 0 && level < 6){
             logcat_level = level;
@@ -90,24 +90,24 @@ class LogcatCacher{
         }
     }
     
-    void Exit(){
+    public void Exit(){
         bexit = true;
         if (process != nilptr){
             process.exit(1);
         }
     }
     
-    void rerun(){
+    public void rerun(){
         if (process != nilptr){
             process.exit(1);
         }
     }
     
-    bool execute_logcat(String app,String workdir, String [] _args, XAndroid.ProcessStream ps){
+    public bool execute_logcat(String app,String workdir, String [] _args, XAndroid.ProcessStream ps){
         process = new Process(app , _args);
         process.setWorkDirectory(workdir);
         try{
-            if (process.create(false, true, false, false)) {
+            if (process.create(Process.StdOut | Process.RedirectStdErr)) {
                 XAndroid.readForProcess(ps, process);
                 process.waitFor(-1);
                 process = nilptr;

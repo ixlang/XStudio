@@ -1,12 +1,12 @@
 class QXCheckBox : QXWidget{
-    QXCheckBox(){
+    public QXCheckBox(){
     }
     
-    QXCheckBox(long handle){
+    public QXCheckBox(long handle){
         super(handle);
     }
     
-    bool create(){
+    public bool create(){
         nativehandle = createQObject(QType.qtCheckBox, this, 0);
         if (nativehandle == 0){
             return false;
@@ -14,7 +14,7 @@ class QXCheckBox : QXWidget{
         return true;
     }
     
-    bool create(QXWidget parent){
+    public bool create(QXWidget parent){
         nativehandle = createQObject(QType.qtCheckBox, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
@@ -22,15 +22,15 @@ class QXCheckBox : QXWidget{
         return true;
     }
     
-	void setCheck(bool bc){
+	public void setCheck(bool bc){
 		widget_set_bool_value(nativehandle, CHKSETCHECK, bc);
 	}
     
-	bool getCheck(){
+	public bool getCheck(){
 		return widget_get_bool_value(nativehandle, CHKGETCHECK);
 	}
     
-    void setText(String text){
+    public void setText(String text){
 		widget_slot_string(nativehandle, BUTTONSETTEXT, text);
     }
 };

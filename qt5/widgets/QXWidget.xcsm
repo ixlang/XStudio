@@ -1,67 +1,66 @@
 
 static class Runnable {
-    void run();
+    public void run();
 };
 
 class QXWidget : QXObject {
     //WindowType
-    enum RenderFlag {
+    public enum RenderFlag {
         DrawWindowBackground = 0x1,
         DrawChildren = 0x2,
         IgnoreMask = 0x4
     };
-    enum RegionType { Rectangle, Ellipse };
-    static const int Widget = 0x00000000;
-    static const int Window = 0x00000001;
-    static const int Dialog = 0x00000002 | Window;
-    static const int Sheet = 0x00000004 | Window;
-    static const int Drawer = Sheet | Dialog;
-    static const int Popup = 0x00000008 | Window;
-    static const int Tool = Popup | Dialog;
-    static const int ToolTip = Popup | Sheet;
-    static const int SplashScreen = ToolTip | Dialog;
-    static const int Desktop = 0x00000010 | Window;
-    static const int SubWindow = 0x00000012;
-    static const int ForeignWindow = 0x00000020 | Window;
-    static const int CoverWindow = 0x00000040 | Window;
-    static const int WindowType_Mask = 0x000000ff;
-    static const int MSWindowsFixedSizeDialogHint = 0x00000100;
-    static const int MSWindowsOwnDC = 0x00000200;
-    static const int BypassWindowManagerHint = 0x00000400;
-    static const int X11BypassWindowManagerHint = BypassWindowManagerHint;
-    static const int FramelessWindowHint = 0x00000800;
-    static const int WindowTitleHint = 0x00001000;
-    static const int WindowSystemMenuHint = 0x00002000;
-    static const int WindowMinimizeButtonHint = 0x00004000;
-    static const int WindowMaximizeButtonHint = 0x00008000;
-    static const int WindowMinMaxButtonsHint = WindowMinimizeButtonHint | WindowMaximizeButtonHint;
-    static const int WindowContextHelpButtonHint = 0x00010000;
-    static const int WindowShadeButtonHint = 0x00020000;
-    static const int WindowStaysOnTopHint = 0x00040000;
-    static const int WindowTransparentForInput = 0x00080000;
-    static const int WindowOverridesSystemGestures = 0x00100000;
-    static const int WindowDoesNotAcceptFocus = 0x00200000;
-    static const int MaximizeUsingFullscreenGeometryHint = 0x00400000;
-    static const int CustomizeWindowHint = 0x02000000;
-    static const int WindowStaysOnBottomHint = 0x04000000;
-    static const int WindowCloseButtonHint = 0x08000000;
-    static const int MacWindowToolBarButtonHint = 0x10000000;
-    static const int BypassGraphicsProxyWidget = 0x20000000;
-    static const int NoDropShadowWindowHint = 0x40000000;
-    static const int WindowFullscreenButtonHint = 0x80000000;
-    static class QPoint {
-        QPoint(int _x,int _y) {
+    public enum RegionType { Rectangle, Ellipse };
+    public static const int Widget = 0x00000000;
+    public static const int Window = 0x00000001;
+    public static const int Dialog = 0x00000002 | Window;
+    public static const int Sheet = 0x00000004 | Window;
+    public static const int Drawer = Sheet | Dialog;
+    public static const int Popup = 0x00000008 | Window;
+    public static const int Tool = Popup | Dialog;
+    public static const int ToolTip = Popup | Sheet;
+    public static const int SplashScreen = ToolTip | Dialog;
+    public static const int Desktop = 0x00000010 | Window;
+    public static const int SubWindow = 0x00000012;
+    public static const int ForeignWindow = 0x00000020 | Window;
+    public static const int CoverWindow = 0x00000040 | Window;
+    public static const int WindowType_Mask = 0x000000ff;
+    public static const int MSWindowsFixedSizeDialogHint = 0x00000100;
+    public static const int MSWindowsOwnDC = 0x00000200;
+    public static const int BypassWindowManagerHint = 0x00000400;
+    public static const int X11BypassWindowManagerHint = BypassWindowManagerHint;
+    public static const int FramelessWindowHint = 0x00000800;
+    public static const int WindowTitleHint = 0x00001000;
+    public static const int WindowSystemMenuHint = 0x00002000;
+    public static const int WindowMinimizeButtonHint = 0x00004000;
+    public static const int WindowMaximizeButtonHint = 0x00008000;
+    public static const int WindowMinMaxButtonsHint = WindowMinimizeButtonHint | WindowMaximizeButtonHint;
+    public static const int WindowContextHelpButtonHint = 0x00010000;
+    public static const int WindowShadeButtonHint = 0x00020000;
+    public static const int WindowStaysOnTopHint = 0x00040000;
+    public static const int WindowTransparentForInput = 0x00080000;
+    public static const int WindowOverridesSystemGestures = 0x00100000;
+    public static const int WindowDoesNotAcceptFocus = 0x00200000;
+    public static const int MaximizeUsingFullscreenGeometryHint = 0x00400000;
+    public static const int CustomizeWindowHint = 0x02000000;
+    public static const int WindowStaysOnBottomHint = 0x04000000;
+    public static const int WindowCloseButtonHint = 0x08000000;
+    public static const int MacWindowToolBarButtonHint = 0x10000000;
+    public static const int BypassGraphicsProxyWidget = 0x20000000;
+    public static const int NoDropShadowWindowHint = 0x40000000;
+    public static const int WindowFullscreenButtonHint = 0x80000000;
+    public static class QPoint {
+        public QPoint(int _x,int _y) {
             x = _x;
             y = _y;
         }
-        QPoint(long v) {
+        public QPoint(long v) {
             x = (v >> 32) & 0xffffffff;
             y = v & 0xffffffff;
         }
-        int x;
-        int y;
+        public int x, y;
     };
-    static const int  AlignLeft = 0x0001,
+    public static const int  AlignLeft = 0x0001,
                       AlignLeading = AlignLeft,
                       AlignRight = 0x0002,
                       AlignTrailing = AlignRight,
@@ -79,34 +78,36 @@ class QXWidget : QXObject {
                       // shouldn't really be any ambiguity between the two overlapping enum values.
                       AlignVertical_Mask = AlignTop | AlignBottom | AlignVCenter | AlignBaseline,
                       AlignCenter = AlignVCenter | AlignHCenter;
-    static const int  Horizontal = 0x1,
-                      Vertical = 0x2;
-    static const int  TopToBottom = 0, BottomToTop = 1;
-    static const int
+    public enum Orientation {
+        Horizontal = 0x1,
+        Vertical = 0x2
+    };
+    public static const int  TopToBottom = 0, BottomToTop = 1;
+    public static const int
     NoContextMenu = 0,
     DefaultContextMenu = 1,
     ActionsContextMenu = 2,
     CustomContextMenu = 3,
     PreventContextMenu = 4;
 
-    static const int
+    public static const int
     NoFocus = 0,
     TabFocus = 0x1,
     ClickFocus = 0x2,
     StrongFocus = TabFocus | ClickFocus | 0x8,
     WheelFocus = StrongFocus | 0x4;
 
-    QXWidget() {
+    public QXWidget() {
     }
 
 
 
-    static List<Runnable> _uiloop_list = new List<Runnable>();
+    public static List<Runnable> _uiloop_list = new List<Runnable>();
 
-    static const int NEW_UI_TASK_NID = 0xf00f00ff;
+    public static const int NEW_UI_TASK_NID = 0xf00f00ff;
 
 
-    static const int   WA_Disabled = 0,
+    public static const int   WA_Disabled = 0,
                        WA_UnderMouse = 1,
                        WA_MouseTracking = 2,
                        WA_ContentsPropagated = 3, // ## deprecated
@@ -247,14 +248,14 @@ class QXWidget : QXObject {
                        // Add new attributes before this line
                        WA_AttributeCount = 130;
 
-    void runOnUi(Runnable task) {
+    public void runOnUi(Runnable task) {
         synchronized(_uiloop_list) {
             _uiloop_list.add(task);
         }
         Notify(NEW_UI_TASK_NID);
     }
 
-    static void runOnThread(Runnable task) {
+    public static void runOnThread(Runnable task) {
         new Thread() {
             void run()override {
                 task.run();
@@ -262,7 +263,7 @@ class QXWidget : QXObject {
         } .start();
     }
 
-    final void onNotify(long eventid)override {
+    private final void onNotify(long eventid)override {
         if (eventid == NEW_UI_TASK_NID) {
             while (_uiloop_list.size() > 0) {
                 Runnable r;
@@ -281,17 +282,17 @@ class QXWidget : QXObject {
     }
 
 
-    void onNotification(long eventid) {
+    public void onNotification(long eventid) {
         if (_notifyListener != nilptr) {
             _notifyListener.onNotify(this, eventid);
         }
     }
 
-    QXWidget(long h) {
+    public QXWidget(long h) {
         super(h);
     }
 
-    bool create() {
+    public bool create() {
         nativehandle = createQObject(QType.qtWidget, this, 0);
         if (nativehandle == 0) {
             return false;
@@ -299,11 +300,11 @@ class QXWidget : QXObject {
         return true;
     }
 
-    void setAttribute(int flag, bool bOn) {
+    public void setAttribute(int flag, bool bOn) {
         widget_set_int_bool_value(nativehandle, QXCore.SETATTRIBUTE, flag, bOn);
     }
 
-    bool create(QXWidget parent) {
+    public bool create(QXWidget parent) {
         nativehandle = createQObject(QType.qtWidget, this, parent.nativehandle);
         if (nativehandle == 0) {
             return false;
@@ -311,185 +312,185 @@ class QXWidget : QXObject {
         return true;
     }
 
-    bool load(String uifile) {
+    public bool load(String uifile) {
         nativehandle = locaUiFile(uifile, this, 0);
         if (nativehandle == 0) {
             return false;
         }
         return true;
     }
-    bool load(String uifile, QXWidget parent) {
+    public bool load(String uifile, QXWidget parent) {
         nativehandle = locaUiFile(uifile, this, parent.nativehandle);
         if (nativehandle == 0) {
             return false;
         }
         return true;
     }
-    bool load(QXBuffer data) {
+    public bool load(QXBuffer data) {
         nativehandle = locaUiData(data.nativehandle, this, 0);
         if (nativehandle == 0) {
             return false;
         }
         return true;
     }
-    bool load(QXBuffer data, QXWidget parent) {
+    public bool load(QXBuffer data, QXWidget parent) {
         nativehandle = locaUiData(data.nativehandle, this, parent.nativehandle);
         if (nativehandle == 0) {
             return false;
         }
         return true;
     }
-    void setParent(QXWidget parent) {
+    public void setParent(QXWidget parent) {
         widget_set_native_value(nativehandle, QXCore.PARENTWIDGET, parent.nativehandle);
     }
 
-    double getOpacity() {
+    public double getOpacity() {
         return widget_get_double_value(nativehandle,QXCore.OPACITY);
     }
 
-    void setModal(bool bm) {
+    public void setModal(bool bm) {
         widget_set_bool_value(nativehandle, QXCore.MODAL, bm);
     }
 
-    bool isVisible() {
+    public bool isVisible() {
         return widget_get_bool_value(nativehandle, QXCore.VISIBLE);
     }
 
-    bool maximized() {
+    public bool maximized() {
         return widget_get_bool_value(nativehandle, QXCore.MAXIMIZED);
     }
 
-    bool minimized() {
+    public bool minimized() {
         return widget_get_bool_value(nativehandle, QXCore.MINIMIZED);
     }
 
-    bool isEnabled() {
+    public bool isEnabled() {
         return widget_get_bool_value(nativehandle, QXCore.ENABLED);
     }
 
-    bool isActive() {
+    public bool isActive() {
         return widget_get_bool_value(nativehandle, QXCore.ACTIVED);
     }
 
 
 
-    void setOpacity(double v) {
+    public void setOpacity(double v) {
         widget_set_double_value(nativehandle,QXCore.OPACITY, v);
     }
 
-    void setVisible(bool v) {
+    public void setVisible(bool v) {
         widget_set_bool_value(nativehandle, QXCore.VISIBLE, v);
     }
 
-    void setMaximized(bool v) {
+    public void setMaximized(bool v) {
         widget_set_bool_value(nativehandle, QXCore.MAXIMIZED, v);
     }
 
-    void setMinimized(bool v) {
+    public void setMinimized(bool v) {
         widget_set_bool_value(nativehandle, QXCore.MINIMIZED, v);
     }
 
-    void setEnabled(bool v) {
+    public void setEnabled(bool v) {
         widget_set_bool_value(nativehandle, QXCore.ENABLED, v);
     }
 
-    void setActive(bool v) {
+    public void setActive(bool v) {
         widget_set_bool_value(nativehandle, QXCore.ACTIVED, v);
     }
 
-    void setFocusPolicy(int fcy)   {
+    public void setFocusPolicy(int fcy)   {
         widget_set_vint_value(nativehandle, QXCore.SETFOCUSPOLICY, fcy);
     }
 
-    int getFocusPolicy() {
+    public int getFocusPolicy() {
         return widget_get_int_value(nativehandle, QXCore.SETFOCUSPOLICY);
     }
-    int getMinimumHeight() {
+    public int getMinimumHeight() {
         return widget_get_int_value(nativehandle, QXCore.MINIMUMHEIGHT);
     }
 
-    int getMaximumHeight() {
+    public int getMaximumHeight() {
         return widget_get_int_value(nativehandle, QXCore.MAXIMUMHEIGHT);
     }
 
-    int getMinimumWidth() {
+    public int getMinimumWidth() {
         return widget_get_int_value(nativehandle, QXCore.MINIMUMWIDTH);
     }
 
-    int getMaximumWidth() {
+    public int getMaximumWidth() {
         return widget_get_int_value(nativehandle, QXCore.MAXIMUMWIDTH);
     }
 
-    int x() {
+    public int x() {
         return widget_get_int_value(nativehandle, QXCore.X_POS);
     }
 
-    int y() {
+    public int y() {
         return widget_get_int_value(nativehandle, QXCore.Y_POS);
     }
 
-    int width() {
+    public int width() {
         return widget_get_int_value(nativehandle, QXCore.WIDTH);
     }
 
-    int height() {
+    public int height() {
         return widget_get_int_value(nativehandle, QXCore.HEIGHT);
     }
 
-    bool isFullScreen() {
+    public bool isFullScreen() {
         return widget_get_bool_value(nativehandle, QXCore.FULLSCREEN);
     }
 
-    bool isHidden() {
+    public bool isHidden() {
         return widget_get_bool_value(nativehandle, QXCore.HIDDEN);
     }
 
-    bool isModal() {
+    public bool isModal() {
         return widget_get_bool_value(nativehandle, QXCore.MODAL);
     }
 
-    bool isWindow() {
+    public bool isWindow() {
         return widget_get_bool_value(nativehandle, QXCore.WINDOW);
     }
 
-    void resize(int w,int h) {
+    public void resize(int w,int h) {
         widget_set_v2int_value(nativehandle, QXCore.RESIZE, w, h);
     }
 
-    void scroll(int dx,int dy) {
+    public void scroll(int dx,int dy) {
         widget_set_v2int_value(nativehandle, QXCore.SCROLL, dx, dy);
     }
 
-    void setBackgroundRole(int role) {
+    public void setBackgroundRole(int role) {
         widget_set_bkrl(nativehandle, role);
     }
 
-    void setCursor() {
+    public void setCursor() {
 
     }
 
-    void move(int x,int y) {
+    public void move(int x,int y) {
         widget_set_v2int_value(nativehandle, QXCore.MOVE, x, y);
     }
 
-    void setFixedHeight(int h) {
+    public void setFixedHeight(int h) {
         widget_set_vint_value(nativehandle, QXCore.FIXEDHEIGHT, h);
     }
 
-    void setWindowFlags(int flag/*WindowType*/) {
+    public void setWindowFlags(int flag/*WindowType*/) {
         widget_set_vint_value(nativehandle, QXCore.WINDOWFLAG, flag);
     }
 
-    void setWindowFlag(int flag/*WindowType*/, bool bOn) {
+    public void setWindowFlag(int flag/*WindowType*/, bool bOn) {
         widget_set_int_bool_value(nativehandle, QXCore.SETWINDOWFLAG, flag, bOn);
     }
-    String getStyleSheet() {
+    public String getStyleSheet() {
         return (String)core_getString(nativehandle, GETSTYLESHEEY);
     }
-    void addAction(QXAction action) {
+    public void addAction(QXAction action) {
         widget_set_native_value(nativehandle, ADDDEFACTION, action.nativehandle);
     }
-    void addActions(QXAction []actions) {
+    public void addActions(QXAction []actions) {
         long [] al = new long[actions.length];
         for (int i =0; i < al.length; i ++) {
             al[i] = actions[i].nativehandle;
@@ -497,216 +498,218 @@ class QXWidget : QXObject {
         widget_set_object_value(nativehandle, ADDDEFACTION, al);
     }
 
-    void setWindowIcon(String icon) {
+    public void setWindowIcon(String icon) {
         widget_slot_string(nativehandle, QXCore.WINDOWICON, icon);
     }
-    void setContextMenuPolicy(int v) {
+    public void setContextMenuPolicy(int v) {
         widget_set_vint_value(nativehandle, SETCONTEXTMENUPOLICY, v);
     }
-    void setFixedSize(int w, int h) {
+    public void setFixedSize(int w, int h) {
         widget_set_v2int_value(nativehandle, QXCore.FIXEDSIZE, w, h);
     }
-    void setFontDescrption(String desc) {
+    public void setFontDescrption(String desc) {
         widget_slot_string(nativehandle, QXCore.SETWIDGETFONT, desc);
     }
-    void setFixedWidth(int w) {
+    public void setFixedWidth(int w) {
         widget_set_vint_value(nativehandle, QXCore.FIXEDWIDTH, w);
     }
 
-    void setPalette(int flags, int color) {
+    public void setPalette(int flags, int color) {
         widget_set_v2int_value(nativehandle, QXCore.PALETTE, flags, color);
     }
 
-    void
+    public void
     setPalette(QXPalette palette) {
         widget_set_native_value(nativehandle, QXCore.PALETTE, palette.nativehandle);
     }
 
-    void
+    public void
     setStyle(QXStyle style) {
         widget_set_native_value(nativehandle, QXCore.STYLE, style.nativehandle);
     }
 
     //virtual
-    void close() {
+    public void close() {
         widget_slot(nativehandle, QXCore.CLOSE);
     }
-    void hide() {
+    public void hide() {
         widget_slot(nativehandle, QXCore.HIDE);
     }
-    void lower() {
+    public void lower() {
         widget_slot(nativehandle, QXCore.LOWER);
     }
-    void raise() {
+    public void raise() {
         widget_slot(nativehandle, QXCore.RAISE);
     }
-    void repaint() {
+    public void repaint() {
         widget_slot(nativehandle, QXCore.REPAINT);
     }
-    void update() {
+    public void update() {
         widget_slot(nativehandle, QXCore.UPDATE);
     }
-    void setFocus() {
+    public void setFocus() {
         widget_slot(nativehandle, QXCore.SETFOCUS);
     }
 
-    void
+    public void
     setWindowTitle(String text) {
         widget_slot_string(nativehandle, QXCore.WINDOWTITLE, text);
     }
 
-    void
+    public void
     show() {
         widget_slot(nativehandle, QXCore.SHOW);
     }
-    void
+    public void
     showFullScreen() {
         widget_slot(nativehandle, QXCore.SHOWFULLSCREEN);
     }
-    void
+    public void
     showMaximized() {
         widget_slot(nativehandle, QXCore.SHOWMAX);
     }
-    void
+    public void
     showMinimized() {
         widget_slot(nativehandle, QXCore.SHOWMIN);
     }
-    void
+    public void
     showNormal() {
         widget_slot(nativehandle, QXCore.SHOWNORMAL);
     }
-    int Critical(String caption, String text, int button, int defaultBtn) {
+    public int Critical(String caption, String text, int button, int defaultBtn) {
         return long_string2_int2(nativehandle, MESSAGEBOXERR, caption, text, button, defaultBtn);
     }
-    int Warning(String caption, String text, int button, int defaultBtn) {
+    public int Warning(String caption, String text, int button, int defaultBtn) {
         return long_string2_int2(nativehandle, MESSAGEBOXWAR, caption, text, button, defaultBtn);
     }
 
-    int Question(String caption, String text, int button, int defaultBtn) {
+    public int Question(String caption, String text, int button, int defaultBtn) {
         return long_string2_int2(nativehandle, MESSAGEBOXQUE, caption, text, button, defaultBtn);
     }
-    int Information(String caption, String text, int button, int defaultBtn) {
+    public int Information(String caption, String text, int button, int defaultBtn) {
         return long_string2_int2(nativehandle, MESSAGEBOXINF, caption, text, button, defaultBtn);
     }
 
-    void About(String caption, String text) {
+    public void About(String caption, String text) {
         long_string2_int2(nativehandle, MESSAGEBOXABT, caption, text, 0, 0);
     }
 
-    void setCursor(int cursor) {
+    public void setCursor(int cursor) {
         widget_set_vint_value(nativehandle, SETCURSOR, cursor);
     }
 
-    QPoint mapTo(QXWidget w, int x,int y) {
+    public QPoint mapTo(QXWidget w, int x,int y) {
         long v = x;
         v = (v << 32) | y;
         v = long_intlong2(nativehandle, MAPPOINT, w.nativehandle, v);
         return new QPoint(v);
     }
-    QPoint mapToGlobal(int x,int y) {
+    public QPoint mapToGlobal(int x,int y) {
         long v = x;
         v = (v << 32) | y;
         v = long_intlong2(nativehandle, MAPPOINT, 0, v);
         return new QPoint(v);
     }
-    QPoint mapFromGlobal(int x,int y) {
+    public QPoint mapFromGlobal(int x,int y) {
         long v = x;
         v = (v << 32) | y;
         v = long_intlong2(0, MAPPOINT, nativehandle, v);
         return new QPoint(v);
     }
-    QXPoint getScreenPoint(int num) {
+    public QXPoint getScreenPoint(int num) {
         long xy = object_get_long_int(nativehandle, QXCore.SCREENPOSITION, num, 0);
         return new QXPoint((xy >> 32) & 0xffffffff, xy & 0xffffffff);
     }
-    QXPoint getCurrentScreenPoint() {
+    public QXPoint getCurrentScreenPoint() {
         long xy = object_get_long_int(nativehandle, QXCore.SCREENPOSITION, -1, 0);
         return new QXPoint((xy >> 32) & 0xffffffff, xy & 0xffffffff);
     }
-    QXRect getScreenSize(int num) {
+    public QXRect getScreenSize(int num) {
         long wh = object_get_long_int(nativehandle, QXCore.SCREENSIZE, num, 0);
         return new QXRect(0, 0, (wh >> 32) & 0xffffffff, wh & 0xffffffff);
     }
-    QXRect getCurrentScreenSize() {
+    public QXRect getCurrentScreenSize() {
         long wh = object_get_long_int(nativehandle, QXCore.SCREENSIZE, -1, 0);
         return new QXRect(0, 0, (wh >> 32) & 0xffffffff, wh & 0xffffffff);
     }
-    int getCurrentScreen() {
+    public int getCurrentScreen() {
         return widget_get_int_value(nativehandle, QXCore.CURRENTSCREEN);
     }
     //不能在工作线程中update 要在UI线程中执行
-    final void postUpdate() {
+    public final void postUpdate() {
         runOnUi(new Runnable() {
             void run()override {
                 QXWidget.this.update();
             }
         });
     }
-    void setStyleSheet(String file) {
+    public void setStyleSheet(String file) {
         widget_slot_string(nativehandle, QXCore.SETSTYLESHEET, file);
     }
-    void setStyle(String styneName) {
+    public void setStyle(String styneName) {
         widget_slot_string(nativehandle, QXCore.SETSTYLE, styneName);
     }
-    void setStyleSheetString(String stylesheet) {
+    public void setStyleSheetString(String stylesheet) {
         widget_slot_string(nativehandle, QXCore.SETSTYLESHEETSTRING, stylesheet);
     }
-    void setWhatsThis(String tips) {
+    public void setWhatsThis(String tips) {
         widget_slot_string(nativehandle, QXCore.SETWHATSTHIS, tips);
     }
-    void centerScreen() {
+    public void centerScreen() {
         QXRect rc = getCurrentScreenSize();
         rc.offset(getCurrentScreenPoint());
         move((rc.width() - width()) / 2, (rc.height() - height()) / 2);
     }
 
-    bool hasFocus() {
+    public bool hasFocus() {
         return widget_get_bool_value(nativehandle, QXCore.HASFOCUS);
     }
 
-    String getToolTips() {
+    public String getToolTips() {
         return (String)core_getString(nativehandle, QXCore.GETTOOLTIPS);
     }
 
-    void setToolTips(String text) {
+    public void setToolTips(String text) {
         widget_slot_string(nativehandle, QXCore.SETTOOLTIPS, text);
     }
-    
-    void showToolTips(int x, int y, long duration) {
+    public void setLayout(QLayout layout){
+        widget_set_native_value(nativehandle, QXCore.SETLAYOUT, layout.nativehandle);
+    }
+    public void showToolTips(int x, int y, long duration) {
         widget_set_intlongstring_value(nativehandle, QXCore.SHOWTOOLTIPS, ((long)x) << 32 |  y, duration, nilptr);
     }
-    void showToolTips(int x, int y, String text, long duration) {
+    public void showToolTips(int x, int y, String text, long duration) {
         widget_set_intlongstring_value(nativehandle, QXCore.SHOWTOOLTIPS, ((long)x) << 32 |  y,  duration, text);
     }
-    static void ShowToolTips(int x, int y, String text, long duration) {
+    public static void ShowToolTips(int x, int y, String text, long duration) {
         widget_set_intlongstring_value(0, QXCore.SHOWTOOLTIPS, ((long)x) << 32 |  y,  duration, text);
     }
 
-    bool isAcceptDrops() {
+    public bool isAcceptDrops() {
         return widget_get_bool_value(nativehandle, QXCore.ENABLEDROG);
     }
 
-    void setAcceptDrops(bool ba) {
+    public void setAcceptDrops(bool ba) {
         widget_set_bool_value(nativehandle, QXCore.ENABLEDROG, ba);
     }
 
-    void setUpdateEnabled(bool be) {
+    public void setUpdateEnabled(bool be) {
         widget_set_bool_value(nativehandle, UPDATEENABLE, be);
     }
 
-    bool isUpdateEnabled() {
+    public bool isUpdateEnabled() {
         return widget_get_bool_value(nativehandle,UPDATEENABLE );
     }
-    void render(QXPainter painter){
+    public void render(QXPainter painter){
         long_long_int9(nativehandle, WIDGETRENDER1, painter.hpaint, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
-    void render(QXPainter painter, RenderFlag flags){
+    public void render(QXPainter painter, RenderFlag flags){
         long_long_int9(nativehandle, WIDGETRENDER1, painter.hpaint, 0, 0, 0, 0, 0, 0, 0, flags, 0);
     }
-    void render(QXPainter painter, int x,int y, RenderFlag flags){
+    public void render(QXPainter painter, int x,int y, RenderFlag flags){
         long_long_int9(nativehandle, WIDGETRENDER1, painter.hpaint, x, y, 0, 0, 0, 0, 0, flags, 0);
     }
-    void render(QXPainter painter, int x,int y, int sx,int sy,int sw,int sh,RegionType sflags, RenderFlag flags){
+    public void render(QXPainter painter, int x,int y, int sx,int sy,int sw,int sh,RegionType sflags, RenderFlag flags){
         long_long_int9(nativehandle, WIDGETRENDER1, painter.hpaint, x, y, sx, sy, sw, sh, sflags, flags, 0);
     }
 };

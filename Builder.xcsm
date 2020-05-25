@@ -1,52 +1,85 @@
 
 class Builder : IBuilder
 {
-    static XWndOutput output;
-    static XWndInfor infownd;
+    public static XWndOutput output;
+    public static XWndInfor infownd;
 
     bool inConsole = false;
     Process buildProcess;
 
 
-    Builder()
+    public Builder()
     {
     }
-    Builder(bool bcon)
+    public Builder(bool bcon)
     {
         inConsole = bcon;
     }
-    static void clearAll(bool focus)
+    public static void clearAll(bool focus)
     {
         if (output != nilptr) {
             output.clearAll(focus);
             infownd.clear();
         }
     }
-    static void clearComm(bool focus)
+    public static void clearComm(bool focus)
     {
         if (output != nilptr) {
             output.clearComm(focus);
+            infownd.clear();
         }
     }
-    String build(String compilerPath, String []args, String workDir)override
+    public String build(String compilerPath, String []args, String workDir, InformationParser parser, bool bForceArgs)override
     {
         String allInfo = nilptr;
-
+        String argfilepath = nilptr;
+        
         if (buildProcess == nilptr) {
             allInfo = "";
             String fullCommand = "";
-            for (int i =0; i < args.length; i++) {
+            for (int i = 0; i < args.length; i++) {
                 fullCommand = fullCommand + (args[i] + " ");
             }
 
             OutputText(XPlatform.converPlatformCharSetTo(fullCommand) + "\n", 0);
-
-            buildProcess = new Process(XPlatform.converToPlatformCharSet(compilerPath), args);
+            
+            
+            if (bForceArgs == false && Setting.isUseArgfile()){
+                argfilepath = workDir.appendPath("~tmp" + Math.random() + ".list");
+                try{
+                    FileOutputStream fos = new FileOutputStream(argfilepath);
+                    String argcontent = "";
+                    for (int i = 1; i < args.length; i++){
+                        if (argcontent.length() != 0){
+                            argcontent = argcontent + " ";
+                        }
+                        argcontent = argcontent + args[i];
+                    }
+                    fos.write(argcontent.getBytes());
+                    fos.close();
+                    
+                }catch(Exception e){
+                    OutputText("无法写入参数文件:\n[" + argfilepath + "]" , 0);
+                    XPlatform.deleteFile(argfilepath);
+                    return "";
+                }
+                
+                String  [] __args  = {args[0],  ""};
+                if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
+                    __args[1] = "@\"" + argfilepath + "\"";
+                }else{
+                    __args[1] = "@" + argfilepath;
+                }
+                
+                buildProcess = new Process(XPlatform.converToPlatformCharSet(compilerPath), __args);
+            }else{
+                buildProcess = new Process(XPlatform.converToPlatformCharSet(compilerPath), args);
+            }
 
             buildProcess.setWorkDirectory(XPlatform.converToPlatformCharSet(workDir));
 
             try {
-                if (buildProcess.create(false, true, false, false)) {
+                if (buildProcess.create(Process.StdOut | Process.RedirectStdErr)) {
                     String lines = "";
                     try {
                         int rd = 0;
@@ -56,7 +89,12 @@ class Builder : IBuilder
                             String rdinfo = new String(buffer, 0, rd);
 
                             lines = lines + rdinfo;
-                            allInfo = allInfo + rdinfo;
+                            
+                            if (parser != nilptr){
+                                allInfo = parser.parse(allInfo + rdinfo);
+                            }else{
+                                allInfo = allInfo + rdinfo;
+                            }
 
                             int lf = -1;
                             if ((lf = lines.lastIndexOf('\n')) != -1) {
@@ -88,10 +126,13 @@ class Builder : IBuilder
             buildProcess = nilptr;
         }
 
+        if (argfilepath != nilptr){
+            XPlatform.deleteFile(argfilepath);
+        }
         return XPlatform.converPlatformCharSetTo(allInfo);
     }
 
-    void OutputText(String text, int id)override
+    public void OutputText(String text, int id)override
     {
         if (inConsole == false) {
             output.output(text, id);
@@ -99,10 +140,15 @@ class Builder : IBuilder
             _system_.consoleWrite(XPlatform.converToPlatformCharSet(text));
         }
     }
-    void setCompileInfor(Vector<ICompileInfo> infos)override
+    public void setCompileInfor(Vector<ICompileInfo> infos)override
     {
         if (inConsole == false) {
             infownd.showInfo(infos);
         }
+    }
+    public void complete(){
+        if (inConsole == false) {
+            infownd.completeCompile();
+        } 
     }
 };

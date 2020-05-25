@@ -1,48 +1,48 @@
 
 class QXMessageBox : QXObject{
-    static const int NoButton           = 0x00000000;
-    static const int Ok                 = 0x00000400;
-    static const int Save               = 0x00000800;
-    static const int SaveAll            = 0x00001000;
-    static const int Open               = 0x00002000;
-    static const int Yes                = 0x00004000;
-    static const int YesToAll           = 0x00008000;
-    static const int No                 = 0x00010000;
-    static const int NoToAll            = 0x00020000;
-    static const int Abort              = 0x00040000;
-    static const int Retry              = 0x00080000;
-    static const int Ignore             = 0x00100000;
-    static const int Close              = 0x00200000;
-    static const int Cancel             = 0x00400000;
-    static const int Discard            = 0x00800000;
-    static const int Help               = 0x01000000;
-    static const int Apply              = 0x02000000;
-    static const int Reset              = 0x04000000;
-    static const int RestoreDefaults    = 0x08000000;
-    static const int FirstButton        = Ok;                // internal
-    static const int LastButton         = RestoreDefaults;   // internal
-    static const int YesAll             = YesToAll;          // obsolete
-    static const int NoAll              = NoToAll;           // obsolete
-    static const int Default            = 0x00000100;        // obsolete
-    static const int Escape             = 0x00000200;        // obsolete
-    static const int FlagMask           = 0x00000300;        // obsolete
-    static const int ButtonMask         = ~FlagMask;          // obsolete
+    public static const int NoButton           = 0x00000000;
+    public static const int Ok                 = 0x00000400;
+    public static const int Save               = 0x00000800;
+    public static const int SaveAll            = 0x00001000;
+    public static const int Open               = 0x00002000;
+    public static const int Yes                = 0x00004000;
+    public static const int YesToAll           = 0x00008000;
+    public static const int No                 = 0x00010000;
+    public static const int NoToAll            = 0x00020000;
+    public static const int Abort              = 0x00040000;
+    public static const int Retry              = 0x00080000;
+    public static const int Ignore             = 0x00100000;
+    public static const int Close              = 0x00200000;
+    public static const int Cancel             = 0x00400000;
+    public static const int Discard            = 0x00800000;
+    public static const int Help               = 0x01000000;
+    public static const int Apply              = 0x02000000;
+    public static const int Reset              = 0x04000000;
+    public static const int RestoreDefaults    = 0x08000000;
+    public static const int FirstButton        = Ok;                // internal
+    public static const int LastButton         = RestoreDefaults;   // internal
+    public static const int YesAll             = YesToAll;          // obsolete
+    public static const int NoAll              = NoToAll;           // obsolete
+    public static const int Default            = 0x00000100;        // obsolete
+    public static const int Escape             = 0x00000200;        // obsolete
+    public static const int FlagMask           = 0x00000300;        // obsolete
+    public static const int ButtonMask         = ~FlagMask;          // obsolete
     
-    static int Critical(String caption, String text, int button, int defaultBtn){
+    public static int Critical(String caption, String text, int button, int defaultBtn){
         return long_string2_int2(0, MESSAGEBOXERR, caption, text, button, defaultBtn);
     }
-    static int Warning(String caption, String text, int button, int defaultBtn){
+    public static int Warning(String caption, String text, int button, int defaultBtn){
         return long_string2_int2(0, MESSAGEBOXWAR, caption, text, button, defaultBtn);
     }
     
-    static int Question(String caption, String text, int button, int defaultBtn){
+    public static int Question(String caption, String text, int button, int defaultBtn){
         return long_string2_int2(0, MESSAGEBOXQUE, caption, text, button, defaultBtn);
     }
-    static int Information(String caption, String text, int button, int defaultBtn){
+    public static int Information(String caption, String text, int button, int defaultBtn){
         return long_string2_int2(0, MESSAGEBOXINF, caption, text, button, defaultBtn);
     }
     
-    static void About(String caption, String text){
+    public static void About(String caption, String text){
         long_string2_int2(0, MESSAGEBOXABT, caption, text, 0, 0);
     }
     

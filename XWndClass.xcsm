@@ -3,42 +3,42 @@ class XWndClass : QXDockWidget
 {
 
     QXTreeView _treeview;
-    XWorkspace workspace;
+    public XWorkspace workspace;
     JsonArray sources;
     QXLineEdit editSearch;
 
-    static class ItemLoader
+    public static class ItemLoader
     {
-        long loaditem;
-        JsonArray object;
-        ItemLoader(long i, JsonArray o)
+        public long loaditem;
+        public JsonArray object;
+        public ItemLoader(long i, JsonArray o)
         {
             loaditem = i;
             object = o;
         }
     };
 
-    static class Position
+    public static class Position
     {
-        Position(int s,int l,int r, bool b)
+        public Position(int s,int l,int r, bool b)
         {
             source = s;
             line = l;
             row = r;
             lib = b;
         }
-        int source = -1, line, row;
-        bool lib = false;
+        public int source = -1, line, row;
+        public bool lib = false;
     };
 
     Map<long, ItemLoader> expand_data = new Map<long, ItemLoader>();
     Map<long, Position> position_info = new Map<long, Position>();
 
-    static XWndClass wndClass;
+    public static XWndClass wndClass;
 
     String searchkey = nilptr;
 
-    void onAttach()
+    public void onAttach()
     {
         editSearch =  (QXLineEdit)attachByName(new QXLineEdit(), "classSearch");
         _treeview = (QXTreeView)attachByName(new QXTreeView(), "tree_class");
@@ -82,7 +82,7 @@ class XWndClass : QXDockWidget
 
         editSearch.setOnEditEventListener(new onEditEventListener() {
             void onTextChanged(QXObject, String text)override {
-                if (ignoreSearch || workspace.currentProject == nilptr) {
+                if (ignoreSearch || workspace.getCurrentProject() == nilptr) {
                     return;
                 }
                 searchkey = text;
@@ -100,7 +100,7 @@ class XWndClass : QXDockWidget
     bool ignoreSearch = false;
     Object searchLock = new Object();
 
-    void onSearch()
+    public void onSearch()
     {
         synchronized(searchLock) {
             if (searchThread == nilptr) {
@@ -130,7 +130,7 @@ class XWndClass : QXDockWidget
                             }
                         });
                         if (currentKey != nilptr) {
-                            search(workspace.currentProject, currentKey.upper());
+                            search(workspace.getCurrentProject(), currentKey.upper());
                         }
 
                         synchronized(searchLock) {
@@ -160,17 +160,17 @@ class XWndClass : QXDockWidget
         }
     }
 
-    static void prepare(Project project)
+    public static void prepare(Project project)
     {
         wndClass._treeview.addItem("res/toolbar/project.png", project.getName() + "(正在生成类视图...)");
     }
 
-    static void refresh()
+    public static void refresh()
     {
         XWndClass.postNotify(XWorkspace.AUTODOMPEVENTID);
     }
 
-    void clickItem(long item)
+    public void clickItem(long item)
     {
         Position pos = nilptr;
 
@@ -183,16 +183,16 @@ class XWndClass : QXDockWidget
         if (pos != nilptr) {
             //_system_.consoleWrite("" + pos.source + ": " + pos.line + "." + pos.row + "\n");
             if (pos.source == -1) {
-                QXMessageBox.Information("注意", "对象不在源代码中定义.", QXMessageBox.Ok, QXMessageBox.Ok);
+                //QXMessageBox.Information("注意", "对象不在源代码中定义.", QXMessageBox.Ok, QXMessageBox.Ok);
                 return ;
             }
             String source = sources.getString(pos.source);
             if (source == nilptr || source.length() == 0) {
-                QXMessageBox.Information("注意", "对象不在源代码中定义.", QXMessageBox.Ok, QXMessageBox.Ok);
+                //QXMessageBox.Information("注意", "对象不在源代码中定义.", QXMessageBox.Ok, QXMessageBox.Ok);
                 return ;
             }
-            if (workspace.currentProject != nilptr) {
-                source = workspace.currentProject.getFullPath(source);
+            if (workspace.getCurrentProject() != nilptr) {
+                source = workspace.getCurrentProject().getFullPath(source);
             }
             if (XPlatform.existsSystemFile(source) == false) {
                 if (pos.lib == false) {
@@ -203,7 +203,7 @@ class XWndClass : QXDockWidget
             }
         }
     }
-    void expandLoad(long item)
+    public void expandLoad(long item)
     {
         ItemLoader loader = nilptr;
 
@@ -225,28 +225,28 @@ class XWndClass : QXDockWidget
         }
     }
 
-    static void postNotify(int id)
+    public static void postNotify(int id)
     {
         wndClass.Notify(id);
     }
-    void clear()
+    public void clear()
     {
         _treeview.clear();
         expand_data.clear();
         position_info.clear();
         sources = nilptr;
     }
-    void onNotification(long eventid)
+    public void onNotification(long eventid)
     {
-        if (workspace.currentProject != nilptr) {
-            loadProject(workspace.currentProject);
+        if (workspace.getCurrentProject() != nilptr) {
+            loadProject(workspace.getCurrentProject());
         }
     }
     /*static void load(Project project){
     	wndClass.loadProject(project);
     }*/
 
-    long [][] loadLibs(Configure configure)
+    public long [][] loadLibs(Project project, Configure configure)
     {
         long [] hlibs;
         long [] hlinks;
@@ -254,7 +254,7 @@ class XWndClass : QXDockWidget
         if (configure != nilptr) {
             long libroot = 0;
 
-            JsonArray libs = (JsonArray)configure.root.get("libs");
+            JsonArray libs = project.getExternLibs(configure);
             if (libs != nilptr) {
                 hlibs = new long[libs.length()];
 
@@ -289,7 +289,7 @@ class XWndClass : QXDockWidget
     }
 
 
-    void search(Project project, String key)
+    public void search(Project project, String key)
     {
         if (project != nilptr) {
             JsonObject json = project.xintelliSenseMap;
@@ -312,7 +312,7 @@ class XWndClass : QXDockWidget
 
     }
 
-    int searchObject(JsonArray objs, String key, bool showBuildin)
+    public int searchObject(JsonArray objs, String key, bool showBuildin)
     {
         int hasVisible = 0;
         if (objs == nilptr ) {
@@ -331,28 +331,36 @@ class XWndClass : QXDockWidget
 
             int bVisible = 0;
             obj.remove("mathced");
-            if (Pattern.test(objname, key, 0, false)) {
-                bVisible ++;
-            }
-
-            if (type == 31) {
-                bVisible += searchObject((JsonArray)obj.get("properites"), key, showBuildin);
-                bVisible += searchObject((JsonArray)obj.get("static_properites"), key, showBuildin);
-                bVisible += searchObject((JsonArray)obj.get("method"), key, showBuildin);
-                bVisible += searchObject((JsonArray)obj.get("static_method"), key, showBuildin);
-            } else if (type == 23) {
-                JsonArray param = (JsonArray)obj.get("params");
-                for (int x = 0, y = param.length(); x < y; x++) {
-                    JsonObject jo = (JsonObject)param.get(x);
-                    String fname = jo.getString("name").upper();
-                    jo.remove("mathced");
-                    if (Pattern.test(fname, key, 0, false)) {
-                        jo.put("mathced",1);
-                        bVisible ++;
+            
+            try{
+                if (Pattern.test(objname, key, 0, false)) {
+                    bVisible ++;
+                }
+            
+                if (type == 31) {
+                    bVisible += searchObject((JsonArray)obj.get("properites"), key, showBuildin);
+                    bVisible += searchObject((JsonArray)obj.get("static_properites"), key, showBuildin);
+                    bVisible += searchObject((JsonArray)obj.get("method"), key, showBuildin);
+                    bVisible += searchObject((JsonArray)obj.get("static_method"), key, showBuildin);
+                } else if (type == 23) {
+                    JsonArray param = (JsonArray)obj.get("params");
+                    if (param != nilptr){
+                        for (int x = 0, y = param.length(); x < y; x++) {
+                            JsonObject jo = (JsonObject)param.get(x);
+                            String fname = jo.getString("name").upper();
+                            jo.remove("mathced");
+                            
+                            
+                            if (Pattern.test(fname, key, 0, false)) {
+                                jo.put("mathced",1);
+                                bVisible ++;
+                            }
+                        }
                     }
                 }
+            }catch(Exception e){
+                
             }
-
             if (bVisible > 0) {
                 hasVisible++;
                 obj.put("mathced", 1);
@@ -361,7 +369,7 @@ class XWndClass : QXDockWidget
         return hasVisible;
     }
 
-    void loadProject(Project project)
+    public void loadProject(Project project)
     {
         clear();
         long root = _treeview.addItem("res/toolbar/project.png", project.getName());
@@ -370,7 +378,7 @@ class XWndClass : QXDockWidget
             hbuildin = _treeview.addItem("res/toolbar/sources.png", "内置对象");
         }
 
-        long [][]libs = loadLibs(project.currentConfig);
+        long [][]libs = loadLibs(project, project.getCurrentConfig());
 
         if (project.xintelliSenseMap != nilptr) {
             sources = (JsonArray)project.xintelliSenseMap.get("sources");
@@ -383,11 +391,11 @@ class XWndClass : QXDockWidget
             _treeview.setExpand(root, true);
         }
     }
-    long insertLoad(long item)
+    public long insertLoad(long item)
     {
         return _treeview.insertItem(item, nilptr, "加载中...");
     }
-    void loadObject(long hroot, long [][]libs, JsonArray objs, long hbuildin)
+    public void loadObject(long hroot, long [][]libs, JsonArray objs, long hbuildin)
     {
         if (objs == nilptr) {
             return ;
@@ -470,14 +478,30 @@ class XWndClass : QXDockWidget
                     expand_data.put(method, new ItemLoader(insertLoad(method),  (JsonArray)obj.get("method")));
                     expand_data.put(static_method,new ItemLoader( insertLoad(static_method),  (JsonArray)obj.get("static_method")));
                 }else{ 
-                    long prop = _treeview.insertItem(item, "res/toolbar/member.png", "成员");
-                    long static_prop = _treeview.insertItem(item, "res/toolbar/static.png", "静态成员");
-                    long method = _treeview.insertItem(item, "res/toolbar/function.png", "方法");
-                    long static_method = _treeview.insertItem(item, "res/toolbar/staticfunction.png", "静态方法");
-                    expand_data.put(prop,new ItemLoader(insertLoad(prop), (JsonArray)obj.get("properites")));
-                    expand_data.put(static_prop,new ItemLoader(insertLoad(static_prop),   (JsonArray)obj.get("static_properites")));
-                    expand_data.put(method, new ItemLoader(insertLoad(method),  (JsonArray)obj.get("method")));
-                    expand_data.put(static_method,new ItemLoader( insertLoad(static_method),  (JsonArray)obj.get("static_method")));
+
+                    JsonArray properites = (JsonArray)obj.get("properites");
+                    if (properites != nilptr && properites.length() > 0){
+                        long prop = _treeview.insertItem(item, "res/toolbar/member.png", "成员");
+                        expand_data.put(prop,new ItemLoader(insertLoad(prop), properites));
+                    }
+                    
+                    JsonArray static_properites = (JsonArray)obj.get("static_properites");
+                    if (static_properites != nilptr && static_properites.length() > 0){
+                        long static_prop = _treeview.insertItem(item, "res/toolbar/static.png", "静态成员");
+                        expand_data.put(static_prop,new ItemLoader(insertLoad(static_prop),   static_properites));
+                    }
+                    
+                    JsonArray methods = (JsonArray)obj.get("method");
+                    if (methods != nilptr && methods.length() > 0){
+                        long method = _treeview.insertItem(item, "res/toolbar/function.png", "方法");
+                        expand_data.put(method, new ItemLoader(insertLoad(method),  methods));
+                    }
+                    
+                    JsonArray static_methods = (JsonArray)obj.get("static_method");
+                    if (static_methods != nilptr && static_methods.length() > 0){
+                        long static_method = _treeview.insertItem(item, "res/toolbar/staticfunction.png", "静态方法");
+                        expand_data.put(static_method,new ItemLoader( insertLoad(static_method),  static_methods));
+                    }
                 }
                 /*loadObject(prop, (JsonArray)obj.get("properites"));
                 loadObject(static_prop, (JsonArray)obj.get("static_properites"));
@@ -495,17 +519,22 @@ class XWndClass : QXDockWidget
                     _treeview.insertItem(temp, nilptr, obj.getString("typeobj"));
                 }
 
-                long params = _treeview.insertItem(item, "res/toolbar/params.png", "参数列表");
+                long params = 0;
 
                 JsonArray param = (JsonArray)obj.get("params");
-                for (int x = 0, y = param.length(); x < y; x++) {
-                    JsonObject jo = (JsonObject)param.get(x);
-                    if (searched &&  !jo.has("mathced")) {
-                        continue;
+                if (param != nilptr){
+                    if (param.length() > 0){
+                        params = _treeview.insertItem(item, "res/toolbar/params.png", "参数列表");
                     }
-                    long pitem = _treeview.insertItem(params, "res/toolbar/param.png", jo.getString("name"));
-                    long temp = _treeview.insertItem(pitem, "res/toolbar/class.png", "类型");
-                    _treeview.insertItem(temp, nilptr, jo.getString("type"));
+                    for (int x = 0, y = param.length(); x < y; x++) {
+                        JsonObject jo = (JsonObject)param.get(x);
+                        if (searched &&  !jo.has("mathced")) {
+                            continue;
+                        }
+                        long pitem = _treeview.insertItem(params, "res/toolbar/param.png", jo.getString("name"));
+                        long temp = _treeview.insertItem(pitem, "res/toolbar/class.png", "类型");
+                        _treeview.insertItem(temp, nilptr, jo.getString("type"));
+                    }
                 }
             } else if (type == 18) {
                 item = _treeview.insertItem(root, "res/toolbar/object.png", obj.getString("name"));
@@ -519,7 +548,7 @@ class XWndClass : QXDockWidget
                 if (obj.has("source")) {
                     sourceid = obj.getInt("source");
                 }
-                position_info.put(item, new Position(sourceid, obj.getInt("line"), obj.getInt("row"), blib));
+                position_info.put(item, new Position(sourceid, obj.getInt("line"), obj.getInt("column"), blib));
             }
         }
     }

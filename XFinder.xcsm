@@ -4,17 +4,17 @@
 
 class XFinder{
 
-	static class FindItem{
-		String file;
-		int position;
-        int line, row;
-        int type;
-        int findlen;
-        String findres;
+	public static class FindItem{
+		public String file;
+		public int position;
+        public int line, row;
+        public int type;
+        public int findlen;
+        public String findres;
         
-        int method;	//0:poslocation 1:linerowlocation
+        public int method;	//0:poslocation 1:linerowlocation
         
-        FindItem(String _file, int p, int l, String s){
+        public FindItem(String _file, int p, int l, String s){
 			file = _file;
 			position = p;
             findlen = l;
@@ -22,7 +22,7 @@ class XFinder{
             method = 0;
         }
         
-        FindItem(String _file, int _l, int _r, int l, String s){
+        public FindItem(String _file, int _l, int _r, int l, String s){
 			file = _file;
             findlen = l;
             line = _l;
@@ -32,9 +32,9 @@ class XFinder{
         }
     };
     
-    static class FindResult : Vector<FindItem>{};
+    public static class FindResult : Vector<FindItem>{};
     
-    static String readFileContent(String file){
+    public static String readFileContent(String file){
 		FileInputStream fis = nilptr;
 		try{
 			fis = new FileInputStream(file);
@@ -54,7 +54,7 @@ class XFinder{
         return nilptr;
     }
     
-    static bool writeFileContent(String file, String content){
+    public static bool writeFileContent(String file, String content){
 		FileOutputStream fis = nilptr;
 		try{
 			fis = new FileOutputStream(file);
@@ -71,7 +71,7 @@ class XFinder{
         return false;
     }
     
-    static String getFileContent(String file){
+    public static String getFileContent(String file){
 		String content = XSourceEditor.getEditingContent(file);
         if (content == nilptr){
 			content = readFileContent(file);
@@ -79,13 +79,13 @@ class XFinder{
         return content;
     }
     
-	static const int 
+	public static const int 
 		SCOPE_CURRENT = 0,
 		SCOPE_ALLOPENED = 1,
 		SCOPE_PROJECT = 2;
         
-	static void find(FindResult result, Project project, bool bcase, bool wholeWord, bool regex, String [] extsions, int scope, String findTxt, Pattern pattern){
-		if (scope == SCOPE_PROJECT){
+	public static void find(FindResult result, Project project, bool bcase, bool wholeWord, bool regex, String [] extsions, int scope, String findTxt, Pattern pattern){
+		if (scope == SCOPE_PROJECT && project != nilptr){
 			for (int i = 0; i < project.getSourceFileCount(); i++){
 				String path = project.getSourcePath(i);
                 findInFile(result, path, bcase, wholeWord, regex, extsions, findTxt, pattern);
@@ -101,7 +101,7 @@ class XFinder{
         }
     }
     
-    static bool testExtsion(String file , String [] extsions){
+    public static bool testExtsion(String file , String [] extsions){
 		for (int i = 0; i < extsions.length; i++){
 			if (file.lower().endWith(extsions[i].lower())){
 				return true;
@@ -110,7 +110,7 @@ class XFinder{
         return false;
     }
     
-    static void findInFile(FindResult result, String file, bool bcase, bool wholeWord, bool regex, String [] extsions, String findTxt, Pattern pattern){
+    public static void findInFile(FindResult result, String file, bool bcase, bool wholeWord, bool regex, String [] extsions, String findTxt, Pattern pattern){
 		if (extsions != nilptr && testExtsion(file, extsions) == false){
 			return ;
         }
@@ -123,7 +123,7 @@ class XFinder{
     }
     
     
-    static void findInText(FindResult result, String file, String text, bool bcase, bool wholeWord, bool regex, String findTxt, Pattern pattern){
+    public static void findInText(FindResult result, String file, String text, bool bcase, bool wholeWord, bool regex, String findTxt, Pattern pattern){
 		if (regex){
 			findRegex(result, file, text, pattern);
         }else
@@ -142,7 +142,7 @@ class XFinder{
         }
     }
     
-    static void findRegex(FindResult result,String file, String text, Pattern findTxt){
+    public static void findRegex(FindResult result,String file, String text, Pattern findTxt){
 		Pattern.Result 
 			rt = findTxt.match(text, Pattern.NOTEMPTY);
             
@@ -155,7 +155,7 @@ class XFinder{
 		}
     }
     
-    static String cutString(String text, int sl, int el){
+    public static String cutString(String text, int sl, int el){
 		sl = Math.max(sl - 20, 0);
         el = Math.min(text.length() - 1, el + 20);
         String out = text.substring(sl, el + 1);
@@ -165,11 +165,11 @@ class XFinder{
         return "..." + out + "...";
     }
     
-    static bool isWordChar(char c){
+    public static bool isWordChar(char c){
 		return !(c >=0 && c < 48);
     }
     
-    static void findText(FindResult result,String file, String originalText ,String text, String findTxt){
+    public static void findText(FindResult result,String file, String originalText ,String text, String findTxt){
 		int findpos = -1;
         int findlen = findTxt.length();
         
@@ -178,7 +178,7 @@ class XFinder{
         }
     }
     
-    static void findTextWholeWord(FindResult result,String file, String originalText ,String text, String findTxt){
+    public static void findTextWholeWord(FindResult result,String file, String originalText ,String text, String findTxt){
 		int findpos = -1;
         int findlen = findTxt.length();
         
@@ -201,7 +201,7 @@ class XFinder{
         }
     }
     
-    static void replace(FindResult result, String replaceStr){
+    public static void replace(FindResult result, String replaceStr){
 		for (int i = result.size() - 1; i >= 0; i--){
 			FindItem item = result.get(i);
             if (item != nilptr){
@@ -210,7 +210,7 @@ class XFinder{
         }
     }
     
-    static void replaceOnFile(FindItem item, String replaceStr){
+    public static void replaceOnFile(FindItem item, String replaceStr){
 		XSourceEditor wnd = XSourceEditor.findDocumentWindow(nilptr, item.file, false);
         
         if (wnd != nilptr){
@@ -219,7 +219,7 @@ class XFinder{
 			String content = readFileContent(item.file);
             if (content != nilptr){
 				try{
-					content = content.replace(item.position, item.position + item.findlen - 1, replaceStr);
+					content = content.replace(item.position, item.position + item.findlen, replaceStr);
 					writeFileContent(item.file, content);
                 }catch(Exception e){
                 

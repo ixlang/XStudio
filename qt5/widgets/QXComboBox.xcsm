@@ -1,14 +1,14 @@
 
 class QXComboBox : QXWidget{
-    QXComboBox(){
+    public QXComboBox(){
     
     }
     
-    QXComboBox(long handle){
+    public QXComboBox(long handle){
         super(handle);
     }
     
-    bool create(){
+    public bool create(){
         nativehandle = createQObject(QType.qtComboBox, this, 0);
         if (nativehandle == 0){
             return false;
@@ -16,31 +16,31 @@ class QXComboBox : QXWidget{
         return true;
     }
     
-    bool create(QXWidget parent){
+    public bool create(QXWidget parent){
         nativehandle = createQObject(QType.qtComboBox, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
         }
         return true;
     }    
-    void setText(String text){
+    public void setText(String text){
         widget_slot_string(nativehandle, COMBOSETTEXT, text);
     }
     
-    String getCurrentText(){
+    public String getCurrentText(){
         return (String)core_getString(nativehandle, COMBOGETTEXT);
     }
-    void addItems(String [] items){
+    public void addItems(String [] items){
         widget_set_object_value(nativehandle, COMBOBOXADD, items);
     }
-    void clear(){
+    public void clear(){
         widget_get_bool_value(nativehandle, COMBOXCLR);
     }
-    void setCurrentIndex(int id){
+    public void setCurrentIndex(int id){
         widget_set_vint_value(nativehandle, COMBOBOXSETID, id);
     }
     
-    int getCurrentIndex(){
+    public int getCurrentIndex(){
         return widget_get_int_value(nativehandle, COMBOBOXGETID);
     }
 };

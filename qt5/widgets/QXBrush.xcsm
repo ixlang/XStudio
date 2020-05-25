@@ -5,7 +5,7 @@ class QXBrush : QXNative{
 
 	/** @brush style
 	*/
-	enum Style{
+	public enum Style{
 		NoBrush ,
 		SolidPattern ,
 		Dense1Pattern ,
@@ -27,22 +27,22 @@ class QXBrush : QXNative{
 		TexturePattern = 24
 	};
 
-	enum Spread{
+	public enum Spread{
         PadSpread ,
         ReflectSpread ,
         RepeatSpread 
     };
     
-	static class Gradient{
-		long gradhandle = 0;
+	public static class Gradient{
+		public long gradhandle = 0;
         
 		int nstyle = Style.LinearGradientPattern;
                 
-		Gradient(int style){
+		public Gradient(int style){
 			nstyle = style;
         }
 		
-        bool create(double [] data){
+        public bool create(double [] data){
 			if (gradhandle != 0){
 				return false;
             }
@@ -73,23 +73,23 @@ class QXBrush : QXNative{
             return gradhandle != 0;
         }
         
-        void setColorAt(double pos, int color){
+        public void setColorAt(double pos, int color){
 			widget_set_v2int_double_value(gradhandle, QXCore.SETCOLORAT, color, pos, 0);
         }
         
-        void setSpread(int spread){
+        public void setSpread(int spread){
 			widget_set_vint_value(gradhandle, QXCore.SETSPREAD, spread);
         } 
         
-        void finalize(){
+        public void finalize(){
 			if (gradhandle != 0){
 				QXNative.widget_slot(gradhandle, QXCore.DELLOCGRADIENT);
 			}
 		}
     };
     
-    static class QXLinearGradient : Gradient{
-		QXLinearGradient(double x,double y,double ex,double ey){
+    public static class QXLinearGradient : Gradient{
+		public QXLinearGradient(double x,double y,double ex,double ey){
 			super(Style.LinearGradientPattern);
             double [] _params = {x, y, ex, ey};
             if (create(_params) == false){
@@ -99,8 +99,8 @@ class QXBrush : QXNative{
 
     };
     
-    static class QXRadialGradient : Gradient{
-		QXRadialGradient(double x,double y,double r){
+    public static class QXRadialGradient : Gradient{
+		public QXRadialGradient(double x,double y,double r){
 			super(Style.RadialGradientPattern);
             double [] _params = {x, y, r};
             if (create(_params) == false){
@@ -108,7 +108,7 @@ class QXBrush : QXNative{
             }
         }
         
-        QXRadialGradient(double x,double y,double r,double fx,double fy){
+        public QXRadialGradient(double x,double y,double r,double fx,double fy){
 			super(Style.RadialGradientPattern);
             double [] _params = {x, y, r, fx, fy};
             if (create(_params) == false){
@@ -116,7 +116,7 @@ class QXBrush : QXNative{
             }
         }
         
-        QXRadialGradient(double x,double y,double r,double fx,double fy, double fr){
+        public QXRadialGradient(double x,double y,double r,double fx,double fy, double fr){
 			super(Style.RadialGradientPattern);
             double [] _params = {x, y, r, fx, fy, fr};
             if (create(_params) == false){
@@ -125,8 +125,8 @@ class QXBrush : QXNative{
         }
     };
     
-    static class QXConicalGradient : Gradient{
-		QXConicalGradient(double cx,double cy,double s){
+    public static class QXConicalGradient : Gradient{
+		public QXConicalGradient(double cx,double cy,double s){
 			super(Style.ConicalGradientPattern);
             double [] _params = {cx, cy, s};
             if (create(_params) == false){
@@ -135,28 +135,28 @@ class QXBrush : QXNative{
         }
     };
     
-	QXBrush() {//构造
+	public QXBrush() {//构造
 		nativehandle = createNObject(QType.qtBrush, 0);
         if (nativehandle == 0){
             throw new IllegalArgumentException("can not create QXBrush");
         }
 	}
 
-	QXBrush(Gradient grad){
+	public QXBrush(Gradient grad){
         nativehandle = createNObject(QType.qtBrush, grad.gradhandle);
         if (nativehandle == 0){
             throw new IllegalArgumentException("can not create QXBrush");
         }
     }
 	
-    QXBrush(QXImage img){
+    public QXBrush(QXImage img){
         nativehandle = createNObject(QType.qtImgBrush, img.himage);
         if (nativehandle == 0){
             throw new IllegalArgumentException("can not create QXBrush");
         }
     }
     
-	void finalize(){
+	public void finalize(){
 		if (nativehandle != 0){
 			QXNative.widget_slot(nativehandle, QXCore.DELLOCBRUSH);
         }

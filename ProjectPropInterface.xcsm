@@ -11,4 +11,16 @@ interface ProjectPropInterface{
 	void stopRun();
     String generateMake(Project object, Configure configure);
 	bool create(WizardLoader loader, String projectName, String projectDir, String uuid, Project object, bool isAddToProject, String userType);
+    JsonObject getProperitiesConfigure();
+    Stream createDebugPipe(String host, int ip);
+    Stream getDebugPipe();
+    IXIntelliSense allocIntelliSense(Project project, Configure cfg);
+    String [] generatorCompArgs(Project object, Configure configure, String sourfile);
+    ICompileInfo parseOutputLine(QXSci sci, int position, int line, String lineText);
+    void stopBuild();
+    void onProjectSettingChange(Project object);
+    IXPlugin getXPlugin();
+    void customDebug();
+    String getDebuggeeDescription();
+    JsonArray getExternLibs(Configure);
 };

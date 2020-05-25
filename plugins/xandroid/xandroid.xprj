@@ -16,21 +16,6 @@
 				"makeclean":	"",
 				"afterbuild":	"",
 				"afterclean":	"",
-				"libs":	["XPlatform_1.0.0.2.lix", "FileStream_1.0.0.5.lix"],
-				"links":	["XStudio1.xl"],
-				"depends":	[{
-						"name":	"XPlatform",
-						"version":	"1.0.0.2"
-					}, {
-						"name":	"FileStream",
-						"version":	"1.0.0.5"
-					}],
-				"wtype":	"",
-				"ostype":	"",
-				"outname":	"$(ProjectName)$(Ext)",
-				"outpath":	"D:\\Programs\\windows_x64_dev\\plugins",
-				"command":	"-slx -c",
-				"uaclevel":	"默认",
 				"cmd":	"$(Output)",
 				"args":	"$(Output)",
 				"workdir":	"$(ProjectDir)",
@@ -38,7 +23,23 @@
 				"compdest":	"",
 				"ignorewl":	"",
 				"debugable":	"",
-				"debugdatabase":	""
+				"debugdatabase":	"",
+				"wtype":	"",
+				"ostype":	"",
+				"sstype":	"",
+				"outname":	"$(ProjectName)$(Ext)",
+				"outpath":	"D:\\Programs\\windows_x64_dev\\plugins",
+				"command":	"-slx -c",
+				"uaclevel":	"默认",
+				"libs":	["XPlatform_1.0.0.2.lix", "FileStream_1.0.0.5.lix"],
+				"links":	["XStudio.xl"],
+				"depends":	[{
+						"name":	"XPlatform",
+						"version":	"1.0.0.2"
+					}, {
+						"name":	"FileStream",
+						"version":	"1.0.0.5"
+					}]
 			},
 			"release":	{
 				"path":	{
@@ -56,7 +57,7 @@
 				"workdir":	"$(ProjectDir)"
 			}
 		},
-		"icofile":	"",
-		"versioninc":	"0"
+		"versioninc":	"0",
+		"icofile":	""
 	}
 }

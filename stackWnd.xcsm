@@ -3,48 +3,48 @@
 
 class XStackInfor : QXDockWidget{
 
-    static const int XDBG_STATE_UPDATE	=	0;	//状态更新
-	static const int XDBG_STATE_CREATE	=	1;	//线程创建
-	static const int XDBG_STATE_EXIT		=	2;	//线程退出
-	static const int XDBG_STATE_EXCEPTION = 	4;	//捕获异常
-    static const int XDBG_STATE_REIGGEBP 	= 	8;	//触发断点
+    public static const int XDBG_STATE_UPDATE	=	0;	//状态更新
+	public static const int XDBG_STATE_CREATE	=	1;	//线程创建
+	public static const int XDBG_STATE_EXIT		=	2;	//线程退出
+	public static const int XDBG_STATE_EXCEPTION = 	4;	//捕获异常
+    public static const int XDBG_STATE_REIGGEBP 	= 	8;	//触发断点
     
-    static bool bOutputThreadStatus = true;
+    public static bool bOutputThreadStatus = true;
     
-    QXTreeView _listview;
+    public QXTreeView _listview;
     
-    JsonObject root;
-    Object rootLock = new Object();
-    static XStackInfor stackWnd;
+    private JsonObject root;
+    private Object rootLock = new Object();
+    public static XStackInfor stackWnd;
     
-    static class BreakPosition{
-		BreakPosition(String f, int l, int r, bool a){
+    public static class BreakPosition{
+		public BreakPosition(String f, int l, int r, bool a){
 			file = f;
 			line = l;
             row = r;
             active = a;
 		}
         
-		String file;
-        int line;
-        int row;
-        bool active;
+		public String file;
+        public int line;
+        public int row;
+        public bool active;
     };
         
-    static class ThreadInfo{
-		long item;
-        int serial;
-        bool bInterrupt;
+    public static class ThreadInfo{
+		public long item;
+        public int serial;
+        public bool bInterrupt;
     };  
     
-    onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
-        void onItemClicked(QXTreeView tree,long item, int column)override{
+    public onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
+        public void onItemClicked(QXTreeView tree,long item, int column)override{
 			queryAuto(item, column);
         }
     };
     
 
-	void queryAuto(long item, int column){
+	public void queryAuto(long item, int column){
 		long parent_item = _listview.getParentItem(item);
         if (parent_item != 0){
 			String tid = _listview.getItemText(parent_item, 1);
@@ -60,7 +60,7 @@ class XStackInfor : QXDockWidget{
                 String lr = _listview.getItemText(item, 2);
                 String []lrs = lr.split(',');
                 
-                if (lrs.length == 2){
+                if (lrs.length == 2 && filepath.length() > 0){
 					XSourceEditor.openForFileInfo(XWorkspace.workspace, filepath, lrs[0].parseInt() + 1, lrs[1].parseInt(), nilptr);
                 }
             }
@@ -75,7 +75,7 @@ class XStackInfor : QXDockWidget{
         }
     }
     
-    void onAttach(){
+    public void onAttach(){
         _listview = (QXTreeView)attachByName(new QXTreeView(), "stacklist");
        
         /*setOnLayoutEventListener(new onLayoutEventListener(){
@@ -99,9 +99,9 @@ class XStackInfor : QXDockWidget{
         stackWnd = this;
     }
     
-	static void updateThread(long tid, int action){
+	public static void updateThread(long tid, int action){
         stackWnd.runOnUi(new Runnable(){
-            void run()override{
+            public void run()override{
                 stackWnd.onNotification(tid, action);
             }
         });
@@ -135,12 +135,21 @@ class XStackInfor : QXDockWidget{
     
  
     
-    void updateToItem(long item, ThreadManager.ThreadObject to, bool bLocate){
+     void updateToItem(long item, ThreadManager.ThreadObject to, bool bLocate){
 		_listview.setItemText(item, 0, to.name);
         _listview.setItemText(item, 1, "" + to.id);
         
+        bool bCurrentThread = false;
+        
+        if (to.id == ThreadManager.currentThreadId){
+            bCurrentThread = true;
+        }
+        
+        _listview.setItemBackColor(item,0,bCurrentThread ? 0xffcccccc : 0x00000000);
+        _listview.setItemBackColor(item,1,bCurrentThread ? 0xffcccccc : 0x00000000);
+        _listview.setItemBackColor(item,2,bCurrentThread ? 0xffcccccc : 0x00000000);
+
 		if (to.bInterrupt){
-			
 			_listview.setItemIcon(item, 0, "res/toolbar/break.png");
             _listview.setItemText(item, 2, "中断");
         }else
@@ -165,7 +174,7 @@ class XStackInfor : QXDockWidget{
 				if (sf.source == nilptr){
 					_listview.setItemText(fitem, 3, ip + "<无调试信息>");
 				}else{
-					_listview.setItemText(fitem, 2, "" + sf.line + "," + sf.row);
+					_listview.setItemText(fitem, 2, "" + sf.line + "," + sf.column);
                     String path = sf.path;
                     if (path != nilptr && path.length() > 0){
                         path = convertPathToMethod(path);
@@ -187,27 +196,30 @@ class XStackInfor : QXDockWidget{
 					_listview.setItemText(fitem, 4, sf.source);
 					
 					if (i == 0){
+                    
+                        if (sf.source != nilptr && sf.source.length() > 0){
+                            BreakPosition bp = new BreakPosition(sf.source, sf.line, sf.column, bLocate);
                         
-						BreakPosition bp = new BreakPosition(sf.source, sf.line, sf.row, bLocate);
-					
-						Map.Iterator<long, BreakPosition> iter = breakList.find(to.id);
-						if (iter != nilptr){
-							BreakPosition old_bp = iter.getValue();
-							
-							if (old_bp.file.equals(sf.source) && old_bp.line == sf.line && old_bp.row == sf.row){
-								if (old_bp.active == false){
-									XSourceEditor.setBreak(bp, true);
+                            Map.Iterator<long, BreakPosition> iter = breakList.find(to.id);
+                            if (iter != nilptr){
+                                BreakPosition old_bp = iter.getValue();
+                                
+                                if (old_bp.file.equals(sf.source) && old_bp.line == sf.line && old_bp.row == sf.column){
+                                    if (old_bp.active == false){
+                                        XSourceEditor.setBreak(bp, true);
+                                    }
+                                    continue;
+                                    //onlyActive = true;
+                                }else{
+                                    XSourceEditor.removeBreak(iter.getValue());
+                                    iter.setValue(bp);
                                 }
-								continue;
-								//onlyActive = true;
-							}else{
-								XSourceEditor.removeBreak(iter.getValue());
-                                iter.setValue(bp);
-							}
-						}
-						breakList.put(to.id ,bp);
-						XSourceEditor.setBreak(bp, false);
-						ThreadManager.setCurrentThread(to.id, 0);
+                            }
+                        
+                            breakList.put(to.id ,bp);
+                            XSourceEditor.setBreak(bp, false);
+                        }
+                        
 					}
 				}
 			}
@@ -215,7 +227,7 @@ class XStackInfor : QXDockWidget{
     }
     
     
-    void update(long tid, bool bLocate){
+    public void update(long tid, bool bLocate){
 		long item = 0;
 		Map.Iterator<long,long> iter = threadlist.find(tid);
 		if (iter == nilptr){
@@ -233,7 +245,7 @@ class XStackInfor : QXDockWidget{
 		}
     }
     
-    void createThread(long tid){
+    public void createThread(long tid){
 
 		long item = _listview.addItem(nilptr, "");
 		
@@ -247,7 +259,7 @@ class XStackInfor : QXDockWidget{
         
     }
     
-    void exitThread(long tid){
+    public void exitThread(long tid){
 		Map.Iterator<long,long> iter = threadlist.find(tid);
 		if (iter != nilptr){
 			_listview.removeItem(iter.getValue());
@@ -256,7 +268,7 @@ class XStackInfor : QXDockWidget{
 		}
     }
     
-    void onException(long tid){
+    public void onException(long tid){
 		String msgInfo = nilptr;
 
 		long item = 0;
@@ -274,28 +286,30 @@ class XStackInfor : QXDockWidget{
 		if (to != nilptr){
 			updateToItem(item, to, true);
 			
-			msgInfo = "调试器捕获了一个未处理的异常[" +  to.except_name + "]在地址:" + to.except_addr + "产生的中断,该异常将使程序停止运行.<br /><br />" + 
-			"详细信息:<br />" + 
-			"<strong style=\"color:#ff0000\">异常:" + to.except_name +"</strong><br />" + 
-			"<strong style=\"color:#80b0f0\">消息:" + to.except_msg + "</strong><br />" + 
-			"<strong style=\"color:#bde0ac\">地址:" + to.except_addr + "</strong><br />";
-		}
-        
-		XWorkspace.Caution();
-        
-		raise();
-        
-        if (msgInfo != nilptr){
-			QXMessageBox.Warning("异常中断", msgInfo, QXMessageBox.Ok, QXMessageBox.Ok);
+            if (to.bException){
+                msgInfo = "调试器捕获了一个未处理的异常[" +  to.except_name + "]在地址:" + to.except_addr + "产生的中断,该异常将使程序停止运行.<br /><br />" + 
+                "详细信息:<br />" + 
+                "<strong style=\"color:#ff0000\">异常:" + to.except_name +"</strong><br />" + 
+                "<strong style=\"color:#80b0f0\">消息:" + to.except_msg + "</strong><br />" + 
+                "<strong style=\"color:#bde0ac\">地址:" + to.except_addr + "</strong><br />";
+            
+                XWorkspace.Caution();
+                
+                raise();
+                
+                if (msgInfo != nilptr){
+                    QXMessageBox.Warning("异常中断", msgInfo, QXMessageBox.Ok, QXMessageBox.Ok);
+                }
+            }
         }
     }
         
         
-    static void setThreadOuputStatus(bool b){
+    public static void setThreadOuputStatus(bool b){
 		bOutputThreadStatus = b;
     }
     
-    void onNotification(long tid, int action){
+    public void onNotification(long tid, int action){
 		synchronized(threadlist){
 			
 			
@@ -323,7 +337,7 @@ class XStackInfor : QXDockWidget{
 		}
     }
     
-    static void clearBreak(long tid){
+    public static void clearBreak(long tid){
 		stackWnd.removeBreak(tid);
     }
     
@@ -341,7 +355,7 @@ class XStackInfor : QXDockWidget{
 		stackWnd.threadlist.clear();
     }*/
             
-    static void reset(){
+    public static void reset(){
 		synchronized(stackWnd.threadlist){
 			stackWnd.threadlist.clear();
 			stackWnd._listview.clear();

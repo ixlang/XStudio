@@ -3,17 +3,17 @@
 class ArgsProcessor {
     String[] args;
     int cmd = 0;
-    String configure = nilptr;
-    String targetpath = nilptr;
-    String xcross = nilptr;
-    String arch = nilptr;
-    String project = nilptr;
+    public String configure = nilptr;
+    public String targetpath = nilptr;
+    public String xcross = nilptr;
+    public String arch = nilptr;
+    public String project = nilptr;
 
-    static const int CMD_INSTXP = 1,
+    public static const int CMD_INSTXP = 1,
                      CMD_LOADXPRJ = 2,
                      CMD_BUILD = 3;
 
-    ArgsProcessor(String []_arg) {
+    public ArgsProcessor(String []_arg) {
         args = _arg;
 
         if (args.length > 1) {
@@ -27,11 +27,11 @@ class ArgsProcessor {
         }
     }
 
-    int getCommand() {
+    public int getCommand() {
         return cmd;
     }
 
-    bool parse() {
+    public bool parse() {
         if (cmd == CMD_BUILD) {
             if (args[1].equals("-build")) {
                 for (int i = 2; i < args.length; i++) {
@@ -57,7 +57,7 @@ class ArgsProcessor {
         return true;
     }
 
-    void printfHelp() {
+    public void printfHelp() {
         _system_.consoleWrite("\nXStudio build command:\n" +
                               "e.g XStudio -build <options>\n" +
                               "--config=<Config Name>\n" +
@@ -70,34 +70,34 @@ class ArgsProcessor {
 
 
 class QxApp : QXApplication {
-    QXMainWindow mainWindow;
-    XWndClass wndclass ;
-    XWndSln wndsln;
-    XStackInfor wndStack;
-    XWndOutput wndOutput;
-    XWndInfor wndInfor;
-    XFindresWnd findWnd;
-    AutoWnd autoWndInfo;
-    WatchWnd watchWndInfo;
-    BreakPointWnd bpWndInfo;
-    XMemoryWnd memoryWnd;
-    XLogcatWnd logcatWnd;
-    XWndObjectDump xDumpWnd;
-    MemoryLookupWnd memlookupWnd;
+    public QXMainWindow mainWindow;
+    public XWndClass wndclass ;
+    public XWndSln wndsln;
+    public XStackInfor wndStack;
+    public XWndOutput wndOutput;
+    public XWndInfor wndInfor;
+    public XFindresWnd findWnd;
+    public AutoWnd autoWndInfo;
+    public WatchWnd watchWndInfo;
+    public BreakPointWnd bpWndInfo;
+    public XMemoryWnd memoryWnd;
+    public XLogcatWnd logcatWnd;
+    public XWndObjectDump xDumpWnd;
+    public MemoryLookupWnd memlookupWnd;
 
     static String [] _appargs;
-    static QxApp _theApp;
-    static String lastTask = nilptr;
-    static StatusBarMgr statusBar = new StatusBarMgr();
+    public static QxApp _theApp;
+    public static String lastTask = nilptr;
+    public static StatusBarMgr statusBar = new StatusBarMgr();
 
-    XWorkspace _mdispace;
-    XMenuManager menuMgr = new XMenuManager();
+    public XWorkspace _mdispace;
+    public XMenuManager menuMgr = new XMenuManager();
 
     void finalize()override {
         super.finalize();
     }
 
-    IXStudioController _xstudio_controller = new IXStudioController() {
+    public IXStudioController _xstudio_controller = new IXStudioController() {
         WorkspaceController getWorkspace()override {
             if (_mdispace != nilptr) {
                 return _mdispace.getController();
@@ -133,7 +133,7 @@ class QxApp : QXApplication {
     }
 
 
-    void reconfig() {
+    public void reconfig() {
         loadConfig();
         wndOutput.reconfig();
         XSourceEditor.reconfig();
@@ -141,7 +141,7 @@ class QxApp : QXApplication {
         memlookupWnd.reconfig();
     }
 
-    void loadConfig() {
+    public void loadConfig() {
         if (Setting.isDarkStyle()) {
             setStyleSheet("res/qss/black.qss");
         } else {
@@ -155,7 +155,7 @@ class QxApp : QXApplication {
     }
 
 
-    void processArgs() {
+    public void processArgs() {
         if (_appargs.length > 1) {
             if (_appargs[1].equals("uacdebug")) {
                 if (nilptr != _mdispace.loadProject(_appargs[2])) {
@@ -167,9 +167,8 @@ class QxApp : QXApplication {
         }
     }
 
-    bool createWorkspace() {
+    public bool createWorkspace() {
         mainWindow = new QXMainWindow();
-
         /*Resource.getData(Resource.RES_MAINWINDOW)*/
         if (mainWindow.load("ui/mainwindow.ui") == false) {
             return false;
@@ -285,7 +284,7 @@ class QxApp : QXApplication {
         return true;
     }
 
-    void loadPlusins() {
+    public void loadPlusins() {
         ExtensionManager.load();
         
         FSObject fp = new FSObject(_system_.getAppDirectory().appendPath("plugins"));
@@ -299,7 +298,7 @@ class QxApp : QXApplication {
                         _system_.loadLibrary(pfile.getPath());
                     }
                 } catch (Exception e) {
-
+                    
                 }
             }
             fp.closeDir(hfind);
@@ -308,7 +307,7 @@ class QxApp : QXApplication {
         PluginsController.initPlugins(_xstudio_controller);
     }
 
-    bool preprocessArgs() {
+    public bool preprocessArgs() {
         if (_appargs.length > 1) {
             if (_appargs[1].equals("-installpkg")) {
                 loadConfig();
@@ -320,7 +319,7 @@ class QxApp : QXApplication {
         return false;
     }
 
-    bool create() {
+    public bool create() {
         if (super.createQXApplication()) {
             loadTranslator("translator/qt_zh_CN.qm");
 
@@ -341,7 +340,7 @@ class QxApp : QXApplication {
     }
 
 
-    static void runConsoleBuild(ArgsProcessor argspro) {
+    public static void runConsoleBuild(ArgsProcessor argspro) {
         _system_.createConsole();
 
         if (argspro.parse()) {
@@ -359,15 +358,15 @@ class QxApp : QXApplication {
                 }
 
                 if (argspro.targetpath != nilptr) {
-                    proj.currentConfig.setOption("outpath", argspro.targetpath);
+                    proj.getCurrentConfig().setOption("outpath", argspro.targetpath);
                 }
 
                 if (argspro.arch != nilptr) {
-                    proj.currentConfig.setOption("wtype", "-arch:" + argspro.arch);
+                    proj.getCurrentConfig().setOption("wtype", "-arch:" + argspro.arch);
                 }
 
                 if (argspro.xcross != nilptr) {
-                    proj.currentConfig.setOption("ostype", "-xcross-" + argspro.xcross);
+                    proj.getCurrentConfig().setOption("ostype", "-xcross-" + argspro.xcross);
                 }
 
                 proj.thread_build(_builder, new BuildListener() {
@@ -380,7 +379,7 @@ class QxApp : QXApplication {
         }
     }
 
-    static int main(String [] args) {
+    public static int main(String [] args) {
         _system_.chdir(_system_.getAppDirectory());
         ArgsProcessor argspro = new ArgsProcessor(args);
 

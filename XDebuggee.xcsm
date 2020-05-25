@@ -4,11 +4,11 @@
 
 class XDebuggee{
 	
-	 static const int 
+	 public static const int 
 		TSTATUS_RUN = 0,
 		TSTATUS_BREAK = 1;
      
-     static const int 	
+     public static const int 	
 		Unknow = 0,
 		Interrupt = 1,
 		Continue = 2,
@@ -43,33 +43,40 @@ class XDebuggee{
         LookupMemory = 31,
         DumpMemory = 32,
         GCInfo = 33,
-        DBGExit = 34;
+        DBGExit = 34,
+        MessageBox = 35,
+        MessageBoxReply = 36,
+        QueryInstruction = 37,
+        InstructionShow = 38,
+        InstructionStepIn = 39,
+        InstructionStepOver = 40,
+        InstructionStepOut = 41,
+        ModuleUnloaded = 42;
            
-    bool isDebugging = false;
+    public bool isDebugging = false;
      
-    const byte[] debug_helo = "XDEBUGGEE_V1 HELO\n".getBytes();
+    public const byte[] debug_helo = "XDEBUGGEE_V1 HELO\n".getBytes();
     Object pipeLock = new Object();
     Stream _pipe;
     XWorkspace _workspace;
 
     Map<int,bool> threadStatus = new Map<int,bool>();
-    XDebugPipe local_debugstream;
-	XDebuggee(XWorkspace workspace){
+
+	public XDebuggee(XWorkspace workspace){
 		_workspace = workspace;
     }
     
     
-    bool createDebugServer(IBuilder builder,int port){
-		local_debugstream = new XDebugPipe(port);
+    /*bool createDebugServer(IBuilder builder, ProjectPropInterface iprop){
         
         if (local_debugstream.prepareForPipe()){
 			return true;
         }
 
         return false;
-    }
+    }*/
     
-    void debugClose(){
+    public void debugClose(){
 		synchronized(pipeLock){
 			if (_pipe != nilptr){
                 _pipe = nilptr;
@@ -77,13 +84,13 @@ class XDebuggee{
         }
     }
     
-    void active(){
+    public void active(){
 		BreakPointWnd.SendBreakPoint();
 		WatchWnd.UpdateWatch();
 		debugActive();
     }
     
-    void close(){
+    public void close(){
 		synchronized(pipeLock){
 			if (_pipe != nilptr){
 				_pipe.close();
@@ -91,23 +98,24 @@ class XDebuggee{
 		}
     }
     
-    bool debug_start(){
-        if (local_debugstream.createstream()){
+    public bool debug_start(Stream _stream){
+            
+        if (_stream != nilptr){
 
-			if (local_debugstream.write(debug_helo, 0, debug_helo.length) > 0){
+			if (_stream.write(debug_helo, 0, debug_helo.length) > 0){
 				byte []recvdata = new byte[22];
 
 				int readed = 0;
                 
                 while (readed < 22){
-					readed += local_debugstream.read(recvdata, readed, 22 - readed) ;
+					readed += _stream.read(recvdata, readed, 22 - readed) ;
                 }
 
 				if (readed == 22){
 					String str = new String(recvdata);
 					if (str.equals("XDEBUG_CLIENT_V1 RECV\n")){
 						synchronized(pipeLock){
-							_pipe = local_debugstream;
+							_pipe = _stream;
 						}
 						isDebugging = true;
 
@@ -124,21 +132,17 @@ class XDebuggee{
 					}
 				}
 			}else{
-				local_debugstream.close();
-				local_debugstream = nilptr;
+				_stream.close();
 			}
-        }else{
-        	local_debugstream.close();
-			local_debugstream = nilptr;
         }
         return false;
     }
     
-    bool connect(IBuilder builder, String host, int port){
+    public bool connect(IBuilder builder, String url, int port){
 		StreamSocket _socket = new StreamSocket();
         builder.OutputText("\n正在连接到调试端口:" + port + "...\n", 1);
                 
-		if (_socket.connect(host, port)){
+		if (_socket.connect(url, port)){
 			builder.OutputText("\n已连接调试器!\n", 1);
 			if (_socket.write(debug_helo, 0, debug_helo.length) > 0){
 				byte []recvdata = new byte[22];
@@ -176,15 +180,16 @@ class XDebuggee{
 					}
 				}
             }
+            _socket.close();
         }
         return false;
     }
     
-    bool isDebuging(){
+    public bool isDebuging(){
 		return isDebugging;
     }
     
-    void queryObject(String queryId, String objectid, String param, long start, long end){
+    public void queryObject(String queryId, String objectid, String param, long start, long end){
         JsonObject json = new JsonObject();
         json.put("queryid", queryId);
         json.put("param", param);
@@ -198,18 +203,18 @@ class XDebuggee{
         sendCommand(QueryObject, 0, data, data.length);
     }
     
-    void lookupMemory(long address, int len){
+    public void lookupMemory(String address, int len){
 		JsonObject json = new JsonObject();
-        json.put("address",String.format("%d",address));
+        json.put("address",address);
         json.put("size",len);
         String text = json.toString(false);
         byte [] data = text.getBytes();
         sendCommand(LookupMemory, 0, data, data.length);
     }
     
-    void dumpMemory(long address, int len, String param){
+    public void dumpMemory(String address, int len, String param){
 		JsonObject json = new JsonObject();
-        json.put("address",String.format("%d",address));
+        json.put("address",address);
         json.put("param",param);
         json.put("size",len);
         String text = json.toString(false);
@@ -217,7 +222,7 @@ class XDebuggee{
         sendCommand(DumpMemory, 0, data, data.length);
     }
     
-    void onQueryObject(JsonObject json){
+    public void onQueryObject(JsonObject json){
 		String param = json.getString("param");
         if (param.startWith("auto")){
 			AutoWnd.auto_wnd.onQueryObject(json);
@@ -227,7 +232,7 @@ class XDebuggee{
         }
     }
     
-    void queryFrame(long thread, int frame){
+    public void queryFrame(long thread, int frame){
 		JsonObject json = new JsonObject();
         json.put("frame", frame);
         String text = json.toString(false);
@@ -235,7 +240,7 @@ class XDebuggee{
         sendCommand(QueryFrame, thread, data, data.length);
     }
     
-    void updateWatch(JsonArray objects, long thread, int frame, bool delete){
+    public void updateWatch(JsonArray objects, long thread, int frame, bool delete){
 		JsonObject root = new JsonObject();
         root.put("names", objects);
         root.put("frame", frame);
@@ -246,34 +251,34 @@ class XDebuggee{
         sendCommand(WatchObject, thread, data, data.length);
     }
     
-    void setBreak(long tid){
+    public void setBreak(long tid){
 		sendCommand(Interrupt, tid, new byte[0], 0);
     }    
     
-    void stepin(long tid){
+    public void stepin(long tid){
 		XStackInfor.clearBreak(tid);
 		sendCommand(StepIn, tid, new byte[0], 0);
     }
     
-    void continuerun(long tid){
+    public void continuerun(long tid){
 		XStackInfor.clearBreak(tid);
 		sendCommand(Continue, tid, new byte[0], 0);
     }
     
-    void dumpObjects(){
+    public void dumpObjects(){
 		sendCommand(GcDump, 0, new byte[0], 0);
     }
     
-    void dbgSendExit(){
+    public void dbgSendExit(){
 		sendCommand(DBGExit, 0, new byte[0], 0);
     }
     
-    static class QueryThread{
-		JsonObject object;
-        bool cancel = false;
+    public static class QueryThread{
+		public JsonObject object;
+        public bool cancel = false;
     };
     
-    void cancelAllRequest(){
+    public void cancelAllRequest(){
 		synchronized(threadObject){
 			Map.Iterator<long,QueryThread> iter = threadObject.iterator();
             
@@ -292,7 +297,7 @@ class XDebuggee{
     
     Map<long,QueryThread> threadObject = new Map<long,QueryThread>();
     
-    JsonObject queryObjectByName(int thread, int frame, String name){
+    public JsonObject queryObjectByName(int thread, int frame, String name){
         JsonObject json = new JsonObject();
         json.put("queryid", "" + Thread.getId());
         json.put("param", "");
@@ -320,15 +325,266 @@ class XDebuggee{
         return qt.object;
     }
     
-    void onLookupMemory(JsonObject json){
+    public void onLookupMemory(JsonObject json){
 		MemoryLookupWnd.SetData(json);
     }
 
-    void onDumpMemory(JsonObject json){
+    public void onDumpMemory(JsonObject json){
 		MemoryLookupWnd.SetDumpData(json);
     }
     
-    void onLoadModule(JsonObject json){
+    static int parseButtons(String button){
+        int nbutton = QXMessageBox.Ok;
+        
+        if (button != nilptr){
+            String [] btns = button.split("|");
+            for (int i = 0; i < btns.length; i++){
+                switch(btns[i]){
+                    case "Ok":
+                    nbutton |= QXMessageBox.Ok;
+                    break;
+                    case "Save":
+                    nbutton |= QXMessageBox.Save;
+                    break;
+                    case "SaveAll":
+                    nbutton |= QXMessageBox.SaveAll;
+                    break;
+                    case "Open":
+                    nbutton |= QXMessageBox.Open;
+                    break;
+                    case "Yes":
+                    nbutton |= QXMessageBox.Yes;
+                    break;
+                    case "YesToAll":
+                    nbutton |= QXMessageBox.YesToAll;
+                    break;
+                    case "No":
+                    nbutton |= QXMessageBox.No;
+                    break;
+                    case "NoToAll":
+                    nbutton |= QXMessageBox.NoToAll;
+                    break;
+                    case "Abort":
+                    nbutton |= QXMessageBox.Abort;
+                    break;
+                    case "Retry":
+                    nbutton |= QXMessageBox.Retry;
+                    break;
+                    case "Ignore":
+                    nbutton |= QXMessageBox.Ignore;
+                    break;
+                    case "Close":
+                    nbutton |= QXMessageBox.Close;
+                    break;
+                    case "Cancel":
+                    nbutton |= QXMessageBox.Cancel;
+                    break;
+                    case "Discard":
+                    nbutton |= QXMessageBox.Discard;
+                    break;
+                    case "Help":
+                    nbutton |= QXMessageBox.Help;
+                    break;
+                    case "Apply":
+                    nbutton |= QXMessageBox.Apply;
+                    break;
+                    case "Reset":
+                    nbutton |= QXMessageBox.Reset;
+                    break;
+                    case "RestoreDefaults":
+                    nbutton |= QXMessageBox.RestoreDefaults;
+                    break;
+                    default:
+                    case "NoButton":
+                    nbutton |= QXMessageBox.NoButton;
+                    break;
+                }
+            }
+        }
+        return nbutton;
+    }
+    
+    
+    String getButton(int bt){
+        String sbutton = "";
+        switch(bt){
+            case QXMessageBox.Ok:
+            sbutton = "Ok";
+            break;
+            case QXMessageBox.Save:
+            sbutton = "Save";
+            break;
+            case QXMessageBox.SaveAll:
+            sbutton = "SaveAll";
+            break;
+            case QXMessageBox.Open:
+            sbutton = "Open";
+            break;
+            case QXMessageBox.Yes:
+            sbutton = "Yes";
+            break;
+            case QXMessageBox.YesToAll:
+            sbutton = "YesToAll";
+            break;
+            case QXMessageBox.No:
+            sbutton = "No";
+            break;
+            case QXMessageBox.NoToAll:
+            sbutton = "NoToAll";
+            break;
+            case QXMessageBox.Abort:
+            sbutton = "Abort";
+            break;
+            case QXMessageBox.Retry:
+            sbutton = "Retry";
+            break;
+            case QXMessageBox.Ignore:
+            sbutton = "Ignore";
+            break;
+            case QXMessageBox.Close:
+            sbutton = "Close";
+            break;
+            case QXMessageBox.Cancel:
+            sbutton = "Cancel";
+            break;
+            case QXMessageBox.Discard:
+            sbutton = "Discard";
+            break;
+            case QXMessageBox.Help:
+            sbutton = "Help";
+            break;
+            case QXMessageBox.Apply:
+            sbutton = "Apply";
+            break;
+            case QXMessageBox.Reset:
+            sbutton = "Reset";
+            break;
+            case QXMessageBox.RestoreDefaults:
+            sbutton = "RestoreDefaults";
+            break;
+            default:
+            case QXMessageBox.NoButton:
+            sbutton = "NoButton";
+            break;
+        }
+        return sbutton;
+    }
+    
+    String checkValue(String v, String def){
+        if (v == nilptr){
+            return def;
+        }
+        return v;
+    }
+    
+    public void onMessageBox(JsonObject json){
+        XWorkspace.workspace.mainWindow.runOnUi(new Runnable(){
+            void run()override{
+                try{
+                    showMessageBox(json);
+                }catch(Exception e){
+                    
+                }
+            }
+        });
+    }
+    
+    public void showMessageBox(JsonObject json){
+        String type = checkValue(json.getString("type"), "Critical");
+        String message = checkValue(json.getString("message"), "");
+        String title = checkValue(json.getString("title"), "注意");
+        String button = checkValue(json.getString("button"), "NoButton");
+        String dmid = checkValue(json.getString("dmid"), "");
+        
+        if (message.length() == 0 || title.length() == 0){
+            return;
+        }
+        
+        int nbutton = parseButtons(button);
+        
+        String result = "";
+        
+        switch(type){
+            case "Critical":
+                result = getButton(QXMessageBox.Critical(title,message,nbutton,QXMessageBox.NoButton));
+            break;
+            
+            case "Question":
+                result = getButton(QXMessageBox.Question(title,message,nbutton,QXMessageBox.NoButton));
+            break;
+            
+            case "Information":
+                result = getButton(QXMessageBox.Information(title,message,nbutton,QXMessageBox.NoButton));
+            break;
+            
+            case "Warning":
+                result = getButton(QXMessageBox.Warning(title,message,nbutton,QXMessageBox.NoButton));
+            break;
+            
+            case "Input":
+            { 
+                String defaultValue = json.getString("value");
+                
+                result = InputDialog.requestInputDlg(new InputDialog.onInputListener() {
+                    bool onInputOk(String text)override {
+                        return true;
+                    }
+                    bool onInputCancel()override {
+                        return true;
+                    }
+                    String getTitle()override {
+                        return title;
+                    }
+                    String getTips()override {
+                        return message;
+                    }
+                    String getDefault()override {
+                        return defaultValue;
+                    }
+                });
+            }
+            break;
+            
+            case "List":
+            { 
+                JsonArray array = (JsonArray)json.get("list");
+                String defval  = json.getString("value");
+                
+                String [] lists = new String[array.length()];
+                
+                for (int i = 0; i < array.length(); i++){
+                    lists[i] = array.getString(i);
+                }
+                
+                result = "" + MultiSelectDialog.requestSelect(new InputDialog.onInputListener(){
+                        bool onInputOk(String text)override{ return true;}
+                        bool onInputCancel()override{ return true;}
+                        bool onSelectOk(int id){
+                            return true;
+                        }
+                        String getTitle()override{return title;}
+                        String getTips()override{return message;}
+                        String getDefault()override{
+                            return defval;
+                        }
+                    },lists);
+            }
+            break;
+        }
+        
+        if (dmid.length() > 0){
+            JsonObject reply = new JsonObject();
+            
+            reply.put("dmid", dmid);
+            reply.put("result", result);
+            
+            byte [] content = reply.toString(true).getBytes();
+            
+            sendCommand(MessageBoxReply, 0, content, content.length);
+        }
+    }
+    
+    public void onLoadModule(JsonObject json){
 		String module = json.getString("module");
         bool bSymbol = json.getBool("symbol");
         
@@ -338,7 +594,7 @@ class XDebuggee{
         sendCommand(ModuleLoaded, 0, new byte[0], 0);
     }
     
-    void onQueryByName(JsonObject json){
+    public void onQueryByName(JsonObject json){
     
 		String qid = json.getString("queryid");
         
@@ -367,33 +623,33 @@ class XDebuggee{
 
     }
     
-    void onDumpObjects(JsonObject json){
+    public void onDumpObjects(JsonObject json){
 		XWndObjectDump.sendInfo(json);
     }
-    void queryMemory(){
+    public void queryMemory(){
 		sendCommand(QueryMemoryInfo, 0, new byte[0], 0);
     }
     
-    void requestGc(){
+    public void requestGc(){
 		sendCommand(GC, 0, new byte[0], 0);
     }
     
-    void stepover(long tid){
+    public void stepover(long tid){
 		XStackInfor.clearBreak(tid);
 		sendCommand(StepOver, tid, new byte[0], 0);
         
     }
     
-    void debugActive(){
+    public void debugActive(){
 		sendCommand(Active, 0, new byte[0], 0);
     }
     
-    void stepout(long tid){
+    public void stepout(long tid){
 		XStackInfor.clearBreak(tid);
 		sendCommand(StepOut, tid, new byte[0], 0);
     }
     
-    void sendCommand(int cmd, long tid, byte[] data, int length){
+    public void sendCommand(int cmd, long tid, byte[] data, int length){
 		int buf_size = 16 + length;
 		byte [] buffer = new byte[buf_size];
 
@@ -429,7 +685,7 @@ class XDebuggee{
         }.start();
 	}  
             
-    void debug(){
+    public void debug(){
         byte [] buffer = new byte[1024];
         int length = 0;
         int rd = 0;
@@ -474,7 +730,9 @@ class XDebuggee{
 								json = new JsonObject();
 							}
 
-							analyzeCommand(cmd, tid, json);
+							if (analyzeCommand(cmd, tid, json) == false){
+                                break;
+                            }
 							int al = result.getRegularLength();
 							if (al > 0){
 								length -= al;
@@ -499,18 +757,18 @@ class XDebuggee{
         }
     }
     
-    void onInterrupt(long tid, JsonObject json){
+    public void onInterrupt(long tid, JsonObject json){
         ThreadManager.Update(json, tid == 0);
     }
     
-    void setThreadStatus(int tid, bool interrupt){
+    public void setThreadStatus(int tid, bool interrupt){
 		synchronized(threadStatus){
 			threadStatus.put(tid, interrupt);
         }
         updateMenu(tid);
     }
     
-    void updateMenu(int thread){
+    public void updateMenu(int thread){
 		bool bInterrupt = false;
 		synchronized(threadStatus){
 			Map.Iterator<int,bool> item = threadStatus.find(thread);
@@ -521,7 +779,7 @@ class XDebuggee{
         XWorkspace.workspace.refreshDebugControl(bInterrupt);
     }
     
-    void toggleBreakpoint(String file, int line, bool add){
+    public void toggleBreakpoint(String file, int line, bool add){
 		JsonObject json = new JsonObject();
         json.put("file", file);
         json.put("line", line);
@@ -531,7 +789,7 @@ class XDebuggee{
         sendCommand(SetBreakPoint, 0, data, data.length);
     }
     
-    void onSetBreakPoint(JsonObject json){
+    public void onSetBreakPoint(JsonObject json){
 		String file = json.getString("file");
         int reqline = json.getInt("reqline");
         int realine = json.getInt("realine");
@@ -540,10 +798,10 @@ class XDebuggee{
         BreakPointWnd.setBreakPoint(file, reqline, realine, set != 0, error);
     }
     
-    void onQueryFrame(long tid, JsonObject json){
+    public void onQueryFrame(long tid, JsonObject json){
 		AutoWnd.setFrameInfo(tid, json);
     }
-    void analyzeCommand(int cmd, long tid, JsonObject json){
+    public bool analyzeCommand(int cmd, long tid, JsonObject json){
 		switch(cmd){
 			case Unknow:
             
@@ -680,6 +938,17 @@ class XDebuggee{
             case DumpMemory:
 				onDumpMemory(json);
             break;
+            
+            case MessageBox:
+                onMessageBox(json);
+            break;
+            
+            default:
+            case DBGExit:
+                return false;
+            break;
+            
         }
+        return true;
     }
 };

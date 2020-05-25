@@ -2,14 +2,14 @@
 //Date: Tue Sep 17:10:41 2018 
 
 class BreakPointWnd : ListDockWidget{
-	static BreakPointWnd bpWnd;
-	static class BreakPointRequest{
-		String file;
-        int reqline;
-        int realine;
-        bool set;
-        int error;
-        BreakPointRequest(String f, int ql, int rl, bool s, int e){
+	public static BreakPointWnd bpWnd;
+	public static class BreakPointRequest{
+		public String file;
+        public int reqline;
+        public int realine;
+        public bool set;
+        public int error;
+        public BreakPointRequest(String f, int ql, int rl, bool s, int e){
 			file = f;
             reqline = ql;
             realine = rl;
@@ -21,15 +21,15 @@ class BreakPointWnd : ListDockWidget{
     
     ContextMenu _contextMenu = new ContextMenu();
     
-    static Vector<BreakPointRequest> requestlist = new Vector<BreakPointRequest>();
+    public static Vector<BreakPointRequest> requestlist = new Vector<BreakPointRequest>();
     
-	static Map<String,Map<int,BreakPointRequest>> breakPoints = new Map<String,Map<int,BreakPointRequest>>();
+	public static Map<String,Map<int,BreakPointRequest>> breakPoints = new Map<String,Map<int,BreakPointRequest>>();
     
-    static void toggleBreakPoint(XSourceEditor editor, String file, int line, bool add){
+    public static void toggleBreakPoint(XSourceEditor editor, String file, int line, bool add){
 		bpWnd.toggleBreakPoint(editor, new BreakPointRequest(file, line, line, add, 0));
     }
      
-    void toggleBreakPoint(XSourceEditor editor, BreakPointRequest brp){
+    public void toggleBreakPoint(XSourceEditor editor, BreakPointRequest brp){
 		Map<int,BreakPointRequest> lineMap = nilptr;
         
         try{
@@ -60,11 +60,11 @@ class BreakPointWnd : ListDockWidget{
         }
     }
 
-	static void SendBreakPoint(){
+	public static void SendBreakPoint(){
 		bpWnd.sendBreakPoint();
     }
     
-	void sendBreakPoint(){
+	public void sendBreakPoint(){
 		Map.Iterator<String,Map<int,BreakPointRequest>> iter = breakPoints.iterator();
 		while (iter.hasNext()){
 			applyBreakpoint(iter.getValue());
@@ -72,7 +72,7 @@ class BreakPointWnd : ListDockWidget{
 		}
     }
     
-    void applyBreakpoint(Map<int,BreakPointRequest> itemmap){
+    public void applyBreakpoint(Map<int,BreakPointRequest> itemmap){
 		if (itemmap != nilptr){
 			Map.Iterator<int,BreakPointRequest> iter = itemmap.iterator();
 			while (iter.hasNext()){
@@ -83,7 +83,7 @@ class BreakPointWnd : ListDockWidget{
         }
     }
     
-    void refreshBreakPoints(){
+    public void refreshBreakPoints(){
 		QXTreeView list = getList();
         
         list.clear();
@@ -97,7 +97,7 @@ class BreakPointWnd : ListDockWidget{
         }
     }
     
-    void addToList(QXTreeView list , String file, Map<int,BreakPointRequest> mbp){
+    public void addToList(QXTreeView list , String file, Map<int,BreakPointRequest> mbp){
     	Map.Iterator<int,BreakPointRequest> iter =  mbp.iterator();
         while (iter.hasNext()){
 			BreakPointRequest brp =  iter.getValue();
@@ -116,7 +116,7 @@ class BreakPointWnd : ListDockWidget{
         }
     }
     
-	void onListItemClicked(QXTreeView tree,long item, int column)override{
+	public void onListItemClicked(QXTreeView tree,long item, int column)override{
 		String sfile = tree.getItemText(item, 2);
 		String sline = tree.getItemText(item, 3);
         
@@ -124,7 +124,7 @@ class BreakPointWnd : ListDockWidget{
     }
         
         
-    void deleteBreakPoint(long [] items){
+    public void deleteBreakPoint(long [] items){
 		QXTreeView list = getList();
         
 		for (int i = 0;i < items.length; i++){
@@ -149,27 +149,27 @@ class BreakPointWnd : ListDockWidget{
         
         refreshBreakPoints();
     }
-    void onCreate(){
+    public void onCreate(){
 		bpWnd = this;
         createContextMenu();
     }
     
-    String getListName()override{
+    public String getListName()override{
 		return "bplist";
     }
     
-    String [] getColumn()override{
+    public String [] getColumn()override{
 		String [] columns = {"类型", "地址", "位置", "行"};
         return columns;
     }
     
-    int [] getColumnWidths()override{
+    public int [] getColumnWidths()override{
 		int [] ws = {100, 50, 300, 50};
         return ws;
     }
     
 
-	void onNotification(long id){
+	public void onNotification(long id){
 		 synchronized(requestlist){
 			for (int i =0; i < requestlist.size(); i++){
 				BreakPointRequest bpr = requestlist.get(i);
@@ -181,7 +181,7 @@ class BreakPointWnd : ListDockWidget{
 	}
     
     
-    void setBreakPointEnable(BreakPointRequest bpr, bool enabled){
+    public void setBreakPointEnable(BreakPointRequest bpr, bool enabled){
 		QXTreeView list = getList();
         
         int count = list.getTopLevelCount();
@@ -195,7 +195,7 @@ class BreakPointWnd : ListDockWidget{
         }
     }
     
-    void invalidAllBreakpoint(){
+    public void invalidAllBreakpoint(){
 		QXTreeView list = getList();
         
         int count = list.getTopLevelCount();
@@ -205,7 +205,7 @@ class BreakPointWnd : ListDockWidget{
         }
     }
     
-    void parseBreakPoint(BreakPointRequest bpr){
+    public void parseBreakPoint(BreakPointRequest bpr){
 		//QXTreeView list = getList();
 		runOnUi( new Runnable(){
 			void run(){
@@ -244,11 +244,11 @@ class BreakPointWnd : ListDockWidget{
     }
     
 
-    static class ContextMenu{
-		QXMenu contextMenu = new QXMenu();
-		QXAction [] actions;
+    public static class ContextMenu{
+		public QXMenu contextMenu = new QXMenu();
+		public QXAction [] actions;
 		
-		void create(QXWidget parent, String [] acts, onEventListener listener){
+		public void create(QXWidget parent, String [] acts, onEventListener listener){
 			if (contextMenu.create(parent)){
 				actions = new QXAction[acts.length];
 				for (int i = 0; i < acts.length; i ++){
@@ -271,7 +271,7 @@ class BreakPointWnd : ListDockWidget{
 		}
 	};
     
-    void createContextMenu(){
+    public void createContextMenu(){
 		QXTreeView list = getList();
         
 		onEventListener menuListener = new onEventListener(){
@@ -290,7 +290,7 @@ class BreakPointWnd : ListDockWidget{
 		_contextMenu.create(list, acts, menuListener);
 	}
     
-    static void setBreakPoint(String file, int reqline, int realine, bool set, int error){
+    public static void setBreakPoint(String file, int reqline, int realine, bool set, int error){
 		synchronized(requestlist){
 			requestlist.add(new BreakPointRequest(file, reqline, realine, set, error));
             bpWnd.Notify(0);

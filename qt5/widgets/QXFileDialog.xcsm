@@ -1,21 +1,21 @@
 
 class QXFileDialog : QXNative{
-    static String getOpenFileName(String caption, String defaultPath, String pattern, QXWidget parent){
+    public static String getOpenFileName(String caption, String defaultPath, String pattern, QXWidget parent){
         return (String)openfile_dlg_string3_obj(QXCore.OPEN, caption, defaultPath,  pattern, parent.nativehandle);
     }
-    static String[] getOpenFileNames(String caption, String defaultPath, String pattern, QXWidget parent){
+    public static String[] getOpenFileNames(String caption, String defaultPath, String pattern, QXWidget parent){
         return (String[])openfile_dlg_string3_obj(QXCore.OPENMULTI, caption, defaultPath,  pattern, parent.nativehandle);
     }
-    static String getSaveFileName(String caption, String defaultPath, String pattern, QXWidget parent){
+    public static String getSaveFileName(String caption, String defaultPath, String pattern, QXWidget parent){
         return (String)openfile_dlg_string3_obj(QXCore.SAVE, caption, defaultPath,  pattern, parent.nativehandle);
     }
-    static String getFolderPath(String caption, String defaultPath, String optionNum, QXWidget parent){
+    public static String getFolderPath(String caption, String defaultPath, String optionNum, QXWidget parent){
         return (String)openfile_dlg_string3_obj(QXCore.FOLDER, caption, defaultPath, optionNum, parent.nativehandle);
     }
 };
 
 class QXFontDialog : QXNative{
-    static String getFontDialog(String caption, String defaultfont, QXWidget parent){
+    public static String getFontDialog(String caption, String defaultfont, QXWidget parent){
 		return (String)openfile_dlg_string3_obj(QXCore.GETFONT, caption, defaultfont, nilptr, parent.nativehandle);
     }
 };

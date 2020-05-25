@@ -11,7 +11,7 @@ class XWndObjectDump : QXDockWidget{
     
     static XWndObjectDump XWndoDump;
     
-	void onAttach() override {
+	public void onAttach() override {
 
         _listview = (QXTreeView)attachByName(new QXTreeView(), "objslist");
         
@@ -48,24 +48,24 @@ class XWndObjectDump : QXDockWidget{
     Object lock = new Object();
     
     
-    static void sendInfo(JsonObject infos){
+    public static void sendInfo(JsonObject infos){
 		XWndoDump.showInfo(infos);
     }
     
-    void showInfo(JsonObject infos){
+    public void showInfo(JsonObject infos){
 		synchronized(lock){
 			root = infos;
 			this.Notify(2);
 		}
     }
     
-     void onNotification(long id){
+    public  void onNotification(long id){
 		synchronized(lock){
 			loadRoot();
 		}
     }
     
-    long additem(long parent, String name, int count){
+    public long additem(long parent, String name, int count){
 		long item = 0;
         
         if (parent == 0){
@@ -78,7 +78,7 @@ class XWndObjectDump : QXDockWidget{
         return item;
     }
     
-    void updateItem(int id, String name, int count){
+    public void updateItem(int id, String name, int count){
 		if (root_items[id] != 0){
 			_listview.setItemText(root_items[id], 1, "" + count);
         }else{
@@ -86,7 +86,7 @@ class XWndObjectDump : QXDockWidget{
         }
     }
     
-    void loadRoot(){
+    public void loadRoot(){
 		int object_count = root.getInt("oc");
         int thread_count = root.getInt("cc");
         int class_count = root.getInt("sc");

@@ -12,7 +12,7 @@ class FirstPrepare : QXDialog{
     QXWidget imagefrt, imagebck;
     Switche dark = new Switche();
     
-    void onAttach(){
+    public void onAttach(){
     
         setWindowFlags(CustomizeWindowHint | WindowCloseButtonHint);
         
@@ -74,7 +74,7 @@ class FirstPrepare : QXDialog{
         show();
     }
     
-    void switchStyle(bool bdark){
+    public void switchStyle(bool bdark){
 		Timer t = new Timer();
         t.schedule(new TimerTask(){
 			int st = 1;
@@ -123,7 +123,7 @@ class FirstPrepare : QXDialog{
         }, 10, -1);
     }
 
-	static bool showFirstRun(QxApp app){
+	public static bool showFirstRun(QxApp app){
    
 		QXDialog newDlg = new QXDialog();
 		if (newDlg.load("ui/first.ui") == false){

@@ -1,15 +1,15 @@
 //xlang Source, Name:QXProgressBar.xcs 
 //Date: Sat Aug 11:35:52 2018 
 class QXProgressBar : QXWidget{
-    QXProgressBar(){
+    public QXProgressBar(){
     
     }
     
-    QXProgressBar(long handle){
+    public QXProgressBar(long handle){
         super(handle);
     }
     
-    bool create(){
+    public bool create(){
         nativehandle = createQObject(QType.qtProgressBar, this, 0);
         if (nativehandle == 0){
             return false;
@@ -17,77 +17,77 @@ class QXProgressBar : QXWidget{
         return true;
     }
     
-    bool create(QXWidget parent){
+    public bool create(QXWidget parent){
         nativehandle = createQObject(QType.qtProgressBar, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
         }
         return true;
     }    
-    int minimum(){
+    public int minimum(){
 		return widget_get_int_value(nativehandle, QPMININUM);
 	}
-    int maximum() {
+    public int maximum() {
 		return widget_get_int_value(nativehandle, QPMAXINUM);
 	}
-    int value() {
+    public int value() {
 		return widget_get_int_value(nativehandle, QPVALUE);
 	}
-    String getText(){
+    public String getText(){
 		return (String)core_getString(nativehandle, QPTEXT);
 	}
-    void setTextVisible(bool visible){
+    public void setTextVisible(bool visible){
 		widget_set_bool_value(nativehandle, QPVISIBLE, visible);
 	}
-    bool isTextVisible() {
+    public bool isTextVisible() {
 		return widget_get_bool_value(nativehandle, QPVISIBLE);
 	}
-    int alignment(){
+    public int alignment(){
 		return widget_get_int_value(nativehandle, QPALIGN);
 	}
-    void setAlignment(int alignment){
+    public void setAlignment(int alignment){
 		widget_set_vint_value(nativehandle, QPALIGN, alignment);
 	}
-    int orientation(){
+    public int orientation(){
 		return widget_get_int_value(nativehandle, QPORIENTATION);
 	}
-    void setInvertedAppearance(bool invert){
+    public void setInvertedAppearance(bool invert){
 		widget_set_bool_value(nativehandle, QPINVERTAPPEAR, invert);
 	}
-    bool invertedAppearance() {
+    public bool invertedAppearance() {
 		return widget_get_bool_value(nativehandle, QPINVERTAPPEAR);
 	}
-    void setTextDirection(int textDirection){
+    public void setTextDirection(int textDirection){
 		widget_set_vint_value(nativehandle, QPTEXTDIR, textDirection);
 	}
-    int textDirection() {
+    public int textDirection() {
 		return widget_get_int_value(nativehandle, QPTEXTDIR);
 	}
-    void setFormat(String format){
+    public void setFormat(String format){
 		widget_slot_string(nativehandle, QPFORMAT, format);
 	}
-    void resetFormat(){
+    public void resetFormat(){
 		widget_slot(nativehandle, QPFORMAT);
 	}
-    String format() {
+    public String format() {
 		return (String)core_getString(nativehandle, QPFORMAT);
 	}
-    void reset(){
+    public void reset(){
 		widget_slot(nativehandle, QPRESET);
 	}
-    void setRange(int minimum, int maximum){
+    public void setRange(int minimum, int maximum){
 		widget_set_v2int_value(nativehandle, QPRANGE, minimum, maximum);
 	}
-    void setMinimum(int minimum){
+    public void setMinimum(int minimum){
 		widget_set_vint_value(nativehandle, QPMININUM, minimum);
 	}
-    void setMaximum(int maximum){
+    public void setMaximum(int maximum){
 		widget_set_vint_value(nativehandle, QPMAXINUM, maximum);
 	}
-    void setValue(int value){
+    public void setValue(int value){
 		widget_set_vint_value(nativehandle, QPVALUE, value);
 	}
-    void setOrientation(int Orientation){
+    public void setOrientation(int Orientation){
 		widget_set_vint_value(nativehandle, QPORIENTATION, Orientation);
 	}
 };

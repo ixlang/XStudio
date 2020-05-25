@@ -1,17 +1,17 @@
 
 class XMenuManager
 {
-    QxApp app ;
-    QXMainWindow mainwindow;
-    static XMenuManager _menuMgr;
+    public QxApp app ;
+    public QXMainWindow mainwindow;
+    public static XMenuManager _menuMgr;
     QXMenu [] mainMenus = new QXMenu[7];
     
-    XMenuManager()
+    public XMenuManager()
     {
         _menuMgr = this;
     }
 
-    static void setStatusSel(bool b)
+    public static void setStatusSel(bool b)
     {
         enabledMenu("actioncut", b);
         enabledMenu("actionupper", b);
@@ -20,7 +20,7 @@ class XMenuManager
     }
 
 
-    static void setProjectLoaded(bool b)
+    public static void setProjectLoaded(bool b)
     {
         String []names = {"actioncloseproject",
                           "actiongotodef",
@@ -37,8 +37,6 @@ class XMenuManager
                           "actiondebug",
                           "actionfile",
                           "actionclass",
-                          "actioninterface",
-                          "actionpackage",
                           "actioncomment",
                           "actionsaveastemp",
                           "actionrun",
@@ -71,7 +69,7 @@ class XMenuManager
         }
     }
 
-    static void setProjectBuilding(bool b)
+    public static void setProjectBuilding(bool b)
     {
         String []names = {"actioncloseproject",
                           "actioncompile_project",
@@ -84,10 +82,14 @@ class XMenuManager
                           "actiondebug",
                           "actionrun"
                          };
+        String []namesr = {                
+            "actionprocstop"
+        };
         enabledMenus(names, !b);
+        enabledMenus(namesr, b);
     }
     
-    static void refreshDebugMenu(bool bDebug)
+    public static void refreshDebugMenu(bool bDebug)
     {
         String []enable_names = {
             "actionbreak",
@@ -105,7 +107,7 @@ class XMenuManager
         enabledMenus(disable_names, !bDebug);
     }
 
-    static void refreshRunMenu(bool bRun)
+    public static void refreshRunMenu(bool bRun)
     {
         if (bRun) {
             String []enable_names = {
@@ -127,7 +129,7 @@ class XMenuManager
         }
     }
 
-    static void disableDebugMenu()
+   public  static void disableDebugMenu()
     {
 
         String []disable_names = {"actiondebug",
@@ -142,7 +144,7 @@ class XMenuManager
         enabledMenus(disable_names, false);
     }
 
-    static void refreshDebugControl(bool bInterrupt)
+    public static void refreshDebugControl(bool bInterrupt)
     {
         String []enable_names = {
             "actiondebug",
@@ -156,7 +158,7 @@ class XMenuManager
         enabledMenus(enable_names, bInterrupt);
         enabledMenus(disable_names, !bInterrupt);
     }
-    static void setDocumentOpened(bool b)
+    public static void setDocumentOpened(bool b)
     {
         String []names = {"actionclose",
                           "actionundo",
@@ -186,12 +188,14 @@ class XMenuManager
                           "actionsave",
                           "actionmatchbrace",
                           "actionsaveas",
-                          "actionprint"
+                          "actionprint",
+                          "actioncodepage",
+                          "actioncovcharset"
                          };
         enabledMenus(names, b);
     }
 
-    static void enabledMenus(String []names, bool b)
+    public static void enabledMenus(String []names, bool b)
     {
         for (int i =0; i < names.length; i++) {
             QXAction action = ((QXAction)_menuMgr.mainwindow.findByName(names[i]));
@@ -201,7 +205,7 @@ class XMenuManager
         }
     }
 
-    static void enabledMenu(String name, bool b)
+    public static void enabledMenu(String name, bool b)
     {
         QXAction action = ((QXAction)_menuMgr.mainwindow.findByName(name));
         if (action != nilptr) {
@@ -211,353 +215,367 @@ class XMenuManager
 
     class TriggerEvent : QXObject.onEventListener
     {
-        void onTrigger(QXObject obj)override
+        public void onTrigger(QXObject obj)override
         {
             String name = obj.getName();
-            if (name.equals("actionOpen")) {
-                app._mdispace.doOpen();
-                //XMenuManager.this.OpenFile();
-                return ;
-            }
-            if (name.equals("actiondebug")) {
-                app._mdispace.debugRun();
-                return ;
-            }
-            if (name.equals("actionremotedbg")) {
-                app._mdispace.remoteDebug();
-                return ;
-            }
-            if (name.equals("actionrun")) {
-                app._mdispace.Run();
-                return ;
-            }
-            if (name.equals("actionsave")) {
-                app._mdispace.saveFile();
-                return ;
-            }
-            if (name.equals("actionoverride")) {
-                app._mdispace.overrideFunction();
-                return ;
-            }
-            if (name.equals("actionsaveas")) {
-                app._mdispace.saveFileAs();
-                return ;
-            }
-            if (name.equals("actionsaveproject")) {
-                app._mdispace.saveProject();
-                return ;
-            }
-            if (name.equals("actionProject_P")) {
-                app._mdispace.createProject();
-                return ;
-            }
-            if (name.equals("actioncompile_project")) {
-                app._mdispace.build(nilptr);
-                return ;
-            }
-            if (name.equals("actionclean")) {
-                app._mdispace.cleanup();
-                return ;
-            }
-            if (name.equals("allwindows")) {
-                app._mdispace.showAllWindows();
-                return ;
-            }
-            if (name.equals("actiontoback")) {
-                app._mdispace.toback();
-                return ;
-            }
-            if (name.equals("actiontofront")) {
-                app._mdispace.tofront();
-                return ;
-            }
-            if (name.equals("actionexporttools")) {
-                ExportTool.Show();
-                return ;
-            }
-            if (name.equals("actionpackmgr")) {
-                PackageViewer.Show();
-                return ;
-            }
-            if (name.equals("actionsaveastemp")) {
-                app._mdispace.saveProjectAsTemplate();
-                return ;
-            }
-            if (name.equals("actionoverlapped")) {
-                app._mdispace.cascadeSubWindows();
-                return ;
-            }
-            if (name.equals("actionlocalProblem")) {
-                XWndInfor.infoWnd.nextInfo();
-            }
-            if (name.equals("sortwindows")) {
-                app._mdispace.tileSubWindows();
-                return ;
-            }
-            if (name.equals("actionundo")) {
-                app._mdispace.UnDo();
-                return ;
-            }
-            if (name.equals("actionredo")) {
-                app._mdispace.ReDo();
-                return ;
-            }
-            if (name.equals("actioncut")) {
-                app._mdispace.Cut();
-                return ;
-            }
-            if (name.equals("actionextmgr")){
-                app._mdispace.openExtMgr();
-                return ;
-            }
-            if (name.equals("actioncopy")) {
-                app._mdispace.Copy();
-                return ;
-            }
-            if (name.equals("actionnewlineup")) {
-                app._mdispace.insertNewLine();
-                return ;
-            }
-            if (name.equals("actionnewlinedown")) {
-                app._mdispace.appendNewLine();
-                return ;
-            }
-            if (name.equals("actionupper")) {
-                app._mdispace.setUpper();
-                return;
-            }
-            if (name.equals("actionlower")) {
-                app._mdispace.setLower();
-                return;
-            }
-            if (name.equals("actionclose")) {
-                app._mdispace.closeCurrentDocument();
-                return;
-            }
-            if (name.equals("actioncloseproject")) {
-                app._mdispace.closeProject();
-                return;
-            }
-            if (name.equals("actionpaste")) {
-                app._mdispace.Paste();
-                return ;
-            }
-            if (name.equals("actiondelete")) {
-                app._mdispace.Delete();
-                return ;
-            }
-            if (name.equals("actiondelcurline")) {
-                app._mdispace.DeleteCurLine();
-                return ;
-            }
-
-            if (name.equals("actionsamples")) {
-                String url = _system_.getAppPath().findVolumePath().appendPath("examples");
-                QXCore.openLocal(String.formatPath(url, false));
-            }
-            if (name.equals("actionhelp")) {
-                String url = _system_.getAppPath().findVolumePath().appendPath("./document/html/index.html");
-                QXCore.openLocal(String.formatPath(url, false));
-                return ;
-            }
-            if (name.equals("actionsetting")) {
-                app._mdispace.showSetting();
-                return ;
-            }
-            if (name.equals("actionfind") || name.equals("actionreplace")) {
-                app._mdispace.FindReplace();
-                return ;
-            }
-            if (name.equals("actiongoto")) {
-                app._mdispace.gotoLine();
-                return ;
-            }
-            if (name.equals("actionfindagain")) {
-                app._mdispace.findAgain();
-                return ;
-            }
-            if (name.equals("actiongenerateNativeSrc")) {
-                app._mdispace.generateSource();
-                return ;
-            }
-            if (name.equals("actiongenmake")) {
-                app._mdispace.generateMake();
-                return ;
-            }
-            if (name.equals("actionopenoutput")) {
-                app._mdispace.openOutput();
-                return ;
-            }
-            if (name.equals("actiongotodef")) {
-                app._mdispace.gotoDef();
-                return ;
-            }
-            if (name.equals("actionstoprun")) {
-                app._mdispace.stopRun();
-                return ;
-            }
-            if (name.equals("actionprop")) {
-                app._mdispace.showProperites(nilptr);
-                return ;
-            }
-            if (name.equals("actionbreak")) {
-                app._mdispace.debuggee.setBreak(ThreadManager.currentThreadId);
-                return ;
-            }
-            if (name.equals("actionstartup")) {
-                app._mdispace.openIndexPage();
-                return ;
-            }
-            if (name.equals("actionmatchbrace")) {
-                app._mdispace.matchbrace();
-                return ;
-            }
-
-            if (name.equals("actiontest")) {
-                XWorkspace.workspace.test();
-            }
-            if (name.equals("actionstepin")) {
-                app._mdispace.debuggee.stepin(ThreadManager.currentThreadId);
-                return ;
-            }
-            if (name.equals("actionstepover")) {
-                app._mdispace.debuggee.stepover(ThreadManager.currentThreadId);
-                return ;
-            }
-            if (name.equals("actionstepout")) {
-                app._mdispace.debuggee.stepout(ThreadManager.currentThreadId);
-                return ;
-            }
-            if (name.equals("actionQTCreator")) {
-                openDesigner();
-                return;
-            }
-            if (name.equals("actionexit")) {
-                mainwindow.close();
-                return ;
-            }
-            if (name.equals("actionbreakpoint")) {
-                app._mdispace.toggleBreakpoint();
-                return ;
-            }
-            if (name.equals("actionfile")) {
-                app._mdispace.addObject(0);
-                return ;
-            }
-            if (name.equals("actionclass")) {
-                app._mdispace.addObject(1);
-                return ;
-            }
-            if (name.equals("actioninterface")) {
-                app._mdispace.addObject(2);
-                return ;
-            }
-            if (name.equals("actionpackage")) {
-                app._mdispace.addObject(3);
-                return ;
-            }
             
-            if (name.equals("actioncurup")) {
-                app._mdispace.CursorUp();
-                return ;
-            }
-            if (name.equals("actioncurleft")) {
-                app._mdispace.CursorLeft();
-                return ;
-            }
-            if (name.equals("actioncurright")) {
-                app._mdispace.CursorRight();
-                return ;
-            }
-            if (name.equals("actioncurdown")) {
-                app._mdispace.CursorDown();
-                return ;
-            }
-            if (name.equals("actionlinebegin")) {
-                app._mdispace.CursorLineBegin();
-                return ;
-            }
-            if (name.equals("actionlineend")) {
-                app._mdispace.CursorLineEnd();
-                return ;
-            }
-            if (name.equals("actionprepage")) {
-                app._mdispace.CursorPrevPage();
-                return ;
-            }
-            if (name.equals("actionnextpage")) {
-                app._mdispace.CursorNextPage();
-                return ;
-            }
-            if (name.equals("actiontotop")) {
-                app._mdispace.CursortoTop();
-                return ;
-            }
-            if (name.equals("actiontobottom")) {
-                app._mdispace.CursortoBottom();
-                return ;
-            }
-            if (name.equals("actionprint")) {
-                app._mdispace.doPrint();
-                return ;
-            }
-            if (name.equals("actiondeploy")){
-                app._mdispace.deploy();
-                return ;
-            }
-            if (name.equals("actiondeployto")){
-                app._mdispace.deployto();
-                return ;
-            }
-            if (name.equals("actioninstcext")) {
-                app._mdispace.installCompileExt();
-                return ;
-            }
-            if (name.equals("actioninstallplugin")) {
-                app._mdispace.installPlugin();
-                return ;
-            }
-            if (name.equals("actioncomment")) {
-                app._mdispace.showComment();
-                return ;
-            }
-            if (name.equals("actionsendfeedback")) {
-                app._mdispace.sendFeedback();
-                return ;
-            }
-            if(name.equals("actionabout")) {
+            switch(name){
+                case ("actionOpen"): {
+                    app._mdispace.doOpen();
+                }
+                break;
+                case ("actiondebug"): {
+                    app._mdispace.debugRun();
+                }
+                break;
+                case ("actionremotedbg"): {
+                    app._mdispace.remoteDebug();
+                }
+                break;
+                case ("actionattachdbg"): {
+                    app._mdispace.attachDebug();
+                }
+                break;
+                case ("actionrun"): {
+                    app._mdispace.Run();
+                }
+                break;
+                case ("actionsave"): {
+                    app._mdispace.saveFile();
+                }
+                break;
+                case ("actionoverride"): {
+                    app._mdispace.overrideFunction();
+                }
+                break;
+                case ("actionsaveas"): {
+                    app._mdispace.saveFileAs();
+                }
+                break;
+                case ("actionsaveproject"): {
+                    app._mdispace.saveProject();
+                }
+                break;
+                case ("actionProject_P"): {
+                    app._mdispace.createProject();
+                }
+                break;
+                case ("actioncompile_project"): {
+                    app._mdispace.build(nilptr);
+                }
+                break;
+                case ("actionprocstop"): {
+                    app._mdispace.buildStop();
+                }
+                break;
+                case ("actionclean"): {
+                    app._mdispace.cleanup();
+                }
+                break;
+                case ("allwindows"): {
+                    app._mdispace.showAllWindows();
+                }
+                break;
+                case ("actiontoback"): {
+                    app._mdispace.toback();
+                }
+                break;
+                case ("actiontofront"): {
+                    app._mdispace.tofront();
+                }
+                break;
+                case ("actionexporttools"): {
+                    ExportTool.Show();
+                }
+                break;
+                case ("actionpackmgr"): {
+                    PackageViewer.Show();
+                }
+                break;
+                case ("actionsaveastemp"): {
+                    app._mdispace.saveProjectAsTemplate();
+                }
+                break;
+                case ("actionoverlapped"): {
+                    app._mdispace.cascadeSubWindows();
+                }
+                break;
+                case ("actionlocalProblem"): {
+                    XWndInfor.infoWnd.nextInfo();
+                }
+                break;
+                case ("sortwindows"): {
+                    app._mdispace.tileSubWindows();
+                }
+                break;
+                case ("actionundo"): {
+                    app._mdispace.UnDo();
+                }
+                break;
+                case ("actionredo"): {
+                    app._mdispace.ReDo();
+                }
+                break;
+                case ("actioncut"): {
+                    app._mdispace.Cut();
+                }
+                break;
+                case ("actionextmgr"): {
+                    app._mdispace.openExtMgr();
+                }
+                break;
+                case ("actioncopy"): {
+                    app._mdispace.Copy();
+                }
+                break;
+                case ("actioncodepage"): {
+                    app._mdispace.UpdateCodepage();
+                }
+                break;
+                case ("actioncovcharset"): {
+                    app._mdispace.convertCharset();
+                }
+                break;
+                case ("actionnewlineup"): {
+                    app._mdispace.insertNewLine();
+                }
+                break;
+                case ("actionnewlinedown"): {
+                    app._mdispace.appendNewLine();
+                }
+                break;
+                case ("actionupper"): {
+                    app._mdispace.setUpper();
+                }
+                break;
+                case ("actionlower"): {
+                    app._mdispace.setLower();
+                }
+                break;
+                case ("actionclose"): {
+                    app._mdispace.closeCurrentDocument();
+                }
+                break;
+                case ("actioncloseproject"): {
+                    app._mdispace.closeProject();
+                }
+                break;
+                case ("actionpaste"): {
+                    app._mdispace.Paste();
+                }
+                break;
+                case ("actiondelete"): {
+                    app._mdispace.Delete();
+                }
+                break;
+                case ("actiondelcurline"): {
+                    app._mdispace.DeleteCurLine();
+                }
+                break;
 
-                String buildtime = String.formatDate("%Y年%m月%d日", _system_.getAppTimestamp());
-                app.mainWindow.About("关于",
-                                     "<Strong>XStudio(Xlang 集成开发环境) Release " + Utils.getAppVersion() + " </Strong><br /><br />" +
-                                     "开发语言: Xlang v3.1<br /><br />" +
-                                     "编译时间: " + buildtime + "<br /><br />" +
-                                     "<b>该软件使用xlang 3.1 开发, 软件全部源代码可在xlang的example中找到," +
-                                     "native部分为C++与Xlang的XNL项目(同样在example代码中), native项目仅有软件使用的部分调用," +
-                                     "如需要用于其它开发需要修改native项目增加接口.</b><br /><br />" +
-                                     "该软件的使用不受任何限制,可用于任意用途的修改或者发布.<br /><br />" +
-                                     "<em>需要注意该软件底层使用了第三方图形库Qt (Copyright The Qt Company Ltd), 二次发布和使用须遵守第三方授权协议.</em><br /><br />" +
-                                     "<strong>xlang项目中使用了以下第三方项目:</strong><br />" +
-                                     "<em>	curl-7.37.0</em><br />" +
-                                     "<em>	iconv-1.11.1</em><br />" +
-                                     "<em>	openssl-1.0.2e</em><br />" +
-                                     "<em>	zlib-1.2.8</em><br />" +
-                                     "<em>	pcre-8.37</em><br />" +
-                                     "<em>	cJSON</em><br />" +
-                                     "<em>	libffi</em><br />" +
-                                     "<em>	libmicrohttpd</em><br />" +
-                                     "<em>	rapidxml</em><br />" +
-                                     "<em>	lzma</em><br /><br />" +
-                                     "官方主页:<a href=\"http://xlang.link/\">http://xlang.link/</a><br />" +
-                                     "官方博客:<a href=\"http://blog.xlang.link/\">http://blog.xlang.link/</a><br /><br />" +
-                                     "github项目首页:<a href=\"https://ixlang.github.io/\">https://ixlang.github.io/</a><br />" +
-                                     "github项目仓库:<a href=\"https://github.com/ixlang/XStudio\">https://github.com/ixlang/XStudio</a><br />" +
-                                     "github代码示例仓库:<a href=\"https://github.com/ixlang/examples\">https://github.com/ixlang/examples</a><br /><br />" +
-                                     "致谢名单:<a href=\"http://xlang.link/credits.html\">http://xlang.link/credits.html</a><br />" +
-                                     "<em>(为所有对 xlang 以及 XStudio 的进步有推助作用的名录)</em><br /><br />" +
-                                     "<p align=\"right\">建议可通过以下方式反馈</p>" +
-                                     "<p align=\"right\">QQ: 3.vc@163.com</p>" +
-                                     "<p align=\"right\">Cadaquz 2018-07-30</p>");
+                case ("actionsamples"): {
+                    String url = _system_.getAppPath().findVolumePath().appendPath("examples");
+                    QXCore.openLocal(String.formatPath(url, false));
+                }
+                break;
+                case ("actionhelp"): {
+                    String url = _system_.getAppPath().findVolumePath().appendPath("./document/html/index.html");
+                    QXCore.openLocal(String.formatPath(url, false));
+                }
+                break;
+                case ("actionsetting"): {
+                    app._mdispace.showSetting();
+                }
+                break;
+                case "actionreplace":
+                case ("actionfind") : {
+                    app._mdispace.FindReplace();
+                }
+                break;
+                case ("actiongoto"): {
+                    app._mdispace.gotoLine();
+                }
+                break;
+                case ("actionfindagain"): {
+                    app._mdispace.findAgain();
+                }
+                break;
+                case ("actiongenerateNativeSrc"): {
+                    app._mdispace.generateSource();
+                }
+                break;
+                case ("actiongenmake"): {
+                    app._mdispace.generateMake();
+                }
+                break;
+                case ("actionopenoutput"): {
+                    app._mdispace.openOutput();
+                }
+                break;
+                case ("actiongotodef"): {
+                    app._mdispace.gotoDef();
+                }
+                break;
+                case ("actionstoprun"): {
+                    app._mdispace.stopRun();
+                }
+                break;
+                case ("actionprop"): {
+                    app._mdispace.showProperites(nilptr);
+                }
+                break;
+                case ("actionbreak"): {
+                    app._mdispace.debuggee.setBreak(ThreadManager.currentThreadId);
+                }
+                break;
+                case ("actionstartup"): {
+                    app._mdispace.openIndexPage();
+                }
+                break;
+                case ("actionmatchbrace"): {
+                    app._mdispace.matchbrace();
+                }
+                break;
+
+                case ("actiontest"): {
+                    XWorkspace.workspace.test();
+                }
+                break;
+                case ("actionstepin"): {
+                    app._mdispace.debuggee.stepin(ThreadManager.currentThreadId);
+                }
+                break;
+                case ("actionstepover"): {
+                    app._mdispace.debuggee.stepover(ThreadManager.currentThreadId);
+                }
+                break;
+                case ("actionstepout"): {
+                    app._mdispace.debuggee.stepout(ThreadManager.currentThreadId);
+                }
+                break;
+                case ("actionQTCreator"): {
+                    openDesigner();
+                }
+                break;
+                case ("actionexit"): {
+                    mainwindow.close();
+                }
+                break;
+                case ("actionbreakpoint"): {
+                    app._mdispace.toggleBreakpoint();
+                }
+                break;
+                case ("actionfile"): {
+                    app._mdispace.addObject(0);
+                }
+                break;
+                case ("actionclass"): {
+                    app._mdispace.addObject(1);
+                }
+                break;
+                case ("actioncurup"): {
+                    app._mdispace.CursorUp();
+                }
+                break;
+                case ("actioncurleft"): {
+                    app._mdispace.CursorLeft();
+                }
+                break;
+                case ("actioncurright"): {
+                    app._mdispace.CursorRight();
+                }
+                break;
+                case ("actioncurdown"): {
+                    app._mdispace.CursorDown();
+                }
+                break;
+                case ("actionlinebegin"): {
+                    app._mdispace.CursorLineBegin();
+                }
+                break;
+                case ("actionlineend"): {
+                    app._mdispace.CursorLineEnd();
+                }
+                break;
+                case ("actionprepage"): {
+                    app._mdispace.CursorPrevPage();
+                }
+                break;
+                case ("actionnextpage"): {
+                    app._mdispace.CursorNextPage();
+                }
+                break;
+                case ("actiontotop"): {
+                    app._mdispace.CursortoTop();
+                }
+                break;
+                case ("actiontobottom"): {
+                    app._mdispace.CursortoBottom();
+                }
+                break;
+                case ("actionprint"): {
+                    app._mdispace.doPrint();
+                }
+                break;
+                case ("actiondeploy") :{
+                    app._mdispace.deploy();
+                }
+                break;
+                case ("actiondeployto"): {
+                    app._mdispace.deployto();
+                }
+                break;
+                case ("actioninstcext"): {
+                    app._mdispace.installCompileExt();
+                }
+                break;
+                case ("actioninstallplugin"): {
+                    app._mdispace.installPlugin();
+                }
+                break;
+                case ("actioncomment"): {
+                    app._mdispace.showComment();
+                }
+                break;
+                case ("actionsendfeedback"): {
+                    app._mdispace.sendFeedback();
+                }
+                break;
+                case ("actionabout"): {
+
+                    String buildtime = String.formatDate("%Y年%m月%d日", _system_.getAppTimestamp());
+                    app.mainWindow.About("关于",
+                                         "<Strong>XStudio(Xlang 集成开发环境) Release " + Utils.getAppVersion() + " </Strong><br /><br />" +
+                                         "开发语言: Xlang v3.1<br /><br />" +
+                                         "编译时间: " + buildtime + "<br /><br />" +
+                                         "<b>该软件使用xlang 3.1 开发, 软件全部源代码可在xlang的example中找到," +
+                                         "native部分为C++与Xlang的XNL项目(同样在example代码中), native项目仅有软件使用的部分调用," +
+                                         "如需要用于其它开发需要修改native项目增加接口.</b><br /><br />" +
+                                         "该软件的使用不受任何限制,可用于任意用途的修改或者发布.<br /><br />" +
+                                         "<em>需要注意该软件底层使用了第三方图形库Qt (Copyright The Qt Company Ltd), 二次发布和使用须遵守第三方授权协议.</em><br /><br />" +
+                                         "<strong>xlang项目中使用了以下第三方项目:</strong><br />" +
+                                         "<em>	curl-7.37.0</em><br />" +
+                                         "<em>	iconv-1.11.1</em><br />" +
+                                         "<em>	openssl-1.0.2e</em><br />" +
+                                         "<em>	zlib-1.2.8</em><br />" +
+                                         "<em>	pcre-8.37</em><br />" +
+                                         "<em>	cJSON</em><br />" +
+                                         "<em>	libffi</em><br />" +
+                                         "<em>	libmicrohttpd</em><br />" +
+                                         "<em>	rapidxml</em><br />" +
+                                         "<em>	lzma</em><br /><br />" +
+                                         "官方主页:<a href=\"http://xlang.link/\">http://xlang.link/</a><br />" +
+                                         "官方博客:<a href=\"http://blog.xlang.link/\">http://blog.xlang.link/</a><br /><br />" +
+                                         "github项目首页:<a href=\"https://ixlang.github.io/\">https://ixlang.github.io/</a><br />" +
+                                         "github项目仓库:<a href=\"https://github.com/ixlang/XStudio\">https://github.com/ixlang/XStudio</a><br />" +
+                                         "github代码示例仓库:<a href=\"https://github.com/ixlang/examples\">https://github.com/ixlang/examples</a><br /><br />" +
+                                         "致谢名单:<a href=\"http://xlang.link/credits.html\">http://xlang.link/credits.html</a><br />" +
+                                         "<em>(为所有对 xlang 以及 XStudio 的进步有推助作用的名录)</em><br /><br />" +
+                                         "<p align=\"right\">建议可通过以下方式反馈</p>" +
+                                         "<p align=\"right\">QQ: 3.vc@163.com</p>" +
+                                         "<p align=\"right\">Cadaquz 2018-07-30</p>");
+                }
+                break;
             }
         }
     };
@@ -569,7 +587,7 @@ class XMenuManager
     {
         Map<String, IXPlugin> menu_plugin = new Map<String, IXPlugin>();
 
-        void onTrigger(QXObject obj)override
+        public void onTrigger(QXObject obj)override
         {
             String name = obj.getName();
             if (name != nilptr) {
@@ -584,19 +602,19 @@ class XMenuManager
             }
         }
 
-        void addMenu(QXAction action, String name, IXPlugin plugin)
+        public void addMenu(QXAction action, String name, IXPlugin plugin)
         {
             menu_plugin.put(name, plugin);
             action.setOnEventListener(_externListener);
         }
 
-        bool check(String name)
+        public bool check(String name)
         {
             return menu_plugin.containsKey(name);
         }
     };
 
-    bool addMenu(int mainid, String name, String text, String icon, String shortcut, IXPlugin plugin)
+    public bool addMenu(int mainid, String name, String text, String icon, String shortcut, IXPlugin plugin)
     {
         bool bSeparator = text.equals("-");
         if (bSeparator == false && _externListener.check(name)) {
@@ -632,25 +650,33 @@ class XMenuManager
         return false;
     }
 
-    void setupListener(String actname){
+    public void setupListener(String actname){
         mainwindow.findByName(actname).setOnEventListener(_triggerEvent);
+        /*
+        QXObject act = mainwindow.findByName(actname);
+        if (act != nilptr){
+            act.setOnEventListener(_triggerEvent);
+        }else{
+            _system_.output("actname is nilptr");
+        }
+        */
     }
     
-    void init(QxApp _app)
+    public void init(QxApp _app)
     {
         app = _app;
         mainwindow = _app.mainWindow;
         
         String [] actions = {
             "actionsetting","actionOpen","actionProject_P","actionsave","actionsaveas","actionsaveastemp","actionsaveproject","actionclose","actioncloseproject","actionexit",
-            "actionfile","actionclass","actioninterface","actionpackage","actionpackmgr","menuaddition","actionundo","actionredo","actioncut","actioncopy","actionnewlineup",
+            "actionfile","actionclass","actionpackmgr","menuaddition","actionundo","actionredo","actioncut","actioncopy","actionnewlineup",
             "actionnewlinedown","actionpaste","actiondelete","actiondelcurline","actiongotodef","actionfind","actiongoto","actionreplace","actionfindagain","actionoverride",
-            "actionautocomplete","actionopenoutput","actioncompile_project","actionclean","actiongenerateNativeSrc","actiongenmake","actionprop","actionfunction","actiondata",
-            "actionlocalProblem","actionstartup","actionmatchbrace","actiondebug","actionremotedbg","actionrun","actionstepin","actionstepover","actionstepout","actionbreakpoint",
+            "actionautocomplete","actionopenoutput","actioncompile_project","actionprocstop","actionclean","actiongenerateNativeSrc","actiongenmake","actionprop","actionfunction","actiondata",
+            "actionlocalProblem","actionstartup","actionmatchbrace","actiondebug","actionremotedbg","actionattachdbg","actionrun","actionstepin","actionstepover","actionstepout","actionbreakpoint",
             "menunewbreakpoint","actionbreak","actionstoprun","actiontest","actioncomment","actionexporttools","actionQTCreator","actionhelp","actionextmgr","actionsendfeedback","actionsamples",
             "actionabout","sortwindows", "actionoverlapped","allwindows","actiontoback","actiontofront","actioninstcext","actioninstallplugin","actioncurup","actioncurleft",
             "actioncurright","actioncurdown","actionlinebegin","actionlineend","actionprepage","actionnextpage","actiontotop","actiontobottom","menukeyboard","actionupper",
-            "actionlower","actionprint", "actiondeploy", "actiondeployto"
+            "actionlower","actionprint", "actiondeploy", "actiondeployto", "actioncodepage", "actioncovcharset"
         };
 
         for (int i = 0; i < actions.length; i++) {
@@ -665,7 +691,7 @@ class XMenuManager
         }
     }
 
-    void openDesigner()
+    public void openDesigner()
     {
         String degpath = String.formatPath(_system_.getAppPath().findVolumePath().appendPath("designer/designer"), false);
 
@@ -679,7 +705,7 @@ class XMenuManager
         Process designer = new Process(degpath, args);
         
         try {
-            designer.create(true, false, false, false);
+            designer.create(Process.Visible);
         } catch(Exception e) {
             QXMessageBox.Critical("error", e.getMessage(), QXMessageBox.Ok, QXMessageBox.Ok);
         }

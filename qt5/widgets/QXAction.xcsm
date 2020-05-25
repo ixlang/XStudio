@@ -1,7 +1,7 @@
 class QXAction : QXObject{
-	QXAction(){
+	public QXAction(){
 	}
-    bool create(){
+    public bool create(){
         nativehandle = createQObject(QType.qtAction, this, 0);
         if (nativehandle == 0){
             return false;
@@ -9,7 +9,7 @@ class QXAction : QXObject{
         return true;
     }
     
-    bool create(QXWidget parent){
+    public bool create(QXWidget parent){
         nativehandle = createQObject(QType.qtAction, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
@@ -17,66 +17,66 @@ class QXAction : QXObject{
         return true;
     }
     
-    QXAction(long handle){
+    public QXAction(long handle){
         super(handle);
     }
     
-    void setMenu(QXMenu menu){
+    public void setMenu(QXMenu menu){
         widget_set_native_value(nativehandle, SETMENU, menu.nativehandle);
     }
     
-    void setSeparator(bool b){
+    public void setSeparator(bool b){
         widget_set_bool_value(nativehandle, SETSEP, b);
     }
     
-    bool isSeparator(){
+    public bool isSeparator(){
         return widget_get_bool_value(nativehandle, ISSEP);
     }
     
-    void setShortcut(String shortcutKey){
+    public void setShortcut(String shortcutKey){
         widget_slot_string(nativehandle, SETSHRCUT, shortcutKey);
     }
     
-    void setShortcut(int StandardKey){
+    public void setShortcut(int StandardKey){
         widget_set_vint_value(nativehandle, SETSHRCUT, StandardKey);
     }
     
-    void setText(String text){
+    public void setText(String text){
         widget_slot_string(nativehandle, ACTSETTEXT, text);
     }
     
-    String getText(){
+    public String getText(){
         return (String)core_getString(nativehandle, ACTGETTEXT);
     }
     
-	void setEnable(bool b){
+	public void setEnable(bool b){
 		widget_set_bool_value(nativehandle, ACTENABLED, b);
 	}
-    QXMenu getMenu(){
+    public QXMenu getMenu(){
         return (QXMenu)widget_get_object(nativehandle, GETMENU);
     }
     
-    QXWidget parentWidget(){
+    public QXWidget parentWidget(){
         return (QXWidget)widget_get_object(nativehandle, PARENTWIDGET);
     }
     
-    void trigger(){
+    public void trigger(){
         widget_slot(nativehandle, TRIGGER);
     }
     
-    void setChecked(bool b){
+    public void setChecked(bool b){
         widget_set_bool_value(nativehandle, CHECKED, b);
     }
     
-    bool getChecked(){
+    public bool getChecked(){
         return widget_get_bool_value(nativehandle, CHECKED);
     }
     
-    void setCheckable(bool b){
+    public void setCheckable(bool b){
         widget_set_bool_value(nativehandle, CHECKABLE, b);
     }
     
-    bool getCheckable(){
+    public bool getCheckable(){
         return widget_get_bool_value(nativehandle, CHECKABLE);
     }
 };

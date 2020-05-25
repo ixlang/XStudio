@@ -2,9 +2,9 @@
 //Date: Mon Oct 21:48:01 2018 
 
 class QXImage{
-	long himage;
+	public long himage;
             
-    static const int         
+    public static const int         
 		Format_Invalid = 0,
         Format_Mono = 1,
         Format_MonoLSB = 2,
@@ -32,25 +32,25 @@ class QXImage{
         Format_Grayscale8 = 24,
         NImageFormats = 25;
         
-    QXImage(){
+    public QXImage(){
     
     }
 
-    QXImage(String file, String format){
+    public QXImage(String file, String format){
 		himage = QXNative.long_string2(0, QXCore.IMGLOAD, file, format);
         if (himage == 0){
 			throw new IllegalArgumentException("can not load file:" + file);
         }
     }
    
-    QXImage(byte [] data, String format){
+    public QXImage(byte [] data, String format){
 		himage = QXNative.long_object_string(0, QXCore.IMGLOAD, data, format);
         if (himage == 0){
 			throw new IllegalArgumentException("can not load from data");
         }
     }
      
-    QXImage(int width, int height, int format){
+    public QXImage(int width, int height, int format){
 		long wh = width;
         wh <<= 32;
 
@@ -61,7 +61,7 @@ class QXImage{
         }
     }
     
-    QXImage(byte [] data, int width, int height, int format){
+    public QXImage(byte [] data, int width, int height, int format){
 		long wh = width;
         wh <<= 32;
 		
@@ -73,33 +73,33 @@ class QXImage{
         
     }
     
-    void finalize(){
+    public void finalize(){
 		if (himage != 0){
 			QXNative.widget_slot(himage, QXCore.DELETEIMAGE);
         }
     }
     
-    bool saveToFile(String filename, String format, int quality){
+    public bool saveToFile(String filename, String format, int quality){
 		return QXNative.long_long_string2(himage, QXCore.QIMGSAVE, quality, filename, format) != 0;
     }
     
-    bool saveToFile(String filename, String format){
+    public bool saveToFile(String filename, String format){
 		return QXNative.long_long_string2(himage, QXCore.QIMGSAVE, -1, filename, format) != 0;
     } 
     
-    int width(){
+    public int width(){
 		return QXNative.widget_get_int_value(himage, QXCore.IMGWIDTH);
     }
     
-    int height(){
+    public int height(){
 		return QXNative.widget_get_int_value(himage, QXCore.IMGHEIGHT);
     }
     
-    int format(){
+    public int format(){
 		return QXNative.widget_get_int_value(himage, QXCore.IMGFORMAT);
     }
     
-    byte[] getdata(){
+    public byte[] getdata(){
 		return (byte[])QXNative.object_get_handle(himage, QXCore.IMGGETDATA, 0);
     }
 };

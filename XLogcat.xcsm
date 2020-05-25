@@ -16,7 +16,7 @@ class XLogcatWnd : QXDockWidget{
     QXCheckBox chkAutoScroll;
     Filter currentFilter;
     long allRoot;
-    String [] logLevel = {
+    public String [] logLevel = {
 		"LOG_EMERG", 
 		"LOG_ALERT", 
 		"LOG_CRIT", 
@@ -27,28 +27,28 @@ class XLogcatWnd : QXDockWidget{
 		"LOG_DEBUG"
     };
     
-    onTreeViewItemEvent filterlistener = new onTreeViewItemEvent(){
-        void onItemClicked(QXTreeView tree,long item, int column)override{
+    public onTreeViewItemEvent filterlistener = new onTreeViewItemEvent(){
+        public void onItemClicked(QXTreeView tree,long item, int column)override{
 			onFilterItemClicked(tree, item, column);
         }
-        void onItemDoubleClicked(QXTreeView tree,long item, int column){
+        public void onItemDoubleClicked(QXTreeView tree,long item, int column){
 			onFilterItemDBClicked(tree, item, column);
         }
     };
     
-    onTreeViewItemEvent logcatlistener = new onTreeViewItemEvent(){
+    public onTreeViewItemEvent logcatlistener = new onTreeViewItemEvent(){
         void onItemDoubleClicked(QXTreeView tree,long item, int column){
 			TextDetail td = new TextDetail();
 			String text = tree.getItemText(item, column);
 			td.create("logcat", text.replace(" ↩ ", "\n")
 							.replace(" ↵ ", "\r")
 							.replace(" ⇥ ", "\t")
-                            .replace(" ⇤ ", "\b"));
+                            .replace(" ⇤ ", "\b"), nilptr, false);
         }
     };
     
-    static class Logcat{
-		Logcat(String t, String thr, String g, String m, int l){
+    public static class Logcat{
+		public Logcat(String t, String thr, String g, String m, int l){
 			time = t;
             thread = thr;
             tag = g;
@@ -60,25 +60,25 @@ class XLogcatWnd : QXDockWidget{
 							.replace("\t", " ⇥ ")
                             .replace("\b", " ⇤ ");
         }
-		String time, thread, tag, msg;
-        int level;
+		public String time, thread, tag, msg;
+        public int level;
     };
     
-    static class Filter{
-		int type;
+    public static class Filter{
+		public int type;
 
-        String [] key;
-        String name;
-        int level;
-        long item;
-        static const int FILTER_THREAD = 1,
+        public String [] key;
+        public String name;
+        public int level;
+        public long item;
+        public static const int FILTER_THREAD = 1,
 			FILTER_TAG = 2,
             FILTER_MSG = 4,
             FILTER_LEVEL = 8;
             
-        List<Logcat> logcats = new List<Logcat>();
+        public List<Logcat> logcats = new List<Logcat>();
         
-        bool filter(Logcat log){
+        public bool filter(Logcat log){
 			if (type == 0){
 				return false;
             }
@@ -87,24 +87,28 @@ class XLogcatWnd : QXDockWidget{
 					return false;
 				}
             }
-			if ((type & FILTER_THREAD) == FILTER_THREAD){
-				if (Pattern.test(log.thread, key[0], 0, false) == false){
-					return false;
+            try{
+                if ((type & FILTER_THREAD) == FILTER_THREAD){
+                    if (Pattern.test(log.thread, key[0], 0, false) == false){
+                        return false;
+                    }
                 }
-            }
-            
-			if ((type & FILTER_TAG) == FILTER_TAG){
-				if (Pattern.test(log.tag, key[1], 0, false) == false){
-					return false;
+                
+                if ((type & FILTER_TAG) == FILTER_TAG){
+                    if (Pattern.test(log.tag, key[1], 0, false) == false){
+                        return false;
+                    }
                 }
-            }
-            
-			if ((type & FILTER_MSG) == FILTER_MSG){
-				if (Pattern.test(log.msg, key[2], 0, false) == false){
-					return false;
+                
+                if ((type & FILTER_MSG) == FILTER_MSG){
+                    if (Pattern.test(log.msg, key[2], 0, false) == false){
+                        return false;
+                    }
                 }
+                
+            }catch(Exception e){
+                return false;
             }
-            
             logcats.add(log);
 
 			while (logcats.size() > logcat_maxitems){
@@ -113,11 +117,11 @@ class XLogcatWnd : QXDockWidget{
             return true;
         }
         
-        List<Logcat> getLogs(){
+        public List<Logcat> getLogs(){
 			return logcats;
         }
         
-        void clear(){
+        public void clear(){
 			logcats.clear();
         }
     };
@@ -127,15 +131,15 @@ class XLogcatWnd : QXDockWidget{
     
     Map<String, Filter> filter_list = new Map<String, Filter>();
     
-	void onFilterItemClicked(QXTreeView tree,long item, int column){
+	public void onFilterItemClicked(QXTreeView tree,long item, int column){
 		setCurrentFilter(tree.getItemText(item, 0));
     }
     
-    void onFilterItemDBClicked(QXTreeView tree,long item, int column){
+    public void onFilterItemDBClicked(QXTreeView tree,long item, int column){
 		updateFilter(tree.getItemText(item, 0));
 	}
     
-    void updateFilter(String name){
+    public void updateFilter(String name){
 		synchronized(prepare_list){
 			if (name.equals("All")){
 				currentFilter = nilptr;
@@ -157,7 +161,7 @@ class XLogcatWnd : QXDockWidget{
 		}
     }
     
-    bool addFilter(){
+    public bool addFilter(){
         QXDialog newDlg = new QXDialog();
         if (newDlg.load("ui/logfilter.ui") == false){
             return false;
@@ -167,7 +171,7 @@ class XLogcatWnd : QXDockWidget{
         return true;
     }
     
-    static bool addFilter(Filter filter){
+    public static bool addFilter(Filter filter){
 		if (filter.name.equals("All")){
 			return false;
 		}
@@ -180,7 +184,7 @@ class XLogcatWnd : QXDockWidget{
         }
     }
 
-    static void sendLogcat(JsonObject json){
+    public static void sendLogcat(JsonObject json){
 		XLogcatWnd.Logcat log = new XLogcatWnd.Logcat(json.getString("time"), json.getString("thread"), json.getString("tag"), json.getString("content"), json.getInt("level"));
         synchronized(logcatWnd.prepare_list){
 
@@ -190,7 +194,7 @@ class XLogcatWnd : QXDockWidget{
         logcatWnd.Notify(LOGCAT_INFO_NOTIFY);
     }
     
-    void updateFilter(Logcat log){
+   public  void updateFilter(Logcat log){
 		Map.Iterator<String, Filter> iter = filter_list.iterator();
         while (iter.hasNext()){
 			Filter filter = iter.getValue();
@@ -206,7 +210,7 @@ class XLogcatWnd : QXDockWidget{
         }
     }
     
-    void onNotification(long id){
+    public void onNotification(long id){
 		 synchronized(prepare_list){
 			int c = prepare_list.size();
             
@@ -232,7 +236,7 @@ class XLogcatWnd : QXDockWidget{
 		 }
 	}
     
-    String getLevel(int n){
+    public String getLevel(int n){
 		for (int i =0; i < 8; i ++){
 			if (n == (1<<i)){
 				return logLevel[i];
@@ -241,7 +245,7 @@ class XLogcatWnd : QXDockWidget{
         return "UNKNOW";
     }
     
-    static void setMaxItems(int maxitem){
+    public static void setMaxItems(int maxitem){
 		if (maxitem > 0){
 			logcat_maxitems = maxitem;
         }else{
@@ -254,7 +258,7 @@ class XLogcatWnd : QXDockWidget{
         }
     }
     
-    void addToList(Logcat log){
+    public void addToList(Logcat log){
 		long item = logcatlist.addItem(nilptr, log.time);
         while (logcatlist.getTopLevelCount() > logcat_maxitems){
 			long ritem = logcatlist.getTopItem(0);
@@ -273,7 +277,7 @@ class XLogcatWnd : QXDockWidget{
         }
     }
     
-    void onAttach(){
+   public  void onAttach(){
 		chkAutoScroll = (QXCheckBox)attachByName(new QXCheckBox(), "chkAutoScroll");
 		btnClear = (QXPushButton)attachByName(new QXPushButton(), "btnClear");
 		btnFilter = (QXPushButton)attachByName(new QXPushButton(), "btnFilter");
@@ -339,7 +343,7 @@ class XLogcatWnd : QXDockWidget{
         logcatWnd = this;
     }
     
-    void clearList(){
+    public void clearList(){
         logcatlist.clear();
         synchronized(prepare_list){
 			if (currentFilter != nilptr){
@@ -351,7 +355,7 @@ class XLogcatWnd : QXDockWidget{
         }
     }
 
-    void setCurrentFilter(String name){
+    public void setCurrentFilter(String name){
 		synchronized(prepare_list){
 			if (name.equals("All")){
 				currentFilter = nilptr;
@@ -373,7 +377,7 @@ class XLogcatWnd : QXDockWidget{
 		}
     }
     
-    void loadLogcat(List<Logcat> logcats){
+    public void loadLogcat(List<Logcat> logcats){
 		logcatlist.clear();
         
         List.Iterator<Logcat> iter = logcats.iterator();
@@ -382,7 +386,7 @@ class XLogcatWnd : QXDockWidget{
         }
     }
     
-    void updateFilterList(){
+    public void updateFilterList(){
 		filterlist.clear();
         allRoot = filterlist.addItem("res/toolbar/filter.png" , "All");
         filterlist.setItemText(allRoot, 1, "" + logcat_list.size());
@@ -402,7 +406,7 @@ class XLogcatWnd : QXDockWidget{
         }
     }
     
-    static void reset(){
+    public static void reset(){
 		synchronized(logcatWnd.prepare_list){
 		    logcatWnd.filterlist.clear();
 			logcatWnd.logcatlist.clear();
@@ -412,11 +416,11 @@ class XLogcatWnd : QXDockWidget{
     }
     
     
-    static class ContextMenu{
-		QXMenu contextMenu = new QXMenu();
-		QXAction [] actions;
+    public static class ContextMenu{
+		public QXMenu contextMenu = new QXMenu();
+		public QXAction [] actions;
 		
-		void create(QXWidget parent, String [] acts, onEventListener listener){
+		public void create(QXWidget parent, String [] acts, onEventListener listener){
 			if (contextMenu.create(parent)){
 				actions = new QXAction[acts.length];
 				for (int i = 0; i < acts.length; i ++){
@@ -439,7 +443,7 @@ class XLogcatWnd : QXDockWidget{
 		}
 	};
     
-    void createContextMenu(){
+    public void createContextMenu(){
     
 		onEventListener menuListener = new onEventListener(){
 		   void onTrigger(QXObject obj) override{

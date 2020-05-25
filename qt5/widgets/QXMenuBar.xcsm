@@ -1,9 +1,9 @@
 class QXMenuBar : QXWidget{
-    QXMenuBar(){
+    public QXMenuBar(){
     
     }
     
-    bool create(){
+    public bool create(){
         nativehandle = createQObject(QType.qtMenuBar, this, 0);
         if (nativehandle == 0){
             return false;
@@ -11,7 +11,7 @@ class QXMenuBar : QXWidget{
         return true;
     }
     
-    bool create(QXWidget parent){
+    public bool create(QXWidget parent){
         nativehandle = createQObject(QType.qtMenuBar, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
@@ -19,43 +19,43 @@ class QXMenuBar : QXWidget{
         return true;
     }
     
-    QXMenuBar(long handle){
+    public QXMenuBar(long handle){
         super(handle);
     }
     
-    QXAction addAction(String action){
+    public QXAction addAction(String action){
         return (QXAction)object_get_string(nativehandle, ADDACTION, action);
     }
     
-    QXAction addMenu(QXMenu menu){
+    public QXAction addMenu(QXMenu menu){
         return (QXAction)object_get_handle(nativehandle, ADDMENU, menu.nativehandle);
     }
     
-    QXMenu addMenu(String icon, String title){
+    public QXMenu addMenu(String icon, String title){
        return (QXMenu)object_get_string2(nativehandle, ADDMENU, icon, title);
     }
     
-    QXAction addSeparator(){
+    public QXAction addSeparator(){
         return (QXAction) widget_get_object(nativehandle, ADDSEP);
     }
     
-    QXAction insertSeparator(QXAction before){
+    public QXAction insertSeparator(QXAction before){
         return (QXAction) object_get_handle(nativehandle, INSSEP, before.nativehandle);
     }
     
-    QXAction insertMenu(QXAction before, QXMenu menu){
+    public QXAction insertMenu(QXAction before, QXMenu menu){
         return (QXAction) object_get_handle2(nativehandle, INSMENU, before.nativehandle, menu.nativehandle);
     }
     
-    void clear(){
+    public void clear(){
         widget_slot(nativehandle, MENUBAR_CLR);
     }
     
-    bool isDefaultUp(){
+    public bool isDefaultUp(){
         return widget_get_bool_value(nativehandle, ISDEFUP);
     }
     
-    bool isNativeMenuBar(){
+    public bool isNativeMenuBar(){
         return widget_get_bool_value(nativehandle, ISNAMBR);
     }
 };

@@ -13,20 +13,22 @@ class XTextEditor : TextEditorPlugin{
 	String getKeyWords() override {
 		//TODO:	
 		return 
-			"break case catch char class " + 
-			"const continue default do double else final finally cdecl for " + 
-			"if import interface stdcall fastcall pascal operator " + 
-			"new package include using require synchronized_read synchronized_write " + 
-			"return static super switch synchronized this throw " + 
-			"try void while @Declare override bool byte long char int long short String _system_ " + 
-			"Thread nilptr Exception Vector Map List Iterator Timer TimerTask true false finalize enum" ;
+			"break case catch char class " +
+        "const continue default do double else final finally cdecl for " +
+        "if import interface stdcall fastcall pascal operator " +
+        "new package include using require synchronized_read synchronized_write " +
+        "return static super switch synchronized this throw " +
+        "try void while @Declare @NotNilptr public private protected override bool byte long char int long short String _system_ " +
+        "Thread nilptr Exception Vector Map List Iterator Timer TimerTask true false enum finalize" ;
 	}
 
 	bool requestClose(TextEditorController editor) override {
 		//TODO:	
 		return true;
 	}
-
+    void configEditor(Project, String path, QXSci sci, bool){
+        
+    }
 	SyntaxHighlighting getColorConfigure(String styleName) override {
 		//TODO:	
 		if (styleName.equals("dark")){

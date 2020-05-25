@@ -3,23 +3,27 @@
 
 class InputDialog : QXDialog {
 
-	interface onInputListener{
-		bool onInputOk(String text);
-        bool onInputCancel();
-        String getTitle();
-        String getTips();
-        String getDefault();
+	public static class onInputListener{
+		public bool onInputOk(String text);
+        public bool onInputCancel();
+        public bool onSelectOk(int id){
+            return false;
+        }
+        public String getTitle();
+        public String getTips();
+        public String getDefault();
     };
     
-    onInputListener listener;
-	InputDialog(onInputListener intputlis){
+    public onInputListener listener;
+	public InputDialog(onInputListener intputlis){
 		listener = intputlis;
     }
 
     QXPushButton btnOk, btnCancel;
     QXLineEdit edtLine;
-
-    void onAttach()override{ 
+    
+    String result = nilptr;
+    public void onAttach()override{ 
     
         setWindowFlags(CustomizeWindowHint | WindowCloseButtonHint);
         
@@ -38,8 +42,9 @@ class InputDialog : QXDialog {
             void onClick(QXObject obj, bool checked)override{
 				String text = edtLine.getText();
                 if (listener.onInputOk(text)){
+                    result = text;
 					close();
-                }                
+                }           
             }
         });
         
@@ -58,11 +63,11 @@ class InputDialog : QXDialog {
         
         setModal(true);
         
-        show();
+        
         edtLine.setFocus();
     }
     
-    static void requestInput(onInputListener lis){
+    public static void requestInput(onInputListener lis){
 		QXDialog newDlg = new QXDialog();
         if (newDlg.load("ui/goto.ui") == false){
             return ;
@@ -70,5 +75,18 @@ class InputDialog : QXDialog {
         InputDialog wizard = new InputDialog(lis);	
         
         wizard.attach(newDlg);
+        wizard.show();
+    }
+    
+    public static String requestInputDlg(onInputListener lis){
+		QXDialog newDlg = new QXDialog();
+        if (newDlg.load("ui/goto.ui") == false){
+            return nilptr;
+        }
+        InputDialog wizard = new InputDialog(lis);	
+        
+        wizard.attach(newDlg);
+        wizard.exec();
+        return wizard.result;
     }
 };

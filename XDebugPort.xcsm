@@ -5,25 +5,35 @@ class XDebugPipe : Stream{
 	int debugport;
 	long readfd;
 	long writefd;
-
+    bool bforServer = false;
 	Object readlock = new Object();
     Object writelock = new Object();
     
-	XDebugPipe(){
+	public XDebugPipe(){
 		readfd = writefd = debugport = 0;
 	}
-	XDebugPipe(int port){
+    public XDebugPipe(bool _bforServer){
+		readfd = writefd = debugport = 0;
+        bforServer = _bforServer;
+	}
+	public XDebugPipe(int port){
 		readfd = writefd = 0;
 		debugport = port;
 	}
-    
-    bool prepareForPipe(){
+    public bool setForServer(bool bf){
+        if (readfd == 0 && writefd == 0){
+            bforServer = bf;
+            return true;
+        }
+        return false;
+    }
+    public bool prepareForPipe(){
     	String readport = String.format("XDEBUG_WRITE_%d", debugport);
 		String writeport = String.format("XDEBUG_READ_%d", debugport);
         
-        readfd = _system_.createPipe(readport, false);
+        readfd = _system_.createPipe(bforServer ? writeport : readport, bforServer);
         if (readfd != 0){
-			writefd = _system_.createPipe(writeport, false);
+			writefd = _system_.createPipe(bforServer ? readport : writeport, bforServer);
             if (writefd == 0){
 				_system_.closePipe(readfd);
                 return false;
@@ -34,7 +44,7 @@ class XDebugPipe : Stream{
         return false;
     }
     
-	bool createstream(){
+	public bool createstream(){
 		synchronized(readlock){
 			synchronized(writelock){
 				if (readfd != 0 && writefd != 0){
@@ -52,7 +62,7 @@ class XDebugPipe : Stream{
 		return true;
 	}
 
-	int read(byte[] buffer,int pos, int countOfByte)override{
+	public int read(byte[] buffer,int pos, int countOfByte)override{
 		int rd = -1;
 		synchronized(readlock){
 			if (readfd != 0){
@@ -67,7 +77,7 @@ class XDebugPipe : Stream{
         return rd;
 	}
 
-	int write(byte[] buffer, int pos, int countOfByte) override{
+	public int write(byte[] buffer, int pos, int countOfByte) override{
 		int rd = 0;
 		synchronized(writelock){
 			if (readfd != 0){
@@ -82,14 +92,16 @@ class XDebugPipe : Stream{
         return rd;
 	}
 
-	final void close() override{
-		synchronized(readlock){
+	public final void close() override{
+		synchronized(readlock)
+        {
 			if (readfd != 0){
 				_system_.closePipe(readfd);
                 readfd = 0;
 			}
         }
-        synchronized(writelock){
+        synchronized(writelock)
+        {
 			if (writefd != 0){
 				_system_.closePipe(writefd);
                 writefd = 0;
@@ -97,18 +109,18 @@ class XDebugPipe : Stream{
 		}
 	}
     
-    long seek(int ,long)override{
+    public long seek(int ,long)override{
 		return 0;
     }
     
-    long getPosition()override{
+    public long getPosition()override{
 		return 0;
     }
     
-    long length()override{return 0;}
-    long available(bool)override{return 0;}
+    public long length()override{return 0;}
+    public long available(bool)override{return 0;}
     
-    void finalize(){
+    public void finalize(){
 		close();
     }
 };

@@ -24,15 +24,16 @@
 				"ignorewl":	"",
 				"debugable":	"-dbg",
 				"debugdatabase":	"",
-				"libs":	[],
-				"links":	["XStudio1.xl"],
-				"depends":	[],
 				"wtype":	"",
 				"ostype":	"",
+				"sstype":	"",
 				"outname":	"$(ProjectName)$(Ext)",
 				"outpath":	"D:\\Programs\\windows_x64_dev\\plugins",
 				"command":	"-slx -c",
-				"uaclevel":	"默认"
+				"uaclevel":	"默认",
+				"libs":	[],
+				"links":	["XStudio.xl"],
+				"depends":	[]
 			},
 			"release":	{
 				"path":	{

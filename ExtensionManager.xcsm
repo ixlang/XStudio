@@ -2,13 +2,13 @@
 //Date: Mon Dec 22:38:01 2019 
 
 class ExtensionManager : QXDialog{
-    XWorkspace _workspace;
+    public XWorkspace _workspace;
     QXTreeView extlist;
     QXPushButton btnenable, btnuninst, btnclose;
     
     static JsonObject extobj = new JsonObject();
     
-    static void load(){
+    public static void load(){
         String confFile = "./config/extstat.conf";
         FileInputStream fiss;
         try {
@@ -26,7 +26,7 @@ class ExtensionManager : QXDialog{
         }
     }
     
-    static bool isEnabled(String name){
+    public static bool isEnabled(String name){
         if (extobj.has(name)){
             JsonObject plobj = (JsonObject)extobj.get(name);
             if (plobj != nilptr){
@@ -39,7 +39,7 @@ class ExtensionManager : QXDialog{
         return true;
     }
     
-    static void setEnabled(String name, bool eab){
+    public static void setEnabled(String name, bool eab){
         while  (extobj.has(name)){
             extobj.remove(name);
         }
@@ -49,7 +49,7 @@ class ExtensionManager : QXDialog{
         save();
     }
     
-    static void save(){
+    public static void save(){
         FileOutputStream fos;
         
         try{
@@ -66,7 +66,7 @@ class ExtensionManager : QXDialog{
         }
     }
     
-	void onAttach() override {
+	public void onAttach() override {
 		//TODO:	
         setWindowFlags(CustomizeWindowHint | WindowMinMaxButtonsHint | WindowCloseButtonHint);
         setWindowIcon("./res/toolbar/dynamic.png");
@@ -139,7 +139,7 @@ class ExtensionManager : QXDialog{
 	}
     
     
-    void loadlist(){
+    public void loadlist(){
         extlist.clear();
         Map.Iterator<String, XPluginShell> iter = PluginsController.plugins_list.iterator();
         while (iter.hasNext()) {

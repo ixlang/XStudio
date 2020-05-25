@@ -1,9 +1,9 @@
 
 class QXMainWindow : QXWidget{
-    QXMainWindow(){
+    public QXMainWindow(){
     }
     
-    bool create(){
+    public bool create(){
         nativehandle = createQObject(QType.qtMainWindow, this, 0);
         if (nativehandle == 0){
             return false;
@@ -11,7 +11,7 @@ class QXMainWindow : QXWidget{
         return true;
     }
     
-    bool create(QXWidget parent){
+    public bool create(QXWidget parent){
         nativehandle = createQObject(QType.qtMainWindow, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
@@ -19,31 +19,48 @@ class QXMainWindow : QXWidget{
         return true;
     }    
     
-    QXWidget getWindow(){
+    public QXWidget getWindow(){
         return (QXWidget)widget_get_object(nativehandle, QXCore.WINDOW);
     }
     
-    QXWidget getCentralWindow(){
+    public QXWidget getCentralWindow(){
         return (QXWidget)widget_get_object(nativehandle, QXCore.CENTRALWIDGET);
     }
     
-    QXMainWindow(long handle){
+    public QXMainWindow(long handle){
     
     }
     
-    byte [] saveState(){
+    public byte [] saveState(){
 		return (byte[])widget_get_object(nativehandle, QXCore.SAVESTATE);
     }
     
-    void loadState(byte [] data){
+    public void loadState(byte [] data){
 		widget_set_object_value(nativehandle, QXCore.LOADSTATE, data);
     }
     
-    QXMenuBar getMenuBar(){
+    public QXMenuBar getMenuBar(){
         return (QXMenuBar)widget_get_object(nativehandle, QXCore.MENUBAR);
     }
     
-	QXStatusBar getStatusBar(){
+	public QXStatusBar getStatusBar(){
 		return (QXStatusBar)widget_get_object(nativehandle, QXCore.STATUSBAR);
 	}
+    
+    public void addDockWidget(int area, QXDockWidget widget, Orientation ori){
+        int_long_int_long_int_int(nativehandle, ADDDOCKWIDGET, widget.nativehandle, area, ori);
+    }
+    
+    public void setDockNestingEnabled(bool b){
+        widget_set_vint_value(nativehandle, SETDOCKNESTINGENABLED, b ? 1:  0);
+    }
+    
+    public void tabifyDockWidget(QXDockWidget a, QXDockWidget b){
+        object_set_long_int_long(nativehandle, TABIFYDOCKWIDGET, a.nativehandle, 0, b.nativehandle);
+    }
+    
+    public bool isDockNestingEnabled(){
+        return widget_get_bool_value(nativehandle, ISDOCKNESTINGENABLED);
+    }
+    
 };

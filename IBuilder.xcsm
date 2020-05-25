@@ -1,19 +1,39 @@
 
 class ICompileInfo{
-    static const int TIPS = 0;
-    static const int WARNING = 1;
-    static const int ERROR = 2;
+    public static const int TIPS = 0;
+    public static const int WARNING = 1;
+    public static const int ERROR = 2;
     
-    int getType();
-    String getFile();
-    int getLine();
-    int getRow();
-    String getTips();
+    public int getType();
+    public String getFile();
+    public int getLine();
+    public int getRow();
+    public String getTips();
 };
- 
+
+class InformationParser{
+    public String parse(String);
+};
+
 class IBuilder{
-    String build(String compilerPath, String []args, String workDir);
-    void setCompileInfor(Vector<ICompileInfo> infos);
-    void OutputText(String text, int id);
+    /*** 
+    @brief 调用compilerPath 
+    @param compilerPath 编译器路径
+    @param args 编译器参数
+    @param workDir 工作目录， 
+    @param InformationParser 编译器输出信息解析回调
+    @param bforceArgs 强制使用命令行传参，将忽略文件命令行设置)  
+    @return 返回编译器输出信息
+    */
+    public String build(String compilerPath, String []args, String workDir, InformationParser, bool bforceArgs);
+    
+    /** @brief 输出编译信息解析结果 */
+    public void setCompileInfor(Vector<ICompileInfo> infos);
+    
+    /** @brief 打印文字到输出窗口, id为窗口编号 */
+    public void OutputText(String text, int id);
+    
+    /** @brief 编译结束时调用 告诉Ide编译完成了 */
+    public void complete();
 }; 
  

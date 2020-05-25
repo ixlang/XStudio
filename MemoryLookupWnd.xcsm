@@ -7,47 +7,48 @@ class MemoryLookupWnd : QXDockWidget{
 	HexEditor memcontent;
     static MemoryLookupWnd memlookupWnd;
     
-    static class caRegMixMath {
+    public static class caRegMixMath {
 
-		static class Express{
+		public static class Express{
 			byte [] p;
 			int start;
 			int length;
 			
-            Express(String exp){
+            public Express(String exp){
 				p = exp.getBytes();
                 start = 0;
                 length = exp.length();
             }
             
-			Express(byte [] _p,int _s,int _l){
+			public Express(byte [] _p,int _s,int _l){
 				p = _p;
 				start = _s;
 				length = _l;
 			}
 			
-			Express(Express p2) {
+			public Express(Express p2) {
 				p = p2.p;
 				start = p2.start;
 				length = p2.length;	
 			}
 
-			char getChar(){
+			public char getChar(){
 				return p[start];
 			}
-			bool next(){
+			public bool next(){
 				if (start < length - 1){
 					start++;
 					return true;
 				}
 				return false;
 			}
-			long atoi(){
+			public long atoi(){
 				int n = start;
                 bool bhex = false;
-                if (length > 1 && p[n] == '0' && p[n + 1] == 'x'){
+                if ((length - n) > 2 && p[n] == '0' && p[n + 1] == 'x'){
 					bhex = true;
                     n += 2;
+                    start += 2;
                 }
 				while ((p[n] >= '0' && p[n] <= '9') || (p[n] >= 'a' && p[n] <= 'z' && bhex)){
 					n++;
@@ -57,26 +58,33 @@ class MemoryLookupWnd : QXDockWidget{
 				}
 				if (n > start){
 					if (bhex){
-						return new String(p, start, n - start).parseHex();
+						return Math.parseLong(new String(p, start, n - start), 16);
                     }
-					return new String(p, start, n - start).parseLong();
+					return Math.parseLong(new String(p, start, n - start), 10);
 				}
-				return 0;
+				throw new IllegalArgumentException("not a number");
+                return 0;
 			}
 
-			bool complete() {
+			public bool complete() {
 				return (length -1) == start;
 			}
 		};
         
-        static long calc(String text){
+        public static long calc(String text){
 			return mixcalc(new Express(text), true, false);
         }
         
-		static long mixcalc(Express p,bool bmain, bool b) {
+		public static long mixcalc(Express p,bool bmain, bool b) {
 			long result = 1;
 
-			while ( p.getChar() != '(' && false == (p.getChar() >= '0' && p.getChar() <= '9') && false == (p.getChar() >= 'a' && p.getChar() <= 'z')) { result *= (p.getChar() == '-' ? -1 : 1); p.next(); }
+			while ( p.getChar() != '(' && false == (p.getChar() >= '0' && p.getChar() <= '9') && false == (p.getChar() >= 'a' && p.getChar() <= 'z')) {
+                result *= (p.getChar() == '-' ? -1 : 1); 
+                if (p.next() == false){
+                    throw new IllegalArgumentException("not a number");
+                    return 0;
+                }
+            }
 
 			if (p.getChar() == '(') {
 				p.next();
@@ -130,18 +138,28 @@ class MemoryLookupWnd : QXDockWidget{
 		}
 	};
     
-    void dump(){
-		String addrtext = edtaddress.getText().replace(" ", "");
+    
+    public String getRealAddress(String text){
+        String addrtext = edtaddress.getText().replace(" ", "");
+        try{
+            long address = caRegMixMath.calc(addrtext.lower());
+            return String.format("%d",address);
+        }catch(Exception e){
+            
+        }
+        return text;
+    }
+    
+    public void dump(){
+		String addrtext = getRealAddress(edtaddress.getText());
 		if (addrtext.length() > 0){
-			long address = caRegMixMath.calc(addrtext.lower());
-			XWorkspace.workspace.debuggee.lookupMemory(address, 512);
+			XWorkspace.workspace.debuggee.lookupMemory(addrtext, 512);
 		}
     }
     
-    void dumpFile(){
-		String addrtext = edtaddress.getText().replace(" ", "");
+    public void dumpFile(){
+		String addrtext = getRealAddress(edtaddress.getText());
 		if (addrtext.length() > 0){
-			long address = caRegMixMath.calc(addrtext.lower());
             
             InputDialog.requestInput(new InputDialog.onInputListener() {
                 static String filePath = "";
@@ -160,7 +178,7 @@ class MemoryLookupWnd : QXDockWidget{
                     String file = QXFileDialog.getSaveFileName("保存文件", filePath,  "All Files(*.*)", MemoryLookupWnd.this);
                     if (file != nilptr && file.length() > 0) {
                         filePath = file;
-                        dumpCore(file, address, length);
+                        dumpCore(file, addrtext, length);
                     }
                     return true;
                 }
@@ -177,11 +195,11 @@ class MemoryLookupWnd : QXDockWidget{
                     return "";
                 }
             });
-			XWorkspace.workspace.debuggee.lookupMemory(address, 512);
+			XWorkspace.workspace.debuggee.lookupMemory(addrtext, 512);
 		}
     }
     
-    void dumpCore(String localFile, long address, long length){
+    public void dumpCore(String localFile, String address, long length){
         JsonObject json = new JsonObject();
         json.put("file", localFile);
         json.put("address", "" + address);
@@ -189,7 +207,7 @@ class MemoryLookupWnd : QXDockWidget{
 		XWorkspace.workspace.debuggee.dumpMemory(address, 512, json.toString(false));
     }
     
-	void onAttach(){
+	public void onAttach(){
 		memlookupWnd = this;
 		edtaddress = (QXLineEdit)attachByName(new QXLineEdit(), "edtaddress");
         btnLockup = (QXPushButton)attachByName(new QXPushButton(), "btnLockup");
@@ -220,7 +238,7 @@ class MemoryLookupWnd : QXDockWidget{
         memcontent.init();
     }
     
-    static void SetData(JsonObject json){
+    public static void SetData(JsonObject json){
 		memlookupWnd.runOnUi(new Runnable(){
 			void run()override{
 				memlookupWnd.setData(json);
@@ -228,7 +246,7 @@ class MemoryLookupWnd : QXDockWidget{
         });
     }
     
-    static void SetDumpData(JsonObject json){
+    public static void SetDumpData(JsonObject json){
 		memlookupWnd.runOnUi(new Runnable(){
 			void run()override{
 				memlookupWnd.setDumpData(json);
@@ -236,7 +254,7 @@ class MemoryLookupWnd : QXDockWidget{
         });
     }
     
-    static void reset(){
+    public static void reset(){
     	memlookupWnd.runOnUi(new Runnable(){
 			void run()override{
 				memlookupWnd.memcontent.setData(nilptr, 0, 0, 0);
@@ -244,7 +262,7 @@ class MemoryLookupWnd : QXDockWidget{
         });
     }
     
-    void setData(JsonObject json){
+    public void setData(JsonObject json){
 		String dataCont = json.getString("content");
         String address =json.getString("address");
         int requestlen = json.getInt("request");
@@ -255,7 +273,7 @@ class MemoryLookupWnd : QXDockWidget{
         memcontent.setData(data, offset, requestlen, responselen);
     }
     
-    void setDumpData(JsonObject json){
+    public void setDumpData(JsonObject json){
 		String dataCont = json.getString("content");
         String address = json.getString("address");
         String param = json.getString("param");
@@ -300,7 +318,7 @@ class MemoryLookupWnd : QXDockWidget{
         }
         
         if (bContinue_req){
-            XWorkspace.workspace.debuggee.dumpMemory(offset + responselen, 512, param);
+            XWorkspace.workspace.debuggee.dumpMemory(String.format("%d",offset + responselen), 512, param);
         }else{
             if (dumpfailed){
                 XWndOutput.Output("转储内存文件:" + localFile + " 仅完成部分(错误:无法访问内存)\n", 1);
@@ -310,7 +328,7 @@ class MemoryLookupWnd : QXDockWidget{
         }
     }
     
-    void reconfig(){
+    public void reconfig(){
 		memcontent.setStyle(Setting.isDarkStyle());
     }
 };

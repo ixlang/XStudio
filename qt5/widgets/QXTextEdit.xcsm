@@ -2,7 +2,7 @@
 //Date: Thu Sep 20:52:18 2019 
 
 class QXTextEdit : QXWidget{
-    enum Alignment {
+    public enum Alignment {
         AlignLeft = 0x0001,
         AlignLeading = 0x0001,
         AlignRight = 0x0002,
@@ -24,33 +24,33 @@ class QXTextEdit : QXWidget{
 
         AlignCenter = 0x0080 | 0x0004
     };
-    enum WrapMode {
+    public enum WrapMode {
         NoWrap,
         WordWrap,
         ManualWrap,
         WrapAnywhere,
         WrapAtWordBoundaryOrAnywhere
     };
-    enum LineWrapMode {
+    public enum LineWrapMode {
         NoWrap,
         WidgetWidth,
         FixedPixelWidth,
         FixedColumnWidth
     };
-    enum AutoFormatting {
+    public enum AutoFormatting {
         AutoNone = 0,
         AutoBulletList = 0x00000001,
         AutoAll = 0xffffffff
     };
-	QXTextEdit() {//构造
+	public QXTextEdit() {//构造
 		//TODO:	
 	}
 
-	QXTextEdit(long h) {//构造
+	public QXTextEdit(long h) {//构造
 		super(h);
 	}
 
-    bool create(){
+    public bool create(){
         nativehandle = createQObject(QType.qtTextEdit, this, 0);
         if (nativehandle == 0){
             return false;
@@ -58,7 +58,7 @@ class QXTextEdit : QXWidget{
         return true;
     }
     
-    bool create(QXWidget parent){
+    public bool create(QXWidget parent){
         nativehandle = createQObject(QType.qtTextEdit, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
@@ -66,16 +66,16 @@ class QXTextEdit : QXWidget{
         return true;
     }   
     
-    static class onChangeListener{
-        void onTextChanged(QXTextEdit obj){
+    public static class onChangeListener{
+        public void onTextChanged(QXTextEdit obj){
         
         }
         
-        void onCursorPositionChanged(QXTextEdit obj){
+        public void onCursorPositionChanged(QXTextEdit obj){
             
         }
         
-        void onSelectionChanged(QXTextEdit obj){
+        public void onSelectionChanged(QXTextEdit obj){
             
         }
     };
@@ -83,162 +83,162 @@ class QXTextEdit : QXWidget{
     
     onChangeListener lis = nilptr;
     
-    void setOnChangeListener(onChangeListener l){
+    public void setOnChangeListener(onChangeListener l){
         lis = l;
     }
-    void onTextChanged(){
+    public void onTextChanged(){
         if (lis != nilptr){
             lis.onTextChanged(this);
         }
     }
     
-    void onCursorPositionChanged(){
+    public void onCursorPositionChanged(){
         if (lis != nilptr){
             lis.onCursorPositionChanged(this);
         }
     }
     
-    void onSelectionChanged(){
+    public void onSelectionChanged(){
         if (lis != nilptr){
             lis.onSelectionChanged(this);
         }
     }
     
-    void setReadOnly(bool breadOnly){
+    public void setReadOnly(bool breadOnly){
         widget_set_bool_value(nativehandle, TESETREADONLY, breadOnly);
     }
     
-    bool isReadOnly(){
+    public bool isReadOnly(){
         return widget_get_bool_value(nativehandle, TEGETREADONLY);
     }
     
-    Alignment alignment() {
+    public Alignment alignment() {
         return (Alignment)widget_get_int_value(nativehandle, TEGETALIGNMENT);
     }
     
-    WrapMode wordWrapMode() {
+    public WrapMode wordWrapMode() {
         return (WrapMode)widget_get_int_value(nativehandle, TEGETWRAPMODE);
     }
     
-    void setWordWrapMode(WrapMode policy){
+    public void setWordWrapMode(WrapMode policy){
         widget_set_vint_value(nativehandle, TESETWORDWRAPMODE, policy);
     }
     
-    String toHtml(){
+    public String toHtml(){
         return (String)core_getString(nativehandle, TETOHTML);
     }
     
-    String toPlainText(){
+    public String toPlainText(){
         return (String)core_getString(nativehandle, TETOPLAINTEXT);
     }
     
-    void setFontPointSize(double s){
+    public void setFontPointSize(double s){
         widget_set_double_value(nativehandle, TESETFONTPOINTSIZE, s);
     }
-    void setFontFamily(String fontFamily){
+    public void setFontFamily(String fontFamily){
         widget_slot_string(nativehandle, TESETFONTFAMILY, fontFamily);
     }
-    void setFontWeight(int w){
+    public void setFontWeight(int w){
         widget_set_vint_value(nativehandle, TESETFONTWEIGHT, w);
     }
-    void setFontUnderline(bool b){
+    public void setFontUnderline(bool b){
         widget_set_bool_value(nativehandle, TESETFONTUNDERLINE, b);
     }
-    void setFontItalic(bool b){
+    public void setFontItalic(bool b){
         widget_set_bool_value(nativehandle, TESETFONTITALIC, b);
     }
-    void setTextColor(int c){
+    public void setTextColor(int c){
         widget_set_vint_value(nativehandle, TESETTEXTCOLOR, c);
     }
-    void setTextBackgroundColor(int c){
+    public void setTextBackgroundColor(int c){
         widget_set_vint_value(nativehandle, TESETTEXTBACKGROUNDCOLOR, c);
     }
-    void setCurrentFont(QXFont f){
+    public void setCurrentFont(QXFont f){
         widget_set_native_value(nativehandle, TESETCURRENTFONT, f.nativehandle);
     }
-    void setAlignment(Alignment a){
+    public void setAlignment(Alignment a){
         widget_set_vint_value(nativehandle, TESETALIGNMENT, a);
     }
 
-    void setPlainText(String text){
+    public void setPlainText(String text){
         widget_slot_string(nativehandle, TESETPLAINTEXT, text);
     }
 
-    void setHtml(String text){
+    public void setHtml(String text){
         widget_slot_string(nativehandle, TESETHTML, text);
     }
 
-    void setText(String text){
+    public void setText(String text){
         widget_slot_string(nativehandle, TESETTEXT, text);
     }
 
 
-    void cut(){
+    public void cut(){
         widget_slot(nativehandle, TECUT);
     }
-    void copy(){
+    public void copy(){
         widget_slot(nativehandle, TECOPY);
     }
-    void paste(){
+    public void paste(){
         widget_slot(nativehandle, TEPASTE);
     }
 
-    AutoFormatting autoFormatting() {
+    public AutoFormatting autoFormatting() {
         return (AutoFormatting)widget_get_int_value(nativehandle, TEGETAUTOFORMATTING);
     }
-    void setAutoFormatting(AutoFormatting features){
+    public void setAutoFormatting(AutoFormatting features){
         widget_set_vint_value(nativehandle, TESETAUTOFORMATTING, features);
     }
-    bool tabChangesFocus() {
+    public bool tabChangesFocus() {
         return widget_get_bool_value(nativehandle, TETABCHANGESFOCUS);
     }
-    void setTabChangesFocus(bool b){
+    public void setTabChangesFocus(bool b){
         widget_set_bool_value(nativehandle, TESETTABCHANGESFOCUS, b);
     }
-    void setPlaceholderText(String placeholderText){
+    public void setPlaceholderText(String placeholderText){
         widget_slot_string(nativehandle, TESETPLACEHOLDERTEXT, placeholderText);
     }
-    String placeholderText() {
+    public String placeholderText() {
         return (String)core_getString(nativehandle, TEGETPLACEHOLDERTEXT);
     }
-    void undo(){
+    public void undo(){
         widget_slot(nativehandle, TEUNDO);
     }
-    void redo(){
+    public void redo(){
         widget_slot(nativehandle, TEREDO);
     }
 
-    void clear(){
+    public void clear(){
         widget_slot(nativehandle, TECLEAR);
     }
-    void selectAll(){
+    public void selectAll(){
         widget_slot(nativehandle, TESELECTALL);
     }
 
-    void insertPlainText(String text){
+    public void insertPlainText(String text){
         widget_slot_string(nativehandle, TEINSERTPLAINTEXT, text);
     }
 
-    void insertHtml(String text){
+    public void insertHtml(String text){
         widget_slot_string(nativehandle, TEINSERTHTML, text);
     }
 
 
-    void append(String text){
+    public void append(String text){
         widget_slot_string(nativehandle, TEAPPEND, text);
     }
 
-    void scrollToAnchor(String name){
+    public void scrollToAnchor(String name){
         widget_slot_string(nativehandle, TESCROLLTOANCHOR, name);
     }
 
-    void zoomIn(int range ){
+    public void zoomIn(int range ){
         widget_set_vint_value(nativehandle, TEZOOMIN, range);
     }
-    void zoomOut(int range ){
+    public void zoomOut(int range ){
         widget_set_vint_value(nativehandle, TEZOOMOUT, range);
     }
-    void setLineWrapMode(LineWrapMode mode){
+    public void setLineWrapMode(LineWrapMode mode){
         widget_set_vint_value(nativehandle, TESETLINEWRAPMODE, mode);
     }
 };

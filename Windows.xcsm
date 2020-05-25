@@ -1,7 +1,7 @@
 
 class Windows : QXDialog
 {
-    XWorkspace  _workspace;
+    public XWorkspace  _workspace;
     QXTreeView _listview;
     Map<long, XSourceEditor> windows_list = new Map<long, XSourceEditor>();
 

@@ -3,26 +3,26 @@
 
 class Recently{
 
-	static Recently recent = new Recently();
+	public static Recently recent = new Recently();
     
-	static class RecentlyObject {
-		String name;
-        String path;
-        String date;
+	public static class RecentlyObject {
+		public String name;
+        public String path;
+        public String date;
     };
     
-	Recently(){
+	public Recently(){
 		loadRecently();
     }
     
 	JsonObject recently; 
     
-	String getRecentlyPath(){
+	public String getRecentlyPath(){
 		String file = XPlatform.getAppDirectory();
 		return String.formatPath(file.appendPath("config").appendPath("recently.prop"), false);
 	}
     
-	void loadRecently(){
+	public void loadRecently(){
 
 		String file = getRecentlyPath();
 		
@@ -49,7 +49,7 @@ class Recently{
 		}
 	}
         
-	int getCount(){
+	public int getCount(){
 		try{
 			JsonArray  node = (JsonArray)recently.get("projects");
             return node.length();
@@ -59,7 +59,7 @@ class Recently{
 		return 0;
     }
     
-    RecentlyObject get(int i){
+    public RecentlyObject get(int i){
 		try{
 			JsonNode node = recently.get("projects");
 			if (node != nilptr){
@@ -79,7 +79,7 @@ class Recently{
         return nilptr;
     }
     
-    void checktoArray(JsonArray node, String name , String path){
+    public void checktoArray(JsonArray node, String name , String path){
 		try{
 			for (int i = 0, c = node.length(); i < c; i++){
 				JsonObject obj = (JsonObject )node.get(i);
@@ -98,7 +98,7 @@ class Recently{
 		}
     }
     
-    void put(String name , String path){
+    public void put(String name , String path){
 		String date = String.formatDate("%Y年 %m月 %d日 %H时 %M分"/*"%c"*/, _system_.currentTimeMillis());
         JsonObject pnode = new JsonObject();
         pnode.put("name", name);
@@ -128,7 +128,7 @@ class Recently{
     }
     
         
-	void save(){
+	public void save(){
 		String file = getRecentlyPath();
 		
 		FileOutputStream fos = nilptr;
@@ -150,15 +150,15 @@ class Recently{
 		}
 	}
     
-    static void putRecent(String name , String path){
+    public static void putRecent(String name , String path){
 		recent.put(name, path);
     }
     
-    static int count(){
+    public static int count(){
 		return recent.getCount();
     }
     
-    static String getLastPath(){
+    public static String getLastPath(){
         int c = count();
         if (c > 0){
             RecentlyObject ro = getItem(c - 1);
@@ -168,15 +168,15 @@ class Recently{
         }
         return nilptr;
     }
-    static RecentlyObject getItem(int i){
+    public static RecentlyObject getItem(int i){
 		return recent.get(i);
     }
     
-    static bool isFirstRun(){
+    public static bool isFirstRun(){
 		return false == XPlatform.existsSystemFile(recent.getRecentlyPath());
     }
     
-    static void mkFirstFile(){
+    public static void mkFirstFile(){
 		long fp = XPlatform.openSystemFile(recent.getRecentlyPath(), "w");
         _system_.closeFile(fp);
     }

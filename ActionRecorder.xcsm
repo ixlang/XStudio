@@ -3,12 +3,12 @@
 
 class ActionRecorder{
 	static class Action{
-		Action(String s, int pos){
+		public Action(String s, int pos){
 			source = s;
             position = pos;
         }
-		String source;
-        int position;
+		public String source;
+        public int position;
     };
     
     Action lastAction ;
@@ -16,7 +16,7 @@ class ActionRecorder{
     int pointer = 0;
     Vector<Action> actions = new Vector<Action>();
     
-    void addAction(String source, int pos){
+    public void addAction(String source, int pos){
     
 		if (lastAction != nilptr && lastAction.source.equals(source) && lastAction.position == pos){
 			return ;
@@ -34,13 +34,13 @@ class ActionRecorder{
 	
     }
     
-    void tripAction(){
+    public void tripAction(){
 		while (actions.size() > (pointer + 1)){
 			actions.remove( actions.size() - 1);
         }
     }
     
-    void undo(){
+    public void undo(){
         if ((pointer >0) && (pointer < actions.size())){
 			pointer--;
         }
@@ -49,7 +49,7 @@ class ActionRecorder{
         XSourceEditor.localtion(lastAction.source, lastAction.position);
     }
     
-    void redo(){
+    public void redo(){
         if ((pointer >=0) && (pointer + 1 < actions.size())){
 			pointer++;
         }
@@ -58,7 +58,7 @@ class ActionRecorder{
         XSourceEditor.localtion(lastAction.source, lastAction.position);
     }
     
-    void clear(){
+    public void clear(){
 		actions.clear();
     }
 };

@@ -11,7 +11,7 @@ class WatchWnd : ListDockWidget{
     JsonNode saveState;
     
 	long add_item = 0;
-    static WatchWnd watchesWnd;
+    public static WatchWnd watchesWnd;
     JsonObject root;
     Object rootLock = new Object();
     ContextMenu _contextMenu = new ContextMenu();
@@ -19,14 +19,14 @@ class WatchWnd : ListDockWidget{
     
     Object serlock = new Object();
     
-    class Range{
-		long start;
-        long length;
-        long object;
-        long itemload;
-        int unit;
+    public class Range{
+		public long start;
+        public long length;
+        public long object;
+        public long itemload;
+        public int unit;
         
-        Range(long s,long l,long o,int u, long load){
+        public Range(long s,long l,long o,int u, long load){
 			start = s ;
             length = l;
             object = o;
@@ -37,14 +37,14 @@ class WatchWnd : ListDockWidget{
     
     Map<long, Range> array_objects = new Map<long, Range>();
     
-	void onListItemClicked(QXTreeView tree,long item, int column)override{
+	public void onListItemClicked(QXTreeView tree,long item, int column)override{
     
     }
 
-	void onListItemPressed(QXTreeView tree,long item, int column)override{
+	public void onListItemPressed(QXTreeView tree,long item, int column)override{
 		_contextMenu.actions[0].setEnable(item != add_item);
 	}
-	void onListItemDoubleClicked(QXTreeView tree,long item, int column)override{
+	public void onListItemDoubleClicked(QXTreeView tree,long item, int column)override{
 		if (item == add_item){
 			return ;
         }
@@ -66,15 +66,15 @@ class WatchWnd : ListDockWidget{
 				td.create(caption, text.replace(" ↩ ", "\n")
 							.replace(" ↵ ", "\r")
 							.replace(" ⇥ ", "\t")
-                            .replace(" ⇤ ", "\b"));
+                            .replace(" ⇤ ", "\b"), nilptr, false);
             }
         }
 	}
-    void onListItemExpanded(QXTreeView tree,long item)override{
+    public void onListItemExpanded(QXTreeView tree,long item)override{
         expandItem(tree, item);
 	}
     
-    void expandItem(QXTreeView tree,long item){
+    public void expandItem(QXTreeView tree,long item){
 		if (expandArrays(item) == false){
 			long objectId = tree.getItemTag(item, 0);
 			if (objectId != 0){
@@ -102,7 +102,7 @@ class WatchWnd : ListDockWidget{
         }
     }
     
-    bool expandArrays(long item){
+    public bool expandArrays(long item){
 		
 		Map.Iterator<long, Range> iter = array_objects.find(item);
 		
@@ -125,7 +125,7 @@ class WatchWnd : ListDockWidget{
 		return false;
     }
     
-    void onListItemChanged(QXTreeView tree,long item, int column){
+    public void onListItemChanged(QXTreeView tree,long item, int column){
 		if (item == add_item){
 			add_item = 0;
             long new_add_item = 0;
@@ -162,7 +162,7 @@ class WatchWnd : ListDockWidget{
     
     Map<long, JsonNode> expandTask = new Map<long, JsonNode>();
     
-    void querySaveState(long item){
+    public void querySaveState(long item){
         try{
             JsonNode node = expandTask.get(item);
             if (node != nilptr){
@@ -176,14 +176,14 @@ class WatchWnd : ListDockWidget{
         }
     }
     
-    void expandItem(long item, JsonNode child){
+    public void expandItem(long item, JsonNode child){
         QXTreeView list = getList();
         expandTask.put(item, child);
         list.setExpand(item,true);
         //expandItem(list, item);
     }
     
-    void applyState(){
+    public void applyState(){
         if (saveState == nilptr){
             return;
         }
@@ -209,7 +209,7 @@ class WatchWnd : ListDockWidget{
         applyStateEx(items, state);
     }
     
-    void applyStateEx(long [] items, JsonArray state){
+    public void applyStateEx(long [] items, JsonArray state){
         QXTreeView list = getList();
         int stlen = state.length();
         for (int i = 0; i < items.length; i++){
@@ -233,11 +233,11 @@ class WatchWnd : ListDockWidget{
     }
     
     
-    static void UpdateWatch(){
+    public static void UpdateWatch(){
 		watchesWnd.updateWatch();
     }
     
-    void updateWatch(){
+    public void updateWatch(){
 		Map.Iterator<String, long> iter = watchs.iterator();
         JsonArray array = new JsonArray();
         while (iter.hasNext()){
@@ -247,17 +247,18 @@ class WatchWnd : ListDockWidget{
 		XWorkspace.workspace.debuggee.updateWatch(array, ThreadManager.currentThreadId,ThreadManager.currentFrameId, false);
     }
     
-    String getListName()override{
+    public String getListName()override{
 		return "watchlist";
     }
     
-    void onQueryObject(JsonObject object){
+    public void onQueryObject(JsonObject object){
 		synchronized(queriedObjects){
 			queriedObjects.add(object);
             Notify(QUERYOBJECT);
         }
     }
     
+    public 
     void showInfo(JsonObject infos){
 		synchronized(rootLock){
 			root = infos;
@@ -265,6 +266,7 @@ class WatchWnd : ListDockWidget{
         }
     }
     
+    public 
 	void onNotification(long id){
 		if (id == REFRESH_WATCH){
 			JsonObject infos;
@@ -286,6 +288,7 @@ class WatchWnd : ListDockWidget{
         }
 	}
     
+    public 
     void loadObject(JsonObject json){
 		synchronized(serlock){
 			QXTreeView list = getList();
@@ -304,7 +307,7 @@ class WatchWnd : ListDockWidget{
 						String content = text_root.getString("value");
 						String caption = qid.substring(7, qid.length());
                         caption = caption + " : length=" + content.length();
-						td.create(caption, content);
+						td.create(caption, content, nilptr, false);
 					}catch(Exception e){
 					
 					}
@@ -358,12 +361,14 @@ class WatchWnd : ListDockWidget{
 		}
     }*/
     
+    public 
     void parseWatchInfo(JsonObject json){
     
 		//_system_.consoleWrite(json.toString(false));        
 		parseWatchInfoCore(json);
     }
     
+    public 
     void parseWatchInfoCore(JsonObject json){
             
         JsonArray watches;
@@ -423,6 +428,7 @@ class WatchWnd : ListDockWidget{
         applyState();
     }
     
+    public 
     long getSplit(long length){
 		long i = 100;
         while (i < length){
@@ -431,12 +437,13 @@ class WatchWnd : ListDockWidget{
         return i / 10;
     }
     
-    
+    public 
     void displayArray(QXTreeView list, long item , long object,long start, long length, int unit, bool recursion){
 		long newitem = list.insertItem(item, nilptr, String.format("[%d~%d]", start, start + length - 1));
         splitArray(list, newitem, object, start, length, unit, recursion);
     }
     
+    public 
     void splitArray(QXTreeView list, long newitem , long object,long start, long length, int unit, bool recursion){
 		
         
@@ -471,7 +478,7 @@ class WatchWnd : ListDockWidget{
         
     }
     
-    void displayValue(QXTreeView list, long item ,JsonObject valueroot){
+    public void displayValue(QXTreeView list, long item ,JsonObject valueroot){
 		if (valueroot.has("object_id")){
 			String objectId = valueroot.getString("object_id");
             
@@ -509,19 +516,22 @@ class WatchWnd : ListDockWidget{
 		}
         
 		int valueType = valueroot.getInt("valuetype");
-		String values = valueroot.getString("value"); 
-        
-        if (values == nilptr){
-			values = "nilptr";
-        }else{
-			values = values.replace("\n", " ↩ ")
-							.replace("\r", " ↵ ")
-							.replace("\t", " ⇥ ")
-                            .replace("\b", " ⇤ ");
-        }
+		
 		switch(valueType){
 		case 0:
+        {
+            String values = valueroot.getString("value"); 
+            
+            if (values == nilptr){
+                values = "nilptr";
+            }else{
+                values = values.replace("\n", " ↩ ")
+                                .replace("\r", " ↵ ")
+                                .replace("\t", " ⇥ ")
+                                .replace("\b", " ⇤ ");
+            }
 			list.setItemText(item, 2, values);
+        }
 		break;
         
 		case 1:
@@ -535,6 +545,7 @@ class WatchWnd : ListDockWidget{
 		}
     }
     
+    public 
 	void parseArrayValue(QXTreeView list, long item ,JsonObject valueroot){
         long dataitem = list.insertItem(item, nilptr, "data");
 
@@ -555,6 +566,7 @@ class WatchWnd : ListDockWidget{
         
     }
     
+    public 
     void parseMember(QXTreeView list, long item ,JsonObject valueroot){
         JsonArray valarr = (JsonArray)valueroot.get("value");
         if (valarr != nilptr){
@@ -572,18 +584,18 @@ class WatchWnd : ListDockWidget{
         } 
     }
     
-    String [] getColumn()override{
+   public  String [] getColumn()override{
 		String [] columns = {"名称", "类型", "值", "ID"};
         return columns;
     }
     
-    int [] getColumnWidths()override{ 
+    public int [] getColumnWidths()override{ 
 		int [] ws = {150, 150, 200, 100};
         return ws;
     }
     
     
-    void listReset(){
+    public void listReset(){
 		QXTreeView list = getList();
         //UI线程使用
 		synchronized(serlock){
@@ -596,7 +608,7 @@ class WatchWnd : ListDockWidget{
         list.modifyItemFlags(add_item, QXTreeView.ItemIsEditable, 0);
     }
     
-    void onCreate(){
+    public void onCreate(){
 		listReset();
         
         createContextMenu();
@@ -604,11 +616,11 @@ class WatchWnd : ListDockWidget{
     }
     
     
-    static class ContextMenu{
-		QXMenu contextMenu = new QXMenu();
-		QXAction [] actions;
+    public static class ContextMenu{
+		public QXMenu contextMenu = new QXMenu();
+		public QXAction [] actions;
 		
-		void create(QXWidget parent, String [] acts, onEventListener listener){
+		public void create(QXWidget parent, String [] acts, onEventListener listener){
 			if (contextMenu.create(parent)){
 				actions = new QXAction[acts.length];
 				for (int i = 0; i < acts.length; i ++){
@@ -631,7 +643,7 @@ class WatchWnd : ListDockWidget{
 		}
 	};
     
-    void createContextMenu(){
+    public void createContextMenu(){
 		QXTreeView list = getList();
         
 		onEventListener menuListener = new onEventListener(){

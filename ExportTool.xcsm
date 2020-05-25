@@ -10,15 +10,15 @@ class ExportTool : QXDialog{
     QXProgressBar	prgExport;
     
     
-    class FilePackage{
-		int id;
-		Vector<String> files = new Vector<String>();
+    public class FilePackage{
+		public int id;
+		public Vector<String> files = new Vector<String>();
         
-        FilePackage(int i){
+        public FilePackage(int i){
 			id = i;
         }
         
-        void preview(QXTreeView tree, long item){
+        public void preview(QXTreeView tree, long item){
         
 			String [] oss = {"Windows", "Linux", "Macos", "其他"};
 			long hroot = tree.insertItem(item, "res/toolbar/winoverlap.png", oss[id]);
@@ -29,7 +29,7 @@ class ExportTool : QXDialog{
             
         }
         
-        bool build(ZipArchive zs, String path){
+        public bool build(ZipArchive zs, String path){
 			String myPath = path.appendPath("" + id);
 			//zs.createEntry(new ZipFile(myPath, nilptr, true, _system_.currentTimeMillis()));
             
@@ -44,7 +44,7 @@ class ExportTool : QXDialog{
             return true;
         }
         
-        JsonArray save(){
+        public JsonArray save(){
 			JsonArray filesobj = new JsonArray();
             for (int i =0; i < files.size(); i++){
 				filesobj.put(files.get(i));
@@ -52,23 +52,23 @@ class ExportTool : QXDialog{
             return filesobj;
         }
         
-        void load(String file){
+        public void load(String file){
 			files.add(file);
         }
     };
     
-    class Arch{
-		int id;
-        Map<int, FilePackage> osFile = new Map<int, FilePackage>();
+    public class Arch{
+		public int id;
+        public Map<int, FilePackage> osFile = new Map<int, FilePackage>();
         
-        Arch(int ai){
+        public Arch(int ai){
 			id = ai;
             for (int i =0; i < 4; i ++){
 				osFile.put(i,new FilePackage(i));
             }
         }
         
-        void preview(QXTreeView tree, long item){
+        public void preview(QXTreeView tree, long item){
 			String [] options = {"default", "x86", "x86_64", "arm", "arm64", "mips"};
 			long hroot = tree.insertItem(item, "res/toolbar/console.png", options[id]);
             Map.Iterator<int, FilePackage> iters = osFile.iterator();
@@ -79,7 +79,7 @@ class ExportTool : QXDialog{
             }            
         }
         
-        bool build(ZipArchive zs, String path){
+        public bool build(ZipArchive zs, String path){
 			String myPath = path.appendPath("" + id);
 			//zs.createEntry(new ZipFile(myPath, nilptr, true, _system_.currentTimeMillis()));
             
@@ -96,7 +96,7 @@ class ExportTool : QXDialog{
             return true;
         }
         
-        JsonObject save(){
+        public JsonObject save(){
 			JsonObject object = new JsonObject();
 			Map.Iterator<int, FilePackage> iters = osFile.iterator();
             
@@ -110,7 +110,7 @@ class ExportTool : QXDialog{
             return object;
         }
         
-        bool load(JsonObject objects){
+        public bool load(JsonObject objects){
 			bool bsucc = true;
             
 			JsonArray fileo = (JsonArray)objects.child();
@@ -131,32 +131,32 @@ class ExportTool : QXDialog{
         }
     };
     
-    class Package{
-		String lixpath = "";
-        String readme = "";
-        String icon = "";
-        String comment = "";
+    public class Package{
+		public String lixpath = "";
+        public String readme = "";
+        public String icon = "";
+        public String comment = "";
         
-		Map<int, Arch> archs = new Map<int, Arch>();
+		public Map<int, Arch> archs = new Map<int, Arch>();
         
-        Package(){
+        public Package(){
 			init();
         }
         
-        void init(){
+        public void init(){
 			for (int i =0; i < 5; i++){
 				archs.put(i , new Arch(i));
             }
         }
-        void reset(){
+        public void reset(){
 			archs.clear();
             init();
 		}
-        void setComment(String text){
+        public void setComment(String text){
 			comment = text;
         }
         
-        void preview(QXTreeView tree, long item){
+        public void preview(QXTreeView tree, long item){
 			long hroot = tree.insertItem(item, "res/toolbar/staticfunction.png", lixpath);
             tree.insertItem(hroot, "res/toolbar/source.png", readme);
             
@@ -168,7 +168,7 @@ class ExportTool : QXDialog{
             }
         }
         
-        bool build(ZipArchive zs){
+        public bool build(ZipArchive zs){
             if (lixpath.length() > 0){
                 String ext = lixpath.findExtension();
                 
@@ -209,7 +209,7 @@ class ExportTool : QXDialog{
             return true;
         }
         
-        JsonObject save(){
+        public JsonObject save(){
 			JsonObject root = new JsonObject();
             root.put("lib",lixpath);
             root.put("md",readme);
@@ -220,7 +220,7 @@ class ExportTool : QXDialog{
 			return root;
         }
         
-        JsonObject saveArchs(){
+        public JsonObject saveArchs(){
 			JsonObject archobj = new JsonObject();
             
             Map.Iterator<int, Arch> iters = archs.iterator();
@@ -233,7 +233,7 @@ class ExportTool : QXDialog{
             return archobj;
         }
         
-        bool load(JsonObject root ){
+        public bool load(JsonObject root ){
 			try{
 				lixpath = root.getString("lib");
                 readme = root.getString("md");
@@ -247,7 +247,7 @@ class ExportTool : QXDialog{
             return false;
         }
         
-        bool loadArchs(JsonObject objects){
+        public bool loadArchs(JsonObject objects){
 			bool bsucc = true;
 			JsonObject archo = (JsonObject)objects.child();
             while (archo != nilptr){
@@ -267,12 +267,12 @@ class ExportTool : QXDialog{
     
     Package currentPackage = new Package();
     
-    class BrowserListener: onClickListener{
+    public class BrowserListener: onClickListener{
 		QXLineEdit edit;
         String filter , title;
         bool save;
         
-		BrowserListener(QXLineEdit _edit, bool _save, String _title, String _filter){
+		public BrowserListener(QXLineEdit _edit, bool _save, String _title, String _filter){
 			edit = _edit;
             save = _save;
             filter = _filter;
@@ -293,7 +293,7 @@ class ExportTool : QXDialog{
 		}
     };
     
-	void onAttach()override{
+	public void onAttach()override{
     
 		setFixedSize(width(), height());
         
@@ -504,7 +504,7 @@ class ExportTool : QXDialog{
         setWindowIcon("./res/toolbar/wizard.png");
     }
 
-    void addNativeFile(String add_path){
+    public void addNativeFile(String add_path){
         int arch = cbbNative.getCurrentIndex() + 1;
         int os = cbbOs.getCurrentIndex();
         
@@ -523,7 +523,7 @@ class ExportTool : QXDialog{
         }
     }
     
-	void updatepreview(){
+	public void updatepreview(){
 		structView.clear();
         
         long root = structView.addItem("res/toolbar/package.png", "Package");
@@ -532,7 +532,7 @@ class ExportTool : QXDialog{
     }
     
     
-    void onBuild(){
+    public void onBuild(){
 		String outpath = destfile.getText();
         String descrtxt = lelDescr.getText();
         String author = lblAuthor.getText();
@@ -599,7 +599,7 @@ class ExportTool : QXDialog{
 		}
     }
     
-	static bool Show(){
+	public static bool Show(){
     
         QXDialog newDlg = new QXDialog();
         

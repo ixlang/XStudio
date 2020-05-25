@@ -6,11 +6,11 @@ class DownloadCenter{
     
     static bool cancelDownload = false;
     
-    static void createDownload(String key, String url, String local, long totalsize, DownloadListener ls, Object tag){
+    public static void createDownload(String key, String url, String local, long totalsize, DownloadListener ls, Object tag){
         new Downloader(key, url, local, totalsize, ls, tag);
     }
     
-    static int getTaskProgress(String key){
+    public static int getTaskProgress(String key){
         synchronized(dltasks){
             try{
                 return dltasks.get(key).progress;
@@ -21,7 +21,7 @@ class DownloadCenter{
         return -1;
     }
     
-    static List<String> getKeys(){
+    public static List<String> getKeys(){
         List<String> keys = new List<String>();
         synchronized(dltasks){
             Map.Iterator<String, Downloader> iter = dltasks.iterator();
@@ -32,10 +32,10 @@ class DownloadCenter{
         }
         return keys;
     }
-    static bool hasTask(){
+    public static bool hasTask(){
         return dltasks.size() != 0;
     }
-    static Downloader getTask(String key){
+    public static Downloader getTask(String key){
         try{
             synchronized(dltasks){
                return dltasks.get(key);
@@ -46,17 +46,17 @@ class DownloadCenter{
         return nilptr;
     }
     
-    static class Downloader : Thread{
-        DownloadListener lis ;
-        Object _tag;
-        bool bcancel = false;
-        String url, localfile;
-        long dltotalsize;
-        int progress = 0;
-        DownloadStatus state = DownloadStatus.DL_UNKNOW;
-        String key;
+    public static class Downloader : Thread{
+        public DownloadListener lis ;
+        public Object _tag;
+        public bool bcancel = false;
+        public String url, localfile;
+        public long dltotalsize;
+        public int progress = 0;
+        public DownloadStatus state = DownloadStatus.DL_UNKNOW;
+        public String key;
         
-        Downloader(String _key, String _url, String _local, long _totalsize, DownloadListener dl, Object tag){
+        public Downloader(String _key, String _url, String _local, long _totalsize, DownloadListener dl, Object tag){
             localfile = _local;
             key = _key;
             url = _url;
@@ -66,7 +66,7 @@ class DownloadCenter{
             start();
         }
         
-        void run()override{
+        public void run()override{
             synchronized(dltasks){
                 dltasks.put(key, this);
             }
@@ -165,32 +165,32 @@ class DownloadCenter{
             }
         }
         
-        void updateProgress(){
+        public void updateProgress(){
             if (lis != nilptr){
                 lis.onStatus(state, progress, _tag);
             }
         }
         
-        void setCancel(bool bc){
+        public void setCancel(bool bc){
             bcancel = bc;
         }
     };
     
-    static void stopAlldownload(){
+    public static void stopAlldownload(){
         cancelDownload = true;
     }
     
-    static bool hasDownload(){
+    public static bool hasDownload(){
         return dltasks.size() > 0;
     }
     
-    static bool hasDownloadTask(String key){
+    public static bool hasDownloadTask(String key){
         synchronized(dltasks){
             return dltasks.containsKey(key);
         }
     }
         
-    static void cancelDownloadTask(String key){
+    public static void cancelDownloadTask(String key){
         try{
             synchronized(dltasks){
                 dltasks.get(key).setCancel(true);

@@ -18,9 +18,9 @@ class AddObjectDlg : QXDialog {
     String prefix = "";
     
     static class ItemLoader{
-		long loaditem;
-		JsonArray object;
-		ItemLoader(long i, JsonArray o){
+		public long loaditem;
+		public JsonArray object;
+		public ItemLoader(long i, JsonArray o){
 			loaditem = i;
 			object = o;
 		}
@@ -61,7 +61,7 @@ class AddObjectDlg : QXDialog {
             }
         };
         
-    void onAttach()override{ 
+    public void onAttach()override{ 
     
         setWindowFlags(CustomizeWindowHint | WindowCloseButtonHint);
         
@@ -243,7 +243,7 @@ class AddObjectDlg : QXDialog {
         setWindowIcon("./res/toolbar/interfacefun.png");
     }
     
-    void setChildrenUnChecked(long item){
+    public void setChildrenUnChecked(long item){
 		_treeview.setItemCheck(item, 0, false);
 		long []children = _treeview.getItemChildren(item);
         for (int i =0; i < children.length; i++){
@@ -251,7 +251,7 @@ class AddObjectDlg : QXDialog {
         }
     }
     
-    void checkCheck(long item){
+    public void checkCheck(long item){
 		long []children = _treeview.getItemChildren(root_item);
         for (int i =0; i < children.length; i++){
 			if (children[i] != item){
@@ -260,7 +260,7 @@ class AddObjectDlg : QXDialog {
         }
     }
     
-    void expandLoad(long item){
+    public void expandLoad(long item){
 		ItemLoader loader = nilptr; 
         
         try{
@@ -280,18 +280,21 @@ class AddObjectDlg : QXDialog {
 		}
 	}
     
-    long insertLoad(long item){
+    public long insertLoad(long item){
 		return _treeview.insertItem(item, nilptr, "加载中...");
 	}
     
-    static const  int 
+    public static const  int 
 			TYPE_CLASS = 0x100, 
 			TYPE_INTERFACE = 0x10, 
 			TYPE_FUNCTION = 0x1, 
 			TYPE_SUBCLASS = 0x2, 
 			TYPE_TEMPLATE = 4;
     
-    void loadObject(long root, JsonArray objs){
+    public void loadObject(long root, JsonArray objs){
+        if (objs == nilptr || root == 0){
+            return ;
+        }
 		for (int i =0, c = objs.length(); i < c; i++){
 			JsonObject obj = (JsonObject)objs.get(i);
             
@@ -349,7 +352,7 @@ class AddObjectDlg : QXDialog {
 		}
 	}
     
-    static void requestAddObject(Project project, int type){
+    public static void requestAddObject(Project project, int type){
 		QXDialog newDlg = new QXDialog();
         if (newDlg.load("ui/addobj.ui") == false){
             return ;
@@ -361,7 +364,7 @@ class AddObjectDlg : QXDialog {
         wizard.attach(newDlg);
     }
         
-    String generateChildren(long item, String parentClass){
+    public String generateChildren(long item, String parentClass){
 		String text = nilptr;
         int tag = _treeview.getItemTag(item, 0);
         if ((tag & TYPE_CLASS) == TYPE_CLASS){
@@ -429,7 +432,7 @@ class AddObjectDlg : QXDialog {
         return nilptr;
     }
     
-    String generateOverride(long item, String parentName){
+    public String generateOverride(long item, String parentName){
 		String bodyStr = "";
 		String destName = edtName.getText() ;
         long []children = _treeview.getItemChildren(item);

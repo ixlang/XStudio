@@ -3,7 +3,7 @@
 
 class QPagedPaintDevice : QPaintDevice{
         
-    enum PageSize {
+    public enum PageSize {
         // Existing Qt sizes
         A4,
         B5,

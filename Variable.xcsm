@@ -2,19 +2,19 @@ class Variables
     : Map<String, String>{
     static Variables _appVariable = new Variables();
     
-    void reset(){
+    public void reset(){
         super.clear();
     }
     
-    void setVariable(String key, String value){
+    public void setVariable(String key, String value){
         super.put(key, value);
     }
     
-    void setSystemVariable(String key, String value){
+    public void setSystemVariable(String key, String value){
         _appVariable.setVariable(key, value);
     }
     
-    String getVariable(String key){
+    public String getVariable(String key){
         if (containsKey(key)){
             return get(key);
         }
@@ -26,7 +26,7 @@ class Variables
         return "";
     }
     
-    String map_variable(String text){
+    public String map_variable(String text){
         for (Map.Iterator<String, String> iter = iterator(); iter.hasNext(); iter.next()){
             text = text.replace(iter.getKey(), iter.getValue());
         }
@@ -35,5 +35,70 @@ class Variables
             return _appVariable.map_variable(text);
         }
         return text;
+    }
+
+    public void initSystemVar(){
+        int osid = _system_.getPlatformId();
+        String uname_s = "";
+        String arch = "";
+        
+        switch(osid){
+            case _system_.PLATFORM_WINDOWS:
+            uname_s = "Windows";
+            break;
+            case _system_.PLATFORM_LINUX:
+            uname_s = "Linux";
+            break;
+            case _system_.PLATFORM_MACOSX:
+            uname_s = "MacOSX";
+            break;
+            case _system_.PLATFORM_UNIX:
+            uname_s = "Unix";
+            break;
+            case _system_.PLATFORM_ANDROID:
+            uname_s = "Android";
+            break;
+        }
+        
+        String [] archs = {"unknow", "x86", "x64", "arm", "arm64", "mips", "mips64"};
+        int archid = _system_.getArchId();
+        
+        arch = archs[archid];
+        
+        setVariable("$(uname_s)", uname_s);
+        setVariable("$(arch)", arch);
+        setVariable("$(XStudioRoot)", XPlatform.getAppDirectory());
+        
+        if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
+            setVariable("$(ExecuteExt)", ".exe");
+            setVariable("$(SharedExt)", ".dll");
+            setVariable("$(StaticExt)", ".lib");
+            setVariable("$(DriverExt)", ".sys");
+        }else
+        if (_system_.getPlatformId() == _system_.PLATFORM_LINUX){
+            setVariable("$(ExecuteExt)", "");
+            setVariable("$(SharedExt)", ".so");
+            setVariable("$(StaticExt)", ".a");
+            setVariable("$(DriverExt)", ".ko");
+        }else
+        if (_system_.getPlatformId() == _system_.PLATFORM_MACOSX){
+            setVariable("$(ExecuteExt)", "");
+            setVariable("$(SharedExt)", ".dylib");
+            setVariable("$(StaticExt)", ".a");
+            setVariable("$(DriverExt)", ".");
+        }
+        
+        setVariable("$(Windows_ExecuteExt)", ".exe");
+        setVariable("$(Windows_SharedExt)", ".dll");
+        setVariable("$(Windows_StaticExt)", ".lib");
+        setVariable("$(Windows_DriverExt)", ".sys");
+        setVariable("$(Linux_ExecuteExt)", "");
+        setVariable("$(Linux_SharedExt)", ".so");
+        setVariable("$(Linux_StaticExt)", ".a");
+        setVariable("$(Linux_DriverExt)", ".ko");
+        setVariable("$(MacOSX_ExecuteExt)", "");
+        setVariable("$(MacOSX_SharedExt)", ".dylib");
+        setVariable("$(MacOSX_StaticExt)", ".a");
+        setVariable("$(MacOSX_DriverExt)", ".");
     }
 };

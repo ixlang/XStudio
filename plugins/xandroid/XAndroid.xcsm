@@ -13,17 +13,17 @@ class XAndroid : IXPlugin{
     String JAVACNAME = (_system_.getPlatformId()== 0 ?  "javac.exe" : "javac");
     String JAVANAME = (_system_.getPlatformId()== 0 ?  "java.exe" : "java");
     static IXStudioController xcontroller;
-    static WorkspaceController workspace;
+    public static WorkspaceController workspace;
     static QXMainWindow _mainWindow;
-    static String defaultDevice;
+    public static String defaultDevice;
     static JsonObject wizard ;
-    static int output_id = -1;
+    public static int output_id = -1;
     static String qxappuuid = "9fa3bf24-824a-5a4e-3b5c-916686b0ee05";
     static String cocosandroid = "9c24b7d4-7c64-65c2-cf89-6146232d2754";
     static LogcatCacher logcater = new LogcatCacher();
     
     static int port_serial = 30000;
-    static String java_sdk_root, android_sdk_root, android_ndk_root, api_level, build_tools;
+    public static String java_sdk_root, android_sdk_root, android_ndk_root, api_level, build_tools;
     ProjectPlugin _projplugin = new ProjectPlugin();
     
     String getName()override{
@@ -46,15 +46,15 @@ class XAndroid : IXPlugin{
         return nilptr;
     }
     
-    static void setLogcatEnable(bool b){
+    public static void setLogcatEnable(bool b){
         logcater.setLogcatEnabled(b);
     }
     
-    static bool LogcatEnabled(){
+    public static bool LogcatEnabled(){
         return logcater.LogcatEnabled();
     }
     
-    static void setLogcatLevel(int level){
+    public static void setLogcatLevel(int level){
         logcater.setLogcatLevel(level);
     }
     
@@ -149,13 +149,13 @@ class XAndroid : IXPlugin{
         
     }
     
-    static void setDefaultDevice(String serial){
+    public static void setDefaultDevice(String serial){
         defaultDevice = serial;
         saveConfig();
         logcater.rerun();
     }
     
-    static void saveConfig(){
+    public static void saveConfig(){
         String apppath = XPlatform.getAppDirectory().appendPath("plugins").appendPath("xandroid");
         String sdkconf  = apppath.appendPath("sdk.conf");
         
@@ -303,7 +303,7 @@ class XAndroid : IXPlugin{
         return bSuccess;
     }
     
-    static bool createQXAndroidApp(WizardLoader loader, String projectName, String projectDir, String uuid, IProject ownProject, bool addToProject,String appName, String packageName){
+    public static bool createQXAndroidApp(WizardLoader loader, String projectName, String projectDir, String uuid, IProject ownProject, bool addToProject,String appName, String packageName){
         String apputemp = String.formatPath(XPlatform.getAppDirectory().appendPath("plugins").appendPath("xandroid").appendPath("androidapp.utmp"), false);
         if (uuid.equals(cocosandroid)){
             apputemp = String.formatPath(XPlatform.getAppDirectory().appendPath("plugins").appendPath("xandroid").appendPath("androidgame.utmp"), false);
@@ -505,7 +505,7 @@ class XAndroid : IXPlugin{
         }
     }
     
-    static void openSdkManager(){
+    public static void openSdkManager(){
         String errstr = checkBuildTools();
         if (android_sdk_root == nilptr || android_sdk_root.length() == 0){    
             workspace.RunOnUi(new UIRunnable(){
@@ -536,7 +536,7 @@ class XAndroid : IXPlugin{
         }
     }
     
-    static void openSettingDialog(){
+    public static void openSettingDialog(){
         QXDialog newDlg = new QXDialog();
         newDlg.create();
         byte [] buffer = __xPackageResource("sdk_setting.ui");
@@ -547,7 +547,7 @@ class XAndroid : IXPlugin{
         }
     }
     
-    static void openDeviceDialog(){
+    public static void openDeviceDialog(){
         QXDialog newDlg = new QXDialog();
         newDlg.create();
         byte [] buffer = __xPackageResource("devlst.ui");
@@ -558,7 +558,7 @@ class XAndroid : IXPlugin{
         }
     }
     
-    static void setAndroidSdkFolder(String java, String sdk, String ndk, String apilevel, String buildTools){
+    public static void setAndroidSdkFolder(String java, String sdk, String ndk, String apilevel, String buildTools){
         java_sdk_root = java;
         android_sdk_root = sdk;
         android_ndk_root = ndk;
@@ -773,7 +773,7 @@ class XAndroid : IXPlugin{
         return false;
     }
     
-    static Device [] listDevice(){
+    public static Device [] listDevice(){
         String [] arg = {"adb", "devices"};
         String resp = executeCmd(arg);
         
@@ -803,7 +803,7 @@ class XAndroid : IXPlugin{
     }
     
     
-    static void queryDeviceModel(Device dev){
+    public static void queryDeviceModel(Device dev){
         if (dev.type.equals("offline") || dev.type.equals("unknow")){
             dev.model = "unknow";
             return;
@@ -852,11 +852,11 @@ class XAndroid : IXPlugin{
         return buffer.toString();
     }
     
-    static class ProcessStream{
-        void onStreamOut(byte [] data, int pos, int len);
+    public static class ProcessStream{
+        public void onStreamOut(byte [] data, int pos, int len);
     };
     
-    static void readForProcess(ProcessStream out, Process _process){
+    public static void readForProcess(ProcessStream out, Process _process){
 		try{
 			int rd = 0;
 			byte [] buffer = new byte[1024];
@@ -877,7 +877,7 @@ class XAndroid : IXPlugin{
         Process process = new Process(app , args);
         process.setWorkDirectory(workdir);
         try{
-            if (process.create(false, true, false, false)) {
+            if (process.create(Process.StdOut | Process.RedirectStdErr)) {
                 if (wait){
                     readForProcess(ps, process);
                     process.waitFor(-1);
@@ -896,7 +896,7 @@ class XAndroid : IXPlugin{
         return false;
     }
     
-    static String getAdbPath(){
+    public static String getAdbPath(){
         String adk_path = android_sdk_root;
         if (adk_path == nilptr || adk_path.length() == 0){
             return nilptr;
@@ -925,7 +925,7 @@ class XAndroid : IXPlugin{
         Process process = new Process(adb_path , args);
         process.setWorkDirectory(adb_folder);
         try{
-            if (process.create(false, true, false, false)) {
+            if (process.create(Process.StdOut | Process.RedirectStdErr)) {
                 readForProcess(ps, process);
                 process.waitFor(-1);
                 return true;
@@ -967,16 +967,16 @@ class XAndroid : IXPlugin{
         String packageName;
         String mainActivity;
         
-        AndroidInfo(String p, String m){
+        public AndroidInfo(String p, String m){
             packageName = p;
             mainActivity = m;
         }
         
-        String getEntry(){
+        public String getEntry(){
             return packageName + "/" + mainActivity;
         }
         
-        bool success(){
+        public bool success(){
             return (packageName != nilptr) && (packageName.length() != 0) && (mainActivity != nilptr) && (mainActivity.length() != 0);
         }
     };
@@ -1095,7 +1095,7 @@ class XAndroid : IXPlugin{
         }
     }
     
-    static bool mkdirs(String path){
+    public static bool mkdirs(String path){
         if (XPlatform.existsSystemFile(path) == false){
             if (XPlatform.mkdir(path) == false){
                 mkdirs(path.findVolumePath());

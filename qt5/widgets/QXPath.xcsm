@@ -3,54 +3,54 @@
 
 class QXPath : QXCore{
 
-	QXPath(){
+	public QXPath(){
 		nativehandle = createNObject(QType.qtPath, 0);
         if (nativehandle == 0){
 			throw new IllegalArgumentException("can not new QXPath");
         }
     }
     
-    void moveto(double x, double y){
+    public void moveto(double x, double y){
 		double [] param = {x, y};
 		pointer_intlong2(param, PATHMOVETO, nativehandle, 0);
     }
     
-    void lineto(double x, double y){
+    public void lineto(double x, double y){
 		double [] param = {x, y};
 		pointer_intlong2(param, PATHLINETO, nativehandle, 0);
     }
     
-    void arcmoveto(double l,double t,double r,double b,double angle){
+    public void arcmoveto(double l,double t,double r,double b,double angle){
 		double [] param = {l, t, r, b, angle};
 		pointer_intlong2(param, PATHARCMOVETO, nativehandle, 0);
     }
     
-    void arcto(double l,double t,double r,double b,double angle, double length){
+    public void arcto(double l,double t,double r,double b,double angle, double length){
 		double [] param = {l, t, r, b, angle, length};
 		pointer_intlong2(param, PATHARCTO, nativehandle, 0);
     }
     
-    void cubicto(double c1x,double c1y,double c2x,double c2y,double ex, double ey){
+    public void cubicto(double c1x,double c1y,double c2x,double c2y,double ex, double ey){
 		double [] param = {c1x, c1y, c2x, c2y, ex, ey};
 		pointer_intlong2(param, CUBICTO, nativehandle, 0);
     }
     
-    void quadto(double c1x,double c1y,double ex, double ey){
+    public void quadto(double c1x,double c1y,double ex, double ey){
 		double [] param = {c1x, c1y, ex, ey};
 		pointer_intlong2(param, QUADTO, nativehandle, 0);
     }
     
-    void addRect(double l,double t,double r,double b){
+    public void addRect(double l,double t,double r,double b){
 		double [] param = {l, t, r, b};
 		pointer_intlong2(param, ADDRECT, nativehandle, 0);
     }
     
-    void addEllipse(double l,double t,double r,double b){
+    public void addEllipse(double l,double t,double r,double b){
 		double [] param = {l, t, r, b};
 		pointer_intlong2(param, ADDELLIPSE, nativehandle, 0);
     }
     
-    void finalize(){
+    public void finalize(){
 		widget_slot(nativehandle, PATHCTOR);
     }
 };

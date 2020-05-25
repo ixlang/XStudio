@@ -7,8 +7,8 @@ class ConfigMgr : QXDialog {
     QXPushButton btnClone;
     QXPushButton btnDel;
     QXPushButton btnClose;
-    XProperites proWnd;
-    Project _curproject;
+    public XProperites proWnd;
+    public Project _curproject;
 
     void onAttach() {
 
@@ -74,7 +74,7 @@ class ConfigMgr : QXDialog {
 
                 String oldConfigName = _listview.getItemText(items[0], 0);
 
-                if (oldConfigName.equals(_curproject.currentConfig.getName())) {
+                if (oldConfigName.equals(_curproject.getCurrentConfig().getName())) {
                     QXMessageBox.Critical("错误", "不能删除正在使用的配置", QXMessageBox.Ok, QXMessageBox.Ok);
                     return ;
                 }

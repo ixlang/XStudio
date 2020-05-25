@@ -5,23 +5,23 @@ class DownloadManager : QXDialog{
     QXTreeView listtask;
     QXPushButton btncancel, btnclose;
     QXLabel lblstat;
-    static DownloadManager _dlmgrwin;
+    public static DownloadManager _dlmgrwin;
  
     
-    class ItemTask{
-        ItemTask(String k, String u, int p){
+    public class ItemTask{
+        public ItemTask(String k, String u, int p){
             name = k;
             url = u;
             progress = p;
         }
         
-        long item;
-        String name;
-        String url;
-        int progress;
-        bool deleted = false;
+        public long item;
+        public String name;
+        public String url;
+        public int progress;
+        public bool deleted = false;
         
-        void update(int p){
+        public void update(int p){
             progress = p;
             deleted = false;
         }
@@ -29,7 +29,7 @@ class DownloadManager : QXDialog{
     
     Map<String, ItemTask> _tasklist = new Map<String, ItemTask>();
     
-    void onAttach() override {
+    public void onAttach() override {
         listtask = (QXTreeView)attachByName(new QXTreeView(), "listtask");
         btncancel = (QXPushButton)attachByName(new QXPushButton(), "btncancel");
         btnclose = (QXPushButton)attachByName(new QXPushButton(), "btnclose");
@@ -80,7 +80,7 @@ class DownloadManager : QXDialog{
     }
     
     
-    void setAllDelete(){
+    public void setAllDelete(){
         Map.Iterator<String, ItemTask> iter = _tasklist.iterator();
         while (iter.hasNext()){
             iter.getValue().deleted = true;
@@ -88,12 +88,12 @@ class DownloadManager : QXDialog{
         }
     }
     
-    bool onClose()override{
+    public bool onClose()override{
         _dlmgrwin = nilptr;
         return true;
     }
     
-    void loadTask(){
+    public void loadTask(){
         setAllDelete();
         List<String> keys = DownloadCenter.getKeys();
         List.Iterator<String>  iter = keys.iterator();
@@ -114,7 +114,7 @@ class DownloadManager : QXDialog{
     
     
     
-    void updateListView(){
+    public void updateListView(){
         Map.Iterator<String, ItemTask> iter = _tasklist.iterator();
         while (iter.hasNext()){
             ItemTask it = iter.getValue();
@@ -133,7 +133,7 @@ class DownloadManager : QXDialog{
         }
     }
     
-    static void updateProgress(){
+    public static void updateProgress(){
         if (_dlmgrwin != nilptr){
             _dlmgrwin.loadTask();
         }

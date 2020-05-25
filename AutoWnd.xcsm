@@ -9,17 +9,17 @@ class AutoWnd : ListDockWidget{
     static JsonObject s_root;
     Object serlock = new Object();
 	int serial = 0;
-	static AutoWnd auto_wnd;
+	public static AutoWnd auto_wnd;
     Vector<JsonObject> queriedObjects = new Vector<JsonObject>();
     JsonNode saveState;
-    class Range{
-		long start;
-        long length;
-        long object;
-        long itemload;
-        int unit;
+    public class Range{
+		public long start;
+        public long length;
+        public long object;
+        public long itemload;
+        public int unit;
         
-        Range(long s,long l,long o,int u, long load){
+        public Range(long s,long l,long o,int u, long load){
 			start = s ;
             length = l;
             object = o;
@@ -30,11 +30,11 @@ class AutoWnd : ListDockWidget{
     
     Map<long, Range> array_objects = new Map<long, Range>();
     
-	void onListItemClicked(QXTreeView tree,long item, int column)override{
+	public void onListItemClicked(QXTreeView tree,long item, int column)override{
 		
     }
     
-	void onListItemDoubleClicked(QXTreeView tree,long item, int column)override{
+	public void onListItemDoubleClicked(QXTreeView tree,long item, int column)override{
 	    
         long objectId = 0;
         
@@ -54,17 +54,17 @@ class AutoWnd : ListDockWidget{
 				td.create(caption, text.replace(" ↩ ", "\n")
 							.replace(" ↵ ", "\r")
 							.replace(" ⇥ ", "\t")
-                            .replace(" ⇤ ", "\b"));
+                            .replace(" ⇤ ", "\b"), nilptr, false);
             }
         }
 	}
     
     
-    void onListItemExpanded(QXTreeView tree,long item)override{
+    public void onListItemExpanded(QXTreeView tree,long item)override{
         expandItem(tree, item);
 	}
     
-    void expandItem(QXTreeView tree,long item){
+    public void expandItem(QXTreeView tree,long item){
 		if (expandArrays(item) == false){
 			long objectId = tree.getItemTag(item, 0);
 			if (objectId != 0){
@@ -92,7 +92,7 @@ class AutoWnd : ListDockWidget{
     }
     
     
-    bool expandArrays(long item){
+    public bool expandArrays(long item){
 		Map.Iterator<long, Range> iter = array_objects.find(item);
 		if (iter != nilptr){
 			QXTreeView list = getList();
@@ -113,31 +113,31 @@ class AutoWnd : ListDockWidget{
 		return false;
     }
     
-    void onQueryObject(JsonObject object){
+    public void onQueryObject(JsonObject object){
 		synchronized(queriedObjects){
 			queriedObjects.add(object);
             Notify(QUERYOBJECT);
         }
     }
     
-    String getListName()override{ return "autolist"; }
+    public String getListName()override{ return "autolist"; }
     
-    String [] getColumn()override{
+    public String [] getColumn()override{
  
 		String [] columns = {"名称", "类型", "值", "ID"};
         return columns;
     }
     
-    int [] getColumnWidths()override{ 
+    public int [] getColumnWidths()override{ 
 		int [] ws = {150, 150, 200, 100};
         return ws;
     }
     
-    void onCreate(){
+    public void onCreate(){
 		auto_wnd = this;
     }
     
-    static void setFrameInfo(long tid, JsonObject json){
+    public static void setFrameInfo(long tid, JsonObject json){
         synchronized(auto_wnd){
 			s_tid = tid;
 			s_root = json;
@@ -145,7 +145,7 @@ class AutoWnd : ListDockWidget{
         }
     }
     
-	void onNotification(long id){
+	public void onNotification(long id){
 		if (id == REFRESH_AUTO){
 			 synchronized(auto_wnd){
 				if (s_root != nilptr){
@@ -165,7 +165,7 @@ class AutoWnd : ListDockWidget{
         
 	}
     
-    void loadObject(JsonObject json){
+    public void loadObject(JsonObject json){
 		synchronized(serlock){
 			QXTreeView list = getList();
 			//long id = json.getString("id").parseLong();
@@ -180,7 +180,7 @@ class AutoWnd : ListDockWidget{
 						String content = text_root.getString("value");
 						String caption = qid.substring(7, qid.length());
                         caption = caption + " : length=" + content.length();
-						td.create(caption, content);
+						td.create(caption, content, nilptr, false);
 					}catch(Exception e){
 					
 					}
@@ -222,7 +222,7 @@ class AutoWnd : ListDockWidget{
         }
     }
         
-    static void clear(){
+    public static void clear(){
 		synchronized(auto_wnd){
 			synchronized(auto_wnd.serlock){
 				auto_wnd.serial++;
@@ -235,7 +235,7 @@ class AutoWnd : ListDockWidget{
     
     Map<long, JsonNode> expandTask = new Map<long, JsonNode>();
     
-    void querySaveState(long item){
+    public void querySaveState(long item){
         try{
             JsonNode node = expandTask.get(item);
             if (node != nilptr){
@@ -249,14 +249,14 @@ class AutoWnd : ListDockWidget{
         }
     }
     
-    void expandItem(long item, JsonNode child){
+    public void expandItem(long item, JsonNode child){
         QXTreeView list = getList();
         expandTask.put(item, child);
         list.setExpand(item,true);
         //expandItem(list, item);
     }
     
-    void applyState(){
+    public void applyState(){
         if (saveState == nilptr){
             return;
         }
@@ -282,7 +282,7 @@ class AutoWnd : ListDockWidget{
         applyStateEx(items, state);
     }
     
-    void applyStateEx(long [] items, JsonArray state){
+    public void applyStateEx(long [] items, JsonArray state){
         QXTreeView list = getList();
         int stlen = state.length();
         for (int i = 0; i < items.length; i++){
@@ -305,7 +305,7 @@ class AutoWnd : ListDockWidget{
         }
     }
     
-    void parseFrameInfo(long tid, JsonObject json){
+    public void parseFrameInfo(long tid, JsonObject json){
     
 		//_system_.output(json.toString(false));
 		JsonArray stack = (JsonArray)json.get("stack");
@@ -351,7 +351,7 @@ class AutoWnd : ListDockWidget{
         WatchWnd.watchesWnd.parseWatchInfoCore(watch);
     }
     
-    long getSplit(long length){
+    public long getSplit(long length){
 		long i = 100;
         while (i < length){
 			i *= 10;
@@ -359,14 +359,14 @@ class AutoWnd : ListDockWidget{
         return i / 10;
     }
     
-    void displayArray(QXTreeView list, long item , long object,long start, long length, int unit, bool recursion){
+    public void displayArray(QXTreeView list, long item , long object,long start, long length, int unit, bool recursion){
 		if (length > 0){
 			long newitem = list.insertItem(item, nilptr, String.format("[%d~%d]", start, start + length - 1));
 			splitArray(list, newitem, object, start, length, unit, recursion);
         }
     }
     
-    void splitArray(QXTreeView list, long newitem , long object,long start, long length, int unit, bool recursion){
+    public void splitArray(QXTreeView list, long newitem , long object,long start, long length, int unit, bool recursion){
         if (unit >= 100){
             if (recursion == false){
 				long iditem = list.insertItem(newitem, nilptr, "array");
@@ -399,7 +399,7 @@ class AutoWnd : ListDockWidget{
     }
     
     
-    void displayValue(QXTreeView list, long item ,JsonObject valueroot){
+    public void displayValue(QXTreeView list, long item ,JsonObject valueroot){
 		if (valueroot.has("object_id")){
         
 			String objectId = valueroot.getString("object_id");
@@ -463,7 +463,7 @@ class AutoWnd : ListDockWidget{
 		
 		}
     }
-    void parseArrayValue(QXTreeView list, long item ,JsonObject valueroot){
+    public void parseArrayValue(QXTreeView list, long item ,JsonObject valueroot){
         long dataitem = list.insertItem(item, nilptr, "data");
 
         JsonArray valarr = (JsonArray)valueroot.get("value");
@@ -483,7 +483,7 @@ class AutoWnd : ListDockWidget{
         
     }
     
-    void parseMember(QXTreeView list, long item ,JsonObject valueroot){
+    public void parseMember(QXTreeView list, long item ,JsonObject valueroot){
         JsonArray valarr = (JsonArray)valueroot.get("value");
         if (valarr != nilptr){
 			for (int i =0; i < valarr.length(); i++ ){

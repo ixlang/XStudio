@@ -1,20 +1,9 @@
 //xlang Source, Name:XIntelliSense.xcs 
 //Date: Sun Aug 21:33:35 2018 
-class XIntelliSense{
+class XIntelliSense : IXIntelliSense{
 	long handle;
 	Project project;
     
-	static class XIntelliResult{
-		String name;
-		String type;
-		String prop;
-		XIntelliResult _class;
-		XIntelliResult[] params;
-        String source;
-        int line;
-        int row;
-	};
-	
 	const int XIS_NAME = 0,
 				XIS_TYPE  = 1,
 				XIS_CLAS = 2,
@@ -25,7 +14,7 @@ class XIntelliSense{
                 XIS_ROW = 7;
                 
                                 
-	XIntelliSense(Project proj, Configure configure){
+	public XIntelliSense(Project proj, Configure configure){
     
 		if (Setting.isIntellisense()){
 			project = proj;
@@ -43,7 +32,7 @@ class XIntelliSense{
 							for (int i = 0; i < libpath.length(); i++){
 								String var = libpath.getString(i);
 								if (var != nilptr){
-									addLibPath(handle, XPlatform.converToPlatformCharSet(var));
+									addLibPath(handle, XPlatform.converToPlatformCharSet(proj.map_variable(var)));
 								}
 							}
 						}
@@ -54,7 +43,7 @@ class XIntelliSense{
 						for (int i = 0; i < libs.length(); i++){
 							String var = libs.getString(i);
 							if (var != nilptr){
-								addLib(handle, XPlatform.converToPlatformCharSet(var));
+								addLib(handle, XPlatform.converToPlatformCharSet(proj.map_variable(var)));
 							}
 						}
 					}
@@ -64,7 +53,7 @@ class XIntelliSense{
 						for (int i = 0; i < links.length(); i++){
 							String var = links.getString(i);
 							if (var != nilptr){
-								addLink(handle, XPlatform.converToPlatformCharSet(var));
+								addLink(handle, XPlatform.converToPlatformCharSet(proj.map_variable(var)));
 							}
 						}
 					}
@@ -74,7 +63,7 @@ class XIntelliSense{
 					String ext = source.findExtension();
 					
 					if (ext != nilptr && (ext.equalsIgnoreCase(".x") || ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm") )){
-						addFile(handle, XPlatform.converToPlatformCharSet(source));
+						addFile(handle, XPlatform.converToPlatformCharSet(proj.map_variable(source)));
 					}
 				}
 				
@@ -82,7 +71,12 @@ class XIntelliSense{
         }
 	}
     
-    void appendLibpath(String path){
+    
+    public void setCommand(String , String){
+        
+    }
+    
+    public void appendLibpath(String path){
 		synchronized(this){
 			if (handle != 0){
 				addLibPath(handle, XPlatform.converToPlatformCharSet(path));
@@ -90,7 +84,7 @@ class XIntelliSense{
         }
     }
     
-    void appendLib(String path){
+    public void appendLib(String path){
 		synchronized(this){
 			if (handle != 0){
 				addLib(handle, XPlatform.converToPlatformCharSet(path));
@@ -98,7 +92,7 @@ class XIntelliSense{
 		}
     }
     
-    void appendLink(String path){
+    public void appendLink(String path){
 		synchronized(this){
 			if (handle != 0){
 				addLink(handle, XPlatform.converToPlatformCharSet(path));
@@ -106,7 +100,7 @@ class XIntelliSense{
 		}
     }
     
-    void addSource(String source){
+    public void addSource(String source){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -117,7 +111,7 @@ class XIntelliSense{
     }
     
 
-	XIntelliResult [] getIntelliSenseL(String source,int line){
+	public XIntelliResult [] getIntelliSenseL(String source,int line, int column){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -128,7 +122,7 @@ class XIntelliSense{
 		return getResult();
 	}
     
-    XIntelliResult [] getIntelliSenseObject(String source,int line, String name){
+    public XIntelliResult [] getIntelliSenseObject(String source,int line, int column, String name){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -139,7 +133,7 @@ class XIntelliSense{
 		return getResult();
 	}
      
-    XIntelliResult [] getIntelliSenseObjectM(String source,int line){
+    public XIntelliResult [] getIntelliSenseObjectM(String source,int line){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -150,7 +144,7 @@ class XIntelliSense{
 		return getResult();
 	}
     
-	XIntelliResult [] getIntelliSense(String source,String content, long pos){
+	public XIntelliResult [] getIntelliSense(String source,String content, long pos, int line, int column){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -162,8 +156,12 @@ class XIntelliSense{
 		}
 		return getResult();
 	}
-	
-	String getIntelliSenseMap(){
+    
+	public bool initializ()override{
+        return true;
+    }
+    
+	public String getIntelliSenseMap(){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -174,7 +172,7 @@ class XIntelliSense{
 		}
         return nilptr;
 	}
-	void update(String sourcePath, String content){
+	public void update(String sourcePath, String content){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -183,7 +181,7 @@ class XIntelliSense{
 			}
 		}
 	}
-    void updateSource(String sourcePath, String newFile){
+    public void updateSource(String sourcePath, String newFile){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -192,11 +190,80 @@ class XIntelliSense{
 			}
         }
     }
-	XIntelliResult [] getResult(){
+    
+    public WordRecognizer getWordRecognizer(String filepath){
+        return new WordRecognizer(){
+            bool isWord(char c, bool first)override{
+                return ((c =='_') || (c >= 'a' && c <='z') || (c >= 'A' && c <='Z') || ((first == false) && (c >= '0' && c <= '9')));
+            }
+            
+            bool isTriggedChar(char c)override{
+                return (c == '.');
+            }
+            
+            bool isDocument(String ext)override{
+                if (ext == nilptr){
+                    return false;
+                }
+                return (ext.equalsIgnoreCase(".x") || ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm"));
+            }
+            
+            String getFileFilter(String filepath, bool bopen){
+                return nilptr;
+            }
+        };
+    }
+    
+    
+    public class XLangIntelliResult : XIntelliResult{
+        public String name;
+        public String type;
+        public String prop;
+        public XLangIntelliResult _class;
+        public XLangIntelliResult[] params;
+        public String source;
+        public int line;
+        public int row;
+        
+        String get_name(){
+            return name;
+        }
+        
+        int get_type(){
+            return type.parseInt();
+        }
+        
+        bool hasProp(char c){
+            return -1 != prop.indexOf(c);
+        }
+        
+        XIntelliResult get_class(){
+            return _class;
+        }
+        
+        XIntelliResult[] get_params(){
+            return params;
+        }
+        
+        String get_source(){
+            return source;
+        }
+        
+        int get_line(){
+            return line;
+        }
+        
+        int get_row(){
+            return row;
+        }
+        
+    };
+    
+	public XIntelliResult [] getResult(){
 		if (Setting.isIntellisense() == false){
 			return nilptr;
 		}
-        XIntelliResult []  result  = nilptr;
+        XLangIntelliResult []  result  = nilptr;
         synchronized(this){
 			if (handle == 0){
 				return result;
@@ -205,10 +272,10 @@ class XIntelliSense{
 			if (count == 0){
 				return nilptr;
 			}	
-			result = new XIntelliResult[count];
+			result = new XLangIntelliResult[count];
 			
 			for (int i = 0; i < count; i ++){
-				result[i] = new XIntelliResult();
+				result[i] = new XLangIntelliResult();
 				result[i].name = getIntelliSenseItemInfo(handle, i, XIS_NAME);
 				result[i].type = getIntelliSenseItemInfo(handle, i, XIS_TYPE);
 				result[i].prop = getIntelliSenseItemInfo(handle, i, XIS_PROP);
@@ -216,22 +283,22 @@ class XIntelliSense{
 				result[i].line = getIntelliSenseItemInfo(handle, i, XIS_LINE).parseInt();
 				result[i].row = getIntelliSenseItemInfo(handle, i, XIS_ROW).parseInt();
 				
-				result[i]._class = new XIntelliResult();
+				result[i]._class = new XLangIntelliResult();
 				result[i]._class.name = getIntelliSenseItemInfo(handle, i, XIS_CLAS);
 				result[i]._class.type = "31";
 
 				if (result[i].type.equals("23")){
 					int pc = getIntelliSenseFunctionParamCount(handle, i);
-					result[i].params = new XIntelliResult[pc];
+					result[i].params = new XLangIntelliResult[pc];
 					for (int x =0; x < pc; x ++){
-						result[i].params[x] = new XIntelliResult();
+						result[i].params[x] = new XLangIntelliResult();
 						result[i].params[x].name = getIntelliSenseFunctionParamInfo(handle, i, x, XIS_NAME);
 						result[i].params[x].type = getIntelliSenseFunctionParamInfo(handle, i, x, XIS_TYPE);
 						result[i].params[x].source = getIntelliSenseFunctionParamInfo(handle, i, x,XIS_SRC);
 						result[i].params[x].line = getIntelliSenseFunctionParamInfo(handle, i, x,XIS_LINE).parseInt();
 						result[i].params[x].row = getIntelliSenseFunctionParamInfo(handle, i, x,XIS_ROW).parseInt();
 				
-						result[i].params[x]._class = new XIntelliResult();
+						result[i].params[x]._class = new XLangIntelliResult();
 						result[i].params[x]._class.name = getIntelliSenseFunctionParamInfo(handle, i, x, XIS_CLAS);
 						result[i].params[x]._class.type = "31";
 					}
@@ -241,7 +308,7 @@ class XIntelliSense{
 		return result;
 	}
     
-    void close(){
+    public void close(){
 		synchronized(this){
 			if (handle != 0){
 				destroyXProject(handle);
@@ -251,7 +318,7 @@ class XIntelliSense{
 		}
     }
 
-	void finalize(){
+	public void finalize(){
 		close();
     }
     

@@ -1,12 +1,12 @@
 
 class QXObject : QXCore {
-    static const int
+    public static const int
     ElideLeft = 0,
     ElideRight = 1,
     ElideMiddle = 2,
     ElideNone = 3;
 
-    static const int
+    public static const int
     ArrowCursor = 0,
     UpArrowCursor = 1,
     CrossCursor = 2,
@@ -33,7 +33,7 @@ class QXObject : QXCore {
     BitmapCursor = 24,
     CustomCursor = 25;
 
-    static const int
+    public static const int
     Key_Escape = 0x01000000,                // misc keys
     Key_Tab = 0x01000001,
     Key_Backtab = 0x01000002,
@@ -502,7 +502,7 @@ class QXObject : QXCore {
     Key_CameraFocus = 0x01100021,
     Key_unknown = 0x01ffffff;
 
-    static const int 
+    public static const int 
         LeftButton       = 0x00000001,
         RightButton      = 0x00000002,
         MidButton        = 0x00000004, // ### Qt 6: remove me
@@ -541,7 +541,7 @@ class QXObject : QXCore {
         // 4 high-order bits remain available for future use (0x08000000 through 0x40000000).
         MouseButtonMask  = 0xffffffff;
     
-    static const int NoModifier           = 0x00000000,
+    public static const int NoModifier           = 0x00000000,
                      ShiftModifier        = 0x02000000,
                      ControlModifier      = 0x04000000,
                      AltModifier          = 0x08000000,
@@ -551,7 +551,7 @@ class QXObject : QXCore {
                      // Do not extend the mask to include 0x01000000
                      KeyboardModifierMask = 0xfe000000;
 
-    static const int Invalid = 0,
+    public static const int Invalid = 0,
                      Bool = 1,
                      Int = 2,
                      UInt = 3,
@@ -617,345 +617,345 @@ class QXObject : QXCore {
                      UserType = 1024,
                      LastType = -1; // need this so that gcc >= 3.4 allocates 32 bits for Type
 
-    static class onMouseEventListener {
-        void onMouseButtonPress(QXObject obj, int Button, int x, int y, int flags, int source) {
+    public static class onMouseEventListener {
+        public void onMouseButtonPress(QXObject obj, int Button, int x, int y, int flags, int source) {
         }
-        void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source) {
+        public void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source) {
         }
-        void onMouseButtonDblClick(QXObject obj, int Button, int x, int y, int flags, int source) {
+        public void onMouseButtonDblClick(QXObject obj, int Button, int x, int y, int flags, int source) {
         }
-        void onMouseMove(QXObject obj, int Button, int x, int y, int flags, int source) {
+        public void onMouseMove(QXObject obj, int Button, int x, int y, int flags, int source) {
         }
-        void onWheel(QXObject obj, int button, int x,int y,int Orientation,int delta, bool inverted) {
+        public void onWheel(QXObject obj, int button, int x,int y,int Orientation,int delta, bool inverted) {
         }
     };
 
-    static class onKeyEventListener {
-        bool onKeyPress(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier) {
+    public static class onKeyEventListener {
+        public bool onKeyPress(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier) {
             return true;
         }
-        bool onKeyRelease(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier) {
+        public bool onKeyRelease(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier) {
             return true;
         }
     };
 
-    static class onClickListener {
-        void onClick(QXObject obj, bool checked) {
+    public static class onClickListener {
+        public void onClick(QXObject obj, bool checked) {
         }
-        void onToggle(QXObject obj, bool checked) {
+        public void onToggle(QXObject obj, bool checked) {
         }
-        void onPress(QXObject obj) {
+        public void onPress(QXObject obj) {
         }
-        void onRelease(QXObject obj) {
-        }
-    };
-
-    static class onFocusEventListener {
-        void onFocusIn(QXObject obj, bool focus, int reson) {
-        }
-        void onFocusOut(QXObject obj, bool focus, int reson) {
-        }
-        void onFocusAboutToChange(QXObject obj, bool focus, int reson) {
+        public void onRelease(QXObject obj) {
         }
     };
 
-    static class onScopeEventListener {
-        void onEnter(QXObject obj,int x, int y) {
+    public static class onFocusEventListener {
+        public void onFocusIn(QXObject obj, bool focus, int reson) {
         }
-        void onLeave(QXObject obj) {
+        public void onFocusOut(QXObject obj, bool focus, int reson) {
         }
-    };
-
-    static class onPaintListener {
-        void onPaint(QXObject obj, int l,int t, int r,int b, long hpaint) {
+        public void onFocusAboutToChange(QXObject obj, bool focus, int reson) {
         }
     };
 
-    static class onNotifyListener {
-        void onNotify(QXObject obj, long eventid) {
+    public static class onScopeEventListener {
+        public void onEnter(QXObject obj,int x, int y) {
+        }
+        public void onLeave(QXObject obj) {
         }
     };
 
-    static class onLayoutEventListener {
-        void onMove(QXObject obj, int x,int y,int oldx,int oldy) {
-        }
-        void onResize(QXObject obj, int w, int h, int oldw, int oldh) {
+    public static class onPaintListener {
+        public void onPaint(QXObject obj, int l,int t, int r,int b, long hpaint) {
         }
     };
 
-    static class onTreeViewItemEvent {
-        void onItemPressed(QXTreeView, long item, int column) {
-        }
-        void onItemClicked(QXTreeView,long item, int column) {
-        }
-        void onItemDoubleClicked(QXTreeView,long item, int column) {
-        }
-        void onItemActived(QXTreeView,long item, int column) {
-        }
-        void onItemEntered(QXTreeView,long item, int column) {
-        }
-        void onItemChanged(QXTreeView,long item, int column) {
-        }
-        void onItemExpanded(QXTreeView,long item) {
-        }
-        void onItemCollapsed(QXTreeView,long item) {
-        }
-        void onCurrentItemChanged(QXTreeView,long current, long previous) {
-        }
-        void onItemSelectionChanged(QXTreeView) {
-        }
-    };
-    static class onUpdateListener {
-        void onUpdate(QXObject obj) {
+    public static class onNotifyListener {
+        public void onNotify(QXObject obj, long eventid) {
         }
     };
 
-    static class onEventListener {
-        void onTrigger(QXObject obj) {
+    public static class onLayoutEventListener {
+        public void onMove(QXObject obj, int x,int y,int oldx,int oldy) {
+        }
+        public void onResize(QXObject obj, int w, int h, int oldw, int oldh) {
         }
     };
 
-    static class onComboBoxEventListener {
-        void onCurrentTextChange(QXObject obj, String text) {
+    public static class onTreeViewItemEvent {
+        public void onItemPressed(QXTreeView, long item, int column) {
         }
-        void onActivated(QXObject obj, int id) {
+        public void onItemClicked(QXTreeView,long item, int column) {
         }
-        void onItemSelected(QXObject obj, int id) {
+        public void onItemDoubleClicked(QXTreeView,long item, int column) {
+        }
+        public void onItemActived(QXTreeView,long item, int column) {
+        }
+        public void onItemEntered(QXTreeView,long item, int column) {
+        }
+        public void onItemChanged(QXTreeView,long item, int column) {
+        }
+        public void onItemExpanded(QXTreeView,long item) {
+        }
+        public void onItemCollapsed(QXTreeView,long item) {
+        }
+        public void onCurrentItemChanged(QXTreeView,long current, long previous) {
+        }
+        public void onItemSelectionChanged(QXTreeView) {
+        }
+    };
+    public static class onUpdateListener {
+        public void onUpdate(QXObject obj) {
         }
     };
 
-    static class onDragListener {
-        bool onDragEnter(QXObject obj, int l,int t,int r,int b) {
+    public static class onEventListener {
+        public void onTrigger(QXObject obj) {
+        }
+    };
+
+    public static class onComboBoxEventListener {
+        public void onCurrentTextChange(QXObject obj, String text) {
+        }
+        public void onActivated(QXObject obj, int id) {
+        }
+        public void onItemSelected(QXObject obj, int id) {
+        }
+    };
+
+    public static class onDragListener {
+        public bool onDragEnter(QXObject obj, int l,int t,int r,int b) {
             return true;
         }
-        bool onDragMove(QXObject obj,int l,int t,int r,int b) {
+        public bool onDragMove(QXObject obj,int l,int t,int r,int b) {
             return true;
         }
-        bool onDragLeave(QXObject obj,int l,int t,int r,int b) {
+        public bool onDragLeave(QXObject obj,int l,int t,int r,int b) {
             return true;
         }
-        void onDrop(QXObject obj,Object [] object) {
+        public void onDrop(QXObject obj,Object [] object) {
         }
     };
 
-    static class onStatusListener {
-        void onCreate(QXObject obj) {
+    public static class onStatusListener {
+        public void onCreate(QXObject obj) {
         }
-        void onDestroy(QXObject obj) {
+        public void onDestroy(QXObject obj) {
         }
-        void onShow(QXObject obj) {
+        public void onShow(QXObject obj) {
         }
-        void onHide(QXObject obj) {
+        public void onHide(QXObject obj) {
         }
-        bool onClose(QXObject obj) {
+        public bool onClose(QXObject obj) {
             return true;
         }
-        void onQuit(QXObject obj) {
+        public void onQuit(QXObject obj) {
         }
-        void onParentChange(QXObject obj) {
+        public void onParentChange(QXObject obj) {
         }
-        void onWindowStateChange(QXObject obj, int state, int oldState) {}
+        public void onWindowStateChange(QXObject obj, int state, int oldState) {}
     };
 
-    static class TableWidgetEventListener {
-        void onCellChange(QXTableWidget object, int row,int column) {
+    public static class TableWidgetEventListener {
+        public void onCellChange(QXTableWidget object, int row,int column) {
 
         }
-        void onItemChange(QXTableWidget object,long item) {
+        public void onItemChange(QXTableWidget object,long item) {
 
         }
-        void onCellPress(QXTableWidget object, int row,int column) {
+        public void onCellPress(QXTableWidget object, int row,int column) {
 
         }
-        void onItemPress(QXTableWidget object,long item) {
+        public void onItemPress(QXTableWidget object,long item) {
 
         }
-        void onCellClick(QXTableWidget object, int row,int column) {
+        public void onCellClick(QXTableWidget object, int row,int column) {
 
         }
-        void onItemClick(QXTableWidget object,long item) {
+        public void onItemClick(QXTableWidget object,long item) {
 
         }
-        void onCellDBClick(QXTableWidget object, int row,int column) {
+        public void onCellDBClick(QXTableWidget object, int row,int column) {
 
         }
-        void onItemDBClick(QXTableWidget object,long item) {
+        public void onItemDBClick(QXTableWidget object,long item) {
 
         }
-        void onCellEnter(QXTableWidget object, int row,int column) {
+        public void onCellEnter(QXTableWidget object, int row,int column) {
 
         }
-        void onItemEnter(QXTableWidget object,long item) {
+        public void onItemEnter(QXTableWidget object,long item) {
 
         }
-        void onCellActived(QXTableWidget object, int row,int column) {
+        public void onCellActived(QXTableWidget object, int row,int column) {
 
         }
-        void onItemActived(QXTableWidget object,long item) {
+        public void onItemActived(QXTableWidget object,long item) {
 
         }
     };
-    static class SciEventListener {
-        void QON_SELCHANGED(QXSci sci, bool yes) {	}
-        void ON_AUTOCCANCELLED(QXSci sci) {	}
-        void ON_AUTOCCHARDELETED(QXSci sci) {	}
-        void ON_AUTOCCOMPLETED(QXSci sci,String selection, int position, int ch, int method) {	}
-        void ON_AUTOCSELECTION(QXSci sci,String selection, int position, int ch, int method) {	}
-        void ON_AUTOCSELECTION(QXSci sci,String selection, int position) {	}
-        void SCEN_CHANGE(QXSci sci) {	}
-        void ON_CALLTIPCLICK(QXSci sci,int direction) {	}
-        void ON_CHARADDED(QXSci sci,int charadded) {	}
-        void ON_DOUBLECLICK(QXSci sci,int position, int line, int modifiers) {	}
-        void ON_DWELLEND(QXSci sci,int position, int x, int y) {	}
-        void ON_DWELLSTART(QXSci sci,int position, int x, int y) {	}
-        void ON_FOCUSIN(QXSci sci) {	}
-        void ON_FOCUSOUT(QXSci sci) {	}
-        void ON_HOTSPOTCLICK(QXSci sci,int position, int modifiers) {	}
-        void ON_HOTSPOTDOUBLECLICK(QXSci sci,int position, int modifiers) {	}
-        void ON_HOTSPOTRELEASECLICK(QXSci sci, int position, int modifiers) {	}
-        void ON_INDICATORCLICK(QXSci sci, int position, int modifiers) {	}
-        void ON_INDICATORRELEASE(QXSci sci, int position, int modifiers) {	}
-        void ON_MACRORECORD(QXSci sci, int msg, long wparam, long lparam) {	}
-        void ON_MARGINCLICK(QXSci sci, int position, int modifiers, int margin) {	}
-        void ON_MARGINRIGHTCLICK(QXSci sci, int position, int modifiers, int margin) {	}
-        void ON_MODIFIED(QXSci sci,
+    public static class SciEventListener {
+        public void QON_SELCHANGED(QXSci sci, bool yes) {	}
+        public void ON_AUTOCCANCELLED(QXSci sci) {	}
+        public void ON_AUTOCCHARDELETED(QXSci sci) {	}
+        public void ON_AUTOCCOMPLETED(QXSci sci,String selection, int position, int ch, int method) {	}
+        public void ON_AUTOCSELECTION(QXSci sci,String selection, int position, int ch, int method) {	}
+        public void ON_AUTOCSELECTION(QXSci sci,String selection, int position) {	}
+        public void SCEN_CHANGE(QXSci sci) {	}
+        public void ON_CALLTIPCLICK(QXSci sci,int direction) {	}
+        public void ON_CHARADDED(QXSci sci,int charadded) {	}
+        public void ON_DOUBLECLICK(QXSci sci,int position, int line, int modifiers) {	}
+        public void ON_DWELLEND(QXSci sci,int position, int x, int y) {	}
+        public void ON_DWELLSTART(QXSci sci,int position, int x, int y) {	}
+        public void ON_FOCUSIN(QXSci sci) {	}
+        public void ON_FOCUSOUT(QXSci sci) {	}
+        public void ON_HOTSPOTCLICK(QXSci sci,int position, int modifiers) {	}
+        public void ON_HOTSPOTDOUBLECLICK(QXSci sci,int position, int modifiers) {	}
+        public void ON_HOTSPOTRELEASECLICK(QXSci sci, int position, int modifiers) {	}
+        public void ON_INDICATORCLICK(QXSci sci, int position, int modifiers) {	}
+        public void ON_INDICATORRELEASE(QXSci sci, int position, int modifiers) {	}
+        public void ON_MACRORECORD(QXSci sci, int msg, long wparam, long lparam) {	}
+        public void ON_MARGINCLICK(QXSci sci, int position, int modifiers, int margin) {	}
+        public void ON_MARGINRIGHTCLICK(QXSci sci, int position, int modifiers, int margin) {	}
+        public void ON_MODIFIED(QXSci sci,
                          int position, int modType,
                          String text, int length,
                          int linesAdded, int line,
                          int foldLevelNow, int foldLevelPrev,
                          int token, int annotationLinesAdded) {		}
-        void ON_MODIFYATTEMPTRO(QXSci sci) {	}
-        void ON_NEEDSHOWN(QXSci sci, int positino, int length) {	}
-        void ON_PAINTED(QXSci sci) {	}
-        void ON_SAVEPOINTLEFT(QXSci sci) {	}
-        void ON_SAVEPOINTREACHED(QXSci sci) {	}
-        void ON_STYLENEEDED(QXSci sci, int position) {	}
-        void ON_UPDATEUI(QXSci sci, int updated) {	}
-        void ON_USERLISTSELECTION(QXSci sci, String text, int wparam, int ch, int listCompletionMethod) {	}
-        void ON_USERLISTSELECTION(QXSci sci, String text, int wparam) {	}
-        void ON_ZOOM(QXSci sci) {	}
+        public void ON_MODIFYATTEMPTRO(QXSci sci) {	}
+        public void ON_NEEDSHOWN(QXSci sci, int positino, int length) {	}
+        public void ON_PAINTED(QXSci sci) {	}
+        public void ON_SAVEPOINTLEFT(QXSci sci) {	}
+        public void ON_SAVEPOINTREACHED(QXSci sci) {	}
+        public void ON_STYLENEEDED(QXSci sci, int position) {	}
+        public void ON_UPDATEUI(QXSci sci, int updated) {	}
+        public void ON_USERLISTSELECTION(QXSci sci, String text, int wparam, int ch, int listCompletionMethod) {	}
+        public void ON_USERLISTSELECTION(QXSci sci, String text, int wparam) {	}
+        public void ON_ZOOM(QXSci sci) {	}
     };
-    static class onEditEventListener {
-        void onTextChanged(QXObject, String ) {}
-        void onTextEdited(QXObject, String ) {}
-        void onCursorPositionChanged(QXObject, int,int) {}
-        void onReturnPressed(QXObject) {}
-        void onEditingFinished(QXObject) {}
-        void onSelectionChanged(QXObject) {}
+    public static class onEditEventListener {
+        public void onTextChanged(QXObject, String ) {}
+        public void onTextEdited(QXObject, String ) {}
+        public void onCursorPositionChanged(QXObject, int,int) {}
+        public void onReturnPressed(QXObject) {}
+        public void onEditingFinished(QXObject) {}
+        public void onSelectionChanged(QXObject) {}
     };
-    static class onContextMenuListener {
-        void onContextMenu(QXObject, int x,int y,int reson);
-    };
-
-    static class onActivateListener {
-        void onWindowActivate(QXObject) {}
-        void onWindowDeactivate(QXObject) {}
+    public static class onContextMenuListener {
+        public void onContextMenu(QXObject, int x,int y,int reson);
     };
 
-    static class onFileSystemChangeListener {
-        void onFileChanged(QXObject, String path);
-        void onDirChange(QXObject,String path);
+    public static class onActivateListener {
+        public void onWindowActivate(QXObject) {}
+        public void onWindowDeactivate(QXObject) {}
     };
 
-    void setOnFileSystemChangeListener(onFileSystemChangeListener l) {
+    public static class onFileSystemChangeListener {
+        public void onFileChanged(QXObject, String path);
+        public void onDirChange(QXObject,String path);
+    };
+
+    public void setOnFileSystemChangeListener(onFileSystemChangeListener l) {
         _fsweListener = l;
     }
-    TableWidgetEventListener  _tableenvlis = nilptr;
-    onFileSystemChangeListener _fsweListener = nilptr;
-    onEditEventListener	 _editEventListener = nilptr;
-    onMouseEventListener _mouseListener = nilptr;
-    onKeyEventListener   _keyListener = nilptr;
-    onFocusEventListener _focusListener = nilptr;
-    onScopeEventListener _scopeListener = nilptr;
-    onPaintListener      _paintEvent = nilptr;
-    onLayoutEventListener _layoutEvent = nilptr;
-    onStatusListener _statusEvent = nilptr;
-    onUpdateListener _updateListener = nilptr;
-    onEventListener _eventListener = nilptr;
-    onTreeViewItemEvent _treeitemevent = nilptr;
-    onNotifyListener    _notifyListener = nilptr;
-    onClickListener     _clicklistener = nilptr;
-    SciEventListener		_sciEventListener = nilptr;
-    onContextMenuListener	_contextMenuListener = nilptr;
-    onActivateListener _activateListener = nilptr;
-    onComboBoxEventListener _comboboxListener = nilptr;
-    onDragListener _dragListener = nilptr;
-    void setOnDragListener(onDragListener l) {
+    public TableWidgetEventListener  _tableenvlis = nilptr;
+    public onFileSystemChangeListener _fsweListener = nilptr;
+    public onEditEventListener	 _editEventListener = nilptr;
+    public onMouseEventListener _mouseListener = nilptr;
+    public onKeyEventListener   _keyListener = nilptr;
+    public onFocusEventListener _focusListener = nilptr;
+    public onScopeEventListener _scopeListener = nilptr;
+    public onPaintListener      _paintEvent = nilptr;
+    public onLayoutEventListener _layoutEvent = nilptr;
+    public onStatusListener _statusEvent = nilptr;
+    public onUpdateListener _updateListener = nilptr;
+    public onEventListener _eventListener = nilptr;
+    public onTreeViewItemEvent _treeitemevent = nilptr;
+    public onNotifyListener    _notifyListener = nilptr;
+    public onClickListener     _clicklistener = nilptr;
+    public SciEventListener		_sciEventListener = nilptr;
+    public onContextMenuListener	_contextMenuListener = nilptr;
+    public onActivateListener _activateListener = nilptr;
+    public onComboBoxEventListener _comboboxListener = nilptr;
+    public onDragListener _dragListener = nilptr;
+    public void setOnDragListener(onDragListener l) {
         _dragListener = l;
     }
-    void setOnTableWidgetEventListener(TableWidgetEventListener l) {
+    public void setOnTableWidgetEventListener(TableWidgetEventListener l) {
         _tableenvlis = l;
     }
-    void setOnComboBoxEventListener(onComboBoxEventListener l) {
+    public void setOnComboBoxEventListener(onComboBoxEventListener l) {
         _comboboxListener = l;
     }
-    void setOnActivateListener(onActivateListener l) {
+    public void setOnActivateListener(onActivateListener l) {
         _activateListener = l;
     }
-    void setOnContextMenuListener(onContextMenuListener l) {
+    public void setOnContextMenuListener(onContextMenuListener l) {
         _contextMenuListener = l;
     }
-    void setOnSciEventListener(SciEventListener l) {
+    public void setOnSciEventListener(SciEventListener l) {
         _sciEventListener = l;
     }
-    void setOnClickListener(onClickListener l) {
+    public void setOnClickListener(onClickListener l) {
         _clicklistener = l;
     }
 
-    void setOnNotifyListener(onNotifyListener l) {
+    public void setOnNotifyListener(onNotifyListener l) {
         _notifyListener = l;
     }
 
-    void setOnTreeViewItemEvent(onTreeViewItemEvent l) {
+    public void setOnTreeViewItemEvent(onTreeViewItemEvent l) {
         _treeitemevent = l;
     }
-    void setOnEventListener(onEventListener l) {
+    public void setOnEventListener(onEventListener l) {
         _eventListener = l;
     }
-    void setOnUpdateListener(onUpdateListener l) {
+    public void setOnUpdateListener(onUpdateListener l) {
         _updateListener = l;
     }
-    void setOnEditEventListener(onEditEventListener l) {
+    public void setOnEditEventListener(onEditEventListener l) {
         _editEventListener = l;
     }
-    void setOnMouseEventListener(onMouseEventListener l) {
+    public void setOnMouseEventListener(onMouseEventListener l) {
         _mouseListener = l;
     }
-    void setOnKeyEventListener(onKeyEventListener l) {
+    public void setOnKeyEventListener(onKeyEventListener l) {
         _keyListener = l;
     }
-    void setOnFocusEventListener(onFocusEventListener l) {
+    public void setOnFocusEventListener(onFocusEventListener l) {
         _focusListener = l;
     }
-    void setOnScopeEventListener(onScopeEventListener l) {
+    public void setOnScopeEventListener(onScopeEventListener l) {
         _scopeListener = l;
     }
-    void setOnPaintListener(onPaintListener l) {
+    public void setOnPaintListener(onPaintListener l) {
         _paintEvent = l;
     }
-    void setOnLayoutEventListener(onLayoutEventListener l) {
+    public void setOnLayoutEventListener(onLayoutEventListener l) {
         _layoutEvent = l;
     }
-    void setOnStatusListener(onStatusListener l) {
+    public void setOnStatusListener(onStatusListener l) {
         _statusEvent = l;
     }
 
-    void onAttach() {
+    public void onAttach() {
 
     }
 
-    QXObject() {
+    public QXObject() {
     }
 
-    QXObject(long handle) {
+    public QXObject(long handle) {
         super(handle);
     }
 
-    QXObject findByName(String name) {
+    public QXObject findByName(String name) {
         return (QXObject)findControl(nativehandle, name);
     }
 
-    QXObject attachByName(QXObject newObj, String name) {
+    public QXObject attachByName(QXObject newObj, String name) {
         newObj.nativehandle = attachControl(nativehandle, newObj, name);
         if (newObj.nativehandle != 0) {
             newObj.onAttach();
@@ -964,7 +964,7 @@ class QXObject : QXCore {
         return nilptr;
     }
 
-    bool attach(QXObject obj) {
+    public bool attach(QXObject obj) {
         nativehandle = core_attach(obj.nativehandle, this);
         if (nativehandle != 0) {
             onAttach();
@@ -973,729 +973,729 @@ class QXObject : QXCore {
         return false;
     }
 
-    String getName() {
+    public String getName() {
         return (String)core_getName(nativehandle);
     }
 
-    void setName(String name) {
+    public void setName(String name) {
         widget_slot_string(nativehandle, OBJECTSETNAME, name);
     }
 
-    String getClassName() {
+    public String getClassName() {
         return (String)core_getClassName(nativehandle);
     }
 
-    QXObject getParent() {
+    public QXObject getParent() {
         return (QXObject)core_getParent(nativehandle);
     }
 
-    void onTimer(int timeId) {}
+    public void onTimer(int timeId) {}
     ////
-    void onMouseButtonPress(int Button, int x, int y, int flags, int source) {
+    public void onMouseButtonPress(int Button, int x, int y, int flags, int source) {
         if (_mouseListener != nilptr) {
             _mouseListener.onMouseButtonPress(this, Button, x, y, flags, source);
         }
     }
 
-    void onMouseButtonRelease(int Button, int x, int y, int flags, int source) {
+    public void onMouseButtonRelease(int Button, int x, int y, int flags, int source) {
         if (_mouseListener != nilptr) {
             _mouseListener.onMouseButtonRelease(this, Button, x, y, flags, source);
         }
     }
 
-    void onMouseButtonDblClick(int Button, int x, int y, int flags, int source) {
+    public void onMouseButtonDblClick(int Button, int x, int y, int flags, int source) {
         if (_mouseListener != nilptr) {
             _mouseListener.onMouseButtonDblClick(this, Button, x, y, flags, source);
         }
     }
 
-    void onMouseMove(int Button, int x, int y, int flags, int source) {
+    public void onMouseMove(int Button, int x, int y, int flags, int source) {
         if (_mouseListener != nilptr) {
             _mouseListener.onMouseMove(this, Button, x, y, flags, source);
         }
     }
-    void onWheel(int button, int x,int y,int Orientation,int delta, bool inverted) {
+    public void onWheel(int button, int x,int y,int Orientation,int delta, bool inverted) {
         if (_mouseListener != nilptr) {
             _mouseListener.onWheel(this, button, x, y, Orientation, delta, inverted);
         }
     }
     ////
-    bool onKeyPress(int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier) {
+    public bool onKeyPress(int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier) {
         if (_keyListener != nilptr) {
             return _keyListener.onKeyPress(this, key, repeat, count, text, scanCode, virtualKey, modifier);
         }
         return true;
     }
-    bool onKeyRelease(int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier) {
+    public bool onKeyRelease(int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier) {
         if (_keyListener != nilptr) {
             return _keyListener.onKeyRelease(this, key, repeat, count, text, scanCode, virtualKey, modifier);
         }
         return true;
     }
-    void onFocusIn(bool focus, int reson) {
+    public void onFocusIn(bool focus, int reson) {
         if (_focusListener != nilptr) {
             _focusListener.onFocusIn(this, focus, reson);
         }
     }
-    void onFocusOut(bool focus, int reson) {
+    public void onFocusOut(bool focus, int reson) {
         if (_focusListener != nilptr) {
             _focusListener.onFocusOut(this, focus, reson);
         }
     }
-    void onFocusAboutToChange(bool focus, int reson) {
+    public void onFocusAboutToChange(bool focus, int reson) {
         if (_focusListener != nilptr) {
             _focusListener.onFocusAboutToChange(this, focus, reson);
         }
     }
-    void onEnter(int x, int y) {
+    public void onEnter(int x, int y) {
         if (_scopeListener != nilptr) {
             _scopeListener.onEnter(this, x, y);
         }
     }
-    void onLeave() {
+    public void onLeave() {
         if (_scopeListener != nilptr) {
             _scopeListener.onLeave(this);
         }
     }
-    void onPaint(int l,int t, int r,int b, long hpaint) {
+    public void onPaint(int l,int t, int r,int b, long hpaint) {
         if (_paintEvent != nilptr) {
             _paintEvent.onPaint(this, l, t, r, b, hpaint);
         }
     }
-    void onMove(int x,int y,int oldx,int oldy) {
+    public void onMove(int x,int y,int oldx,int oldy) {
         if (_layoutEvent != nilptr) {
             _layoutEvent.onMove(this, x, y, oldx, oldy);
         }
     }
-    void onResize(int w, int h, int oldw, int oldh) {
+    public void onResize(int w, int h, int oldw, int oldh) {
         if (_layoutEvent != nilptr) {
             _layoutEvent.onResize(this, w, h, oldw, oldh);
         }
     }
-    void onCreate() {
+    public void onCreate() {
         if (_statusEvent != nilptr) {
             _statusEvent.onCreate(this);
         }
     }
-    void onDestroy() {
+    public void onDestroy() {
         if (_statusEvent != nilptr) {
             _statusEvent.onDestroy(this);
         }
     }
-    void onShow() {
+    public void onShow() {
         if (_statusEvent != nilptr) {
             _statusEvent.onShow(this);
         }
     }
-    void onHide() {
+    public void onHide() {
         if (_statusEvent != nilptr) {
             _statusEvent.onHide(this);
         }
     }
-    bool onClose() {
+    public bool onClose() {
         if (_statusEvent != nilptr) {
             return _statusEvent.onClose(this);
         }
         return true;
     }
-    void onQuit() {
+    public void onQuit() {
         if (_statusEvent != nilptr) {
             _statusEvent.onQuit(this);
         }
     }
-    void onParentChange() {
+    public void onParentChange() {
         if (_statusEvent != nilptr) {
             _statusEvent.onParentChange(this);
         }
     }
 
-    void onTrigger() {
+    public void onTrigger() {
         if (_eventListener != nilptr) {
             _eventListener.onTrigger(this);
         }
     }
 
-    void onParentAboutToChange() {}
-    void onThreadChange() {}
-    void onWindowActivate() {
+    public void onParentAboutToChange() {}
+    public void onThreadChange() {}
+    public void onWindowActivate() {
         if (_activateListener != nilptr) {
             _activateListener.onWindowActivate(this);
         }
     }
-    void onWindowDeactivate() {
+    public void onWindowDeactivate() {
         if (_activateListener != nilptr) {
             _activateListener.onWindowDeactivate(this);
         }
     }
-    void onShowToParent() {}
-    void onHideToParent() {  }
-    void onClipboard() {     }
-    void onWinEventAct() {}
-    void onDeferredDelete() {}
-    bool onDragEnter(int l,int t,int r,int b) {
+    public void onShowToParent() {}
+    public void onHideToParent() {  }
+    public void onClipboard() {     }
+    public void onWinEventAct() {}
+    public void onDeferredDelete() {}
+    public bool onDragEnter(int l,int t,int r,int b) {
         if (_dragListener != nilptr) {
             return _dragListener.onDragEnter(this, l,t,r,b);
         }
         return true;
     }
-    bool onDragMove(int l,int t,int r,int b) {
+    public bool onDragMove(int l,int t,int r,int b) {
         if (_dragListener != nilptr) {
             return _dragListener.onDragMove(this, l,t,r,b);
         }
         return true;
     }
-    bool onDragLeave(int l,int t,int r,int b) {
+    public bool onDragLeave(int l,int t,int r,int b) {
         if (_dragListener != nilptr) {
             return _dragListener.onDragLeave(this, l,t,r,b);
         }
         return true;
     }
-    void onDrop(Object [] object) {
+    public void onDrop(Object [] object) {
         if (_dragListener != nilptr) {
             _dragListener.onDrop(this, object);
         }
     }
-    void onDragResponse() {}
-    void onLayoutRequest() {}
-    void onUpdateRequest() {
+    public void onDragResponse() {}
+    public void onLayoutRequest() {}
+    public void onUpdateRequest() {
         if (_updateListener != nilptr) {
             _updateListener.onUpdate(this);
         }
     }
-    void onUpdateLater() {}
-    void onEmbeddingControl() {}
-    void onActivateControl() {}
-    void onDeactivateControl() {}
-    void onContextMenu(int x,int y, int reson) {
+    public void onUpdateLater() {}
+    public void onEmbeddingControl() {}
+    public void onActivateControl() {}
+    public void onDeactivateControl() {}
+    public void onContextMenu(int x,int y, int reson) {
         if (_contextMenuListener != nilptr) {
             _contextMenuListener.onContextMenu(this, x, y, reson);
         }
     }
-    void onInputMethod() {}
-    void onTabletMove() {}
-    void onLocaleChange() {}
-    void onLanguageChange() {}
-    void onLayoutDirectionChange() {}
-    void onStyle() {}
-    void onTabletPress() {}
-    void onTabletRelease() {}
-    void onOkRequest() {}
-    void onHelpRequest(int x,int y) {}
-    void onIconDrag() {}
-    void onFontChange() {}
-    void onEnabledChange() {}
-    void onActivationChange() {}
-    void onStyleChange() {}
-    void onIconTextChange() {}
-    void onModifiedChange() {}
-    void onMouseTrackingChange() {}
-    void onWindowBlocked() {}
-    void onWindowUnblocked() {}
+    public void onInputMethod() {}
+    public void onTabletMove() {}
+    public void onLocaleChange() {}
+    public void onLanguageChange() {}
+    public void onLayoutDirectionChange() {}
+    public void onStyle() {}
+    public void onTabletPress() {}
+    public void onTabletRelease() {}
+    public void onOkRequest() {}
+    public void onHelpRequest(int x,int y) {}
+    public void onIconDrag() {}
+    public void onFontChange() {}
+    public void onEnabledChange() {}
+    public void onActivationChange() {}
+    public void onStyleChange() {}
+    public void onIconTextChange() {}
+    public void onModifiedChange() {}
+    public void onMouseTrackingChange() {}
+    public void onWindowBlocked() {}
+    public void onWindowUnblocked() {}
 
-    void onWindowStateChange(int state, int oldState) {
+    public void onWindowStateChange(int state, int oldState) {
         if (_statusEvent != nilptr) {
             _statusEvent.onWindowStateChange(this, state, oldState);
         }
     }
 
-    void onReadOnlyChange() {}
-    void onToolTip(int x,int y) {}
-    void onWhatsThis(int x,int y) {}
-    void onStatusTip(String tips) {}
-    void onActionChanged() {}
-    void onActionAdded() {}
-    void onActionRemoved() {}
-    void onFileOpen() {}
-    void onShortcut(int key, int shortcutId, bool ambig) {}
-    void onShortcutOverride() {}
-    void onWhatsThisClicked() {}
-    void onToolBarChange() {}
-    void onApplicationActivate() {}
-    void onApplicationDeactivate() {}
-    void onQueryWhatsThis() {}
-    void onEnterWhatsThisMode() {}
-    void onLeaveWhatsThisMode() {}
-    void onZOrderChange() {}
-    void onHoverEnter(int x,int y) {}
-    void onHoverLeave(int x,int y) {}
-    void onHoverMove(int x,int y) {}
-    void onAcceptDropsChange() {}
-    void onZeroTimerEvent() {}
-    void onGraphicsSceneMouseMove() {}
-    void onGraphicsSceneMousePress() {}
-    void onGraphicsSceneMouseRelease() {}
-    void onGraphicsSceneMouseDoubleClick() {}
-    void onGraphicsSceneContextMenu() {}
-    void onGraphicsSceneHoverEnter() {}
-    void onGraphicsSceneHoverMove() {}
-    void onGraphicsSceneHoverLeave() {}
-    void onGraphicsSceneHelp() {}
-    void onGraphicsSceneDragEnter() {}
-    void onGraphicsSceneDragMove() {}
-    void onGraphicsSceneDragLeave() {}
-    void onGraphicsSceneDrop() {}
-    void onGraphicsSceneWheel() {}
-    void onKeyboardLayoutChange() {}
-    void onDynamicPropertyChange() {}
-    void onTabletEnterProximity() {}
-    void onTabletLeaveProximity() {}
-    void onNonClientAreaMouseMove() {}
-    void onNonClientAreaMouseButtonPress() {}
-    void onNonClientAreaMouseButtonRelease() {}
-    void onNonClientAreaMouseButtonDblClick() {}
-    void onMacSizeChange() {}
-    void onContentsRectChange() {}
-    void onMacGLWindowChange() {}
-    void onFutureCallOut() {}
-    void onGraphicsSceneResize() {}
-    void onGraphicsSceneMove() {}
-    void onCursorChange() {}
-    void onToolTipChange() {}
-    void onNetworkReplyUpdated() {}
-    void onGrabMouse() {}
-    void onUngrabMouse() {}
-    void onGrabKeyboard() {}
-    void onUngrabKeyboard() {}
-    void onMacGLClearDrawable() {}
-    void onStateMachineSignal() {}
-    void onStateMachineWrapped() {}
-    void onTouchBegin() {}
-    void onTouchUpdate() {}
-    void onTouchEnd() {}
-    void onNativeGesture() {}
-    void onRequestSoftwareInputPanel() {}
-    void onCloseSoftwareInputPanel() {}
-    void onWinIdChange() {}
-    void onGesture() {}
-    void onGestureOverride() {}
-    void onScrollPrepare() {}
-    void onScroll() {}
-    void onExpose() {}
-    void onInputMethodQuery() {}
-    void onOrientationChange() {}
-    void onTouchCancel() {}
-    void onThemeChange() {}
-    void onSockClose() {}
-    void onPlatformPanel() {}
-    void onStyleAnimationUpdate() {}
-    void onApplicationStateChange() {}
-    void onWindowChangeInternal() {}
-    void onScreenChangeInternal() {}
-    void onPlatformSurface() {}
-    void onPointer() {}
-    void onTabletTrackingChange() {}
-    void onUser() {}
-    void onMaxUser() {}
-    void setTag(Object obj) {
+    public void onReadOnlyChange() {}
+    public void onToolTip(int x,int y) {}
+    public void onWhatsThis(int x,int y) {}
+    public void onStatusTip(String tips) {}
+    public void onActionChanged() {}
+    public void onActionAdded() {}
+    public void onActionRemoved() {}
+    public void onFileOpen() {}
+    public void onShortcut(int key, int shortcutId, bool ambig) {}
+    public void onShortcutOverride() {}
+    public void onWhatsThisClicked() {}
+    public void onToolBarChange() {}
+    public void onApplicationActivate() {}
+    public void onApplicationDeactivate() {}
+    public void onQueryWhatsThis() {}
+    public void onEnterWhatsThisMode() {}
+    public void onLeaveWhatsThisMode() {}
+    public void onZOrderChange() {}
+    public void onHoverEnter(int x,int y) {}
+    public void onHoverLeave(int x,int y) {}
+    public void onHoverMove(int x,int y) {}
+    public void onAcceptDropsChange() {}
+    public void onZeroTimerEvent() {}
+    public void onGraphicsSceneMouseMove() {}
+    public void onGraphicsSceneMousePress() {}
+    public void onGraphicsSceneMouseRelease() {}
+    public void onGraphicsSceneMouseDoubleClick() {}
+    public void onGraphicsSceneContextMenu() {}
+    public void onGraphicsSceneHoverEnter() {}
+    public void onGraphicsSceneHoverMove() {}
+    public void onGraphicsSceneHoverLeave() {}
+    public void onGraphicsSceneHelp() {}
+    public void onGraphicsSceneDragEnter() {}
+    public void onGraphicsSceneDragMove() {}
+    public void onGraphicsSceneDragLeave() {}
+    public void onGraphicsSceneDrop() {}
+    public void onGraphicsSceneWheel() {}
+    public void onKeyboardLayoutChange() {}
+    public void onDynamicPropertyChange() {}
+    public void onTabletEnterProximity() {}
+    public void onTabletLeaveProximity() {}
+    public void onNonClientAreaMouseMove() {}
+    public void onNonClientAreaMouseButtonPress() {}
+    public void onNonClientAreaMouseButtonRelease() {}
+    public void onNonClientAreaMouseButtonDblClick() {}
+    public void onMacSizeChange() {}
+    public void onContentsRectChange() {}
+    public void onMacGLWindowChange() {}
+    public void onFutureCallOut() {}
+    public void onGraphicsSceneResize() {}
+    public void onGraphicsSceneMove() {}
+    public void onCursorChange() {}
+    public void onToolTipChange() {}
+    public void onNetworkReplyUpdated() {}
+    public void onGrabMouse() {}
+    public void onUngrabMouse() {}
+    public void onGrabKeyboard() {}
+    public void onUngrabKeyboard() {}
+    public void onMacGLClearDrawable() {}
+    public void onStateMachineSignal() {}
+    public void onStateMachineWrapped() {}
+    public void onTouchBegin() {}
+    public void onTouchUpdate() {}
+    public void onTouchEnd() {}
+    public void onNativeGesture() {}
+    public void onRequestSoftwareInputPanel() {}
+    public void onCloseSoftwareInputPanel() {}
+    public void onWinIdChange() {}
+    public void onGesture() {}
+    public void onGestureOverride() {}
+    public void onScrollPrepare() {}
+    public void onScroll() {}
+    public void onExpose() {}
+    public void onInputMethodQuery() {}
+    public void onOrientationChange() {}
+    public void onTouchCancel() {}
+    public void onThemeChange() {}
+    public void onSockClose() {}
+    public void onPlatformPanel() {}
+    public void onStyleAnimationUpdate() {}
+    public void onApplicationStateChange() {}
+    public void onWindowChangeInternal() {}
+    public void onScreenChangeInternal() {}
+    public void onPlatformSurface() {}
+    public void onPointer() {}
+    public void onTabletTrackingChange() {}
+    public void onUser() {}
+    public void onMaxUser() {}
+    public void setTag(Object obj) {
         widget_set_object_value(nativehandle, SETTAG, obj);
     }
-    Object getTag() {
+    public Object getTag() {
         return widget_get_object(nativehandle, GETTAG);
     }
     // tree event
-    void onItemPressed(long item, int column) {
+    public void onItemPressed(long item, int column) {
         if (_treeitemevent != nilptr) {
             _treeitemevent.onItemPressed((QXTreeView)this, item, column);
         }
     }
-    void onItemClicked(long item, int column) {
+    public void onItemClicked(long item, int column) {
         if (_treeitemevent != nilptr) {
             _treeitemevent.onItemClicked((QXTreeView)this, item, column);
         }
     }
-    void onItemDoubleClicked(long item, int column) {
+    public void onItemDoubleClicked(long item, int column) {
         if (_treeitemevent != nilptr) {
             _treeitemevent.onItemDoubleClicked((QXTreeView)this, item, column);
         }
     }
-    void onItemActived(long item, int column) {
+    public void onItemActived(long item, int column) {
         if (_treeitemevent != nilptr) {
             _treeitemevent.onItemActived((QXTreeView)this, item, column);
         }
     }
-    void onItemEntered(long item, int column) {
+    public void onItemEntered(long item, int column) {
         if (_treeitemevent != nilptr) {
             _treeitemevent.onItemEntered((QXTreeView)this, item, column);
         }
     }
-    void onItemChanged(long item, int column) {
+    public void onItemChanged(long item, int column) {
         if (_treeitemevent != nilptr) {
             _treeitemevent.onItemChanged((QXTreeView)this, item, column);
         }
     }
-    void onItemExpanded(long item) {
+    public void onItemExpanded(long item) {
         if (_treeitemevent != nilptr) {
             _treeitemevent.onItemExpanded((QXTreeView)this, item);
         }
     }
-    void onItemCollapsed(long item) {
+    public void onItemCollapsed(long item) {
         if (_treeitemevent != nilptr) {
             _treeitemevent.onItemCollapsed((QXTreeView)this, item);
         }
     }
-    void onCurrentItemChanged(long cur, long previous) {
+    public void onCurrentItemChanged(long cur, long previous) {
         if (_treeitemevent != nilptr) {
             _treeitemevent.onCurrentItemChanged((QXTreeView)this, cur, previous);
         }
     }
-    void onItemSelectionChanged() {
+    public void onItemSelectionChanged() {
         if (_treeitemevent != nilptr) {
             _treeitemevent.onItemSelectionChanged((QXTreeView)this);
         }
     }
 
-    void onNotify(long eventid) {
+    public void onNotify(long eventid) {
         if (_notifyListener != nilptr) {
             _notifyListener.onNotify(this, eventid);
         }
     }
 
-    void onClick(bool checked) {
+    public void onClick(bool checked) {
         if (_clicklistener != nilptr) {
             _clicklistener.onClick(this, checked);
         }
     }
-    void onToggle(bool checked) {
+    public void onToggle(bool checked) {
         if (_clicklistener != nilptr) {
             _clicklistener.onToggle(this, checked);
         }
     }
-    void onPress() {
+    public void onPress() {
         if (_clicklistener != nilptr) {
             _clicklistener.onPress(this);
         }
     }
-    void onRelease() {
+    public void onRelease() {
         if (_clicklistener != nilptr) {
             _clicklistener.onRelease(this);
         }
     }
-    void nativeFinalize() {
+    public void nativeFinalize() {
         nativehandle = 0;
     }
 
-    void finalize() {
+    public void finalize() {
         if (nativehandle != 0) {
             widget_slot(nativehandle, NATIVEFINALIZE);
         }
     }
-    void onFinish(int res) {
+    public void onFinish(int res) {
     }
-    void onAccept() {
+    public void onAccept() {
     }
-    void onReject() {
+    public void onReject() {
     }
-    void QON_SELCHANGED(bool yes) {
+    public void QON_SELCHANGED(bool yes) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.QON_SELCHANGED((QXSci)this, yes);
         }
     }
-    void ON_AUTOCCANCELLED() {
+    public void ON_AUTOCCANCELLED() {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_AUTOCCANCELLED((QXSci)this);
         }
     }
-    void ON_AUTOCCHARDELETED() {
+    public void ON_AUTOCCHARDELETED() {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_AUTOCCHARDELETED((QXSci)this);
         }
     }
-    void ON_AUTOCCOMPLETED(String selection, int position, int ch, int method) {
+    public void ON_AUTOCCOMPLETED(String selection, int position, int ch, int method) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_AUTOCCOMPLETED((QXSci)this, selection, position, ch, method);
         }
     }
-    void ON_AUTOCSELECTION(String selection, int position, int ch, int method) {
+    public void ON_AUTOCSELECTION(String selection, int position, int ch, int method) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_AUTOCSELECTION((QXSci)this, selection, position, ch, method);
         }
     }
-    void ON_AUTOCSELECTION(String selection, int position) {
+    public void ON_AUTOCSELECTION(String selection, int position) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_AUTOCSELECTION((QXSci)this, selection, position);
         }
     }
-    void SCEN_CHANGE() {
+    public void SCEN_CHANGE() {
         if (_sciEventListener != nilptr) {
             _sciEventListener.SCEN_CHANGE((QXSci)this);
         }
     }
-    void ON_CALLTIPCLICK(int direction) {
+    public void ON_CALLTIPCLICK(int direction) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_CALLTIPCLICK((QXSci)this, direction);
         }
     }
-    void ON_CHARADDED(int charadded) {
+    public void ON_CHARADDED(int charadded) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_CHARADDED((QXSci)this, charadded);
         }
     }
-    void ON_DOUBLECLICK(int position, int line, int modifiers) {
+    public void ON_DOUBLECLICK(int position, int line, int modifiers) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_DOUBLECLICK((QXSci)this, position, line, modifiers);
         }
     }
-    void ON_DWELLEND(int position, int x, int y) {
+    public void ON_DWELLEND(int position, int x, int y) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_DWELLEND((QXSci)this, position, x, y);
         }
     }
-    void ON_DWELLSTART(int position, int x, int y) {
+    public void ON_DWELLSTART(int position, int x, int y) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_DWELLSTART((QXSci)this, position, x, y);
         }
     }
-    void ON_FOCUSIN() {
+    public void ON_FOCUSIN() {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_FOCUSIN((QXSci)this);
         }
     }
-    void ON_FOCUSOUT() {
+    public void ON_FOCUSOUT() {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_FOCUSOUT((QXSci)this);
         }
     }
-    void ON_HOTSPOTCLICK(int position, int modifiers) {
+    public void ON_HOTSPOTCLICK(int position, int modifiers) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_HOTSPOTCLICK((QXSci)this, position, modifiers);
         }
     }
-    void ON_HOTSPOTDOUBLECLICK(int position, int modifiers) {
+    public void ON_HOTSPOTDOUBLECLICK(int position, int modifiers) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_HOTSPOTDOUBLECLICK((QXSci)this, position, modifiers);
         }
     }
-    void ON_HOTSPOTRELEASECLICK(int position, int modifiers) {
+    public void ON_HOTSPOTRELEASECLICK(int position, int modifiers) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_HOTSPOTRELEASECLICK((QXSci)this, position, modifiers);
         }
     }
-    void ON_INDICATORCLICK(int position, int modifiers) {
+    public void ON_INDICATORCLICK(int position, int modifiers) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_INDICATORCLICK((QXSci)this, position, modifiers);
         }
     }
-    void ON_INDICATORRELEASE(int position, int modifiers) {
+    public void ON_INDICATORRELEASE(int position, int modifiers) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_INDICATORRELEASE((QXSci)this, position, modifiers);
         }
     }
-    void ON_MACRORECORD(int msg, long wparam, long lparam) {
+    public void ON_MACRORECORD(int msg, long wparam, long lparam) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_MACRORECORD((QXSci)this, msg, wparam, lparam);
         }
     }
-    void ON_MARGINCLICK(int position, int modifiers, int margin) {
+    public void ON_MARGINCLICK(int position, int modifiers, int margin) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_MARGINCLICK((QXSci)this, position, modifiers, margin);
         }
     }
-    void ON_MARGINRIGHTCLICK(int position, int modifiers, int margin) {
+    public void ON_MARGINRIGHTCLICK(int position, int modifiers, int margin) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_MARGINRIGHTCLICK((QXSci)this, position, modifiers, margin);
         }
     }
-    void ON_MODIFIED(int position, int modType, String text, int length, int linesAdded, int line, int foldLevelNow, int foldLevelPrev, int token, int annotationLinesAdded) {
+    public void ON_MODIFIED(int position, int modType, String text, int length, int linesAdded, int line, int foldLevelNow, int foldLevelPrev, int token, int annotationLinesAdded) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_MODIFIED((QXSci)this, position, modType, text, length, linesAdded, line, foldLevelNow, foldLevelPrev, token, annotationLinesAdded);
         }
     }
-    void ON_MODIFYATTEMPTRO() {
+    public void ON_MODIFYATTEMPTRO() {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_MODIFYATTEMPTRO((QXSci)this);
         }
     }
-    void ON_NEEDSHOWN(int position, int length) {
+    public void ON_NEEDSHOWN(int position, int length) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_NEEDSHOWN((QXSci)this, position, length);
         }
     }
-    void ON_PAINTED() {
+    public void ON_PAINTED() {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_PAINTED((QXSci)this);
         }
     }
-    void ON_SAVEPOINTLEFT() {
+    public void ON_SAVEPOINTLEFT() {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_SAVEPOINTLEFT((QXSci)this);
         }
     }
-    void ON_SAVEPOINTREACHED() {
+    public void ON_SAVEPOINTREACHED() {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_SAVEPOINTREACHED((QXSci)this);
         }
     }
-    void ON_STYLENEEDED(int position) {
+    public void ON_STYLENEEDED(int position) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_STYLENEEDED((QXSci)this, position);
         }
     }
-    void ON_UPDATEUI(int updated) {
+    public void ON_UPDATEUI(int updated) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_UPDATEUI((QXSci)this, updated);
         }
     }
-    void ON_USERLISTSELECTION(String text, int wparam, int ch, int listCompletionMethod) {
+    public void ON_USERLISTSELECTION(String text, int wparam, int ch, int listCompletionMethod) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_USERLISTSELECTION((QXSci)this, text, wparam, ch, listCompletionMethod);
         }
     }
-    void ON_USERLISTSELECTION(String text, int wparam) {
+    public void ON_USERLISTSELECTION(String text, int wparam) {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_USERLISTSELECTION((QXSci)this, text, wparam);
         }
     }
-    void ON_ZOOM() {
+    public void ON_ZOOM() {
         if (_sciEventListener != nilptr) {
             _sciEventListener.ON_ZOOM((QXSci)this);
         }
     }
 
-    void onTextChanged(String text) {
+    public void onTextChanged(String text) {
         if (_editEventListener != nilptr) {
             _editEventListener.onTextChanged(this, text);
         }
     }
 
-    void  onTextEdited(String text) {
+    public void  onTextEdited(String text) {
         if (_editEventListener != nilptr) {
             _editEventListener.onTextEdited(this, text);
         }
     }
 
-    void onCursorPositionChanged(int n,int o) {
+    public void onCursorPositionChanged(int n,int o) {
         if (_editEventListener != nilptr) {
             _editEventListener.onCursorPositionChanged(this, n, o);
         }
     }
 
-    void onReturnPressed() {
+    public void onReturnPressed() {
         if (_editEventListener != nilptr) {
             _editEventListener.onReturnPressed(this);
         }
     }
 
-    void onEditingFinished() {
+    public void onEditingFinished() {
         if (_editEventListener != nilptr) {
             _editEventListener.onEditingFinished(this);
         }
     }
 
-    void onSelectionChanged() {
+    public void onSelectionChanged() {
         if (_editEventListener != nilptr) {
             _editEventListener.onSelectionChanged(this);
         }
     }
 
-    void onCurrentTextChange(String text) {
+    public void onCurrentTextChange(String text) {
         if (_comboboxListener != nilptr) {
             _comboboxListener.onCurrentTextChange(this, text);
         }
     }
 
-    void onActivated(int id) {
+    public void onActivated(int id) {
         if (_comboboxListener != nilptr) {
             _comboboxListener.onActivated(this, id);
         }
     }
 
-    void onItemSelected(int id) {
+    public void onItemSelected(int id) {
         if (_comboboxListener != nilptr) {
             _comboboxListener.onItemSelected(this, id);
         }
     }
 
 
-    void onFileChanged(String path) {
+    public void onFileChanged(String path) {
         if (_fsweListener != nilptr) {
             _fsweListener.onFileChanged(this, path);
         }
     }
 
-    void onDirChange(String path) {
+    public void onDirChange(String path) {
         if (_fsweListener != nilptr) {
             _fsweListener.onDirChange(this, path);
         }
     }
-    void onCellChange(int row,int column) {
+    public void onCellChange(int row,int column) {
         if (_tableenvlis != nilptr) {
             _tableenvlis.onCellChange((QXTableWidget)this, row, column);
         }
     }
-    void onItemChange(long item) {
+    public void onItemChange(long item) {
         if (_tableenvlis != nilptr) {
             _tableenvlis.onItemChange((QXTableWidget)this, item);
         }
     }
-    void onCellPress(int row,int column) {
+    public void onCellPress(int row,int column) {
         if (_tableenvlis != nilptr) {
             _tableenvlis.onCellPress((QXTableWidget)this, row, column);
         }
     }
-    void onItemPress(long item) {
+    public void onItemPress(long item) {
         if (_tableenvlis != nilptr) {
             _tableenvlis.onItemPress((QXTableWidget)this, item);
         }
     }
-    void onCellClick(int row,int column) {
+    public void onCellClick(int row,int column) {
         if (_tableenvlis != nilptr) {
             _tableenvlis.onCellClick((QXTableWidget)this, row, column);
         }
     }
-    void onItemClick(long item) {
+    public void onItemClick(long item) {
         if (_tableenvlis != nilptr) {
             _tableenvlis.onItemClick((QXTableWidget)this, item);
         }
     }
-    void onCellDBClick(int row,int column) {
+    public void onCellDBClick(int row,int column) {
         if (_tableenvlis != nilptr) {
             _tableenvlis.onCellDBClick((QXTableWidget)this, row, column);
         }
     }
-    void onItemDBClick(long item) {
+    public void onItemDBClick(long item) {
         if (_tableenvlis != nilptr) {
             _tableenvlis.onItemDBClick((QXTableWidget)this, item);
         }
     }
-    void onCellEnter(int row,int column) {
+    public void onCellEnter(int row,int column) {
         if (_tableenvlis != nilptr) {
             _tableenvlis.onCellEnter((QXTableWidget)this, row, column);
         }
     }
-    void onItemEnter(long item) {
+    public void onItemEnter(long item) {
         if (_tableenvlis != nilptr) {
             _tableenvlis.onItemEnter((QXTableWidget)this, item);
         }
     }
-    void onCellActived(int row,int column) {
+    public void onCellActived(int row,int column) {
         if (_tableenvlis != nilptr) {
             _tableenvlis.onCellActived((QXTableWidget)this, row, column);
         }
     }
-    void onItemActived(long item) {
+    public void onItemActived(long item) {
         if (_tableenvlis != nilptr) {
             _tableenvlis.onItemActived((QXTableWidget)this, item);
         }
     }
     
-    void onEnumPropertyValueChanged(long prop, int item) {
+    public void onEnumPropertyValueChanged(long prop, int item) {
 
     }
     
-    void onVariantPropertyValueChanged(long prop, int dataType, String stringValue) {
+    public void onVariantPropertyValueChanged(long prop, int dataType, String stringValue) {
 
     }
     
-    void onVariantPropertyAttributeChanged(long prop,String strAttributr, int dataType, String stringValue) {
+    public void onVariantPropertyAttributeChanged(long prop,String strAttributr, int dataType, String stringValue) {
 
     }
     
-    static bool associateExt(String strName, String strExt, String strAppName, String args, String strAppKey, String strDefaultIcon, String strDescribe){
+    public static bool associateExt(String strName, String strExt, String strAppName, String args, String strAppKey, String strDefaultIcon, String strDescribe){
         String [] params = {strName, strExt, strAppName, args, strAppKey, strDefaultIcon, strDescribe};
         return array_int2(0, ASSOCIATEEXT, params, 0, 0);
     }
     
-    static bool checkAssociate(String strName, String strExt, String strAppKey){
+    public static bool checkAssociate(String strName, String strExt, String strAppKey){
         String [] params = {strName, strExt, strAppKey};
         return array_int2(0, CHECKASSOCIATED, params, 0, 0);
     }

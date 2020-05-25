@@ -3,15 +3,15 @@
 
 class QXFileSystemWatcher : QXObject{
 	
-	QXFileSystemWatcher(){
+	public QXFileSystemWatcher(){
     
     }
     
-    QXFileSystemWatcher(long handle){
+    public QXFileSystemWatcher(long handle){
         super(handle);
     }
     
-    bool create(QXWidget parent){
+    public bool create(QXWidget parent){
         nativehandle = createQObject(QType.qtFileWatch, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
@@ -19,11 +19,11 @@ class QXFileSystemWatcher : QXObject{
         return true;
     }
     
-    bool addPath(String path){
+    public bool addPath(String path){
 		return 1 == widget_set_intstring_value(nativehandle, FSWADDFILE, 0, path);
     }
     
-    bool removePath(String path){
+    public bool removePath(String path){
 		return 1 == widget_set_intstring_value(nativehandle, FSWREMFILE, 0, path);
     }
     

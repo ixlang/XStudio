@@ -1,40 +1,66 @@
 
 class QXDockWidget : QXWidget{
-    static const int DockWidgetClosable    = 0x01;
-    static const int DockWidgetMovable     = 0x02;
-    static const int DockWidgetFloatable   = 0x04;
-    static const int DockWidgetVerticalTitleBar = 0x08;
-    static const int DockWidgetFeatureMask = 0x0f;
-    static const int AllDockWidgetFeatures = DockWidgetClosable|DockWidgetMovable|DockWidgetFloatable; // ### Qt 6: remove
-    static const int NoDockWidgetFeatures  = 0x00;
-    static const int Reserved              = 0xff;
-    QXDockWidget(){
+    public static const int DockWidgetClosable    = 0x01;
+    public static const int DockWidgetMovable     = 0x02;
+    public static const int DockWidgetFloatable   = 0x04;
+    public static const int DockWidgetVerticalTitleBar = 0x08;
+    public static const int DockWidgetFeatureMask = 0x0f;
+    public static const int AllDockWidgetFeatures = DockWidgetClosable|DockWidgetMovable|DockWidgetFloatable; // ### Qt 6: remove
+    public static const int NoDockWidgetFeatures  = 0x00;
+    public static const int Reserved              = 0xff;
+    
+    public static const int
+        LeftDockWidgetArea = 0x1,
+        RightDockWidgetArea = 0x2,
+        TopDockWidgetArea = 0x4,
+        BottomDockWidgetArea = 0x8,
+
+        DockWidgetArea_Mask = 0xf,
+        AllDockWidgetAreas = 0xf,
+        NoDockWidgetArea = 0;
+    
+    public bool create(QXWidget parent) {
+        nativehandle = createQObject(QType.qtDockWidget, this, parent.nativehandle);
+        if (nativehandle == 0) {
+            return false;
+        }
+        return true;
     }
     
-    QXDockWidget(long handle){
+    public QXDockWidget(){
+    }
+    
+    public QXDockWidget(long handle){
         super(handle);
     }
-    bool isFlating(){
+    public bool isFlating(){
         return widget_get_bool_value(nativehandle, QXCore.FLATING);
     }
     
-    void setFlating(bool b){
+    public void setFlating(bool b){
         widget_set_bool_value(nativehandle, QXCore.FLATING, b);
     }
     
-    QXWidget getTitalBar(){
+    public QXWidget getTitalBar(){
         return (QXWidget)widget_get_object(nativehandle, QXCore.TITLEBAR);
     }
     
-    void 
+    public void 
     setFeatures(int features){
         widget_set_vint_value(nativehandle, QXCore.DOCKWIDGETFEATURE, features);
     }
-    void setWidget(QXWidget w){
+    
+    public void 
+    setAllowedAreas(int area){
+        widget_set_vint_value(nativehandle, QXCore.DOCKSETALLOWEDAREAS, area);
+    }
+    
+    public void setWidget(QXWidget w){
         widget_set_native_value(nativehandle, QXCore.SETWIDGET, w.nativehandle);
     }
     
-    QXWidget getWidget(){
+    public QXWidget getWidget(){
         return (QXWidget)widget_get_object(nativehandle, GETWIDGET);
     }
+    
 };

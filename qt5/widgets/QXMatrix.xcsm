@@ -2,20 +2,20 @@
 //Date: Mon Oct 23:07:48 2018 
 
 class QXMatrix : QXCore{
-    QXMatrix(){
+    public QXMatrix(){
         nativehandle = createNObject(QType.qtMatrix, 0);
     }
     
-    QXMatrix(long h){
+    public QXMatrix(long h){
         nativehandle = h;
     }
     
-    QXPoint mapPoint(QXPoint p){
+    public QXPoint mapPoint(QXPoint p){
 		long v = object_get_long_int(nativehandle, MATRIXMAPPOINT, p.x, p.y);
         return new QXPoint((v >> 32) & 0xffffffff, v & 0xffffffff);
     }
     
-    QXRect mapRect(QXRect r){
+    public QXRect mapRect(QXRect r){
 		long lt = object_get_long_int(nativehandle, MATRIXMAPPOINT, r.left, r.top);
         long rb = object_get_long_int(nativehandle, MATRIXMAPPOINT, r.right, r.bottom);
         long lb = object_get_long_int(nativehandle, MATRIXMAPPOINT, r.left, r.bottom);
@@ -37,27 +37,27 @@ class QXMatrix : QXCore{
 			);
     }
     
-    QXMatrix translate(double x, double y){
+    public QXMatrix translate(double x, double y){
 		return new QXMatrix(long_double2(nativehandle, MATRIXTRANSLATE, x, y));
     }
     
-    QXMatrix scale(double sx, double sy){
+    public QXMatrix scale(double sx, double sy){
 		return new QXMatrix(long_double2(nativehandle, MATRIXSCALE, sx, sy));
     }
 
-    QXMatrix shear(double sh, double sv){
+    public QXMatrix shear(double sh, double sv){
 		return new QXMatrix(long_double2(nativehandle, MATRIXSHEAR, sh, sv));
     }
     
-    QXMatrix rotate(double a){
+    public QXMatrix rotate(double a){
 		return new QXMatrix(long_double2(nativehandle, MATRIXROTATE, a, 0));
     }
     
-    QXMatrix operator *(QXMatrix m){
+    public QXMatrix operator *(QXMatrix m){
 		return new QXMatrix(object_get_long_int(nativehandle, MATRIXMUL, m.nativehandle, 0));
     }
     
-    void finalize(){
+    public void finalize(){
 		if (nativehandle != 0){
 			widget_slot(nativehandle, MATRIXDTOR);
         }

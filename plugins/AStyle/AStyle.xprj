@@ -10,15 +10,6 @@
 					"libpath":	["../libs"]
 				},
 				"options":	"",
-				"libs":	["XPlatform_1.0.0.2.lix"],
-				"links":	["XStudio1.xl"],
-				"depends":	[],
-				"wtype":	"",
-				"ostype":	"",
-				"outname":	"$(ProjectName)$(Ext)",
-				"outpath":	"D:\\Programs\\windows_x64_dev\\plugins",
-				"command":	"-slx -c",
-				"uaclevel":	"默认",
 				"cmd":	"$(Output)",
 				"args":	"$(Output)",
 				"workdir":	"$(ProjectDir)",
@@ -26,7 +17,17 @@
 				"compdest":	"",
 				"ignorewl":	"",
 				"debugable":	"",
-				"debugdatabase":	""
+				"debugdatabase":	"",
+				"wtype":	"",
+				"ostype":	"",
+				"sstype":	"",
+				"outname":	"$(ProjectName)$(Ext)",
+				"outpath":	"D:\\Programs\\windows_x64_dev\\plugins",
+				"command":	"-slx -c",
+				"uaclevel":	"默认",
+				"libs":	["XPlatform_1.0.0.2.lix"],
+				"links":	["XStudio.xl"],
+				"depends":	[]
 			},
 			"release":	{
 				"path":	{
@@ -44,7 +45,7 @@
 				"workdir":	"$(ProjectDir)"
 			}
 		},
-		"icofile":	"",
-		"versioninc":	"0"
+		"versioninc":	"0",
+		"icofile":	""
 	}
 }

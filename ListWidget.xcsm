@@ -2,46 +2,46 @@
 //Date: Tue Sep 17:03:43 2018 
 
 class ListDockWidget : QXDockWidget{
-    QXTreeView _listview;
+    private QXTreeView _listview;
     
-    XWorkspace _mdi_area;
+    protected XWorkspace _mdi_area;
      
-    static const int STACK_INFO_NOTIFY = 2;
+    public static const int STACK_INFO_NOTIFY = 2;
     
-    onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
-        void onItemClicked(QXTreeView tree,long item, int column)override{
+    public onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
+        public void onItemClicked(QXTreeView tree,long item, int column)override{
 			onListItemClicked(tree, item, column);
         }
-        void onItemChanged(QXTreeView tree,long item, int column)override{
+        public void onItemChanged(QXTreeView tree,long item, int column)override{
 			onListItemChanged(tree, item, column);
         }
-		void onItemExpanded(QXTreeView tree,long item)override{
+		public void onItemExpanded(QXTreeView tree,long item)override{
 			onListItemExpanded(tree, item);
 		}
-        void onItemPressed(QXTreeView tree, long item, int column)override{
+        public void onItemPressed(QXTreeView tree, long item, int column)override{
 			onListItemPressed(tree, item, column);
         }
-        void onItemDoubleClicked(QXTreeView tree,long item, int column)override{
+        public void onItemDoubleClicked(QXTreeView tree,long item, int column)override{
 			onListItemDoubleClicked(tree, item, column);
         }
     };
-	void onListItemDoubleClicked(QXTreeView,long item, int column){
+	public void onListItemDoubleClicked(QXTreeView,long item, int column){
 	}
-	void onListItemClicked(QXTreeView tree,long item, int column);
-    void onListItemPressed(QXTreeView tree,long item, int column){
+	public void onListItemClicked(QXTreeView tree,long item, int column);
+    public void onListItemPressed(QXTreeView tree,long item, int column){
     
     }
-    void onListItemExpanded(QXTreeView,long item){
+    public void onListItemExpanded(QXTreeView,long item){
 
 	}
-    void onListItemChanged(QXTreeView tree,long item, int column){
+    public void onListItemChanged(QXTreeView tree,long item, int column){
     
     }
-    String getListName();
-    String [] getColumn();
-    int [] getColumnWidths();
+    public String getListName();
+    public String [] getColumn();
+    public int [] getColumnWidths();
 
-    void onAttach(){
+    public void onAttach(){
         _listview = (QXTreeView)attachByName(new QXTreeView(), getListName());
        
         /*setOnLayoutEventListener(new onLayoutEventListener(){
@@ -66,15 +66,15 @@ class ListDockWidget : QXDockWidget{
         onCreate();
     }
     
-    void onCreate(){
+    public void onCreate(){
     
     }
     
-    void clearList(){
+    public void clearList(){
         _listview.clear();
     }
     
-    QXTreeView getList(){
+    public QXTreeView getList(){
 		return _listview;
     }
 };

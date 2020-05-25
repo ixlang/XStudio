@@ -4,19 +4,19 @@
 class PackageManager{
 	JsonObject root;
     
-    static class PackageInfo{
-		int id = -1;
-		String name;
-        String version;
-        String filepath;
-        String iconFile;
-        String descr;
-        String author;
-        String url;
-        long   dlsize;
-        String cacheFile;
+    public static class PackageInfo{
+		public int id = -1;
+		public String name;
+        public String version;
+        public String filepath;
+        public String iconFile;
+        public String descr;
+        public String author;
+        public String url;
+        public long   dlsize;
+        public String cacheFile;
         //String message;
-        PackageInfo(int _id,JsonObject jo){
+        public PackageInfo(int _id,JsonObject jo){
 			id = _id;
 			name = jo.getString("package");
             version = jo.getString("version");
@@ -29,7 +29,7 @@ class PackageManager{
             filepath = String.formatPath(_system_.getAppDirectory().appendPath(jo.getString("file")), false);
         }
         
-        bool detectCache(){
+        public bool detectCache(){
             cacheFile = XPlatform.getAppDirectory().appendPath("package_cache");
             XPlatform.mkdir(cacheFile);
             cacheFile = String.formatPath(cacheFile.appendPath(name + version),false);
@@ -44,7 +44,7 @@ class PackageManager{
             return false;
         }
         
-        PackageInfo(JsonObject jo){
+        public PackageInfo(JsonObject jo){
             name = jo.getString("pkgid");
             version = jo.getString("version");
             descr = jo.getString("description");
@@ -53,7 +53,7 @@ class PackageManager{
             author = jo.getString("publisher");
         }
         
-        PackageInfo(JsonObject jo, String file){
+        public PackageInfo(JsonObject jo, String file){
 			id = -1;
 			name = jo.getString("package");
             version = jo.getString("version");
@@ -62,7 +62,7 @@ class PackageManager{
             filepath = file;
         }
         
-        bool extartIconTo(ZipArchive zs, String oufile){
+        public bool extartIconTo(ZipArchive zs, String oufile){
             XPlatform.deleteFile(oufile);
 			ZipEntry entry = zs.findEntry("icon.png");
             if (entry != nilptr){
@@ -84,7 +84,7 @@ class PackageManager{
             return false;
         }
         
-        String extartReadME(ZipArchive zs, String oufile){
+        public String extartReadME(ZipArchive zs, String oufile){
 			String stringout = "";
 			ZipEntry entry = zs.findEntry("readme.md");
             if (entry != nilptr){
@@ -105,7 +105,7 @@ class PackageManager{
         }
     };
     
-    bool load(){
+    public bool load(){
 
 		String package_dir = String.formatPath(_system_.getAppDirectory().appendPath("packages"), false);
 		XPlatform.mkdir(package_dir);
@@ -129,7 +129,7 @@ class PackageManager{
         return false;
     }
     
-    int getCount(){
+    public int getCount(){
 		JsonArray list = (JsonArray)root.get("list");
         if (list != nilptr){
 			return list.length();
@@ -137,7 +137,7 @@ class PackageManager{
         return 0;
     }
     
-    PackageInfo get(int id){
+    public PackageInfo get(int id){
 		JsonArray list = (JsonArray)root.get("list");
         if (list != nilptr){
 			if (id < list.length() && id >= 0){
@@ -151,7 +151,7 @@ class PackageManager{
         return nilptr;
     }
     
-    Vector<PackageInfo> findPackages(String name, String version){
+    public Vector<PackageInfo> findPackages(String name, String version){
 		Vector<PackageInfo> outpackages = new Vector<PackageInfo>();
 		for (int i = 0, c = getCount(); i < c; i++){
 			PackageInfo pj = get(i);
@@ -164,7 +164,7 @@ class PackageManager{
         return outpackages;
     }
     
-     PackageInfo findPackage(String name, String version){
+    public PackageInfo findPackage(String name, String version){
 		for (int i = 0, c = getCount(); i < c; i++){
 			PackageInfo pj = get(i);
             if (pj.name.equals(name)){
@@ -176,7 +176,7 @@ class PackageManager{
         return nilptr;
     }
     
-    bool deletePackage(PackageInfo pi){
+    public bool deletePackage(PackageInfo pi){
 		JsonArray list = (JsonArray)root.get("list");
         if (list != nilptr){
 			if (pi.id < list.length() && pi.id >= 0){
@@ -192,7 +192,7 @@ class PackageManager{
     }
     
     
-    PackageInfo previewPackage(String file){
+    public PackageInfo previewPackage(String file){
 		FileInputStream fis;
         ZipArchive zs;
         
@@ -233,7 +233,7 @@ class PackageManager{
     }
     
     
-   static bool copyFile(String dest, String src){
+    public static bool copyFile(String dest, String src){
         try{
 
 			FileOutputStream fos = new FileOutputStream(dest);
@@ -256,7 +256,7 @@ class PackageManager{
         return false;
     }
     
-    bool installPackage(PackageInfo pi){
+    public bool installPackage(PackageInfo pi){
 		String install_path = String.formatPath(_system_.getAppDirectory().appendPath("packages/" + pi.name + pi.version), false);
         String install_icon = String.formatPath(_system_.getAppDirectory().appendPath("packages/" + pi.name + pi.version + ".png"), false);
         
@@ -284,7 +284,7 @@ class PackageManager{
         return false;
     }
     
-    bool save(){
+    public bool save(){
 		if (root != nilptr){
 			String pckInfo = String.formatPath(_system_.getAppDirectory().appendPath("packages/packages.info"), false);
 			

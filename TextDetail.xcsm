@@ -7,22 +7,22 @@ class TextDetail : QXDialog {
 	String text;
     QXSci _sci;
     
-    interface closeListener{
+    public interface closeListener{
 		void onCreate();
-		void onClose(String text);
+		void onClose(String text, bool updated);
     };
     
     closeListener cl_lis ;
     
-	TextDetail(closeListener l){
+	public TextDetail(closeListener l){
 		cl_lis = l;
     }
     
-	TextDetail(){
+	public TextDetail(){
     
     }
 
-    void syntaxForOutput(){
+    public void syntaxForOutput(){
 		if (Setting.isDarkStyle()){
 			syntaxForOutputDark();
             return ;
@@ -58,7 +58,7 @@ class TextDetail : QXDialog {
         _sci.sendEditor(QXSci.SCI_SETTABWIDTH, 4); 
     }
     
-    void syntaxForOutputDark(){
+    public void syntaxForOutputDark(){
         _sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);
         _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_DEFAULT, 0xff262525);
         _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_DEFAULT, 0xffefefef);
@@ -96,23 +96,25 @@ class TextDetail : QXDialog {
         
     }
     
-    bool onClose(){
+    public bool onClose(){
 		if (cl_lis != nilptr){
 			String update_txt = _sci.getText();
-			if (text.equals(update_txt) == false){
-				cl_lis.onClose(update_txt);
-            }
+			cl_lis.onClose(update_txt, text.equals(update_txt) == false);
         }
         return true;
     }
     
-    bool create(String caption, String str){
+   public bool create(String caption, String str, QXWidget parent, bool modal){
 		title = caption;
 		text = str;
+        if (parent == nilptr){
+            parent = XWorkspace.workspace;
+        }
 		if (super.create(XWorkspace.workspace)){
 			_sci = new QXSci();
 			if (_sci.create(this)){
 				syntaxForOutput();
+                _sci.sendEditor(QXSci.SCI_SETEOLMODE, QXSci.SC_EOL_LF, 0);
 				setOnLayoutEventListener(new onLayoutEventListener(){
 						void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
 							if (_sci != nilptr){
@@ -127,7 +129,9 @@ class TextDetail : QXDialog {
 				_sci.setText(str);
                 
 
-				
+				if (modal){
+                    setModal(true);
+                }
 				resize(400, 300);
 				
                 

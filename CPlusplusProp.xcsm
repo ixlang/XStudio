@@ -3,7 +3,13 @@
 
 class CPlusplusProp : ProjectPropInterface{
 
-   void makefile(IBuilder builder, String projectDir){
+   ProjectPropInterface _bridge = nilptr;
+   
+   public void setBridge(ProjectPropInterface ppi){
+       _bridge = ppi;
+   }
+   
+   public void makefile(IBuilder builder, String projectDir){
 		String [] margs = {"make"};
 		Process _mprocess = new Process("/usr/bin/make", margs);
         _mprocess.setWorkDirectory(projectDir);
@@ -13,7 +19,7 @@ class CPlusplusProp : ProjectPropInterface{
         builder.OutputText(statusoutput + "\n", 0);
         
         try{
-			if (_mprocess.create(false, true, false, false)){
+			if (_mprocess.create(Process.StdOut | Process.RedirectStdErr)){
 				Utils.readForProcess(builder, _mprocess);
 				_mprocess.waitFor(-1);
 			}else{
@@ -26,22 +32,86 @@ class CPlusplusProp : ProjectPropInterface{
         }
     }
     
-    String generateMake(Project object, Configure configure)override{
+    public void onProjectSettingChange(Project object)override{
+        if (_bridge != nilptr){
+            _bridge.onProjectSettingChange(object);
+        }
+    }
+    
+    public IXPlugin getXPlugin()override{
+        if (_bridge != nilptr){
+            return _bridge.getXPlugin();
+        } 
+        return nilptr;
+    }
+    
+    public String getDebuggeeDescription()override{
+        if (_bridge != nilptr){
+            return _bridge.getDebuggeeDescription();
+        }
+        return nilptr;
+    }
+    
+    public String generateMake(Project object, Configure configure)override{
+        if (_bridge != nilptr){
+            return _bridge.generateMake(object, configure);
+        }
 		return nilptr;
     }
-	void Run(IBuilder builder, Project proj, Configure conf) override {
-
+	public void Run(IBuilder builder, Project proj, Configure conf) override {
+        if (_bridge != nilptr){
+            _bridge.Run(builder, proj, conf);
+        }
 	}
-
-	bool build(IBuilder builder, Project object, Configure configure, Object param) override {
+    
+    public void customDebug(){
+        if (_bridge != nilptr){
+            _bridge.customDebug();
+        }
+    }
+    
+    public JsonArray getExternLibs(Configure cfg){
+        if (_bridge != nilptr){
+            return _bridge.getExternLibs(cfg);
+        }
+        return nilptr;
+    }
+    
+	public bool build(IBuilder builder, Project object, Configure configure, Object param) override {
+        if (_bridge != nilptr){
+            return _bridge.build(builder, object, configure, param);
+        }
 		return false;
 	}
    
-    void cleanup(IBuilder builder, Project object, Configure configure) override {
-
+    public void cleanup(IBuilder builder, Project object, Configure configure) override {
+        if (_bridge != nilptr){
+            _bridge.cleanup(builder, object, configure);
+        }
 	}
     
-	bool createNormalFileToProject(WizardLoader loader,String projectName, String projectDir, String uuid, Project ownProject, bool addToProject, String ext){
+    public JsonObject getProperitiesConfigure(){
+        if (_bridge != nilptr){
+            return _bridge.getProperitiesConfigure();
+        }
+        return nilptr;
+    }
+    
+    public IXIntelliSense allocIntelliSense(Project project, Configure cfg){
+        if (_bridge != nilptr){
+            return _bridge.allocIntelliSense(project, cfg);
+        }
+        return nilptr;
+    }
+    
+    public String [] generatorCompArgs(Project object, Configure configure, String sourfile)override{
+        if (_bridge != nilptr){
+            return _bridge.generatorCompArgs(object, configure, sourfile);
+        }
+        return nilptr;
+    }
+    
+	public bool createNormalFileToProject(WizardLoader loader,String projectName, String projectDir, String uuid, Project ownProject, bool addToProject, String ext){
 		XPlatform.mkdir(projectDir);
 		try{
 			String extsion = projectName.findExtension();
@@ -95,7 +165,7 @@ class CPlusplusProp : ProjectPropInterface{
 		return false;
 	}
     
-	bool create(WizardLoader loader, String projectName, String projectDir, String uuid, Project ownProject, bool isAddToProject, String userType) override {
+	public bool create(WizardLoader loader, String projectName, String projectDir, String uuid, Project ownProject, bool isAddToProject, String userType) override {
 		if (uuid.equals("c480d6ff-10ba-483a-8a76-927ea81a2403")){
 			return createNormalFileToProject(loader, projectName, projectDir, uuid, ownProject, isAddToProject, ".cpp");
 		}
@@ -108,21 +178,56 @@ class CPlusplusProp : ProjectPropInterface{
         return false;
 	}
 
-	void stopRun() override {
-
+	public void stopRun() override {
+        if (_bridge != nilptr){
+            _bridge.stopRun();
+        }
 	}
 
-	void debugRun(IBuilder builder, Project proj, Configure conf) override {
-
+    public ICompileInfo parseOutputLine(QXSci sci,int position, int line, String text)override{
+        if (_bridge != nilptr){
+            return _bridge.parseOutputLine(sci,position, line, text);
+        }
+        return nilptr;
+    }
+    
+	public void debugRun(IBuilder builder, Project proj, Configure conf) override {
+        if (_bridge != nilptr){
+            _bridge.debugRun(builder, proj, conf);
+        }
 	}
 
-	String getValue(Project object, Configure configure, String key) override {
-		return "";
+	public String getValue(Project object, Configure configure, String key) override {
+		if (_bridge != nilptr){
+            return _bridge.getValue(object, configure, key);
+        }
+        return "";
 	}
 
-	bool setValue(Project object, Configure configure, String key, String value) override {
-		return false;
+	public bool setValue(Project object, Configure configure, String key, String value) override {
+		if (_bridge != nilptr){
+            return _bridge.setValue(object, configure, key, value);
+        }
+        return false;
 	}
 
-
+    public Stream createDebugPipe(String host, int ip) override {
+		if (_bridge != nilptr){
+            return _bridge.createDebugPipe(host, ip);
+        }
+        return nilptr;
+    }
+    
+    public Stream getDebugPipe(){
+		if (_bridge != nilptr){
+            return _bridge.getDebugPipe();
+        }
+        return nilptr;
+    }
+    
+    public void stopBuild()override{
+        if (_bridge != nilptr){
+            _bridge.stopBuild();
+        }
+    }
 };

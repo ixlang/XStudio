@@ -3,19 +3,19 @@
 
 class QXPoint{
 
-	QXPoint(int _x, int _y){
+	public QXPoint(int _x, int _y){
 		x = _x;
         y = _y;
     }
     
-	int x , y;
+	public int x , y;
     
-    void offset(int _x,int _y){
+    public void offset(int _x,int _y){
 		x += _x;
         y += _y;
     }
     
-    void offset(QXPoint p){
+    public void offset(QXPoint p){
 		x += p.x;
         y += p.y;
     }

@@ -61,6 +61,10 @@ require("widgets/QXEvent.xcsm",
 "widgets/QXDateEdit.xcsm",
 "widgets/QXTimeEdit.xcsm",
 "widgets/QXTextEdit.xcsm",
+"widgets/QHBoxLayout.x",
+"widgets/QVBoxLayout.x",
+"widgets/QBoxLayout.x",
+"widgets/QLayout.x",
 "../uicomponent/ProgressView.xcsm",
 "../uicomponent/Switche.xcsm"
 )

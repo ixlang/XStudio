@@ -3,29 +3,29 @@ class XFindDlg : QXDialog
 {
     QXPushButton btnClose, btnFind, btnFindAgain, benFindall, btnReplace, btnReplaceAll;
     XWorkspace _workspace;
-    static bool bFindAll = false;
+    public static bool bFindAll = false;
     QXComboBox editFind, editRep, filetype, findscope;
 
     QXCheckBox casematch, wholeword, regex, forward, warp;
 
-    static bool findinOutput = false;
+    public static bool findinOutput = false;
 
     static Map<String,int>
     findhistory = new Map<String,int>(),
     replacehistory = new Map<String,int>(),
     filepattern = new Map<String,int>();
 
-    XFindDlg(XWorkspace _w)
+    public XFindDlg(XWorkspace _w)
     {
         _workspace = _w;
     }
 
-    void setDefaultFindText(String text)
+    public void setDefaultFindText(String text)
     {
         editFind.setText(text);
     }
 
-    void flushHistory(Map<String,int> his, QXComboBox comb)
+    public void flushHistory(Map<String,int> his, QXComboBox comb)
     {
         String [] items = new String[his.size()];
         Map.Iterator<String,int> iter = his.iterator();
@@ -37,35 +37,35 @@ class XFindDlg : QXDialog
         comb.clear();
         comb.addItems(items);
     }
-    void addFindHistory(String text)
+    public void addFindHistory(String text)
     {
         findhistory.put(text, 0);
         flushHistory(findhistory, editFind);
         editFind.setText(text);
     }
 
-    void addReplaceHistory(String text)
+    public void addReplaceHistory(String text)
     {
         replacehistory.put(text, 0);
         flushHistory(replacehistory, editRep);
         editRep.setText(text);
     }
 
-    void addFilePattertHistory(String text)
+    public void addFilePattertHistory(String text)
     {
         filepattern.put(text, 0);
         flushHistory(filepattern, filetype);
         filetype.setText(text);
     }
 
-    static int s_scope = 0;
-    static bool s_case = false;
-    static bool s_whole = false;
-    static bool s_regex = false;
-    static bool s_forward = false;
-    static bool s_warp = true;
+    public static int s_scope = 0;
+    public static bool s_case = false;
+    public static bool s_whole = false;
+    public static bool s_regex = false;
+    public static bool s_forward = false;
+    public static bool s_warp = true;
 
-    void saveStatus()
+    public void saveStatus()
     {
         s_scope = findscope.getCurrentIndex();
         s_case = casematch.getCheck();
@@ -75,7 +75,7 @@ class XFindDlg : QXDialog
         s_warp = warp.getCheck();
     }
 
-    void loadStatus()
+    public void loadStatus()
     {
         findscope.setCurrentIndex(s_scope);
         casematch.setCheck(s_case);
@@ -85,7 +85,7 @@ class XFindDlg : QXDialog
         warp.setCheck(s_warp);
     }
 
-    void onAttach()
+    public void onAttach()
     {
         setWindowFlags(CustomizeWindowHint | WindowCloseButtonHint  | Dialog  | WindowTitleHint);
         setFixedSize(width(), height());
@@ -303,7 +303,7 @@ class XFindDlg : QXDialog
         editFind.setFocus();
     }
 
-    XFinder.FindResult findAll()
+    public XFinder.FindResult findAll()
     {
         bFindAll = true;
 
@@ -342,14 +342,15 @@ class XFindDlg : QXDialog
 
         StatusBarMgr.showStatusMessage("正在查找...[匹配大小写=" + bcase + ",全字匹配=" + bwholewd+ ",正则表达式=" + bregex + " ]");
 
-        XFinder.find(result, XWorkspace.workspace.currentProject, bcase, bwholewd, bregex, extions, findscope.getCurrentIndex(), str, pattern);
+        XFinder.find(result, XWorkspace.workspace.getCurrentProject(), bcase, bwholewd, bregex, extions, findscope.getCurrentIndex(), str, pattern);
 
 
         StatusBarMgr.showStatusMessage("查找结束.[匹配大小写=" + bcase + ",全字匹配=" + bwholewd+ ",正则表达式=" + bregex + " ]");
 
         return result;
     }
-    void onFinish( int res)
+    
+    public void onFinish( int res)
     {
         saveStatus();
         XWorkspace.findDlg = nilptr;

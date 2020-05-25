@@ -7,7 +7,7 @@ class XWndOutput: QXDockWidget
     List<String> outputListext = new List<String>();
     Object outputlock = new Object();
     static bool outputInFocus = false;
-    static XWndOutput outputWnd;
+    public static XWndOutput outputWnd;
     Thread mergeThread = nilptr, mergeThreadext = nilptr;
     QXPushButton btnCls;
     QXWidget edtarea;
@@ -21,30 +21,30 @@ class XWndOutput: QXDockWidget
                                     "+\\.([a-zA-Z]{2,4})(:\\d+)?(/[a-zA-Z0-9\\.\\-~!@#$%^&*+?:_/=<>]*)?)|" +
                                     "(www.[a-zA-Z0-9\\.\\-]+\\.([a-zA-Z]{2,4})(:\\d+)?(/[a-zA-Z0-9\\.\\-~!@#$%^&*+?:_/=<>]*)?)");
 
-    static void Output(String text, int id)
+    public static void Output(String text, int id)
     {
         outputWnd.output(text, id);
     }
     
-    static bool inFocus(){
+    public static bool inFocus(){
         return outputWnd.hasFocus();
     }
     
-    static int registryOutput(String icon){
+    public static int registryOutput(String icon){
         if (icon == nilptr || icon.length() == 0){
             return -1;
         }
         return outputWnd.registry_Output(icon);
     }
     
-    int registry_Output(String icon){
+    public int registry_Output(String icon){
         btnOutput[output_count].show();
         icon = icon.replace("\\","/");
         btnOutput[output_count].setStyleSheetString("qproperty-icon: url(" + icon +") off, url(" + icon +") on ;");
         return output_count++;
     }
     
-    void output(String text, int id)
+    public void output(String text, int id)
     {
         if (id <0 || id > 15){
             return;
@@ -73,13 +73,13 @@ class XWndOutput: QXDockWidget
 
     }
 
-    void Copy(){
+    public void Copy(){
         if (_scicomm.isVisible()){
             _scicomm.Copy();
         }
     }
     
-    void clearComm(bool focus)
+    public void clearComm(bool focus)
     {
         _scicomm.clear();
         if (focus){
@@ -87,7 +87,7 @@ class XWndOutput: QXDockWidget
         }
     }
     
-    void clearAll(bool focus)
+    public void clearAll(bool focus)
     {
         _scicomm.clear();
         _sciext.clear();
@@ -97,7 +97,7 @@ class XWndOutput: QXDockWidget
     }
 
 
-    void reconfig()
+    public void reconfig()
     {
         syntaxForOutput(_scicomm);
         syntaxForOutput(_sciext);
@@ -117,7 +117,7 @@ class XWndOutput: QXDockWidget
 
         滚动算法， 显示的最顶端行 + 可显示的行 如果小于最后行 说明被人为向上拉了， 则停止自动滚动， 反之自动滚动
     */
-    void processOutputComm()
+    public void processOutputComm()
     {
         mergeThread = new Thread() {
             void run() {
@@ -157,25 +157,7 @@ class XWndOutput: QXDockWidget
                         runOnUi(new Runnable() {
                             String appstr = finalstr;
                             void run()override {
-                                long displaytime = _system_.currentTimeMillis();
-                                int topline = _scicomm.getFirstVisibleLine();
-                                int scrlines = _scicomm.getLinesOfDisplay();
-
-                                topline += scrlines;
-                                bool tobottom = true;
-                                if (topline < _scicomm.countOfLine()) {
-                                    tobottom = false;
-                                }
-                                _scicomm.appendText(appstr);
-                                int cutcountline = _scicomm.countOfLine();
-
-                                if (tobottom) {
-                                    _scicomm.setFirstVisibleLine(cutcountline - scrlines);
-                                }
-
-                                displaytime = _system_.currentTimeMillis() - displaytime;
-
-                                interval = displaytime + 50 + (cutcountline / 100000) * 5;
+                                interval = appendTextAndScroll(_scicomm, appstr);
                             }
 
                         });
@@ -200,7 +182,47 @@ class XWndOutput: QXDockWidget
         mergeThread.start();
     }
 
-    void processOutputExt()
+    public int appendTextAndScroll(QXSci _sci, String appstr){
+        long displaytime = _system_.currentTimeMillis();
+        bool bWrap = _sci.isWrap();
+        int cutcountline  = 0;
+        if (bWrap == false){
+            int topline = _sci.getFirstVisibleLine();
+            int scrlines = _sci.getLinesOfDisplay();
+            topline += scrlines;
+            bool tobottom = true;
+            if (topline < _sci.countOfLine()) {
+                tobottom = false;
+            }
+            _sci.appendText(appstr);
+            cutcountline = _sci.countOfLine();
+            if (cutcountline > 50000){
+                long del_end_pos = _sci.getEndOfLine(10000);
+                _sci.replaceRange(0,del_end_pos,"");
+            }
+            if (tobottom) {
+                _sci.setFirstVisibleLine(cutcountline - scrlines);
+            }
+        }else{
+            cutcountline = _sci.countOfLine();
+            bool tobottom = _sci.getCurrentPosition() == _sci.getLength();
+            _sci.appendText(appstr);
+            cutcountline = _sci.countOfLine();
+            if (cutcountline > 50000){
+                long del_end_pos = _sci.getEndOfLine(10000);
+                _sci.replaceRange(0,del_end_pos,"");
+                cutcountline = _sci.countOfLine();
+            }
+            
+            if (tobottom){
+                _sci.gotoPos(_sci.getLength());
+            }
+        }
+        displaytime = _system_.currentTimeMillis() - displaytime;
+
+        return displaytime + 50 + (cutcountline / 100000) * 5;
+    }
+    public void processOutputExt()
     {
         mergeThreadext = new Thread() {
             void run() {
@@ -240,28 +262,7 @@ class XWndOutput: QXDockWidget
                         runOnUi(new Runnable() {
                             String appstr = finalstr;
                             void run()override {
-                                long displaytime = _system_.currentTimeMillis();
-                                int topline = _sciext.getFirstVisibleLine();
-                                int scrlines = _sciext.getLinesOfDisplay();
-
-                                topline += scrlines;
-                                bool tobottom = true;
-                                if (topline < _sciext.countOfLine()) {
-                                    tobottom = false;
-                                }
-                                _sciext.appendText(appstr);
-                                int cutcountline = _sciext.countOfLine();
-                                if (cutcountline > 50000){
-                                    long del_end_pos = _sciext.getEndOfLine(10000);
-                                    _sciext.replaceRange(0,del_end_pos,"");
-                                }
-                                if (tobottom) {
-                                    _sciext.setFirstVisibleLine(cutcountline - scrlines);
-                                }
-
-                                displaytime = _system_.currentTimeMillis() - displaytime;
-
-                                interval = displaytime + 50 + (cutcountline / 100000) * 5;
+                                interval = appendTextAndScroll(_sciext, appstr);
                             }
 
                         });
@@ -286,7 +287,7 @@ class XWndOutput: QXDockWidget
         mergeThreadext.start();
     }
     
-    void syntaxForOutput(QXSci _sci)
+    public void syntaxForOutput(QXSci _sci)
     {
         if (Setting.isDarkStyle()) {
             syntaxForOutputDark(_sci);
@@ -332,9 +333,10 @@ class XWndOutput: QXDockWidget
         _sci.sendEditor(QXSci.SCI_SETCARETLINEBACK, 0xffefefef);
 
         _sci.sendEditor(QXSci.SCI_SETTABWIDTH, 4);
+        _sci.setWrap(Setting.isOutputWrap());
     }
 
-    void syntaxForOutputDark(QXSci _sci)
+    public void syntaxForOutputDark(QXSci _sci)
     {
         _sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);
         //_sci.setWrap(true);
@@ -373,11 +375,10 @@ class XWndOutput: QXDockWidget
 
         _sci.sendEditor(QXSci.SCI_SETCARETLINEVISIBLE, 1);
         _sci.sendEditor(QXSci.SCI_SETCARETLINEBACK, 0xff202020);
-
-
+        _sci.setWrap(Setting.isOutputWrap());
     }
 
-    bool onClose()override
+    public bool onClose()override
     {
         /*if (urlmon != nilptr){
         	urlmon.cancel();
@@ -394,7 +395,7 @@ class XWndOutput: QXDockWidget
         }
     };
     
-    void switch_sci(bool commMain){
+    public void switch_sci(bool commMain){
         bool comm_show, ext_show;
         for (int i =0; i < 16; i ++){
             if (output_flags[i]){
@@ -425,7 +426,7 @@ class XWndOutput: QXDockWidget
         }
     }
     
-    void onAttach()
+    public void onAttach()
     {
         edtarea = (QXWidget)attachByName(new QXWidget(),"edtarea");
         
@@ -490,72 +491,37 @@ class XWndOutput: QXDockWidget
 
         }, 1000, -1);*/
         switch_sci(true);
-        
+        output_flags[1] = true;
+        btnOutput[1].setCheck(true);
     }
 
-    void initSci(QXSci _sci){
+    public void initSci(QXSci _sci){
         if (_sci.create(edtarea)) {
             syntaxForOutput(_sci);
-            
-
-
             _sci.setOnSciEventListener(new SciEventListener() {
                 void ON_DOUBLECLICK(QXSci sci,int position, int line, int modifiers) {
 
                     String lineText = sci.getText(line);
                     if (lineText != nilptr && lineText.length() > 0) {
-                        int pos = lineText.lastIndexOf('(');
-                        if (pos != -1) {
-                            int lp = lineText.indexOf(':', pos);
-                            if (lp != -1) {
-                                int le = lineText.indexOf(',', lp);
-                                int rp = lineText.indexOf(':', lp + 1);
-                                if (rp != -1 && le != -1) {
-                                    int re = lineText.indexOf(')', lp);
-                                    String file = lineText.substring(0, pos).trim(true);
-                                    int tl = lineText.substring(lp + 1, le).parseInt();
-                                    int tr = lineText.substring(rp + 1, re).parseInt();
-
-
-                                    int i = line + 1;
-                                    String infos = lineText;
-
-                                    for (int c = sci.countOfLine(); i < c; i++) {
-                                        String linestr = sci.getText(i);
-
-                                        if (linestr.startWith(" ") == false) {
-                                            break;
-                                        } else {
-                                            infos = infos + "\n" + linestr ;
+                        Project project = XWorkspace.workspace.getCurrentProject();
+                        try{
+                            if (project != nilptr){
+                                ProjectPropInterface  intel = project.getPropInterface();
+                                if (intel != nilptr){
+                                    ICompileInfo icf = intel.parseOutputLine(sci, position, line, lineText);
+                                    if (icf != nilptr){
+                                        String tarfile =  icf.getFile();
+                                        int tarline = icf.getLine();
+                                        int tarrow = icf.getRow();
+                                        String tarinfo = icf.getTips();
+                                        if (tarfile != nilptr && tarfile.length() > 0){
+                                            XSourceEditor.openForFileInfo(XWorkspace.workspace, tarfile, tarline, tarrow, tarinfo);
                                         }
                                     }
-                                    /*if (infos.length() < 5){
-                                    	infos = nilptr;
-                                    }*/
-                                    XSourceEditor.openForFileInfo(XWorkspace.workspace, file, tl, tr, infos);
                                 }
                             }
-                        }else{
-                            pos = lineText.indexOf(':');
-                            if (pos != -1) {
-                                String file = lineText.substring(0, pos).trim(true);
-                                int tl = lineText.substring(pos + 1, lineText.length()).parseInt();
-                                
-                                int i = line + 1;
-                                String infos = lineText;
-
-                                for (int c = sci.countOfLine(); i < c; i++) {
-                                    String linestr = sci.getText(i);
-
-                                    if (linestr.startWith(" ") == false) {
-                                        break;
-                                    } else {
-                                        infos = infos + "\n" + linestr ;
-                                    }
-                                }
-                                
-                                XSourceEditor.openForFileInfo(XWorkspace.workspace, file, tl, 1, infos);
-                            }
+                        }catch(Exception e){
+                            
                         }
                     }
                 }
@@ -631,18 +597,18 @@ class XWndOutput: QXDockWidget
             });
         }
     }
-    void showTips(QXSci _sci, int position, String content)
+    public void showTips(QXSci _sci, int position, String content)
     {
         _sci.showTips(position, content);
     }
-    QXSci getCurrentSci(){
+    public QXSci getCurrentSci(){
         if (_scicomm.isVisible()){
             return _scicomm;
         }else{
             return _sciext;
         }
     }
-    void testUrl(QXSci _sci)
+    public void testUrl(QXSci _sci)
     {
         if (_sci.isModified()) {
             String text = _sci.getText();

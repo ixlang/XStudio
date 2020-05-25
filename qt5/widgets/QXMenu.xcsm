@@ -1,10 +1,10 @@
 class QXMenu : QXWidget{
-    QXMenu(long handle){
+    public QXMenu(long handle){
         super(handle);
     }
-	QXMenu(){
+	public QXMenu(){
 	}
-    bool create(){
+    public bool create(){
         nativehandle = createQObject(QType.qtMenu, this, 0);
         if (nativehandle == 0){
             return false;
@@ -12,7 +12,7 @@ class QXMenu : QXWidget{
         return true;
     }
     
-    bool create(QXWidget parent){
+    public bool create(QXWidget parent){
         nativehandle = createQObject(QType.qtMenu, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
@@ -20,27 +20,27 @@ class QXMenu : QXWidget{
         return true;
     }
     
-    QXAction addAction(String text){
+    public QXAction addAction(String text){
         return (QXAction)object_get_string(nativehandle,ADDACT, text);
     }
     
-    QXAction addAction(String icon, String text){
+    public QXAction addAction(String icon, String text){
         return (QXAction)object_get_string2(nativehandle, ADDACT, icon, text);
     }
     
-    QXAction addAction(String text, QXObject receiver, String member, String key){
+    public QXAction addAction(String text, QXObject receiver, String member, String key){
         return (QXAction)object_get_string_handle_string2(nativehandle, ADDACT, text, receiver.nativehandle, member, key);
     }
     
-    QXAction addAction(String text, QXObject receiver, String member, int key){
+    public QXAction addAction(String text, QXObject receiver, String member, int key){
         return (QXAction)object_get_string_handle_string_int(nativehandle, ADDACT, text, receiver.nativehandle, member, key);
     }
     
-    QXAction addAction(String icon, String text, QXObject receiver, String member, String shortcutKey){
+    public QXAction addAction(String icon, String text, QXObject receiver, String member, String shortcutKey){
         return (QXAction)object_get_string2_handle_string2(nativehandle, ADDACT, icon, text, receiver.nativehandle, member, shortcutKey);
     }
     
-    QXAction addAction(String icon, String text, QXObject receiver, String member, int shortcutKey){
+    public QXAction addAction(String icon, String text, QXObject receiver, String member, int shortcutKey){
         return (QXAction)object_get_string2_handle_string_int(nativehandle, ADDACT, icon, text, receiver.nativehandle, member, shortcutKey);
     }
     

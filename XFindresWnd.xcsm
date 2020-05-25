@@ -3,15 +3,15 @@
 
 
 class XFindresWnd : ListDockWidget{
-	static XFindresWnd findWnd;
+	public static XFindresWnd findWnd;
     static int current_click_item = 0;
     XFinder.FindResult _find_result;
     Object findlock = new Object();
-	void onListItemClicked(QXTreeView tree,long item, int column)override{
+	public void onListItemClicked(QXTreeView tree,long item, int column)override{
 		locateFind(tree, item);
     }
         
-    void locateFind(QXTreeView tree,long item){
+    public void locateFind(QXTreeView tree,long item){
 		String file = tree.getItemText(item, 0);
         String posinfo = tree.getItemText(item, 1);
         
@@ -34,26 +34,26 @@ class XFindresWnd : ListDockWidget{
 			XSourceEditor.locateForLineRow(XWorkspace.workspace, file, line, row, len);
         }
     }
-    void onCreate(){
+    public void onCreate(){
 		findWnd = this;
     }
     
-    String getListName()override{
+    public String getListName()override{
 		return "findlist";
     }
     
-    String [] getColumn()override{
+    public String [] getColumn()override{
 		String [] columns = {"文件", "位置", "长度", "源/类型"};
         return columns;
     }
     
-    int [] getColumnWidths()override{
+    public int [] getColumnWidths()override{
 		int [] ws = {300, 50, 50, 50};
         return ws;
     }
     
     
-    void nextFind(){
+    public void nextFind(){
 		synchronized(findlock){
 			QXTreeView tree = getList();
             tree.setCurrentIndex(current_click_item, 0);
@@ -71,11 +71,11 @@ class XFindresWnd : ListDockWidget{
 		}
     }
     
-	void onNotification(long id){
+	public void onNotification(long id){
 
 	}
     
-    void showResult(XFinder.FindResult result){
+    public void showResult(XFinder.FindResult result){
 		if (result == nilptr){
 			return ;
         }
@@ -104,7 +104,7 @@ class XFindresWnd : ListDockWidget{
         raise();
     }
     
-	static void ShowResult(XFinder.FindResult result){
+	public static void ShowResult(XFinder.FindResult result){
 		findWnd.showResult(result);
     }
 };

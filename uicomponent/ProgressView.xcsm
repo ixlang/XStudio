@@ -27,19 +27,19 @@ class ProgressView : QXWidget {
 
     static const double HEIGHT_RATE = 1.15f;
 
-    interface OnDismissListener {
+    public interface OnDismissListener {
         void onDismissListener(ProgressView v);
     };
 
-    void setOnDismissListener(OnDismissListener _dismissListener) {
+    public void setOnDismissListener(OnDismissListener _dismissListener) {
         __dismissListener = _dismissListener;
     }
 
-    int dip2px(double dpValue) {
+    public int dip2px(double dpValue) {
         return (int) (dpValue * _scale + 0.5f);
     }
 
-    void onDrawBackground(QXPainter canvas, double padding, QXPainter.Paint paint) {
+    public void onDrawBackground(QXPainter canvas, double padding, QXPainter.Paint paint) {
         QXRect rect = new QXRect();
         canvas.setRenderHint(QXPainter.RenderHint.Antialiasing, true);
         rect.left = rect.top = padding;
@@ -56,7 +56,7 @@ class ProgressView : QXWidget {
     }
 
 
-    void DrawComplete(QXPainter canvas,double padding,QXPainter.Paint paint,double subCenterX,
+    public void DrawComplete(QXPainter canvas,double padding,QXPainter.Paint paint,double subCenterX,
                       double subCenterY,double minCenterY,double subwidth,double subheight) {
         double width = subwidth * 5.f;
         double height = width / 6;
@@ -90,7 +90,7 @@ class ProgressView : QXWidget {
         canvas.restore();
     }
 
-    void DrawFatal(QXPainter canvas,double padding,QXPainter.Paint paint,double subCenterX,
+    public void DrawFatal(QXPainter canvas,double padding,QXPainter.Paint paint,double subCenterX,
                    double subCenterY,double minCenterY,double subwidth,double subheight) {
         double width = subwidth * 5.f;
         double height = width / 5;
@@ -114,7 +114,7 @@ class ProgressView : QXWidget {
         canvas.restore();
     }
 
-    void DrawWaiting(QXPainter canvas,double padding,QXPainter.Paint paint,double subCenterX,
+    public void DrawWaiting(QXPainter canvas,double padding,QXPainter.Paint paint,double subCenterX,
                      double subCenterY,double minCenterY,double subwidth,double subheight) {
         QXRect progsub = new QXRect();
 
@@ -145,7 +145,7 @@ class ProgressView : QXWidget {
         canvas.restore();
     }
 
-    void calcTitlePosition(QXPainter canvas,double padding,QXPainter.Paint paint) {
+    public void calcTitlePosition(QXPainter canvas,double padding,QXPainter.Paint paint) {
 
         paint.setTextSize(dip2px(_fontSize));
         //paint.setFakeBoldText(true);
@@ -161,7 +161,7 @@ class ProgressView : QXWidget {
 
     }
 
-    void drawProgress(QXPainter canvas,double padding,
+    public void drawProgress(QXPainter canvas,double padding,
                       QXPainter.Paint paint,double progressX,double progressY,
                       double progressCX,double progressCY) {
 
@@ -183,7 +183,7 @@ class ProgressView : QXWidget {
 
 
 
-    void onDraw(QXPainter canvas) {
+    public void onDraw(QXPainter canvas) {
 
         canvas.setPen(0, QXPainter.PenStyle.NoPen, 0);
 
@@ -232,7 +232,7 @@ class ProgressView : QXWidget {
         }
     }
 
-    void beginAnimation(long millionSecond) {
+    public void beginAnimation(long millionSecond) {
         synchronized(_timeObj) {
             if (_animator != nilptr) {
                 return ;
@@ -270,7 +270,7 @@ class ProgressView : QXWidget {
     }
 
 
-    void showModal(long millionSecond, bool bModal) {
+    public void showModal(long millionSecond, bool bModal) {
         setPalette(ColorRole.Background, 0x7fffffff);
         setOpacity(1);
         setWindowFlags(FramelessWindowHint | WindowStaysOnTopHint | Tool);
@@ -287,7 +287,7 @@ class ProgressView : QXWidget {
         show();
     }
 
-    static ProgressView showWait(long millionSecond) {
+    public static ProgressView showWait(long millionSecond) {
         ProgressView _progView = new ProgressView();
         if (_progView.create()) {
             _progView.showModal(millionSecond, false);
@@ -296,7 +296,7 @@ class ProgressView : QXWidget {
         return nilptr;
     }
 
-    static ProgressView showWait(QXWidget p, long millionSecond) {
+    public static ProgressView showWait(QXWidget p, long millionSecond) {
         ProgressView _progView = new ProgressView();
         if (_progView.create(p)) {
             _progView.showModal(millionSecond, true);
@@ -305,34 +305,34 @@ class ProgressView : QXWidget {
         return nilptr;
     }
 
-    String getTitleText() {
+    public String getTitleText() {
         return _titleText;
     }
 
-    void setTitleText(String szTitle) {
+    public void setTitleText(String szTitle) {
         _titleText = szTitle;
     }
 
-    void setTitleColor(int nColor) {
+    public void setTitleColor(int nColor) {
         _titleColor = nColor;
     }
 
-    void setTitleFontSize(int sp) {
+    public void setTitleFontSize(int sp) {
         _fontSize = sp;
     }
 
-    void setTitle(String szTitle,int nColor,int sp) {
+    public void setTitle(String szTitle,int nColor,int sp) {
         _titleText = szTitle;
         _titleColor = nColor;
         _fontSize = sp;
     }
 
-    void showResult(bool bShowResult,bool bSuccess) {
+    public void showResult(bool bShowResult,bool bSuccess) {
         _bShowResult = bShowResult;
         _bResult = bSuccess;
     }
 
-    void EnableProgress(bool bEnable,double persent) {
+    public void EnableProgress(bool bEnable,double persent) {
         _bShowProgress = bEnable;
 
         _progressPersent = Math.max(0.f, persent);
@@ -340,22 +340,22 @@ class ProgressView : QXWidget {
 
     }
 
-    void setProgress(double persent) {
+    public void setProgress(double persent) {
         if (persent >= 0 && persent <= 1) {
             _progressPersent = persent;
         }
     }
 
-    void dismissAfter(int millionSecond) {
+    public void dismissAfter(int millionSecond) {
         _beginMillionSecond = _system_.currentTimeMillis();
         _dismissMillionSecond = millionSecond;
     }
 
-    void dismiss() {
+    public void dismiss() {
         _dismiss();
     }
 
-    void _dismiss() {
+    public void _dismiss() {
         double opacity = 1.f;
 
         new Timer().schedule(new TimerTask() {
@@ -373,11 +373,11 @@ class ProgressView : QXWidget {
         }, 20, 10);
     }
 
-    void onPaint(int l, int t, int r, int b, long hpaint) override {
+    public void onPaint(int l, int t, int r, int b, long hpaint) override {
         onDraw(new QXPainter(hpaint));
     }
 
-    bool onClose()override {
+    public bool onClose()override {
         if (__dismissListener != nilptr) {
             __dismissListener.onDismissListener(ProgressView.this);
         }

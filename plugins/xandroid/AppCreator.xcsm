@@ -11,7 +11,7 @@ class AppCreator : QXDialog{
      IProject ownProject;
      bool addToProject;
     
-    AppCreator(QXDialog d, WizardLoader _loader, String _projectName, String _projectDir, String _uuid, IProject _ownProject, bool _addToProject){
+    public AppCreator(QXDialog d, WizardLoader _loader, String _projectName, String _projectDir, String _uuid, IProject _ownProject, bool _addToProject){
         loader = _loader;
         projectName = _projectName;
         projectDir = _projectDir; 
@@ -21,12 +21,12 @@ class AppCreator : QXDialog{
         attach( d);
     }
     
-    static void create(QXDialog d, WizardLoader _loader, String _projectName, String _projectDir, String _uuid, IProject _ownProject, bool _addToProject){
+    public static void create(QXDialog d, WizardLoader _loader, String _projectName, String _projectDir, String _uuid, IProject _ownProject, bool _addToProject){
         AppCreator ad = new AppCreator(d, _loader, _projectName, _projectDir, _uuid, _ownProject, _addToProject);
         ad.show();
     }
     
-    bool checkPackageName(String packageName){
+    public bool checkPackageName(String packageName){
         byte[]data = packageName.getBytes();
         bool isDot = false;
         
@@ -52,7 +52,7 @@ class AppCreator : QXDialog{
         
         return !isDot;
     }
-    void onAttach()override{
+    public void onAttach()override{
         setWindowIcon(Resources.sdk_setting);
         setWindowFlags(QXDialog.WindowCloseButtonHint);
         setFixedSize(width(), height());

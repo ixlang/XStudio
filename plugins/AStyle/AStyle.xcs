@@ -8,7 +8,7 @@ class XLANGPlugManager
 
     static IXStudioController xcontroller;
     static WorkspaceController workspace;
-    static class XLangPlugin : IXPlugin
+    public static class XLangPlugin : IXPlugin
     {
         String getName()
         {
@@ -84,7 +84,7 @@ class XLANGPlugManager
                                 beautyThread = nilptr;
                                 workspace.RunOnUi(new UIRunnable() {
                                     void run ()override {
-                                        editor.reload();
+                                        editor.reload(nilptr);
                                         editor.continueFileWatch();
                                     }
                                 });
@@ -193,7 +193,7 @@ class XLANGPlugManager
         process.setWorkDirectory(apppath);
 
         try {
-            if (process.create(false, true, false, false)) {
+            if (process.create(Process.StdOut | Process.RedirectStdErr)) {
                 readForProcess(process);
                 process.waitFor(-1);
             } else {

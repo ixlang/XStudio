@@ -2,10 +2,10 @@
 
 class XLANGPlugManager{
 
-	static IXStudioController xcontroller;
+	public static IXStudioController xcontroller;
 
-	static class XLangPlugin : IXPlugin{
-		XTextEditor textPlugin = new XTextEditor();
+	public static class XLangPlugin : IXPlugin{
+		public XTextEditor textPlugin = new XTextEditor();
         
 		String getName(){
 			return "xlang";

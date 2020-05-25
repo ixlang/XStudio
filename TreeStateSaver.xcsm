@@ -3,7 +3,7 @@
 
 class TreeStateSaver{
 
-    static JsonNode saveState(QXTreeView tree, long parent){
+    public static JsonNode saveState(QXTreeView tree, long parent){
         JsonArray jsonitem = new JsonArray();
         
         long [] items;

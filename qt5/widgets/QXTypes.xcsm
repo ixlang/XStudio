@@ -1,5 +1,5 @@
 class QType {
-    static const int None = 0,
+    public static const int None = 0,
                      qtWidget = 1,
                      qtMainWindow = 2,
                      qtSci = 3,
@@ -61,5 +61,8 @@ class QType {
                      qtDateEdit = 59,
                      qtDateTimeEdit = 60,
                      qtTimeEdit = 61,
-                     qtTextEdit = 62;
+                     qtTextEdit = 62,
+                     qtDockWidget = 63,
+                     qtVLayout = 64,
+                     qtHLayout = 65;
 };

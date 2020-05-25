@@ -1,15 +1,15 @@
 //xlang Source, Name:QXStatusBar.xcs 
 //Date: Sat Aug 11:03:30 2018 
 class QXStatusBar : QXWidget{
-    QXStatusBar(){
+    public QXStatusBar(){
     
     }
     
-    QXStatusBar(long handle){
+    public QXStatusBar(long handle){
         super(handle);
     }
     
-    bool create(){
+    public bool create(){
         nativehandle = createQObject(QType.qtStatusBar, this, 0);
         if (nativehandle == 0){
             return false;
@@ -17,38 +17,38 @@ class QXStatusBar : QXWidget{
         return true;
     }
     
-    bool create(QXWidget parent){
+    public bool create(QXWidget parent){
         nativehandle = createQObject(QType.qtStatusBar, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
         }
         return true;
     }    
-    void addWidget(QXWidget widget, int stretch ){
+    public void addWidget(QXWidget widget, int stretch ){
 		widget_set_intlongint_value(nativehandle, ADDWIDGET, widget.nativehandle, stretch, 0);
 	}
-    int insertWidget(int index, QXWidget widget, int stretch){
+    public int insertWidget(int index, QXWidget widget, int stretch){
 		return int_long_int_long_int_int(nativehandle, INSERTWIDGET, widget.nativehandle, stretch, index);
 	}
-    void addPermanentWidget(QXWidget widget, int stretch){
+    public void addPermanentWidget(QXWidget widget, int stretch){
 		widget_set_intlongint_value(nativehandle, ADDPERWIDGET, widget.nativehandle, stretch, 0);
 	}
-    int insertPermanentWidget(int index, QXWidget widget, int stretch){
+    public int insertPermanentWidget(int index, QXWidget widget, int stretch){
 		return int_long_int_long_int_int(nativehandle, INSERTPERWIDGET, widget.nativehandle, stretch, index);
 	}
-    void removeWidget(QXWidget widget){
+    public void removeWidget(QXWidget widget){
 		widget_set_native_value(nativehandle, REMOVEWIDGET, widget.nativehandle);
 	}
-    void setSizeGripEnabled(bool b){
+   public void setSizeGripEnabled(bool b){
 		widget_set_bool_value(nativehandle, SIZEGRIPENABLED, b);
 	}
-    bool isSizeGripEnabled() {
+    public bool isSizeGripEnabled() {
 		return widget_get_bool_value(nativehandle, SIZEGRIPENABLED);
 	}
-    String currentMessage() {
+    public String currentMessage() {
 		return (String)core_getString(nativehandle, CURRENTMESSAGE);
 	}
-	void showMessage(String text){
+	public void showMessage(String text){
 		widget_slot_string(nativehandle, SHOWMESSAGE, text);
 	}	
 };

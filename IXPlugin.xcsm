@@ -177,7 +177,7 @@ interface IProject
     String getOutputDir();
     String getOutputTarget();
     String getOutputName();
-    void setOption(String key, String text);
+    bool setOption(String key, String text);
     void deploy();
     void deployto(String path);
     String getOption(String key);
@@ -206,17 +206,18 @@ interface IProject
     void setTag(String key, Object obj);
     Object getTag(String key);
     bool importPackage(String packName, String ver);
+    void reinitIntelliSense();
 };
 
 class BuildListener{
-    enum BuildState{
+    public enum BuildState{
         BuildSuccess, 
         BuildFailed, 
         BuildSkip,
         BuildPending
     };
     
-	void onBuild(bool success);
+	public void onBuild(bool success);
 };
 
 interface WorkspaceController
@@ -251,6 +252,8 @@ interface WorkspaceController
     void cancelDownloadTask(String key);
     bool hasDownloadTask(String key);
     int getDownloadTaskProgress(String key);
+    void requestReconfigureSystem();
+    SourceContent getSourceContent(String sourcefile);
 };
 
 interface IXStudioController
@@ -258,14 +261,20 @@ interface IXStudioController
     WorkspaceController getWorkspace();
 };
 
+interface SourceContent{
+    String getContent();
+    String getPath();
+    bool isEditing();
+    String getCharset();
+};
 
 interface TextEditorController
 {
     String getPath();
     String getTitle();
     bool save();
-    void reload();
-    void postreload();
+    void reload(String asCharset);
+    void postreload(String asCharset);
     bool gotoLine(long line, long column);
     bool gotoPos(long line);
     bool select(long start, long end);
@@ -293,6 +302,7 @@ interface TextEditorPlugin
 
     bool requestClose(TextEditorController editor);
     String getIconFile();
+    void configEditor(Project project,  String path, QXSci sci, bool darkStyle);
 };
 
 interface WizardLoader{
@@ -335,7 +345,7 @@ interface UIRunnable
 
 interface IConfigure
 {
-    void setOption(String key, String text);
+    bool setOption(String key, String text);
     void save();
     bool isModified();
     void setLibs(String text);
@@ -361,13 +371,13 @@ interface IConfigure
 
 static class XPluginShell
 {
-    XPluginShell(IXPlugin _p)
+    public XPluginShell(IXPlugin _p)
     {
         _plugin = _p;
     }
-    IXPlugin _plugin;
-    bool inited = false;
-    bool disable = false;
+    public IXPlugin _plugin;
+    public bool inited = false;
+    public bool disable = false;
 };
 
 enum DownloadStatus{
@@ -385,8 +395,8 @@ interface DownloadListener{
     
 class PluginsController
 {
-    static Map<String, XPluginShell> plugins_list = new Map<String, XPluginShell>();
-    static void initPlugins(IXStudioController ic)
+    public static Map<String, XPluginShell> plugins_list = new Map<String, XPluginShell>();
+    public static void initPlugins(IXStudioController ic)
     {
         Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
         while (iter.hasNext()) {
@@ -401,7 +411,7 @@ class PluginsController
         }
     }
 
-    static bool exitPlugins()
+    public static bool exitPlugins()
     {
         Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
         while (iter.hasNext()) {
@@ -416,7 +426,7 @@ class PluginsController
         return true;
     }
     
-    static IXPlugin getPlugin(String language)
+    public static IXPlugin getPlugin(String language)
     {
         Map.Iterator<String, XPluginShell> iter = plugins_list.find(language);
         
@@ -430,7 +440,7 @@ class PluginsController
     }
 
 
-    static bool callProjectPlugin(Project project, int step)
+    public static bool callProjectPlugin(Project project, int step)
     {
         
         Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
@@ -472,7 +482,7 @@ class PluginsController
         return true;
     }
     
-    static IProject openProject(String language, JsonObject content)
+    public static IProject openProject(String language, JsonObject content)
     {
         Map.Iterator<String, XPluginShell> iter = plugins_list.find(language);
         if (iter != nilptr) {
@@ -484,7 +494,7 @@ class PluginsController
         return nilptr;
     }
     
-    static List<IProjectPlugin> getProjectPluginList(){
+    public static List<IProjectPlugin> getProjectPluginList(){
         List<IProjectPlugin> list = new List<IProjectPlugin>();
         Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
         while (iter.hasNext()) {
@@ -500,7 +510,7 @@ class PluginsController
         return list;
     }
     
-    static String getProjectTargetPath(IProject project){
+    public static String getProjectTargetPath(IProject project){
         String target;
         Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
         while (iter.hasNext()) {
@@ -519,7 +529,7 @@ class PluginsController
         return target;
     }
     
-    static bool setPluginDisabled(String plugins, bool disabled)
+    public static bool setPluginDisabled(String plugins, bool disabled)
     {
         try{
             ExtensionManager.setEnabled(plugins, !disabled);
@@ -530,7 +540,7 @@ class PluginsController
         }
         return false;
     }
-    static bool uninstallPlugin(String plugins)
+    public static bool uninstallPlugin(String plugins)
     {
         try{
             plugins_list.get(plugins)._plugin.uninstall(QxApp._theApp._xstudio_controller);
@@ -545,13 +555,13 @@ class PluginsController
 
 class PluginManager
 {
-    static void registryPlugins(IXPlugin plugin)
+    public static void registryPlugins(IXPlugin plugin)
     {
         if (plugin != nilptr) {
             PluginsController.plugins_list.put(plugin.getName(), new XPluginShell(plugin));
         }
     }
-    static void unregistryPlugins(String name)
+    public static void unregistryPlugins(String name)
     {
         if (name != nilptr) {
             try{

@@ -1,5 +1,5 @@
 class QXVariant{
-    static const int 
+    public static const int 
         Invalid = 0,
         Bool = 1,
         Int = 2,

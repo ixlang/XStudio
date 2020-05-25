@@ -2,14 +2,14 @@
 //Date: Thu Sep 20:21:28 2019 
 
 class QXDateEdit : QXDateTimeEdit{
-	QXDateEdit() {//构造
+	public QXDateEdit() {//构造
 	}
 
-	QXDateEdit(long h) {//构造
+	public QXDateEdit(long h) {//构造
 		super(h);
 	}
 
-    bool create(){
+    public bool create(){
         nativehandle = createQObject(QType.qtDateEdit, this, 0);
         if (nativehandle == 0){
             return false;
@@ -17,7 +17,7 @@ class QXDateEdit : QXDateTimeEdit{
         return true;
     }
     
-    bool create(QXWidget parent){
+    public bool create(QXWidget parent){
         nativehandle = createQObject(QType.qtDateEdit, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;

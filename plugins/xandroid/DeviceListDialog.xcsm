@@ -14,7 +14,7 @@ class DeviceListDialog : QXDialog{
         attach (d);
     }
     
-    static void create(QXDialog d){
+    public static void create(QXDialog d){
         DeviceListDialog ad = new DeviceListDialog(d);
         ad.show();
     }

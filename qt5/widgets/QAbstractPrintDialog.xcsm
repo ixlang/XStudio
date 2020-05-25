@@ -3,7 +3,7 @@
 
 class QAbstractPrintDialog : QXDialog{
 
-    enum PrintDialogOption {
+    public enum PrintDialogOption {
         None                    = 0x0000, // obsolete
         PrintToFile             = 0x0001,
         PrintSelection          = 0x0002,
@@ -14,20 +14,19 @@ class QAbstractPrintDialog : QXDialog{
         PrintCurrentPage        = 0x0040
     };
     
-    enum PrintRange {
+    public enum PrintRange {
         AllPages,
         Selection,
         PageRange,
         CurrentPage
     };
     
-    QAbstractPrintDialog(){
+    public QAbstractPrintDialog(){
     
     }
     
-    QAbstractPrintDialog(long handle){
+    public QAbstractPrintDialog(long handle){
         super(handle);
     }
     
-    int exec();
 };

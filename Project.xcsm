@@ -3,34 +3,35 @@ class Project : IProject
 {
     static const int XPROJECT_VERSION = 1;
 
-    long viewItem, sourcesRoot, extendsRoot;
-    JsonObject xintelliSenseMap;
+    public long viewItem, sourcesRoot, extendsRoot;
+    public JsonObject xintelliSenseMap;
     JsonObject root;
     String projectName;
     String languageConf;
-    String projpath;
-    String projDir;
+    String pluginsConf;
+    public String projpath;
+    public String projDir;
     ProjectPropInterface _propinterface;
-    XIntelliSense intelliSense;
+    IXIntelliSense intelliSense;
     IXPlugin projectPlugin;
     Variables variables = new Variables();
     Configure currentConfig;
     Object buildlock = new Object();
-    Thread build_thread;
+    public Thread build_thread;
     bool bModified = false;
+    
 
-
-    Configure getCurrentConfig()override{
+    public Configure getCurrentConfig()override{
         return currentConfig;
     }
     Map<String, Object> _tagList;
-    Map<String, Configure> configures = new Map<String, Configure>();
+    public Map<String, Configure> configures = new Map<String, Configure>();
 
-    void setTag(String key, Object obj){
+    public void setTag(String key, Object obj){
         _tagList.put(key, obj);
     }
     
-    Object getTag(String key){
+    public Object getTag(String key){
         try{
             return _tagList.get("key");
         }catch(Exception e){
@@ -39,7 +40,15 @@ class Project : IProject
         return nilptr;
     }
     
-    bool cloneConfigure(String tempName, String newName) override
+    public void close(){
+        xintelliSenseMap = nilptr;
+        root = nilptr;
+    }
+    public IXIntelliSense getIntelliSense(){
+        return intelliSense;
+    }
+    
+    public bool cloneConfigure(String tempName, String newName) override
     {
         if (configures.containsKey(newName) == false) {
             Configure cfgs = getConfigure(tempName);
@@ -60,7 +69,7 @@ class Project : IProject
         return false;
     }
 
-    void removeConfigure(String tempName)override
+    public void removeConfigure(String tempName)override
     {
         configures.remove(tempName);
         try {
@@ -72,7 +81,7 @@ class Project : IProject
     }
 
 
-    bool detectSourcesModified()override
+    public bool detectSourcesModified()override
     {
         Configure configure = currentConfig;
 
@@ -92,7 +101,7 @@ class Project : IProject
         return false;
     }
 
-    void updateSourceModified()override{
+    public void updateSourceModified()override{
         Configure configure = currentConfig;
 
         if (configure != nilptr) {
@@ -114,14 +123,25 @@ class Project : IProject
     		configure.updateMd5s();
          }
      }*/
+    
+    public void buildStop(){
+        ProjectPropInterface ppi = _propinterface;
+        if (ppi != nilptr){
+            ppi.stopBuild();
+        }
+    }
 
-    bool setCurrentConfigure(String configName, bool btips)override
+
+    public bool setCurrentConfigure(String configName, bool btips)override
     {
         if (configName.length() > 0) {
             try {
                 Configure cfg = configures.get(configName);
                 if (cfg != nilptr) {
                     currentConfig = cfg;
+                    if (_propinterface != nilptr){
+                        _propinterface.onProjectSettingChange(this);
+                    }
                     return true;
                 }
             } catch(Exception e) {
@@ -133,7 +153,7 @@ class Project : IProject
         return false;
     }
 
-    Configure getConfigure(String name)override
+    public Configure getConfigure(String name)override
     {
         if (name.length() > 0) {
             try {
@@ -145,17 +165,17 @@ class Project : IProject
         return nilptr;
     }
 
-    String getOutputDir()override
+    public String getOutputDir()override
     {
         if (currentConfig != nilptr) {
-            String out_path = currentConfig .getOption("outpath");
+            String out_path = getCurrentConfig().getOption("outpath");
             out_path = String.formatPath(XlangProjectProp.map_variable(this, currentConfig, out_path), false);
             return (out_path);
         }
         return nilptr;
     }
 
-    String getOutputTarget()override
+    public String getOutputTarget()override
     {
         if (currentConfig != nilptr) {
             return String.formatPath(XlangProjectProp.map_variable(this, currentConfig, currentConfig.getOption("outpath").appendPath(currentConfig.getOption("outname"))), false);
@@ -163,7 +183,7 @@ class Project : IProject
         return nilptr;
     }
 
-    String getOutputName()override
+    public String getOutputName()override
     {
         if (currentConfig != nilptr) {
             return String.formatPath(XlangProjectProp.map_variable(this, currentConfig, currentConfig.getOption("outname")), false);
@@ -171,14 +191,43 @@ class Project : IProject
         return nilptr;
     }
     
-    void setOption(String key, String text)override
+    public bool setOption(String key, String text)override
     {
-        root.remove(key);
-        root.put(key, text);
         bModified = true;
+        if (key.indexOf('.') == -1){
+            root.remove(key);
+            root.put(key, text);
+            return true;
+        }else{
+            String [] sec = key.split('.');
+            JsonObject parent = root;
+            try{
+                for (int i = 0; i < sec.length && parent != nilptr; i++ ){
+                    String _key = sec[i].trim(true);
+                    
+                    if (i + 1 == sec.length){
+                        while (parent.has(_key)){
+                            parent.remove(_key);
+                        }
+                        parent.put(_key, text);
+                        return true;
+                    }else{
+                        parent = (JsonObject)parent.get(_key);
+                        if (parent == nilptr){
+                            JsonObject _newnode = new JsonObject();
+                            parent.put(_key, _newnode);
+                            parent = _newnode;
+                        }
+                    }
+                }
+            }catch(Exception e){
+                
+            }
+        }
+        return false;
     }
-
-    bool importPackage(String packName, String ver)override
+    
+    public bool importPackage(String packName, String ver)override
     {
         PackageManager pm = new PackageManager();
         if (pm.load()){
@@ -190,34 +239,48 @@ class Project : IProject
         return false;
     }
 
-    void deploy()override{
+    public void deploy()override{
     	if (currentConfig != nilptr){
     		currentConfig.dodeploy(this);
         }
     }
     
-    void deployto(String path)override{
+    public void deployto(String path)override{
     	if (currentConfig != nilptr){
     		currentConfig.dodeployto(this, path);
         }
     }
     
-    String getOption(String key)override
+    public String getOption(String key)override
     {
         String value = nilptr;
-        try {
+        
+        if (key.indexOf('.') == -1){
             value = root.getString(key);
-        } catch(Exception e) {
-
+        }else{
+            String [] sec = key.split('.');
+            JsonObject parent = root;
+            try{
+                for (int i = 0; i < sec.length && parent != nilptr; i++ ){
+                    if (i + 1 == sec.length){
+                        value = parent.getString(sec[i]);
+                    }else{
+                        parent = (JsonObject)parent.get(sec[i]);
+                    }
+                }
+            }catch(Exception e){
+                
+            }
         }
-
+        
         if (value == nilptr) {
-            value = "";
+            return "";
         }
+        
         return value;
     }
 
-    String readSlnFile(String file)
+    public String readSlnFile(String file)
     {
         FileInputStream fis = nilptr;
         try {
@@ -233,7 +296,7 @@ class Project : IProject
         return nilptr;
     }
 
-    void thread_build(Builder _builder, BuildListener l, XlangProjectProp. BuildParams params)
+    public void thread_build(Builder _builder, BuildListener l, XlangProjectProp. BuildParams params)
     {
         if (_propinterface != nilptr) {
             bool succ = true;
@@ -254,7 +317,7 @@ class Project : IProject
         }
     }
 
-    void thread_cleanup(Builder _builder)
+    public void thread_cleanup(Builder _builder)
     {
         if (_propinterface != nilptr) {
             _propinterface.cleanup(_builder, this, currentConfig);
@@ -262,7 +325,7 @@ class Project : IProject
         }
     }
 
-    bool cleanup(Builder _builder)
+    public bool cleanup(Builder _builder)
     {
         Builder.clearComm(true);
 
@@ -275,6 +338,7 @@ class Project : IProject
                     void run() {
                         thread_cleanup(_builder);
                         StatusBarMgr.hideProgress("清理完成");
+                        _builder.OutputText("[" + String.formatDate("%c", _system_.currentTimeMillis()) + "] 清理完成.\n", 0);
                     }
                 };
                 build_thread.start();
@@ -285,7 +349,7 @@ class Project : IProject
         return true;
     }
 
-    bool build(Builder _builder, BuildListener l, XlangProjectProp. BuildParams params)
+    public bool build(Builder _builder, BuildListener l, XlangProjectProp. BuildParams params)
     {
 
         synchronized(buildlock) {
@@ -296,7 +360,7 @@ class Project : IProject
 
                 StatusBarMgr.showWaitProgress("正在编译...");
                 _builder.OutputText("[" + String.formatDate("%c", _system_.currentTimeMillis()) + "] 已启动编译...\n", 0);
-                XMenuManager.setProjectBuilding(true);
+                XWorkspace.setProjectBuilding(true);
                 build_thread = new Thread() {
                     void run() {
                         thread_build(_builder, l, params);
@@ -304,7 +368,7 @@ class Project : IProject
                         updateSourceModified();
                         XWorkspace.workspace.runOnUi(new Runnable(){
                             void run(){
-                                XMenuManager.setProjectBuilding(false);
+                                XWorkspace.setProjectBuilding(false);
                             }
                         });
                     }
@@ -320,12 +384,12 @@ class Project : IProject
         return true;
     }
 
-    JsonArray getSources()override
+    public JsonArray getSources()override
     {
         return root.getArray("sources");
     }
-
-    String getComment()override
+    
+    public String getComment()override
     {
         String text = root.getString("comment");
         if (text == nilptr) {
@@ -334,7 +398,11 @@ class Project : IProject
         return text;
     }
 
-    void setComment(String comment)override
+    public JsonArray getExternLibs(Configure cfg){
+        return _propinterface.getExternLibs(cfg);
+    }
+    
+    public void setComment(String comment)override
     {
         bModified = true;
         if (comment == nilptr) {
@@ -344,7 +412,7 @@ class Project : IProject
         root.put("comment", comment);
     }
 
-    bool loadConfigure(JsonObject configs)
+    public bool loadConfigure(JsonObject configs)
     {
         JsonObject confi = (JsonObject)configs.child();
 
@@ -363,13 +431,14 @@ class Project : IProject
         return currentConfig != nilptr;
     }
 
-    bool loadProject(JsonObject xworkspace, bool bconsole)
+    public bool loadProject(JsonObject xworkspace, bool bconsole)
     {
         JsonObject proj = (JsonObject)xworkspace.child();
         if (proj != nilptr) {
             root = proj;
             projectName = proj.getName();
             languageConf = proj.getString("language");
+            pluginsConf = proj.getString("plugins");
             if (false == loadConfigure((JsonObject)proj.get("configures"))) {
                 if (bconsole == false) {
                     QXMessageBox.Critical("错误", "找不到有效的项目配置.", QXMessageBox.Ok, QXMessageBox.Ok);
@@ -379,10 +448,24 @@ class Project : IProject
 
                 return false;
             }
+            variables.initSystemVar();
             variables.setVariable("$(ProjectName)", projectName);
             variables.setVariable("$(ProjectLanguage)", languageConf);
+            
             _propinterface = ProjectPropManager.getForProject(languageConf);
-            projectPlugin = PluginsController.getPlugin(languageConf);
+            
+            if (_propinterface != nilptr){
+                projectPlugin = _propinterface.getXPlugin();
+            }
+            
+            if (projectPlugin == nilptr){
+                if (pluginsConf != nilptr && pluginsConf.length() > 0){
+                    projectPlugin = PluginsController.getPlugin(pluginsConf);
+                }else{
+                    projectPlugin = PluginsController.getPlugin(languageConf);
+                }
+            }
+            
             if (_propinterface != nilptr) {
                 return true;
             } else {
@@ -395,7 +478,7 @@ class Project : IProject
         }
         return false;
     }
-    bool loadWorkspace(String file, bool bconsole)
+    public bool loadWorkspace(String file, bool bconsole)
     {
         try {
             String content = readSlnFile(file);
@@ -406,9 +489,9 @@ class Project : IProject
                 variables.setVariable("$(ProjectSlnFile)", file);
                 projDir = String.formatPath(file.findVolumePath(), false);
                 variables.setVariable("$(ProjectDir)", projDir);
-                if (bconsole == false) {
-                    intelliSense = new XIntelliSense(this, currentConfig);
-                }
+                /*if (bconsole == false) {
+                    reinitIntelliSense();
+                }*/
                 return true;
             }
         } catch(Exception e) {
@@ -421,7 +504,7 @@ class Project : IProject
         return false;
     }
 
-    bool createProject(String name)
+    public bool createProject(String name)
     {
         root = new JsonObject();
         root.put("version", XPROJECT_VERSION);
@@ -433,21 +516,21 @@ class Project : IProject
         return true;
     }
 
-    String map_variable(String text)override
+    public String map_variable(String text)override
     {
         return variables.map_variable(text);
     }
-    String getName()override
+    public String getName()override
     {
         return projectName;
     }
 
-    String getLanguage()override
+    public String getLanguage()override
     {
         return languageConf;
     }
 
-    bool addSource(String filePath)override
+    public bool addSource(String filePath)override
     {
         String rfp = filePath.toRelativePath(getProjectDir(), false, false);
         /*_system_.consoleWrite(String.format(" %s toRelativePath %s = %s\n", filePath, getProjectDir(), rfp));*/
@@ -472,7 +555,7 @@ class Project : IProject
         return false;
     }
 
-    String replaceSource(int index, String filePath)override
+    public String replaceSource(int index, String filePath)override
     {
         String rfp = filePath.toRelativePath(getProjectDir(), false, false);
         /*_system_.consoleWrite(String.format(" %s toRelativePath %s = %s\n", filePath, getProjectDir(), rfp));*/
@@ -495,7 +578,7 @@ class Project : IProject
         return nilptr;
     }
 
-    bool save()override
+    public bool save()override
     {
         FileOutputStream fos = nilptr;
         try {
@@ -522,7 +605,7 @@ class Project : IProject
         return false;
     }
 
-    Project clone(String newName)
+    public Project clone(String newName)
     {
         JsonObject json = new JsonObject();
         json.put(newName, root);
@@ -533,7 +616,7 @@ class Project : IProject
         return newpj;
     }
 
-    bool saveAsTemplate(String templateName, String descr)
+    public bool saveAsTemplate(String templateName, String descr)
     {
         Map<String, String> dirs = new Map<String, String>();
         Vector<String> predir = new Vector<String>();
@@ -674,7 +757,7 @@ class Project : IProject
 
         }
     }
-    bool saveAs(String path)override
+    public bool saveAs(String path)override
     {
         FileOutputStream fos = nilptr;
         try {
@@ -691,7 +774,7 @@ class Project : IProject
         return false;
     }
 
-    String getSourcePath(int id)override
+    public String getSourcePath(int id)override
     {
         String path = getSourceItem(id);
         if (path != nilptr) {
@@ -703,13 +786,13 @@ class Project : IProject
     	String source_path = getSource(id);
     	return getFullPath(source_path);
     }*/
-    String generateFullPath(String source_path)override
+    public String generateFullPath(String source_path)override
     {
         String fullpath = source_path.toAbsolutePath(getProjectDir());
         return String.formatPath(fullpath, false);
     }
 
-    String getFullPath(String source_path)override
+    public String getFullPath(String source_path)override
     {
         String fullpath = String.formatPath(source_path.toAbsolutePath(getProjectDir()), false).replace("\\", "/");
 
@@ -723,21 +806,21 @@ class Project : IProject
 
         return String.formatPath(finalpath, false);
     }
-    String getProjectDir()override
+    public String getProjectDir()override
     {
         return projpath.findVolumePath();
     }
 
-    int getSourceFileCount()override
+    public int getSourceFileCount()override
     {
         return root.getArray("sources").length();
     }
 
-    String getSourceItem(int id)override
+    public String getSourceItem(int id)override
     {
         return root.getArray("sources").getString(id);
     }
-    void removeSource(int id)override
+    public void removeSource(int id)override
     {
         String szFile = getSourcePath(id);
         if (intelliSense != nilptr) {
@@ -752,7 +835,7 @@ class Project : IProject
 
     }
 
-    String rename(int sourceID, String newname)override
+    public String rename(int sourceID, String newname)override
     {
         String path = getSourcePath(sourceID);
         if ( _system_.rename(path, newname)) {
@@ -768,17 +851,20 @@ class Project : IProject
         return nilptr;
     }
 
-    bool isPathSeted()override
+    public bool isPathSeted()override
     {
         return projpath != nilptr;
     }
 
-    void setPath(String path)override
+    public String getPath(){
+        return projpath;
+    }
+    public void setPath(String path)override
     {
         projpath = path;
     }
 
-    bool isModified()override
+    public bool isModified()override
     {
         if (bModified == false) {
             Map.Iterator<String, Configure> iter = configures.iterator();
@@ -793,33 +879,35 @@ class Project : IProject
         return true;
     }
 
-    void debugRun(IBuilder builder)
+    public void debugRun(IBuilder builder)
     {
         XMemoryWnd.reset();
         MemoryLookupWnd.reset();
         _propinterface.debugRun(builder, this, currentConfig);
     }
 
-    void stopRun()
+    public void stopRun()
     {
         _propinterface.stopRun();
     }
-    void Run(IBuilder builder)
+    public void Run(IBuilder builder)
     {
         _propinterface.Run(builder, this, currentConfig);
     }
-    void updateXintelliSense()
+    public void updateXintelliSense()
     {
-        String content = intelliSense.getIntelliSenseMap();
-        //_system_.consoleWrite(content);
-        try {
-            xintelliSenseMap = new JsonObject(content);
-        } catch(Exception e) {
-            xintelliSenseMap = nilptr;
+        if (intelliSense != nilptr){
+            String content = intelliSense.getIntelliSenseMap();
+            //_system_.consoleWrite(content);
+            try {
+                xintelliSenseMap = new JsonObject(content);
+            } catch(Exception e) {
+                xintelliSenseMap = nilptr;
+            }
         }
     }
 
-    void extartReadMe(ZipArchive zs)
+    public void extartReadMe(ZipArchive zs)
     {
         ZipEntry entry = zs.findEntry("readme.md");
         if (entry != nilptr) {
@@ -839,7 +927,7 @@ class Project : IProject
     }
 
 
-    bool importPkg(PackageManager.PackageInfo pi)
+    public bool importPkg(PackageManager.PackageInfo pi)
     {
         try {
             FileInputStream fis = new FileInputStream(pi.filepath);
@@ -899,5 +987,56 @@ class Project : IProject
 
         }
         return false;
+    }
+    
+    public ProjectPropInterface getPropInterface(){ return  _propinterface;}
+    
+    Object intellock = new Object();
+    int intellsence_serial = 0;
+    
+    public void reinitIntelliSense()override{
+        int k = 0;
+        new Thread(){
+            void run()override{
+                IXIntelliSense _intellsence = nilptr;
+                int current_intellsence_serial = 0;
+                
+                synchronized(intellock){
+                    if (intelliSense != nilptr){
+                        intelliSense.close();
+                        intelliSense = nilptr;
+                    }
+                    intellsence_serial++;
+                    current_intellsence_serial = intellsence_serial;
+                    _intellsence = _propinterface.allocIntelliSense(Project.this, currentConfig);
+                }
+                
+                if (_intellsence != nilptr){
+                    bool succeed = _intellsence.initializ();
+                    
+                    if (succeed){
+                        synchronized(intellock){
+                            if (current_intellsence_serial == intellsence_serial){
+                                intelliSense = _intellsence;
+                                succeed = true;
+                            }else{
+                                succeed = false;
+                            }
+                        }
+                        
+                        if (succeed){
+                            XWorkspace.workspace.XIntelliSense();
+                        }
+                    }
+                    if (succeed == false){
+                        _intellsence.close();
+                    }
+                }
+            }
+        }.start();
+    }
+    
+    public IXPlugin getProjectPlugin(){
+        return projectPlugin;
     }
 };

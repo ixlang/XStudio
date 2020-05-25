@@ -2,43 +2,43 @@
 //Date: Mon Oct 21:43:55 2018 
 
 class QXRect{
-	QXRect(){
+	public QXRect(){
     }
-    QXRect(QXRect rc){
+    public QXRect(QXRect rc){
 		left = rc.left;
         top = rc.top;
         right = rc.right;
         bottom = rc.bottom;
     }
-	QXRect(int l, int t,int r,int b){
+	public QXRect(int l, int t,int r,int b){
 		left = l;
         top = t;
         right = r;
         bottom = b;
     }
     
-	int left, top, right, bottom;
+	public int left, top, right, bottom;
     
-    QXPoint centerPoint(){
+    public QXPoint centerPoint(){
 		return new QXPoint((left + right) / 2, (top + bottom) / 2);
     }
     
-    int width(){
+    public int width(){
 		return right - left;
     }
     
-    int height(){
+    public int height(){
 		return bottom - top;
     }
     
-    void offset(int x, int y){
+    public void offset(int x, int y){
 		left += x;
         top += y;
         right += x;
         bottom += y;
     }
     
-    void offset(QXPoint pt){
+    public void offset(QXPoint pt){
 		left += pt.x;
         top += pt.y;
         right += pt.x;

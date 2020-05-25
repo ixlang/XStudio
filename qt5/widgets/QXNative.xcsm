@@ -1,23 +1,23 @@
 
 class QXNative{
-    long nativehandle;
+    public long nativehandle;
     
-    QXNative(){
+    public QXNative(){
     }
     
-    QXNative(long h){
+    public QXNative(long h){
         nativehandle = h;
     }
     
-    static int getScreenCount(){
+    public static int getScreenCount(){
 		return widget_get_int_value(0, QXCore.SCREENCOUNT);
     }
     
-    final bool isValid(){
+    public final bool isValid(){
         return nativehandle != 0;
     }
     
-    import "libQXLibrary"{
+    public import "libQXLibrary"{
         void cdecl widget_set_vint_value(long h, int proid, int value);
         void cdecl widget_set_object_value(long h, int proid, Object value);
         void cdecl widget_set_long_object_value(long h, int proid,long i, Object value);
