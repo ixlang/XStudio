@@ -86,7 +86,7 @@ F5 即可运行;
 ### 使用细节参考请关注xlang 博文 (https://blog.xlang.link/article.html?id=11)
 ### 参考图示
 ![](http://blog.xlang.link/images/iexsa1.gif)
-## 其他内容再待补充
+...
 
 # 开发者交流
 
