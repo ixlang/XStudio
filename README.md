@@ -28,17 +28,17 @@ xlang 语言的集成开发环境, 此项目使用 xlang 开发
 
 ## windows 下运行图
 
-![](http://blog.xlang.link/images/case382.png)
+![](https://github.com/ixlang/XStudio/blob/master/case382.png)
 
 
 ## Linux(ubuntu) 下运行图
 
-![](http://blog.xlang.link/images/case263.png)
+![](https://github.com/ixlang/XStudio/blob/master/case263.png)
 
 
 ## Mac OSX 下运行图
 
-![](http://blog.xlang.link/images/case148.png)
+![](https://github.com/ixlang/XStudio/blob/master/case148.png)
 
 
 # 编译步骤
