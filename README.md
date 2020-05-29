@@ -54,57 +54,38 @@ F5 即可运行;
 
 # 语言插件与二次开发
 
-## 语言支持 
+## 扩展支持 
 
+请参见 XStudio 新建项目向导中的 'XStudio 扩展'模板, 另可参考 cde 扩展组件源码
 
-添加一个继承自 ProjectPropInterface 的类， 并实现其接口
+## 支持自定义扩展的功能与组件:
+### 菜单项
+### 新建项目向导中的类型与模板
+### 项目属性中的项
+### 代码高亮
+### 代码编辑器中的自动补全和提示功能
+### 工作区面板与自定义UI
+### 编译构建流程
+### 生成makefile
+### 通过调试协议自定义调试器(参考文档https://xlang.link/pdf/XStudio%E8%B0%83%E8%AF%95%E5%99%A8%E5%8D%8F%E8%AE%AE%E6%96%87%E6%A1%A3.pdf)
+### 其他非标准扩展接口的自定义项
 
-```java
-interface ProjectPropInterface{
-    //用于处理项目属性页的各项值
-    bool setValue(Project object, Configure configure, String key, String value);
-    String getValue(Project object, Configure configure,  String key);
-    
-    // 构建时的动作
-    void build(IBuilder builder, Project object, Configure configure, Object param);
-    
-    // 清理时的动作
-    void cleanup(IBuilder builder, Project object, Configure configure);
-    
-    // 调试运行的动作
-    void debugRun(IBuilder builder, Project proj, Configure conf);
-    
-    // 运行的动作
-    void Run(IBuilder builder, Project proj, Configure conf); 
-    
-    // 结束运行的动作
-	void stopRun();
- 
-   //使用向导新建项目的动作
-	bool create(WizardLoader loader, String projectName, String projectDir, String uuid, Project object, bool isAddToProject, String userType);
-};
-```
+## 已支持的其他语言类型的开发
 
-在ProjectPropManager.xcsm中添加一个语言处理接口
+### CDE (C/C++ Develop Extends)：多平台的 C/C++ 项目开发支持(扩展组件下载地址:https://xlang.link/publish/cde.xsp 或本repo 的 Release 中cde.xsp)
+### CDE 扩展已支持的细节:
+### 从新建项目向导中建立C/C++项目
+### 代码高亮
+### 通过第三方lsp支持的代码编辑时的自动补全和提示(linux x86 和 macosx 未支持)
+### 使用 GCC/G++/MINGW 构建项目
+### 使用 GDB 进行可视化的源码级调试
+### 可视化的项目属性设置
+### 生成项目的Makefile 以及通过makefile构建和管理项目
 
-
-
-```java
-    static bool registryAllProp(){
-        _props.put("xlang", new XlangProjectProp());
-        // 在这里添加一个新的对象参照上面代码
-        return true;
-    }
-```
-
-## 代码高亮
-
-未整理接口， 请自行修改或者添加 XSourceEditor.xcsm 中的 syntaxForXlangDark(深色主题) 或者 syntaxForXlang(浅色主题)方法。
-
-## 智能提示
-
-参考 XIntelliSense.xcs 
-
+### 安装方法: 下载cde.xsp , 并通过 XStudio [帮助] 菜单中的 [安装XStudio扩展] 进行安装
+### 使用细节参考请关注xlang 博文 (https://blog.xlang.link/article.html?id=11)
+### 参考图示
+![](http://blog.xlang.link/images/iexsa1.gif)
 ## 其他内容再待补充
 
 # 开发者交流
