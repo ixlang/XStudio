@@ -59,28 +59,28 @@ F5 即可运行;
 请参见 XStudio 新建项目向导中的 'XStudio 扩展'模板, 另可参考 cde 扩展组件源码
 
 ## 支持自定义扩展的功能与组件:
-### 菜单项
-### 新建项目向导中的类型与模板
-### 项目属性中的项
-### 代码高亮
-### 代码编辑器中的自动补全和提示功能
-### 工作区面板与自定义UI
-### 编译构建流程
-### 生成makefile
-### 通过调试协议自定义调试器(参考文档https://xlang.link/pdf/XStudio%E8%B0%83%E8%AF%95%E5%99%A8%E5%8D%8F%E8%AE%AE%E6%96%87%E6%A1%A3.pdf)
-### 其他非标准扩展接口的自定义项
+ 菜单项
+ 新建项目向导中的类型与模板
+ 项目属性中的项
+ 代码高亮
+ 代码编辑器中的自动补全和提示功能
+ 工作区面板与自定义UI
+ 编译构建流程
+ 生成makefile
+ 通过调试协议自定义调试器(参考文档https://xlang.link/pdf/XStudio%E8%B0%83%E8%AF%95%E5%99%A8%E5%8D%8F%E8%AE%AE%E6%96%87%E6%A1%A3.pdf)
+ 其他非标准扩展接口的自定义项
 
 ## 已支持的其他语言类型的开发
 
 ### CDE (C/C++ Develop Extends)：多平台的 C/C++ 项目开发支持(扩展组件下载地址:https://xlang.link/publish/cde.xsp 或本repo 的 Release 中cde.xsp)
 ### CDE 扩展已支持的细节:
-### 从新建项目向导中建立C/C++项目
-### 代码高亮
-### 通过第三方lsp支持的代码编辑时的自动补全和提示(linux x86 和 macosx 未支持)
-### 使用 GCC/G++/MINGW 构建项目
-### 使用 GDB 进行可视化的源码级调试
-### 可视化的项目属性设置
-### 生成项目的Makefile 以及通过makefile构建和管理项目
+ 从新建项目向导中建立C/C++项目
+ 代码高亮
+ 通过第三方lsp支持的代码编辑时的自动补全和提示(linux x86 和 macosx 未支持)
+ 使用 GCC/G++/MINGW 构建项目
+ 使用 GDB 进行可视化的源码级调试
+ 可视化的项目属性设置
+ 生成项目的Makefile 以及通过makefile构建和管理项目
 
 ### 安装方法: 下载cde.xsp , 并通过 XStudio [帮助] 菜单中的 [安装XStudio扩展] 进行安装
 ### 使用细节参考请关注xlang 博文 (https://blog.xlang.link/article.html?id=11)
