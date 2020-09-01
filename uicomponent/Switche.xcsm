@@ -28,8 +28,10 @@ class Switche : QXWidget {
     }
 
 
-    public void onDraw(QXPainter canvas) {
+    public void onDraw(@NotNilptr QXPainter canvas) {
         // TODO Auto-generated method stub
+        __nilptr_safe(_cachedBitmap);
+        
         if (_present != 0 && switchbegin == 0) {
             switchbegin = (width() - height()) * _present;
         }
@@ -46,100 +48,103 @@ class Switche : QXWidget {
             bReCreateCached = true;
             _bForceRedraw = true;
         }
+        try{
+            if (bReCreateCached) {
+                _cachedBitmap = new QXImage(width(), height(), QXImage.Format_ARGB32);
+            }
 
-        if (bReCreateCached) {
-            _cachedBitmap = new QXImage(width(), height(), QXImage.Format_ARGB32);
-        }
-
-        if (_bForceRedraw) {
-            _bForceRedraw = false;
-            QXPainter _canvas = new QXPainter(_cachedBitmap);
-            _canvas.setCompositionMode(QXPainter.CompositionMode.CompositionMode_Source);
-            _canvas.fillRect(0, 0, width(), height(), 0, QXBrush.Style.SolidPattern);
-            _canvas.setRenderHint(QXPainter.RenderHint.Antialiasing, true);
+            if (_bForceRedraw) {
+                _bForceRedraw = false;
+                QXPainter _canvas = new QXPainter(_cachedBitmap);
+                _canvas.setCompositionMode(QXPainter.CompositionMode.CompositionMode_Source);
+                _canvas.fillRect(0, 0, width(), height(), 0, QXBrush.Style.SolidPattern);
+                _canvas.setRenderHint(QXPainter.RenderHint.Antialiasing, true);
 
 
-            double padding = dip2px(3.f);
+                double padding = dip2px(3.f);
 
-            //_QXPainter.drawColor(0x00000000);
-            double r = (height() / 2.f) - padding ;
+                //_QXPainter.drawColor(0x00000000);
+                double r = (height() / 2.f) - padding ;
 
-            QXPainter.Paint paint = new QXPainter.Paint();
-            //paint.setShadowLayer(3.F, 2.F,2.F, Color.BLACK);
+                QXPainter.Paint paint = new QXPainter.Paint();
+                //paint.setShadowLayer(3.F, 2.F,2.F, Color.BLACK);
 
-            QXRect rect = new QXRect();
-            rect.left = rect.top = (padding / 2);
-            rect.right = width() - (padding / 2);
-            rect.bottom = height() - (padding / 2);
-            double rxy = rect.height() / 2.f;
+                QXRect rect = new QXRect();
+                rect.left = rect.top = (padding / 2);
+                rect.right = width() - (padding / 2);
+                rect.bottom = height() - (padding / 2);
+                double rxy = rect.height() / 2.f;
 
-            paint.setStyle(QXPainter.Paint.FILL_AND_STROKE);
-            paint.setColor( (this._bOn && (_present == 1)) ? switchOnColor : switchOffColor);
-            paint.setStrokeWidth(1.f);
-            //paint.setShadowLayer(0,0,0, Color.BLACK);
-            _canvas.drawRoundedRect(rect,rxy,rxy,paint);
+                paint.setStyle(QXPainter.Paint.FILL_AND_STROKE);
+                paint.setColor( (this._bOn && (_present == 1)) ? switchOnColor : switchOffColor);
+                paint.setStrokeWidth(1.f);
+                //paint.setShadowLayer(0,0,0, Color.BLACK);
+                _canvas.drawRoundedRect(rect, (int)rxy, (int)rxy,paint);
 
-            QXRect disablerect = new QXRect(rect);
-            disablerect.left = switchbegin;
-            disablerect.right = rect.right - (switchbegin);
-            disablerect.top = rect.top + (switchbegin);
-            disablerect.bottom = rect.bottom - (switchbegin);
+                QXRect disablerect = new QXRect(rect);
+                disablerect.left = switchbegin;
+                disablerect.right = rect.right - (switchbegin);
+                disablerect.top = rect.top + (switchbegin);
+                disablerect.bottom = rect.bottom - (switchbegin);
 
-            if (disablerect.right > disablerect.left && disablerect.bottom > disablerect.top) {
-                paint.setStyle(QXPainter.Paint.FILL);
+                if (disablerect.right > disablerect.left && disablerect.bottom > disablerect.top) {
+                    paint.setStyle(QXPainter.Paint.FILL);
 
-                double rate = Math.min(1.f,(1.f -_present));
-                int alpha = (int) (0xff * rate);
-                if (alpha > 0xCE) {
-                    alpha = 0xCE;
-                } else if (alpha < 0) {
-                    alpha = 0;
+                    double rate = Math.min(1.f,(1.f -_present));
+                    int alpha = (int) (0xff * rate);
+                    if (alpha > 0xCE) {
+                        alpha = 0xCE;
+                    } else if (alpha < 0) {
+                        alpha = 0;
+                    }
+                    alpha <<= 24;
+                    paint.setColor(0x00ffffff | alpha);
+                    _canvas.drawRoundedRect(disablerect, (int)rxy, (int)rxy,paint);
                 }
-                alpha <<= 24;
-                paint.setColor(0x00ffffff | alpha);
-                _canvas.drawRoundedRect(disablerect,rxy,rxy,paint);
-            }
 
 
-            if (_present != 0.f) {
+                if (_present != 0.f) {
+                    paint.setStyle(QXPainter.Paint.FILL);
+                    QXRect avarect = new QXRect(rect);
+                    avarect.right = switchbegin + (r * 2);
+
+                    double rate = (1.f -_present);
+                    int rgbValue = switchOnColor & 0xffffff;
+                    int dist = (0xffffff - rgbValue);
+
+                    int _rv = (int) (((dist>>16) & 0xff) * rate);
+                    int _gv = (int) (((dist>>8) & 0xff) * rate);
+                    int _bv = (int) ((dist & 0xff) * rate);
+
+                    int newclr =  (_rv<<16) | (_gv << 8) | _bv;
+                    int colordis = (int) (switchOnColor + newclr);
+                    paint.setColor(colordis);
+                    _canvas.drawRoundedRect(avarect,(int)rxy, (int)rxy,paint);
+                }
+
                 paint.setStyle(QXPainter.Paint.FILL);
-                QXRect avarect = new QXRect(rect);
-                avarect.right = switchbegin + (r * 2);
+                paint.setColor(0xffffffff);
+                //paint.setShadowLayer(2.F, 0.F,2.F, 0xff333333);
+                _canvas.drawCircle((int)(switchbegin + (height() / 2.f)), (int)(height() / 2.f), (int)r, paint);
 
-                double rate = (1.f -_present);
-                int rgbValue = switchOnColor & 0xffffff;
-                int dist = (0xffffff - rgbValue);
-
-                int _rv = (int) (((dist>>16) & 0xff) * rate);
-                int _gv = (int) (((dist>>8) & 0xff) * rate);
-                int _bv = (int) ((dist & 0xff) * rate);
-
-                int newclr =  (_rv<<16) | (_gv << 8) | _bv;
-                int colordis = (int) (switchOnColor + newclr);
-                paint.setColor(colordis);
-                _canvas.drawRoundedRect(avarect,rxy,rxy,paint);
+                //paint.setMaskFilter(blurFilter);
+                //paint.setShadowLayer(10F, 11F,5F, Color.BLACK);
+                //paint.setXfermode(new PorterDuffXfermode(Mode.SRC_IN));
+                paint.setStrokeWidth(0.f);
+                paint.setStyle(QXPainter.Paint.STROKE);
+                paint.setColor(0xffdedede);
+                //paint.setShadowLayer(0,0,0, Color.BLACK);
+                _canvas.drawCircle((int)(switchbegin + (height() / 2.f)), (int)(height() / 2.f), (int)r, paint);
             }
-
-            paint.setStyle(QXPainter.Paint.FILL);
-            paint.setColor(0xffffffff);
-            //paint.setShadowLayer(2.F, 0.F,2.F, 0xff333333);
-            _canvas.drawCircle(switchbegin + (height() / 2.f), height() / 2.f, r, paint);
-
-            //paint.setMaskFilter(blurFilter);
-            //paint.setShadowLayer(10F, 11F,5F, Color.BLACK);
-            //paint.setXfermode(new PorterDuffXfermode(Mode.SRC_IN));
-            paint.setStrokeWidth(0.f);
-            paint.setStyle(QXPainter.Paint.STROKE);
-            paint.setColor(0xffdedede);
-            //paint.setShadowLayer(0,0,0, Color.BLACK);
-            _canvas.drawCircle(switchbegin + (height() / 2.f), height() / 2.f, r, paint);
-        }
-        if (this.isEnabled() == false) {
-            /*Paint bitmapPaint = new Paint();
-            bitmapPaint.setAlpha(0x7f);*/
-            canvas.drawImage(_cachedBitmap, 0, 0);
-        } else {
-            canvas.drawImage(_cachedBitmap, 0, 0);
+            if (this.isEnabled() == false) {
+                /*Paint bitmapPaint = new Paint();
+                bitmapPaint.setAlpha(0x7f);*/
+                canvas.drawImage(_cachedBitmap, 0, 0);
+            } else {
+                canvas.drawImage(_cachedBitmap, 0, 0);
+            }
+        }catch(Exception e){
+            
         }
     }
 
@@ -150,7 +155,11 @@ class Switche : QXWidget {
         }
 
         _bOn = !_bOn;
-        activeAnimation();
+        try{
+            activeAnimation();
+        }catch(IllegalArgumentException e){
+            
+        }
 
         if (_listener != nilptr) {
             _listener.onSwitch(this, _bOn);
@@ -158,36 +167,44 @@ class Switche : QXWidget {
         //break;
     }
 
-    public bool create() {
+    public bool create()override  {
         if (super.create()) {
             resize(42, 30);
             setAttribute(QXWidget.WA_TranslucentBackground, true);
-            activeAnimation();
+            try{
+                activeAnimation();
+            }catch(IllegalArgumentException e){
+                
+            }
             return true;
         }
         return false;
     }
 
-    public bool create(QXWidget parent) {
+    public bool create(@NotNilptr QXWidget parent) override {
         if (super.create(parent)) {
             resize(42, 30);
             setAttribute(QXWidget.WA_TranslucentBackground, true);
-            activeAnimation();
+            try{
+                activeAnimation();
+            }catch(IllegalArgumentException e){
+                
+            }
             return true;
         }
         return false;
     }
 
-    public bool activeAnimation() {
+    public bool activeAnimation() throws IllegalArgumentException{
         synchronized(_timeObj) {
             if (_animator != nilptr) {
                 return false;
             }
 
             _animator = new Timer();
+     
             _animator.schedule(new TimerTask() {
-
-                void run() {
+                void run() override {
                     synchronized(_timeObj) {
                         double step = width() / 46.f;
                         if (_bOn) {
@@ -252,7 +269,11 @@ class Switche : QXWidget {
 
             postUpdate();
         } else {
-            activeAnimation();
+            try{
+                 activeAnimation();
+            }catch(IllegalArgumentException e){
+                
+            }
         }
     }
 
@@ -265,7 +286,7 @@ class Switche : QXWidget {
         }
     }
 
-    public void onPaint(int l, int t, int r, int b, long hpaint) override {
+    public void onPaint(int , int , int , int , long hpaint) override {
         onDraw(new QXPainter(hpaint));
     }
 };

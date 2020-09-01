@@ -3,7 +3,7 @@
 
 class QHBoxLayout : QBoxLayout{
 
-    public bool create(QXWidget parent){
+    public bool create(@NotNilptr QXWidget parent){
         nativehandle = createQObject(QType.qtHLayout, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;

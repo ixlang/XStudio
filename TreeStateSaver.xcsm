@@ -3,7 +3,7 @@
 
 class TreeStateSaver{
 
-    public static JsonNode saveState(QXTreeView tree, long parent){
+    public static JsonNode saveState(@NotNilptr QXTreeView tree, long parent){
         JsonArray jsonitem = new JsonArray();
         
         long [] items;
@@ -14,18 +14,19 @@ class TreeStateSaver{
             items = tree.getItemChildren(parent);
         }
         
-        for (int i = 0; i < items.length; i++){
-            JsonObject item = new JsonObject();
-            item.put("label", tree.getItemText(items[i], 0));
-            item.put("value", tree.getItemText(items[i], 2));
-            bool isExp = tree.isItemExpand(items[i]);
-            item.put("exp",isExp);
-            if (isExp){
-                item.put("child", saveState(tree, items[i]));
+        if (items != nilptr){
+            for (int i = 0; i < items.length; i++){
+                JsonObject item = new JsonObject();
+                item.put("label", tree.getItemText(items[i], 0));
+                item.put("value", tree.getItemText(items[i], 2));
+                bool isExp = tree.isItemExpand(items[i]);
+                item.put("exp",isExp);
+                if (isExp){
+                    item.put("child", saveState(tree, items[i]));
+                }
+                jsonitem.put(item);
             }
-            jsonitem.put(item);
         }
-        
         return jsonitem;
     }
     

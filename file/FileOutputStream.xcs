@@ -1,72 +1,114 @@
 class FileOutputStream : Stream{
-	long filehandler;
+    long filehandler;
 
-	public FileOutputStream(String path){
-		filehandler = XPlatform.openSystemFile(path, "w");
+    public FileOutputStream(String path) throws NullPointerException, IllegalArgumentException{
+        if (path == nilptr){
+            throw new NullPointerException("path is nilptr");
+        }
+        filehandler = XPlatform.openSystemFile(path, "w");
         if (filehandler == 0){
             throw new IllegalArgumentException("file " + path + " can not open");
         }
-	}
-    public FileOutputStream(String path, bool append){
+    }
+    public FileOutputStream(String path, bool append) throws NullPointerException, IllegalArgumentException{
+        if (path == nilptr){
+            throw new NullPointerException("path is nilptr");
+        }
         filehandler = XPlatform.openSystemFile(path, append ? "a" : "w");
         if (filehandler == 0){
             throw new IllegalArgumentException("file " + path + " can not open");
         }
     }
-	public bool attach(String path){
-		if (filehandler != 0){
-			_system_.closeFile(filehandler);
-			filehandler = 0;
-		}
-		filehandler = XPlatform.openSystemFile(path, "w");
+    
+    public FileOutputStream(@NotNilptr FSObject file) throws NullPointerException, IllegalArgumentException{
+        String path = file.getPath();
+        if (path == nilptr){
+            throw new NullPointerException("path is nilptr");
+        }
+        filehandler = XPlatform.openSystemFile(path, "w");
+        if (filehandler == 0){
+            throw new IllegalArgumentException("file " + path + " can not open");
+        }
+    }
+    public FileOutputStream(@NotNilptr FSObject file, bool append)throws NullPointerException, IllegalArgumentException{
+        String path = file.getPath();
+        if (path == nilptr){
+            throw new NullPointerException("path is nilptr");
+        }
+        filehandler = XPlatform.openSystemFile(path, append ? "a" : "w");
+        if (filehandler == 0){
+            throw new IllegalArgumentException("file " + path + " can not open");
+        }
+    }
+    public FileOutputStream(@NotNilptr FSObject dir,@NotNilptr String file, bool append)throws NullPointerException, IllegalArgumentException{
+        String path = dir.getPath();
+        if (path == nilptr){
+            throw new NullPointerException("path is nilptr");
+        }
+        path = path.appendPath(file);
+        filehandler = XPlatform.openSystemFile(path, append ? "a" : "w");
+        if (filehandler == 0){
+            throw new IllegalArgumentException("file " + path + " can not open");
+        }
+    }
+    public bool attach(String path)throws NullPointerException, IllegalArgumentException{
+        if (filehandler != 0){
+            _system_.closeFile(filehandler);
+            filehandler = 0;
+        }
+        if (path == nilptr){
+            throw new NullPointerException("path is nilptr");
+        }
+        filehandler = XPlatform.openSystemFile(path, "w");
         return filehandler != 0;
-	}
-    public void checkValid(){
+    }
+    public void checkValid() throws IllegalArgumentException{
         if (filehandler == 0){
             throw new IllegalArgumentException("The Stream is not ready");
         }
     }
-	public long available(bool bwait){
-		return 1;
+    public long available(bool )override{
+        return 1;
     }
-	public long seek(int type, long pos){
-		return 0;
-    }
-    
-    public long getPosition(){
-		return 0;
+    public long seek(int , long )override{
+        return 0;
     }
     
-	public long length(){
+    public long getPosition()override{
+        return 0;
+    }
+    
+    public long length()override  throws IllegalArgumentException{
         checkValid();
-		return 0;
-	}
+        return 0;
+    }
 
-	public byte[] read(){
-		return nilptr;
-	}
+    public byte[] read(){
+        return nilptr;
+    }
 
-	public int read(byte [] data , int position, int length)override{
-		return 0;
-	}
-    
-	public long write(byte [] data){
-        checkValid();
-		return _system_.writeFile(filehandler, data, 0, data.length);
-	}
-    
-	public int write(byte [] data , int position, int length)override{
-        checkValid();
-		return _system_.writeFile(filehandler, data, position, length);
+    public int read(@NotNilptr byte []  , int , int )override{
+        return 0;
     }
     
-    public void close(){
-		if (filehandler != 0){
-			_system_.closeFile(filehandler);
-			filehandler = 0;
-		}
+    public long write(@NotNilptr byte [] data) throws IndexOutOfBoundsException	, IllegalArgumentException{
+        checkValid();
+        return _system_.writeFile(filehandler, data, 0, data.length);
     }
-	public void finalize(){
-		close();
-	}
+    
+    public int write(byte [] data , int position, int length)override throws IndexOutOfBoundsException, IllegalArgumentException{
+        checkValid();
+        return _system_.writeFile(filehandler, data, position, length);
+    }
+    
+    public void close()override{
+        if (filehandler != 0){
+            _system_.closeFile(filehandler);
+            filehandler = 0;
+        }
+    }
+    
+    void finalize(){
+        close();
+    }
 };

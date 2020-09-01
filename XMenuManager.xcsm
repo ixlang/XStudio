@@ -195,7 +195,7 @@ class XMenuManager
         enabledMenus(names, b);
     }
 
-    public static void enabledMenus(String []names, bool b)
+    public static void enabledMenus(@NotNilptr String []names, bool b)
     {
         for (int i =0; i < names.length; i++) {
             QXAction action = ((QXAction)_menuMgr.mainwindow.findByName(names[i]));
@@ -215,7 +215,7 @@ class XMenuManager
 
     class TriggerEvent : QXObject.onEventListener
     {
-        public void onTrigger(QXObject obj)override
+        public void onTrigger(@NotNilptr QXObject obj)override
         {
             String name = obj.getName();
             
@@ -442,15 +442,23 @@ class XMenuManager
                 }
                 break;
                 case ("actionstepin"): {
-                    app._mdispace.debuggee.stepin(ThreadManager.currentThreadId);
+                    if (XWorkspace.isDebugging()){
+                        refreshRunMenu(true);
+                        app._mdispace.debuggee.stepin(ThreadManager.currentThreadId);
+                    }
                 }
                 break;
                 case ("actionstepover"): {
-                    app._mdispace.debuggee.stepover(ThreadManager.currentThreadId);
+                    if (XWorkspace.isDebugging()){
+                        refreshRunMenu(true);
+                        app._mdispace.debuggee.stepover(ThreadManager.currentThreadId);
+                    }
                 }
                 break;
                 case ("actionstepout"): {
-                    app._mdispace.debuggee.stepout(ThreadManager.currentThreadId);
+                    if (XWorkspace.isDebugging()){
+                        app._mdispace.debuggee.stepout(ThreadManager.currentThreadId);
+                    }
                 }
                 break;
                 case ("actionQTCreator"): {
@@ -546,9 +554,9 @@ class XMenuManager
                     String buildtime = String.formatDate("%Y年%m月%d日", _system_.getAppTimestamp());
                     app.mainWindow.About("关于",
                                          "<Strong>XStudio(Xlang 集成开发环境) Release " + Utils.getAppVersion() + " </Strong><br /><br />" +
-                                         "开发语言: Xlang v3.1<br /><br />" +
+                                         "开发语言: Xlang v3.3<br /><br />" +
                                          "编译时间: " + buildtime + "<br /><br />" +
-                                         "<b>该软件使用xlang 3.1 开发, 软件全部源代码可在xlang的example中找到," +
+                                         "<b>该软件使用xlang 3.3 开发, 软件全部源代码可在xlang的example中找到," +
                                          "native部分为C++与Xlang的XNL项目(同样在example代码中), native项目仅有软件使用的部分调用," +
                                          "如需要用于其它开发需要修改native项目增加接口.</b><br /><br />" +
                                          "该软件的使用不受任何限制,可用于任意用途的修改或者发布.<br /><br />" +
@@ -587,7 +595,7 @@ class XMenuManager
     {
         Map<String, IXPlugin> menu_plugin = new Map<String, IXPlugin>();
 
-        public void onTrigger(QXObject obj)override
+        public void onTrigger(@NotNilptr QXObject obj)override
         {
             String name = obj.getName();
             if (name != nilptr) {
@@ -602,7 +610,7 @@ class XMenuManager
             }
         }
 
-        public void addMenu(QXAction action, String name, IXPlugin plugin)
+        public void addMenu(@NotNilptr QXAction action, String name, IXPlugin plugin)
         {
             menu_plugin.put(name, plugin);
             action.setOnEventListener(_externListener);
@@ -614,7 +622,7 @@ class XMenuManager
         }
     };
 
-    public bool addMenu(int mainid, String name, String text, String icon, String shortcut, IXPlugin plugin)
+    public bool addMenu(int mainid, String name,@NotNilptr  String text, String icon, String shortcut, IXPlugin plugin)
     {
         bool bSeparator = text.equals("-");
         if (bSeparator == false && _externListener.check(name)) {
@@ -627,42 +635,47 @@ class XMenuManager
         }
 
         QXMenu menu = mainMenus[mainid];
-        QXAction action;
+        if (menu != nilptr){
+            QXAction action;
 
-        if (icon != nilptr) {
-            action = menu.addAction(icon, text);
-        } else {
-            action = menu.addAction(text);
-        }
-    
-        if (bSeparator){
-            action.setSeparator(true);
-        }
-        
-        if (action != nilptr && !bSeparator) {
-            action.setName(name);
-            if (shortcut != nilptr) {
-                action.setShortcut(shortcut);
+            if (icon != nilptr) {
+                action = menu.addAction(icon, text);
+            } else {
+                action = menu.addAction(text);
             }
-            _externListener.addMenu(action, name, plugin);
-            return true;
+        
+            if (action != nilptr){
+                if (bSeparator){
+                    action.setSeparator(true);
+                }
+                
+                if (!bSeparator) {
+                    action.setName(name);
+                    if (shortcut != nilptr) {
+                        action.setShortcut(shortcut);
+                    }
+                    _externListener.addMenu(action, name, plugin);
+                    return true;
+                }
+            }
         }
         return false;
     }
 
     public void setupListener(String actname){
-        mainwindow.findByName(actname).setOnEventListener(_triggerEvent);
-        /*
+        //mainwindow.findByName(actname).setOnEventListener(_triggerEvent);
+        
         QXObject act = mainwindow.findByName(actname);
         if (act != nilptr){
             act.setOnEventListener(_triggerEvent);
         }else{
             _system_.output("actname is nilptr");
+            QXMessageBox.Critical("找不到控件","actname",QXMessageBox.Ok,QXMessageBox.Ok);
         }
-        */
+        
     }
     
-    public void init(QxApp _app)
+    public void init(@NotNilptr QxApp _app)
     {
         app = _app;
         mainwindow = _app.mainWindow;

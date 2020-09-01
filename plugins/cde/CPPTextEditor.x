@@ -11,7 +11,7 @@ class CPPTextEditor: TextEditorPlugin{
 	}
     
     
-    static String parseMacros(String [] macro){
+    static String parseMacros(@NotNilptr String [] macro){
         String str_text = "";
         for (int i =0; i < macro.length; i++){
             if (macro[i] != nilptr && macro[i].startWith("-D")){
@@ -44,7 +44,7 @@ class CPPTextEditor: TextEditorPlugin{
 		return true;
 	}
 
-	SyntaxHighlighting getColorConfigure(String styleName) override {
+	SyntaxHighlighting getColorConfigure(@NotNilptr String styleName) override {
 		//TODO:	
         if (styleName.equals("dark")){
             return dchl;
@@ -52,7 +52,7 @@ class CPPTextEditor: TextEditorPlugin{
 		return chl;
 	}
     
-    void configEditor(Project project, String path, QXSci _sci, bool bdark){
+    void configEditor(Project project, @NotNilptr String path,@NotNilptr  QXSci _sci, bool bdark){
     
         if (project == nilptr){
             return;
@@ -63,7 +63,7 @@ class CPPTextEditor: TextEditorPlugin{
         }
         String ext = path.findExtension();
         
-        if (ext != nilptr && (ext.equalsIgnoreCase(".c") || ext.equalsIgnoreCase(".cpp") || ext.equalsIgnoreCase(".cxx") || ext.equalsIgnoreCase(".m") || 
+        if ((ext.equalsIgnoreCase(".c") || ext.equalsIgnoreCase(".cpp") || ext.equalsIgnoreCase(".cxx") || ext.equalsIgnoreCase(".m") || 
                 ext.equalsIgnoreCase(".mm") || ext.equalsIgnoreCase(".cc") || ext.equalsIgnoreCase(".c++") || ext.equalsIgnoreCase(".cp") || ext.equalsIgnoreCase(".txx") || 
                 ext.equalsIgnoreCase(".tpp") || ext.equalsIgnoreCase(".tpl"))) 
         {
@@ -80,21 +80,23 @@ class CPPTextEditor: TextEditorPlugin{
             }
             
             
-            String [] args = CDEProjectPropInterface.generatorCompArgs_s(project, curcfg, path);
+            String [] args = CDEProjectPropInterface.generatorCompArgs_s(project, curcfg, path, true);
             
             String macro_string = parseMacros(args);
-            String macrokey = macro_string + " " + CDEProjectPropInterface.getMacros(curcfg);
-            if (bcpp){
-                macrokey = macro_string + " __cplusplus=201402L ";
+            
+            if (macro_string != nilptr){
+                String macrokey = macro_string + " " + CDEProjectPropInterface.getMacros(curcfg);
+                if (bcpp){
+                    macrokey = macrokey + " __cplusplus=201402L ";
+                }
+                _sci.setKeywords(4, macrokey); 
+                
+                int color = bdark ? 0xff666666 : 0xffaaaaaa;
+                
+                for (int i = 0; i < 20; i++){
+                   _sci.sendEditor(QXSci.SCI_STYLESETFORE, i + 0x40,color);
+                }
             }
-            _sci.setKeywords(4, macrokey); 
-            
-            int color = bdark ? 0xff666666 : 0xffaaaaaa;
-            
-            for (int i = 0; i < 20; i++){
-               _sci.sendEditor(QXSci.SCI_STYLESETFORE, i + 0x40,color);
-            }
-            
             
         }
     }

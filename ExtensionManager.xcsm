@@ -54,9 +54,11 @@ class ExtensionManager : QXDialog{
         
         try{
             String root = extobj.toString(false);
+            
             fos = new FileOutputStream("./config/extstat.conf");
             fos.write(root.getBytes());
             fos.close();
+        
         }catch(Exception e){
         
         }finally{
@@ -120,7 +122,7 @@ class ExtensionManager : QXDialog{
         extlist.setColumnWidth(3, 250);
         
         extlist.setOnTreeViewItemEvent( new onTreeViewItemEvent(){
-			void onItemClicked(QXTreeView tree,long item, int column){
+			void onItemClicked(@NotNilptr QXTreeView tree,long item, int column){
 				if (column == 4){
 					String txt = tree.getItemText(item, column);
                     if (txt.upper().startWith("HTTP")){
@@ -144,17 +146,20 @@ class ExtensionManager : QXDialog{
         Map.Iterator<String, XPluginShell> iter = PluginsController.plugins_list.iterator();
         while (iter.hasNext()) {
             XPluginShell splug = iter.getValue();
-            if (splug._plugin != nilptr) {
-                String name = splug._plugin.getName();
-                long ver = splug._plugin.getVersion();
-                String description = splug._plugin.getDescrition();
-                String publisher = splug._plugin.publisher();
-                String icon = splug._plugin.getIcon();
-                long item = extlist.addItem(icon, name);
-                extlist.setItemText(item, 1, splug.disable ? "禁用" : "启用");
-                extlist.setItemText(item, 2,  Utils.convertVersion(ver));
-                extlist.setItemText(item, 3,  description);
-                extlist.setItemText(item, 4,  publisher);
+            if (splug != nilptr ){
+                IXPlugin _plugin = splug._plugin;
+                if (_plugin != nilptr) {
+                    String name = _plugin.getName();
+                    long ver = _plugin.getVersion();
+                    String description = _plugin.getDescrition();
+                    String publisher = _plugin.publisher();
+                    String icon = _plugin.getIcon();
+                    long item = extlist.addItem(icon, name);
+                    extlist.setItemText(item, 1, splug.disable ? "禁用" : "启用");
+                    extlist.setItemText(item, 2,  Utils.convertVersion(ver));
+                    extlist.setItemText(item, 3,  description);
+                    extlist.setItemText(item, 4,  publisher);
+                }
             }
             iter.next();
         }

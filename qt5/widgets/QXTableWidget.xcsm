@@ -18,7 +18,7 @@ class QXTableWidget : QXWidget{
         return true;
 	}
 
-	public bool create(QXWidget parent) override {
+	public bool create(@NotNilptr QXWidget parent) override {
         nativehandle = createQObject(QType.qtTableWidget, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
@@ -118,15 +118,17 @@ class QXTableWidget : QXWidget{
     }
     public QXRect [] getSelectedRanges(){
 		long [] rs = (long[])widget_get_object(nativehandle, TABLEGETSELRANGE);
-        
-        QXRect []rgs = new QXRect[rs.length / 2];
-        
-        for (int i =0, c = rgs.length; i < c; i++){
-			QXRect r = new QXRect((rs[i * 2] >> 32) & 0xffffffff, (rs[i * 2 + 1] >> 32) & 0xffffffff, rs[i * 2] & 0xffffffff, rs[i * 2 + 1] & 0xffffffff);
-            rgs[i] = r;
+        if (rs != nilptr){
+            QXRect []rgs = new QXRect[rs.length / 2];
+            
+            for (long i =0, c = rgs.length; i < c; i++){
+                QXRect r = new QXRect((int)(rs[i * 2] >> 32) & 0xffffffff, (int)(rs[i * 2 + 1] >> 32) & 0xffffffff, (int)rs[i * 2] & 0xffffffff, (int)rs[i * 2 + 1] & 0xffffffff);
+                rgs[i] = r;
+            }
+            
+            return rgs;
         }
-        
-        return rgs;
+        return nilptr;
     }
     public void setItemText(long item, String text){
 		widget_set_intlongstring_value(0, SETTABLEITEMTEXT, item, 0, text);
@@ -152,7 +154,7 @@ class QXTableWidget : QXWidget{
 		return widget_get_int_value(item, TABITEMGETFLAG);
     }
     
-    public void setCellWidget(int x,int y, QXWidget w){
+    public void setCellWidget(int x,int y,@NotNilptr  QXWidget w){
 		widget_set_intlongint_value(nativehandle, TABLESETCELLWIDGET, w.nativehandle, x, y);
     }
     

@@ -42,7 +42,7 @@ class QXBrush : QXNative{
 			nstyle = style;
         }
 		
-        public bool create(double [] data){
+        public bool create(@NotNilptr double [] data){
 			if (gradhandle != 0){
 				return false;
             }
@@ -89,7 +89,7 @@ class QXBrush : QXNative{
     };
     
     public static class QXLinearGradient : Gradient{
-		public QXLinearGradient(double x,double y,double ex,double ey){
+		public QXLinearGradient(double x,double y,double ex,double ey) throws IllegalArgumentException{
 			super(Style.LinearGradientPattern);
             double [] _params = {x, y, ex, ey};
             if (create(_params) == false){
@@ -100,7 +100,7 @@ class QXBrush : QXNative{
     };
     
     public static class QXRadialGradient : Gradient{
-		public QXRadialGradient(double x,double y,double r){
+		public QXRadialGradient(double x,double y,double r) throws IllegalArgumentException{
 			super(Style.RadialGradientPattern);
             double [] _params = {x, y, r};
             if (create(_params) == false){
@@ -108,7 +108,7 @@ class QXBrush : QXNative{
             }
         }
         
-        public QXRadialGradient(double x,double y,double r,double fx,double fy){
+        public QXRadialGradient(double x,double y,double r,double fx,double fy) throws IllegalArgumentException{
 			super(Style.RadialGradientPattern);
             double [] _params = {x, y, r, fx, fy};
             if (create(_params) == false){
@@ -116,7 +116,7 @@ class QXBrush : QXNative{
             }
         }
         
-        public QXRadialGradient(double x,double y,double r,double fx,double fy, double fr){
+        public QXRadialGradient(double x,double y,double r,double fx,double fy, double fr) throws IllegalArgumentException{
 			super(Style.RadialGradientPattern);
             double [] _params = {x, y, r, fx, fy, fr};
             if (create(_params) == false){
@@ -126,7 +126,7 @@ class QXBrush : QXNative{
     };
     
     public static class QXConicalGradient : Gradient{
-		public QXConicalGradient(double cx,double cy,double s){
+		public QXConicalGradient(double cx,double cy,double s) throws IllegalArgumentException{
 			super(Style.ConicalGradientPattern);
             double [] _params = {cx, cy, s};
             if (create(_params) == false){
@@ -135,21 +135,21 @@ class QXBrush : QXNative{
         }
     };
     
-	public QXBrush() {//构造
+	public QXBrush()  throws IllegalArgumentException{//构造
 		nativehandle = createNObject(QType.qtBrush, 0);
         if (nativehandle == 0){
             throw new IllegalArgumentException("can not create QXBrush");
         }
 	}
 
-	public QXBrush(Gradient grad){
+	public QXBrush(@NotNilptr Gradient grad) throws IllegalArgumentException{
         nativehandle = createNObject(QType.qtBrush, grad.gradhandle);
         if (nativehandle == 0){
             throw new IllegalArgumentException("can not create QXBrush");
         }
     }
 	
-    public QXBrush(QXImage img){
+    public QXBrush(@NotNilptr QXImage img) throws IllegalArgumentException{
         nativehandle = createNObject(QType.qtImgBrush, img.himage);
         if (nativehandle == 0){
             throw new IllegalArgumentException("can not create QXBrush");

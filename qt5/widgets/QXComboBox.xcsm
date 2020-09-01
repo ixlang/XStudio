@@ -8,7 +8,7 @@ class QXComboBox : QXWidget{
         super(handle);
     }
     
-    public bool create(){
+    public bool create()override {
         nativehandle = createQObject(QType.qtComboBox, this, 0);
         if (nativehandle == 0){
             return false;
@@ -16,7 +16,7 @@ class QXComboBox : QXWidget{
         return true;
     }
     
-    public bool create(QXWidget parent){
+    public bool create(@NotNilptr QXWidget parent)override {
         nativehandle = createQObject(QType.qtComboBox, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
@@ -27,8 +27,10 @@ class QXComboBox : QXWidget{
         widget_slot_string(nativehandle, COMBOSETTEXT, text);
     }
     
-    public String getCurrentText(){
-        return (String)core_getString(nativehandle, COMBOGETTEXT);
+    public @NotNilptr String getCurrentText(){
+        String __txt = (String)core_getString(nativehandle, COMBOGETTEXT);
+        __nilptr_safe(__txt);
+        return __txt;
     }
     public void addItems(String [] items){
         widget_set_object_value(nativehandle, COMBOBOXADD, items);

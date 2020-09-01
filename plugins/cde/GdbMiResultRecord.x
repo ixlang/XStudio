@@ -31,6 +31,9 @@ class GdbMiResultRecord : GdbMiRecord
 	public String toString()
 	{
 		String sb = className;
+        if (sb == nilptr){
+            sb = "";
+        }
 		if (0 == results.size())
 		{
 			sb = sb + (": [");

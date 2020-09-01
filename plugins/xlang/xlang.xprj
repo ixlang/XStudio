@@ -10,30 +10,32 @@
 					"libpath":	["../libs"]
 				},
 				"options":	"",
+				"wtype":	"",
+				"ostype":	"",
+				"sstype":	"",
+				"outname":	"$(ProjectName)$(Ext)",
+				"outpath":	"D:\\Programs\\windows_x64\\plugins",
+				"command":	"-slx -c",
+				"uaclevel":	"默认",
+				"ignorewarning":	"",
+				"warexcp":	"",
+				"compdest":	"",
+				"ignorewl":	"",
+				"debugable":	"-dbg",
+				"debugdatabase":	"",
+				"warnilptr":	"",
+				"libs":	[],
+				"links":	["XStudio.xl"],
+				"depends":	[],
 				"prebuild":	"",
 				"preclean":	"",
 				"makebuild":	"",
 				"makeclean":	"",
 				"afterbuild":	"",
 				"afterclean":	"",
-				"cmd":	"$(Output)",
+				"cmd":	"D:\\Programs\\windows_x64\\XStudio1.exe",
 				"args":	"$(Output)",
-				"workdir":	"$(ProjectDir)",
-				"ignorewarning":	"",
-				"compdest":	"",
-				"ignorewl":	"",
-				"debugable":	"-dbg",
-				"debugdatabase":	"",
-				"wtype":	"",
-				"ostype":	"",
-				"sstype":	"",
-				"outname":	"$(ProjectName)$(Ext)",
-				"outpath":	"D:\\Programs\\windows_x64_dev\\plugins",
-				"command":	"-slx -c",
-				"uaclevel":	"默认",
-				"libs":	[],
-				"links":	["XStudio.xl"],
-				"depends":	[]
+				"workdir":	"D:\\Programs\\windows_x64"
 			},
 			"release":	{
 				"path":	{
@@ -51,7 +53,7 @@
 				"workdir":	"$(ProjectDir)"
 			}
 		},
-		"versioninc":	"0",
-		"icofile":	""
+		"icofile":	"",
+		"versioninc":	"0"
 	}
 }

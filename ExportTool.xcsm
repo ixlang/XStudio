@@ -18,27 +18,28 @@ class ExportTool : QXDialog{
 			id = i;
         }
         
-        public void preview(QXTreeView tree, long item){
+        public void preview(@NotNilptr QXTreeView tree, long item){
         
 			String [] oss = {"Windows", "Linux", "Macos", "其他"};
 			long hroot = tree.insertItem(item, "res/toolbar/winoverlap.png", oss[id]);
             
-            for (int i =0; i < files.size(); i++){
+            for (int i = 0, c = files.size(); i < c; i++){
 				tree.insertItem(hroot, "res/toolbar/source.png", files.get(i));
             }
             
         }
         
-        public bool build(ZipArchive zs, String path){
+        public bool build(@NotNilptr ZipArchive zs,@NotNilptr  String path){
 			String myPath = path.appendPath("" + id);
 			//zs.createEntry(new ZipFile(myPath, nilptr, true, _system_.currentTimeMillis()));
             
-            for (int i =0; i < files.size(); i++){
+            for (int i = 0, c = files.size(); i < c; i++){
 				String filename = files.get(i);
-                
-				if (false == zs.createEntry(new ZipFile(myPath.appendPath(filename.findFilenameAndExtension()), new FileInputStream(filename), false, _system_.currentTimeMillis()))){
-					QXMessageBox.Critical("错误", "添加文件 " + filename + " 时发生错误", QXMessageBox.Ok, QXMessageBox.Ok);
-					return false;
+                if (filename != nilptr){
+                    if (false == zs.createEntry(new ZipFile(myPath.appendPath(filename.findFilenameAndExtension()), new FileInputStream(filename), false, _system_.currentTimeMillis()))){
+                        QXMessageBox.Critical("错误", "添加文件 " + filename + " 时发生错误", QXMessageBox.Ok, QXMessageBox.Ok);
+                        return false;
+                    }
                 }
             }
             return true;
@@ -46,7 +47,7 @@ class ExportTool : QXDialog{
         
         public JsonArray save(){
 			JsonArray filesobj = new JsonArray();
-            for (int i =0; i < files.size(); i++){
+            for (int i = 0, c = files.size(); i < c; i++){
 				filesobj.put(files.get(i));
             }
             return filesobj;
@@ -68,29 +69,39 @@ class ExportTool : QXDialog{
             }
         }
         
-        public void preview(QXTreeView tree, long item){
+        public @NotNilptr Map<int, FilePackage> getOsFile(){
+            return osFile;
+        }
+        
+        public void preview(@NotNilptr QXTreeView tree, long item){
 			String [] options = {"default", "x86", "x86_64", "arm", "arm64", "mips"};
 			long hroot = tree.insertItem(item, "res/toolbar/console.png", options[id]);
             Map.Iterator<int, FilePackage> iters = osFile.iterator();
             
             while (iters.hasNext()){
-				iters.getValue().preview(tree, hroot);
+                FilePackage fp = iters.getValue();
+                if (fp != nilptr){
+                    fp.preview(tree, hroot);
+                }
 				iters.next();
             }            
         }
         
-        public bool build(ZipArchive zs, String path){
+        public bool build(@NotNilptr ZipArchive zs,@NotNilptr  String path){
 			String myPath = path.appendPath("" + id);
 			//zs.createEntry(new ZipFile(myPath, nilptr, true, _system_.currentTimeMillis()));
             
             Map.Iterator<int, FilePackage> iters = osFile.iterator();
             
             while (iters.hasNext()){
-				if (iters.getValue().build(zs, myPath) == false){
-					return false;
+                FilePackage fp = iters.getValue();
+                if (fp != nilptr){
+                    if (fp.build(zs, myPath) == false){
+                        return false;
+                    }
+                    
+                    prgExport.setValue((id + 1) * 20 + (fp.id * 5));
                 }
-				
-                prgExport.setValue((id + 1) * 20 + (iters.getValue().id * 5));
                 iters.next();
             }     
             return true;
@@ -101,16 +112,18 @@ class ExportTool : QXDialog{
 			Map.Iterator<int, FilePackage> iters = osFile.iterator();
             
             while (iters.hasNext()){
-				JsonArray files = iters.getValue().save();
-				
-                object.put("" + iters.getKey(), files);
+                FilePackage fp = iters.getValue();
+                if (fp != nilptr){
+                    JsonArray files = fp.save();
+                    object.put("" + iters.getKey(), files);
+                }
                 iters.next();
             }     
             
             return object;
         }
         
-        public bool load(JsonObject objects){
+        public bool load(@NotNilptr JsonObject objects){
 			bool bsucc = true;
             
 			JsonArray fileo = (JsonArray)objects.child();
@@ -119,9 +132,11 @@ class ExportTool : QXDialog{
                 int fid = arcname.parseInt();
                 try{
 					FilePackage ar = osFile.get(fid);
-					for (int i = 0; i < fileo.length(); i++){
-						ar.load(fileo.getString(i));
-					}
+                    if (ar != nilptr){
+                        for (int i = 0, c = fileo.length(); i < c; i++){
+                            ar.load(fileo.getString(i));
+                        }
+                    }
                 }catch(Exception e){
 					bsucc = false;
 				}
@@ -156,24 +171,27 @@ class ExportTool : QXDialog{
 			comment = text;
         }
         
-        public void preview(QXTreeView tree, long item){
+        public void preview(@NotNilptr QXTreeView tree, long item){
 			long hroot = tree.insertItem(item, "res/toolbar/staticfunction.png", lixpath);
             tree.insertItem(hroot, "res/toolbar/source.png", readme);
             
             Map.Iterator<int, Arch> iters = archs.iterator();
             
             while (iters.hasNext()){
-				iters.getValue().preview(tree, hroot);
+                Arch ar = iters.getValue();
+                if (ar != nilptr){
+                    ar.preview(tree, hroot);
+                }
 				iters.next();
             }
         }
         
-        public bool build(ZipArchive zs){
+        public bool build(@NotNilptr ZipArchive zs){
             if (lixpath.length() > 0){
                 String ext = lixpath.findExtension();
                 
                 bool isxl = false;
-                if (ext != nilptr && ext.upper().equals(".XL")){
+                if (ext.upper().equals(".XL")){
                     isxl = true;
                 }
 				if (false == zs.createEntry(new ZipFile(isxl ? "major.xl" : "major.lix", new FileInputStream(lixpath), false, _system_.currentTimeMillis()))){
@@ -200,10 +218,14 @@ class ExportTool : QXDialog{
             
 
             while (iters.hasNext()){
-				if (false == iters.getValue().build(zs, "")){
-					return false;
+                Arch ach = iters.getValue();
+                
+                if (ach != nilptr){
+                    if (false == ach.build(zs, "")){
+                        return false;
+                    }
+                    prgExport.setValue((ach.id + 1) * 20);
                 }
-                prgExport.setValue((iters.getValue().id + 1) * 20);
 				iters.next();
             } 
             return true;
@@ -226,14 +248,17 @@ class ExportTool : QXDialog{
             Map.Iterator<int, Arch> iters = archs.iterator();
             
             while (iters.hasNext()){
-				JsonObject archFiles = iters.getValue().save();
-                archobj.put("" + iters.getKey(), archFiles);
+                Arch ar = iters.getValue();
+                if (ar != nilptr){
+                    JsonObject archFiles = ar.save();
+                    archobj.put("" + iters.getKey(), archFiles);
+                }
 				iters.next();
             }
             return archobj;
         }
         
-        public bool load(JsonObject root ){
+        public bool load(@NotNilptr JsonObject root ){
 			try{
 				lixpath = root.getString("lib");
                 readme = root.getString("md");
@@ -247,19 +272,24 @@ class ExportTool : QXDialog{
             return false;
         }
         
-        public bool loadArchs(JsonObject objects){
+        public bool loadArchs(@NotNilptr JsonObject objects){
 			bool bsucc = true;
 			JsonObject archo = (JsonObject)objects.child();
             while (archo != nilptr){
 				String arcname = archo.getName();
-                int id = arcname.parseInt();
-                try{
-					Arch ar = archs.get(id);
-                    ar.load(archo);
-                }catch(Exception e){
-					bsucc = false;
+                if (arcname != nilptr){
+                    int id = arcname.parseInt();
+                    try{
+                        Arch ar = archs.get(id);
+                        if (ar != nilptr){
+                            ar.load(archo);
+                        }
+                    }catch(Exception e){
+                        bsucc = false;
+                    }
                 }
                 archo = (JsonObject)archo.next();
+                
             }
             return bsucc;
         }
@@ -345,7 +375,7 @@ class ExportTool : QXDialog{
 				if (file != nilptr && file.length() > 0){
 					String ext = file.findExtension();
                     
-					if (ext == nilptr || (ext.equalsIgnoreCase(".xp") == false)){
+					if (ext.equalsIgnoreCase(".xp") == false){
 						file = file + ".xp";
 					}
 					
@@ -369,14 +399,14 @@ class ExportTool : QXDialog{
                         
                         String content = root.toString(true);
                         
-						try{
-							FileOutputStream fos = new FileOutputStream(file);
-							byte [] data = content.getBytes();
-							fos.write(data, 0, data.length);
-							fos.close();
-						}catch(Exception e){
-							QXMessageBox.Critical("错误","未能保存",QXMessageBox.Ok,QXMessageBox.Ok);
-						}
+                        try{
+                            FileOutputStream fos = new FileOutputStream(file);
+                            byte [] data = content.getBytes();
+                            fos.write(data, 0, data.length);
+                            fos.close();
+                        }catch(Exception e){
+                            QXMessageBox.Critical("错误","未能保存",QXMessageBox.Ok,QXMessageBox.Ok);
+                        }
                     }
 				}
             }
@@ -450,7 +480,7 @@ class ExportTool : QXDialog{
         
         btnReadme.setOnClickListener(new onClickListener(){
 			void onClick(QXObject obj, bool checked)override{
-				String file = QXFileDialog.getOpenFileName("添加注释", nilptr,  "文本文件 (*.*)", ExportTool.this);
+				String file = QXFileDialog.getOpenFileName("添加注释", nilptr,  "文本文件 (*.* *)", ExportTool.this);
 				if (file != nilptr && file.length() > 0){
 					currentPackage.readme = file;
 				}
@@ -465,7 +495,7 @@ class ExportTool : QXDialog{
         
         btnAdd.setOnClickListener(new onClickListener(){
 			void onClick(QXObject obj, bool checked)override{
-                String [] files  = QXFileDialog.getOpenFileNames("添加运行时文件", nilptr,  "所有文件 (*.*)", ExportTool.this);
+                String [] files  = QXFileDialog.getOpenFileNames("添加运行时文件", nilptr,  "所有文件 (*.* *)", ExportTool.this);
 				if (files != nilptr && files.length > 0){
                     for (int i = 0; i < files.length; i++){
                         addNativeFile(files[i]);
@@ -480,7 +510,13 @@ class ExportTool : QXDialog{
                 int os = cbbOs.getCurrentIndex();
                 
                 try{
-					currentPackage.archs.get(arch).osFile.get(os).files.clear();
+                    Arch ar = currentPackage.archs.get(arch);
+                    if (ar != nilptr){
+                        FilePackage fp = ar.getOsFile().get(os);
+                        if (fp != nilptr){
+                            fp.files.clear();
+                        }
+                    }
                     updatepreview();
                 }catch(Exception e){
 					QXMessageBox.Critical("错误", "添加文件时发生错误", QXMessageBox.Ok, QXMessageBox.Ok);
@@ -509,14 +545,24 @@ class ExportTool : QXDialog{
         int os = cbbOs.getCurrentIndex();
         
         try{
-            Vector<String > file = currentPackage.archs.get(arch).osFile.get(os).files;
-            
-            for (int i =0; i <file.size(); i++){
-                if (file.get(i).equals(add_path)){
-                    return ;
+            Arch a_rch = currentPackage.archs.get(arch);
+            if (a_rch != nilptr){
+                FilePackage fp = a_rch.getOsFile().get(os);
+                
+                if (fp != nilptr){
+                    Vector<String> file = fp.files;
+                    
+                    if (file != nilptr){
+                        for (int i = 0, c = file.size(); i < c; i++){
+                            String fi = file.get(i);
+                            if (fi != nilptr && fi.equals(add_path)){
+                                return ;
+                            }
+                        }
+                        file.add(add_path);
+                    }
                 }
             }
-            file.add(add_path);
             updatepreview();
         }catch(Exception e){
             QXMessageBox.Critical("错误", "添加文件时发生错误", QXMessageBox.Ok, QXMessageBox.Ok);
@@ -524,6 +570,7 @@ class ExportTool : QXDialog{
     }
     
 	public void updatepreview(){
+        __nilptr_safe(structView);
 		structView.clear();
         
         long root = structView.addItem("res/toolbar/package.png", "Package");
@@ -595,7 +642,11 @@ class ExportTool : QXDialog{
                
 			}
         }catch(Exception e){
-			QXMessageBox.Critical("注意", "未能导出", 	QXMessageBox.Ok, QXMessageBox.Ok);
+            String msg = e.getMessage();
+            if (msg == nilptr){
+                msg = "unknow";
+            }
+			QXMessageBox.Critical("注意", "未能导出:" + msg, 	QXMessageBox.Ok, QXMessageBox.Ok);
 		}
     }
     

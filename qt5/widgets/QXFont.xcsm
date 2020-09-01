@@ -1,5 +1,5 @@
 class QXFont : QXCore{
-   public  QXFont(String fontName){
+   public  QXFont(String fontName) throws IllegalArgumentException{
         nativehandle = createNObject(QType.qtFont, 0);
         if (nativehandle == 0){
 			throw new IllegalArgumentException("can not new QXPath");
@@ -76,7 +76,7 @@ class QXFont : QXCore{
 		return widget_get_int_value(nativehandle, GETFONTPIXELSIZE);
     }
     
-   public  QXRect measure(String text){
+   public @NotNilptr QXRect measure(String text){
 		QXRect qr = new QXRect();
 		long v = long_longstring(nativehandle, MEASURETEXT, 0, text);
         qr.left = qr.top = 0;

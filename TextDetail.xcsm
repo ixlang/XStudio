@@ -6,7 +6,7 @@ class TextDetail : QXDialog {
 	String title = "详细信息";
 	String text;
     QXSci _sci;
-    
+    static QXRect rect = nilptr;
     public interface closeListener{
 		void onCreate();
 		void onClose(String text, bool updated);
@@ -97,6 +97,7 @@ class TextDetail : QXDialog {
     }
     
     public bool onClose(){
+        rect = new QXRect(x(), y(), width(), height());
 		if (cl_lis != nilptr){
 			String update_txt = _sci.getText();
 			cl_lis.onClose(update_txt, text.equals(update_txt) == false);
@@ -104,7 +105,7 @@ class TextDetail : QXDialog {
         return true;
     }
     
-   public bool create(String caption, String str, QXWidget parent, bool modal){
+   public bool create(String caption,@NotNilptr String str, QXWidget parent, bool modal){
 		title = caption;
 		text = str;
         if (parent == nilptr){
@@ -141,10 +142,17 @@ class TextDetail : QXDialog {
 					cl_lis.onCreate();
                 }
                 
+                if (rect != nilptr){
+                    move(rect.left,rect.top);
+                    resize(rect.right,rect.bottom);
+                }
+                
+                createContextMenu();
+                    
                 show();
                 
                 setOnActivateListener(new onActivateListener(){
-					void onWindowActivate(QXObject obj){
+					void onWindowActivate(@NotNilptr QXObject obj){
 						((QXWidget)obj).setOpacity(1.0);
 					}
 					void onWindowDeactivate(QXObject obj){
@@ -157,4 +165,110 @@ class TextDetail : QXDialog {
         return false;
     }
     
+    
+    public static class ContextMenu{
+		public QXMenu contextMenu = new QXMenu();
+		public QXAction [] actions;
+		
+		public void create(@NotNilptr QXWidget parent,@NotNilptr  String [] acts, onEventListener listener){
+			if (contextMenu.create(parent)){
+				actions = new QXAction[acts.length];
+				for (int i = 0; i < acts.length; i ++){
+					QXAction action = new QXAction();
+					if (action.create(contextMenu)){
+						
+						if (acts[i].equals("-")){
+							action.setSeparator(true);
+						}else{
+							action.setEnable(true);	
+							action.setText(acts[i]);
+							action.setOnEventListener(listener);
+						}
+					}
+					actions[i] = action;
+				}
+				parent.setContextMenuPolicy(ActionsContextMenu);
+				parent.addActions(actions);
+			}
+		}
+	};
+    
+    
+    ContextMenu _contextMenu = new ContextMenu();
+    
+    public void createContextMenu(){
+        static String _default_folder = "", _default_openpath = "", _default_savepath = "";
+		onEventListener menuListener = new onEventListener(){
+           String toRelativePath(String ref, String path, bool cov){
+            bool breslash = false;
+               if ((_system_.getPlatformId() == _system_.PLATFORM_WINDOWS) && Setting.isUnixPath()){
+                   breslash = true;
+               }
+               path = String.formatPath(path, breslash);
+               if (cov == false || ref == nilptr){
+                   return path;
+               }
+               return path.toRelativePath(ref,false,true);
+               
+           }
+		   void onTrigger(QXObject obj) override{
+				if (obj == _contextMenu.actions[0]){
+                    String path = QXFileDialog.getFolderPath("浏览文件夹","",_default_folder, TextDetail.this);
+                    if (path != nilptr && path.length() > 0){
+                        bool breal = false;
+                        String pjdir = XWorkspace.workspace.currentProjectDir();
+                        if (pjdir != nilptr && QXMessageBox.Question("提示","是否转换为当前项目的相对路径?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes) == QXMessageBox.Yes){
+                            breal = true;
+                        }
+                        _default_folder = path;
+                        _sci.insertText(_sci.currentPosition(),toRelativePath(pjdir, path, breal));
+                    }
+                }else
+                if (obj == _contextMenu.actions[2]){
+                    String [] path = QXFileDialog.getOpenFileNames("浏览文件", _default_openpath, "*",TextDetail.this);
+                    if (path != nilptr){
+                        bool breal = false;
+                        String pjdir = XWorkspace.workspace.currentProjectDir();
+                        if (pjdir != nilptr && QXMessageBox.Question("提示","是否转换为当前项目的相对路径?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes) == QXMessageBox.Yes){
+                            breal = true;
+                        }
+                        
+                        for (int i =0; i < path.length; i++){
+                            if (i == 0){
+                                _default_openpath = path[i].findVolumePath();
+                            }
+                            _sci.insertText(_sci.currentPosition(),toRelativePath(pjdir, path[i], breal) + "\n");
+                        }
+                    }
+                }else
+                if (obj == _contextMenu.actions[3]){
+                    String path = QXFileDialog.getSaveFileName("选择保存位置",_default_savepath,"*",TextDetail.this);
+                    if (path != nilptr && path.length() > 0){
+                        bool breal = false;
+                        String pjdir = XWorkspace.workspace.currentProjectDir();
+                        if (pjdir != nilptr && QXMessageBox.Question("提示","是否转换为当前项目的相对路径?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes) == QXMessageBox.Yes){
+                            breal = true;
+                        }
+                        
+                        _default_savepath = path;
+                        _sci.insertText(_sci.currentPosition(),toRelativePath(pjdir, path, breal));
+                    }
+                }else
+                if (obj == _contextMenu.actions[5]){
+                    _sci.Copy();
+                }else
+                if (obj == _contextMenu.actions[6]){
+                    _sci.Paste();
+                }else
+                if (obj == _contextMenu.actions[8]){
+                    TextDetail.this.close();
+                }
+		   }
+		};
+        
+		
+		
+		String []acts = {"浏览文件夹", "-", "浏览文件", "选择保存位置",  "-", "复制", "粘贴", "-", "关闭"};
+		_contextMenu.create(_sci, acts, menuListener);
+	}
 };

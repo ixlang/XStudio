@@ -36,21 +36,21 @@ class QXImage{
     
     }
 
-    public QXImage(String file, String format){
+    public QXImage(String file, String format) throws IllegalArgumentException{
 		himage = QXNative.long_string2(0, QXCore.IMGLOAD, file, format);
         if (himage == 0){
 			throw new IllegalArgumentException("can not load file:" + file);
         }
     }
    
-    public QXImage(byte [] data, String format){
+    public QXImage(byte [] data, String format) throws IllegalArgumentException{
 		himage = QXNative.long_object_string(0, QXCore.IMGLOAD, data, format);
         if (himage == 0){
 			throw new IllegalArgumentException("can not load from data");
         }
     }
      
-    public QXImage(int width, int height, int format){
+    public QXImage(int width, int height, int format) throws IllegalArgumentException{
 		long wh = width;
         wh <<= 32;
 
@@ -61,7 +61,7 @@ class QXImage{
         }
     }
     
-    public QXImage(byte [] data, int width, int height, int format){
+    public QXImage(byte [] data, int width, int height, int format) throws IllegalArgumentException{
 		long wh = width;
         wh <<= 32;
 		

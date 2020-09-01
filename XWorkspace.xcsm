@@ -33,17 +33,18 @@ class XWorkspace : QXMdiArea
         bool onDragLeave(QXObject obj,int l,int t,int r,int b) {
             return true;
         }
-        void onDrop(QXObject obj,Object [] object) {
+        void onDrop(@NotNilptr QXObject obj,@NotNilptr  Object [] object) {
             if (object.length > 0) {
                 try {
                     for (int i =0; i < object.length; i++) {
                         String file = (String)object[0];
-
-                        String ext = file.findExtension();
-                        if (ext != nilptr && ext.equalsIgnoreCase(".xprj")) {
-                            loadProject(file);
-                        } else {
-                            openTextFile(file);
+                        if (file != nilptr){
+                            String ext = file.findExtension();
+                            if (ext.equalsIgnoreCase(".xprj")) {
+                                loadProject(file);
+                            } else {
+                                openTextFile(file);
+                            }
                         }
                     }
 
@@ -61,7 +62,7 @@ class XWorkspace : QXMdiArea
 
     public WorkspaceController _controller = new WorkspaceController()
     {
-        public TextEditorController findTextEditor(String path, bool openIfNotFound) override{
+        public TextEditorController findTextEditor(@NotNilptr String path, bool openIfNotFound) override{
             XSourceEditor editor = XSourceEditor.findDocumentWindow(XWorkspace.this,path,openIfNotFound);
             if (editor != nilptr) {
                 return editor.getController();
@@ -69,7 +70,7 @@ class XWorkspace : QXMdiArea
             return nilptr;
         }
 
-        public TextEditorController openTextEditor(String path)override {
+        public TextEditorController openTextEditor(@NotNilptr String path)override {
             XSourceEditor editor = XSourceEditor.findDocumentWindow(XWorkspace.this,path, true);
             if (editor != nilptr) {
                 setActiveSubWindow(editor);
@@ -78,7 +79,7 @@ class XWorkspace : QXMdiArea
             return nilptr;
         }
 
-        public bool installXep(String path)override{
+        public bool installXep(@NotNilptr String path)override{
             return installCompilerExtension(path);
         }
         
@@ -90,11 +91,11 @@ class XWorkspace : QXMdiArea
             return nilptr;
         }
 
-        public bool saveFile(String path)override {
+        public bool saveFile(@NotNilptr String path)override {
             return XSourceEditor.findSaveFile(path);
         }
 
-        public bool toggleBreakpointAtLine(String path, long line, bool bSet)override {
+        public bool toggleBreakpointAtLine(@NotNilptr String path, long line, bool bSet)override {
             XSourceEditor.toggleBreakPointOnFile(XWorkspace.this,path, line, bSet);
             return true;
         }
@@ -142,7 +143,7 @@ class XWorkspace : QXMdiArea
             bExternModifyAutoload = false;
         }
 
-        public bool addMenu(int mainid, String name, String text, String icon,String shortcut, IXPlugin plugin) override{
+        public bool addMenu(int mainid, String name,@NotNilptr  String text, String icon,String shortcut, IXPlugin plugin) override{
             return QxApp._theApp.menuMgr.addMenu(mainid, name, text, icon, shortcut, plugin);
         }
 
@@ -207,14 +208,14 @@ class XWorkspace : QXMdiArea
             String path = nilptr;
             bool bEditing = false;
             
-            public SourceContentImpl(XSourceEditor wnd){
+            public SourceContentImpl(@NotNilptr XSourceEditor wnd){
                 txtContent = wnd.getTextContent();
                 charset = wnd.defaultCharset;
                 path = wnd.filePath;
                 bEditing = true;
             }
             
-            public SourceContentImpl(String file){
+            public SourceContentImpl(@NotNilptr String file){
                 txtContent = readFileUTF8(file);
                 path = file;
                 if (txtContent == nilptr){
@@ -222,7 +223,7 @@ class XWorkspace : QXMdiArea
                 }
             }
             
-            public String readFileUTF8(String file){
+            public String readFileUTF8(@NotNilptr String file){
                 long hfile = _system_.openFile(file,"r");
                 if (hfile != 0 ){
                     long fl = _system_.fileLength(hfile);
@@ -270,7 +271,7 @@ class XWorkspace : QXMdiArea
             }
         };
         
-        public SourceContent getSourceContent(String sourcefile)override{
+        public SourceContent getSourceContent(@NotNilptr String sourcefile)override{
             String _content = nilptr;
             XSourceEditor wnd = XSourceEditor.findFileWindow(sourcefile);
             if (wnd != nilptr) {
@@ -288,7 +289,7 @@ class XWorkspace : QXMdiArea
         
     };
 
-    public void setupOnDrag(QXWidget w)
+    public void setupOnDrag(@NotNilptr QXWidget w)
     {
         w.setAcceptDrops(true);
         w.setOnDragListener(draglistener);
@@ -303,6 +304,9 @@ class XWorkspace : QXMdiArea
 
     public void setSlnView(XWndSln wndsln)
     {
+        if (wndsln == nilptr){
+            return;
+        }
         slnView = wndsln;
         wndsln.workspace = this;
     }
@@ -351,9 +355,10 @@ class XWorkspace : QXMdiArea
 
     public void closeIndexPage()
     {
-        if (indexPage != nilptr) {
-            XIndexWindow p = indexPage;
-            indexPage = nilptr;
+        XIndexWindow p = indexPage;
+        indexPage = nilptr;
+        
+        if (p != nilptr) {
             p.close();
         }
     }
@@ -387,6 +392,7 @@ class XWorkspace : QXMdiArea
         QxApp._theApp.memoryWnd.setVisible(bs[i++]);
         QxApp._theApp.logcatWnd.setVisible(bs[i++]);
         QxApp._theApp.xDumpWnd.setVisible(bs[i++]);
+        PluginsController.showPluginsDocks(true);
     }
 
     public static Object hideDocks()
@@ -421,7 +427,7 @@ class XWorkspace : QXMdiArea
         QxApp._theApp.logcatWnd.setVisible(false);
         QxApp._theApp.xDumpWnd.setVisible(false);
         QxApp._theApp.memlookupWnd.setVisible(false);
-
+        PluginsController.showPluginsDocks(false);
         return bs;
     }
 
@@ -452,7 +458,7 @@ class XWorkspace : QXMdiArea
         }
 
     }
-    public Project loadProject(String file)
+    public Project loadProject(@NotNilptr String file)
     {
         lastBuildSuccess = false;
         if (currentProject != nilptr) {
@@ -492,17 +498,21 @@ class XWorkspace : QXMdiArea
         return nilptr;
     }
     
-    public bool openTextFile(String file)
+    public bool openTextFile(@NotNilptr String file)
     {
         return XSourceEditor.openForFile(this, file);
     }
-    public bool openTextFileInfo(String file, int line,int column)
+    public bool openTextFileInfo(@NotNilptr String file, int line,int column)
     {
         return XSourceEditor.openForFileInfo(this, file, line, column, nilptr);
     }
     public bool closeFor(String file)
     {
-        return XSourceEditor.closeForFile(file);
+        if (file != nilptr){
+            return XSourceEditor.closeForFile(file);
+        }
+        
+        return false;
     }
 
     public TextEditorPlugin getEditorPlugin()
@@ -526,25 +536,39 @@ class XWorkspace : QXMdiArea
         return nilptr;
     }
 
+    public ProjectPropInterface getCurrentProjectProp()
+    {
+        Project curproj = currentProject;
+        if (curproj != nilptr) {
+            return curproj.getPropInterface();
+        }
+        return nilptr;
+    }
+    
     public void setCurrentProject(Project project)
     {
-        currentProject = project;
-        slnView.loadProject(currentProject);
+        if (project != nilptr){
+            currentProject = project;
+            
+            slnView.loadProject(project);
 
-        Map.Iterator<String, Configure> iterator =
-            currentProject.configures.iterator();
+            Map.Iterator<String, Configure> iterator =
+                project.configures.iterator();
 
-        cfgSel.clear();
+            cfgSel.clear();
 
-        String [] items = new String[currentProject.configures.size()];
-        int pos = 0;
-        while (iterator.hasNext()) {
-            items[pos++] = iterator.getValue().name;
-            iterator.next();
+            String [] items = new String[project.configures.size()];
+            int pos = 0;
+            while (iterator.hasNext()) {
+                Configure cfg_ = iterator.getValue();
+                if (cfg_ != nilptr){
+                    items[pos++] = cfg_.getName();
+                }
+                iterator.next();
+            }
+
+            cfgSel.addItems(items);
         }
-
-        cfgSel.addItems(items);
-
     }
 
     public void refreshConfigures()
@@ -556,7 +580,10 @@ class XWorkspace : QXMdiArea
         String [] items = new String[currentProject.configures.size()];
         int pos = 0;
         while (iterator.hasNext()) {
-            items[pos++] = iterator.getValue().name;
+            Configure cfg_ = iterator.getValue();
+            if (cfg_ != nilptr){
+                items[pos++] = cfg_.getName();
+            }
             iterator.next();
         }
 
@@ -638,7 +665,7 @@ class XWorkspace : QXMdiArea
     {
         TextDetail td = nilptr;
         td = new TextDetail(new TextDetail.closeListener() {
-            void onClose(String text, bool updated) {
+            void onClose(@NotNilptr String text, bool updated) {
                 String content = text.trim(true);
                 if (content.length() > 0) {
                     byte[] data = content.getBytes();
@@ -670,7 +697,7 @@ class XWorkspace : QXMdiArea
 
             TextDetail td = nilptr;
             td = new TextDetail(new TextDetail.closeListener() {
-                void onClose(String text, bool updated) {
+                void onClose(@NotNilptr String text, bool updated) {
                     if (currentProject != nilptr && updated) {
                         currentProject.setComment(text);
                     }
@@ -737,9 +764,9 @@ class XWorkspace : QXMdiArea
         synchronized(debugThreadLock) {
             if (_debugThread != nilptr) {
                 debuggee.debugClose();
-                XWorkspace.updateDebugStatus(false);
-                _debugThread = nilptr;
             }
+            XWorkspace.updateDebugStatus(false);
+            _debugThread = nilptr;
         }
     }
 
@@ -762,17 +789,24 @@ class XWorkspace : QXMdiArea
     public void doOpen()
     {
         String file = Recently.getLastPath();
-        file = QXFileDialog.getOpenFileName("打开文件", file,  "X 项目(*.xprj);;X 模块源文件(*.x *.xcs *.xcsm);;Qt UI文件(*.ui);;X 模块源文件(*.x *.xcs *.xcsm);;Make File(makefile);;C/C++ 源文件(*.cpp *.c *.cc *.cxx *.hpp *.h *.mm);;html 网页(*.htm *.html);;纯文本文件 (*.txt);;其他文件 (*.*)", this);
+        file = QXFileDialog.getOpenFileName("打开文件", file, getAllFilter(), this);
         openFile(file);
     }
 
+    public static String getAllFilter(){
+        String szf = "X 项目(*.xprj);;Make File(makefile);;";
+        String sztail = "html 网页(*.htm *.html);;纯文本文件 (*.txt);;其他文件 (*.* *)";
+        
+        String szplugin = ProjectPropManager.getAllExtensionFilter();
+        return szf + szplugin + sztail;
+    }
 
     public void openFile(String file)
     {
         if (file != nilptr && file.length() > 0) {
             String exts = file.findExtension();
 
-            if (exts == nilptr || exts.equals(".xprj") == false) {
+            if (exts.equals(".xprj") == false) {
                 openTextFile(file);
             } else {
                 loadProject(file);
@@ -870,8 +904,9 @@ class XWorkspace : QXMdiArea
     public bool closeProject()
     {
         if (currentProject != nilptr) {
-            if (currentProject.getIntelliSense() != nilptr) {
-                currentProject.getIntelliSense().close();
+            IXIntelliSense xintels = currentProject.getIntelliSense();
+            if (xintels != nilptr) {
+                xintels.close();
             }
 
             int c = currentProject.getSourceFileCount();
@@ -942,7 +977,8 @@ class XWorkspace : QXMdiArea
             }
             for (int i =0, c = currentProject.getSourceFileCount(); i < c; i++) {
                 String file = currentProject.getSourcePath(i);
-                if (XSourceEditor.findSaveFile(file)) {
+                
+                if (file != nilptr && XSourceEditor.findSaveFile(file)) {
                     QxApp.statusBar.showStatusMessage(file + "已保存.");
                     bSaveModified = true;
                 }
@@ -964,7 +1000,7 @@ class XWorkspace : QXMdiArea
     public void buildStop(){
         Project pj = currentProject;
         if (pj != nilptr){
-            pj.buildStop();
+            pj.buildStop(_builder);
         }
     }
     public BuildListener.BuildState build(BuildListener lis)
@@ -972,30 +1008,31 @@ class XWorkspace : QXMdiArea
         if (currentProject != nilptr) {
             bool bNeedCompile = false;
             String target = currentProject.getOutputTarget();
-
-            if (Setting.isAutoSave()) {
-                bNeedCompile = saveAllFile();
-                if (bNeedCompile == false) {
-                    if ((XPlatform.existsSystemFile(target) == false) || currentProject.detectSourcesModified()) {
-                        bNeedCompile = true;
-                    }
-                }
-            } else {
-                bNeedCompile = true;
-            }
-
-            if (bNeedCompile || (lastBuildSuccess == false)) {
-                build_project(_builder, new BuildListener() {
-                    void onBuild(bool b) {
-                        lastBuildSuccess = b;
-                        if (lis != nilptr){
-                            lis.onBuild(b);
+            if (target != nilptr){
+                if (Setting.isAutoSave()) {
+                    bNeedCompile = saveAllFile();
+                    if (bNeedCompile == false) {
+                        if ((XPlatform.existsSystemFile(target) == false) || currentProject.detectSourcesModified()) {
+                            bNeedCompile = true;
                         }
                     }
-                }, nilptr);
-                return BuildListener.BuildState.BuildPending;
-            } else {
-                _builder.OutputText(target + "\n自上次编译以来没有检测到任何改动,请使用[清理]命令后重新编译.\n", 0);
+                } else {
+                    bNeedCompile = true;
+                }
+
+                if (bNeedCompile || (lastBuildSuccess == false)) {
+                    build_project(_builder, new BuildListener() {
+                        void onBuild(bool b) {
+                            lastBuildSuccess = b;
+                            if (lis != nilptr){
+                                lis.onBuild(b);
+                            }
+                        }
+                    }, nilptr);
+                    return BuildListener.BuildState.BuildPending;
+                } else {
+                    _builder.OutputText(target + "\n自上次编译以来没有检测到任何改动,请使用[清理]命令后重新编译.\n", 0);
+                }
             }
             return BuildListener.BuildState.BuildSkip;
         }else{
@@ -1016,7 +1053,7 @@ class XWorkspace : QXMdiArea
 
         if (_project != nilptr) {
 
-            String file =String.formatPath(_project.getProjectDir().appendPath("makefile"), false);
+            String file = String.formatPath(_project.getProjectDir().appendPath("Makefile"), false);
 
             if (_system_.fileExists(file)) {
                 if (QXMessageBox.Warning("注意","文件" + file + "已存在,将覆盖现有文件,是否继续?",QXMessageBox.Yes | QXMessageBox.Cancel,QXMessageBox.Cancel) == QXMessageBox.Cancel) {
@@ -1028,18 +1065,22 @@ class XWorkspace : QXMdiArea
             
             if (iface != nilptr){
                 String filecontent = iface.generateMake(_project,_project.getCurrentConfig());
+                if (filecontent != nilptr){
+                    String template;
 
-                String template;
-
-                try {
-                    FileOutputStream fos = new FileOutputStream(file);
-                    byte [] data = filecontent.getBytes();
-                    fos.write(data);
-                    fos.close();
-                } catch(Exception e) {
-                    QXMessageBox.Critical("错误","无法写入文件:" + file,QXMessageBox.Ok,QXMessageBox.Ok);
+                    try {
+                        FileOutputStream fos = new FileOutputStream(file);
+                        byte [] data = filecontent.getBytes();
+                        fos.write(data);
+                        fos.close();
+                    } catch(Exception e) {
+                        QXMessageBox.Critical("错误","无法写入文件:" + file,QXMessageBox.Ok,QXMessageBox.Ok);
+                    }
+                    XWndOutput.Output("\n已生成:" + file + "\n", 0);
+                }else{
+                    XWndOutput.Output("\n不能生成:" + file + "\n", 0);
                 }
-                XWndOutput.Output("\n已生成:" + file + "\n", 0);
+                
             }
         }
     }
@@ -1093,21 +1134,29 @@ class XWorkspace : QXMdiArea
             JsonArray xcross = extroot.getArray("xcross");
             JsonArray archs = extroot.getArray("arch");
 
-            if (extroot != nilptr && archs != nilptr) {
+            if (xcross != nilptr && archs != nilptr) {
                 if (root.has("项目属性")) {
                     JsonObject projroot = (JsonObject)root.get("项目属性");
-                    JsonObject xcross_root = (JsonObject)projroot.get("目标操作系统:ostype");
-                    JsonObject arch_root = (JsonObject)projroot.get("处理器架构:wtype");
-
-                    JsonArray xlist = (JsonArray)xcross_root.get("list");
-                    JsonArray alist = (JsonArray)arch_root.get("list");
-
-                    for (int i =0 ; i < xcross.length(); i++) {
-                        xlist.put(xcross.getString(i));
-                    }
-                    
-                    for (int i =0 ; i < archs.length(); i++) {
-                        alist.put(archs.getString(i));
+                    if (projroot != nilptr){
+                        JsonObject xcross_root = (JsonObject)projroot.get("目标操作系统:ostype");
+                        JsonObject arch_root = (JsonObject)projroot.get("处理器架构:wtype");
+                        
+                        if (xcross_root != nilptr){
+                            JsonArray xlist = (JsonArray)xcross_root.get("list");
+                            if (xlist != nilptr){
+                                for (int i = 0, c = xcross.length(); i < c; i++) {
+                                    xlist.put(xcross.getString(i));
+                                }
+                            }
+                        }
+                        if (arch_root != nilptr){
+                            JsonArray alist = (JsonArray)arch_root.get("list");
+                            if (alist != nilptr){
+                                for (int i = 0, c = archs.length(); i < c; i++) {
+                                    alist.put(archs.getString(i));
+                                }
+                            }
+                        }
                     }
                 } else {
 
@@ -1130,7 +1179,9 @@ class XWorkspace : QXMdiArea
                 }
 
                 FileOutputStream fos = new FileOutputStream(file);
+
                 fos.write(root.toString(true).getBytes());
+                
                 fos.close();
                 _builder.OutputText("安装扩展: 操作系统支持:" + xcross.toString(false) + ", 架构支持:" + archs.toString(false) + "\n", 0);
                 return true;
@@ -1141,7 +1192,7 @@ class XWorkspace : QXMdiArea
         return false;
     }
 
-    public bool installCompilerExtension(String zfile)
+    public bool installCompilerExtension(@NotNilptr String zfile)
     {
 
         FileInputStream fis;
@@ -1162,40 +1213,42 @@ class XWorkspace : QXMdiArea
                 if (bSuccess == false) {
                     break;
                 }
+                
+                if (entry != nilptr){
+                    String entryName = entry.getName();
 
-                String entryName = entry.getName();
+                    String path = String.formatPath(dir.appendPath(entryName), false);
 
-                String path = String.formatPath(dir.appendPath(entryName), false);
+                    if (entry.isDirectory() == false) {
+                        ZipFile file = entry.getFile();
 
-                if (entry.isDirectory() == false) {
-                    ZipFile file = entry.getFile();
-
-                    byte []buf = new byte[1024];
-                    int rd = 0;
-                    if (file.open()) {
-                        if (entryName.equals("config")) {
-                            String content = "";
-                            while ((rd = file.read(buf, 0, 1024)) != 0) {
-                                content = content + new String(buf, 0, rd);
-                            }
-                            writeCompileConfig(content);
-                        } else {
-                            long filehandler = _system_.openFile(path, "w");
-                            if (filehandler != 0) {
+                        byte []buf = new byte[1024];
+                        int rd = 0;
+                        if (file.open()) {
+                            if (entryName.equals("config")) {
+                                String content = "";
                                 while ((rd = file.read(buf, 0, 1024)) != 0) {
-                                    _system_.writeFile(filehandler, buf, 0, rd);
+                                    content = content + new String(buf, 0, rd);
                                 }
-                                _system_.closeFile(filehandler);
+                                writeCompileConfig(content);
                             } else {
-                                bSuccess = false;
+                                long filehandler = _system_.openFile(path, "w");
+                                if (filehandler != 0) {
+                                    while ((rd = file.read(buf, 0, 1024)) != 0) {
+                                        _system_.writeFile(filehandler, buf, 0, rd);
+                                    }
+                                    _system_.closeFile(filehandler);
+                                } else {
+                                    bSuccess = false;
+                                }
                             }
+                            file.close();
+                        } else {
+                            bSuccess = false;
                         }
-                        file.close();
                     } else {
-                        bSuccess = false;
+                        _system_.mkdir(path);
                     }
-                } else {
-                    _system_.mkdir(path);
                 }
             }
             zs.close();
@@ -1207,6 +1260,9 @@ class XWorkspace : QXMdiArea
     }
 
     public static bool mkdirs(String path){
+        if (path == nilptr){
+            return false;
+        }
         if (XPlatform.existsSystemFile(path) == false){
             if (XPlatform.mkdir(path) == false){
                 mkdirs(path.findVolumePath());
@@ -1216,7 +1272,7 @@ class XWorkspace : QXMdiArea
         return true;
     }
     
-    public bool installPlugin(String zfile)
+    public bool installPlugin(@NotNilptr String zfile)
     {
         String plugins_path = nilptr;
         
@@ -1238,43 +1294,44 @@ class XWorkspace : QXMdiArea
                 if (bSuccess == false) {
                     break;
                 }
+                if (entry != nilptr){
+                    String entryName = entry.getName();
 
-                String entryName = entry.getName();
+                    String path = String.formatPath(dir.appendPath(entryName), false);
 
-                String path = String.formatPath(dir.appendPath(entryName), false);
+                    if (entry.isDirectory() == false) {
+                        ZipFile file = entry.getFile();
 
-                if (entry.isDirectory() == false) {
-                    ZipFile file = entry.getFile();
-
-                    byte []buf = new byte[1024];
-                    int rd = 0;
-                    if (file.open()) {
-                        if (entryName.lower().endWith(".slx")){
-                            plugins_path = path;
-                        }
-                        
-                        String vpath = path.findVolumePath();
-                        
-                        if (vpath != nilptr){ 
-                            mkdirs(vpath);
-                        }
-                        
-                        long filehandler = _system_.openFile(path, "w");
-                        if (filehandler != 0) {
-                            while ((rd = file.read(buf, 0, 1024)) != 0) {
-                                _system_.writeFile(filehandler, buf, 0, rd);
+                        byte []buf = new byte[1024];
+                        int rd = 0;
+                        if (file.open()) {
+                            if (entryName.lower().endWith(".slx")){
+                                plugins_path = path;
                             }
-                            _system_.closeFile(filehandler);
+                            
+                            String vpath = path.findVolumePath();
+                            
+                            if (vpath.length() > 0){ 
+                                mkdirs(vpath);
+                            }
+                            
+                            long filehandler = _system_.openFile(path, "w");
+                            if (filehandler != 0) {
+                                while ((rd = file.read(buf, 0, 1024)) != 0) {
+                                    _system_.writeFile(filehandler, buf, 0, rd);
+                                }
+                                _system_.closeFile(filehandler);
+                            } else {
+                                bSuccess = false;
+                            }
+                            
+                            file.close();
                         } else {
                             bSuccess = false;
                         }
-                        
-                        file.close();
                     } else {
-                        bSuccess = false;
+                        _system_.mkdir(path);
                     }
-                } else {
-                    _system_.mkdir(path);
                 }
             }
             zs.close();
@@ -1352,33 +1409,35 @@ class XWorkspace : QXMdiArea
     public void createConfigToolbar()
     {
         QXToolBar qtb = (QXToolBar)mainWindow.attachByName(new QXToolBar(), "toolBar_3");
+        
+        if (qtb != nilptr){
+            QXAction actiondebug = (QXAction)mainWindow.findByName("actiondebug");
 
-        QXAction actiondebug = (QXAction)mainWindow.findByName("actiondebug");
+            cfgSel.create();
 
-        cfgSel.create();
+            if (actiondebug != nilptr) {
+                qtb.insertWidget(actiondebug, cfgSel);
+            } else {
+                qtb.addWidget(cfgSel);
+            }
 
-        if (actiondebug != nilptr) {
-            qtb.insertWidget(actiondebug, cfgSel);
-        } else {
-            qtb.addWidget(cfgSel);
-        }
-
-        cfgSel.setOnComboBoxEventListener(
-        new onComboBoxEventListener() {
-            void onItemSelected(QXObject obj, int id) {
-                if (currentProject != nilptr) {
-                    String selcfgname = cfgSel.getCurrentText();
-                    if (selcfgname.length() > 0){
-                        currentProject.setCurrentConfigure(selcfgname, true);
+            cfgSel.setOnComboBoxEventListener(
+            new onComboBoxEventListener() {
+                void onItemSelected(QXObject obj, int id) {
+                    if (currentProject != nilptr) {
+                        String selcfgname = cfgSel.getCurrentText();
+                        if (selcfgname.length() > 0){
+                            currentProject.setCurrentConfigure(selcfgname, true);
+                        }
                     }
                 }
             }
+            );
         }
-        );
     }
 
 
-    public void notifyFileChange(String path)
+    public void notifyFileChange(@NotNilptr String path)
     {
         runOnUi(new Runnable() {
             void run()override {
@@ -1394,11 +1453,12 @@ class XWorkspace : QXMdiArea
         qfsw.create(this);
         qfsw.setOnFileSystemChangeListener(
         new onFileSystemChangeListener() {
-            void onFileChanged(QXObject, String path) {
+            void onFileChanged(QXObject,@NotNilptr String path) {
+                _system_.sleep(20);
                 notifyFileChange(path);
             }
 
-            void onDirChange(QXObject,String path) {
+            void onDirChange(QXObject,@NotNilptr String path) {
 
             }
         });
@@ -1522,7 +1582,7 @@ class XWorkspace : QXMdiArea
     public void gotoLine()
     {
         InputDialog.requestInput(new InputDialog.onInputListener() {
-            bool onInputOk(String text)override {
+            bool onInputOk(@NotNilptr String text)override {
                 if (text.length() == 0 || text.isDigit() == false) {
                     QXMessageBox.Critical("错误", "输入了不正确的行号", QXMessageBox.Ok, QXMessageBox.Ok);
                     return false;
@@ -1555,22 +1615,25 @@ class XWorkspace : QXMdiArea
 
     public void FindReplace()
     {
-        if (findDlg == nilptr) {
-            QXDialog newDlg = new QXDialog();
-            if (newDlg.load("ui/findreplace.ui", mainWindow) == false) {
-                return ;
+        QXMainWindow mwin = mainWindow;
+        
+        if (mwin != nilptr){
+            if (findDlg == nilptr) {
+                QXDialog newDlg = new QXDialog();
+                
+                if (newDlg.load("ui/findreplace.ui", mwin) == false) {
+                    return ;
+                }
+                findDlg = new XFindDlg(this);
+                findDlg.attach(newDlg);
             }
-            findDlg = new XFindDlg(this);
-            findDlg.attach(newDlg);
+            XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+            if (wnd != nilptr) {
+                String text = wnd.getSelectedText();
+                findDlg.setDefaultFindText(text);
+            }
+            findDlg.setActive(true);
         }
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
-        if (wnd != nilptr) {
-            String text = wnd.getSelectedText();
-            findDlg.setDefaultFindText(text);
-        }
-        findDlg.setActive(true);
-
-        return ;
     }
 
     public void stopRun()
@@ -1584,7 +1647,7 @@ class XWorkspace : QXMdiArea
                 
                 if (rt == QXMessageBox.Yes){
                     debuggee.dbgSendExit();
-                    Thread.sleep(50);
+                    _system_.sleep(50);
                 }
                 debuggee.close();
             }
@@ -1595,13 +1658,15 @@ class XWorkspace : QXMdiArea
     {
         if (currentProject != nilptr) {
             InputDialog.requestInput(new InputDialog.onInputListener() {
-                bool onInputOk(String text)override {
+                bool onInputOk(@NotNilptr String text)override {
                     bool b = currentProject.saveAsTemplate(tempName, text);
                     ProgressView pv = ProgressView.showWait(-1);
-                    pv.centerScreen();
-                    pv.showResult(true,b);
-                    pv.setTitleText(b ? "已存为模板" : "保存失败");
-                    pv.dismissAfter(1000);
+                    if (pv != nilptr){
+                        pv.centerScreen();
+                        pv.showResult(true,b);
+                        pv.setTitleText(b ? "已存为模板" : "保存失败");
+                        pv.dismissAfter(1000);
+                    }
                     return true;
                 }
                 bool onInputCancel()override {
@@ -1625,8 +1690,8 @@ class XWorkspace : QXMdiArea
 
         if (currentProject != nilptr) {
             InputDialog.requestInput(new InputDialog.onInputListener() {
-                bool onInputOk(String text)override {
-                    if (text == nilptr || text.length() == 0) {
+                bool onInputOk(@NotNilptr String text)override {
+                    if (text.length() == 0) {
                         QXMessageBox.Critical("错误", "项目名称不合法", QXMessageBox.Ok, QXMessageBox.Ok);
                         return false;
                     }
@@ -1684,7 +1749,12 @@ class XWorkspace : QXMdiArea
     {
         synchronized(debugThreadLock) {
             if (_debugThread == nilptr) {
-                closeIndexPage();
+                runOnUi(new Runnable(){
+                    void run()override{
+                        closeIndexPage();
+                    }
+                });
+                
                 XWorkspace.updateDebugStatus(true);
 
                 _debugThread = new Thread() {
@@ -1712,7 +1782,7 @@ class XWorkspace : QXMdiArea
     public InputDialog.onInputListener remotedbglistener = new InputDialog.onInputListener()
     {
         String defaultaddress = "127.0.0.1:23326";
-        bool onInputOk(String text)override {
+        bool onInputOk(@NotNilptr String text)override {
             int spf = text.indexOf(':');
             if (spf < 1) {
                 QXMessageBox.Critical("错误", "输入了不正确的地址", QXMessageBox.Ok, QXMessageBox.Ok);
@@ -1764,13 +1834,16 @@ class XWorkspace : QXMdiArea
         
         DebuggeeManager dc = ProjectPropManager.getDebuggeeManager();
         String [] langs = dc.namelist.toArray(new String[0]);
-        
+        if (langs.length == 0){
+            QXMessageBox.Critical("注意", "没有安装可用于调试的扩展组件 .", QXMessageBox.Ok, QXMessageBox.Ok);
+            return ;
+        }
         ProjectPropInterface ppi = nilptr;
         
         if (langs.length > 1){
             String sellang = nilptr;
             int res = MultiSelectDialog.requestSelect(new InputDialog.onInputListener(){
-                bool onInputOk(String text)override{ return true;}
+                bool onInputOk(@NotNilptr String text)override{ return true;}
                 bool onInputCancel()override{ 
                     return true;
                 }
@@ -1793,7 +1866,6 @@ class XWorkspace : QXMdiArea
                 }
                 
             },langs);
-            
             if (sellang != nilptr){
                  ppi =  dc.get(sellang);
             }
@@ -1849,19 +1921,21 @@ class XWorkspace : QXMdiArea
                 return;
             }
             String target = currentProject.getOutputTarget();
-            _builder.OutputText("正在检测代码改动...\n", 0);
-            if (_run_thread == nilptr && (lastBuildSuccess == false || saveAllFile() || (XPlatform.existsSystemFile(target) == false) || currentProject.detectSourcesModified() )) {
-                build_project(_builder, new BuildListener() {
-                    void onBuild(bool b) {
-                        lastBuildSuccess = b;
-                        if (b) {
-                            runDebug();
+            if (target != nilptr){
+                _builder.OutputText("正在检测代码改动...\n", 0);
+                if (_run_thread == nilptr && (lastBuildSuccess == false || saveAllFile() || (XPlatform.existsSystemFile(target) == false) || currentProject.detectSourcesModified() )) {
+                    build_project(_builder, new BuildListener() {
+                        void onBuild(bool b) {
+                            lastBuildSuccess = b;
+                            if (b) {
+                                runDebug();
+                            }
                         }
+                    }, nilptr);
+                } else {
+                    if (lastBuildSuccess) {
+                        runDebug();
                     }
-                }, nilptr);
-            } else {
-                if (lastBuildSuccess) {
-                    runDebug();
                 }
             }
         }
@@ -1895,22 +1969,24 @@ class XWorkspace : QXMdiArea
     {
         if (currentProject != nilptr) {
             String target = currentProject.getOutputTarget();
-            _builder.OutputText("正在检测代码改动...\n", 0);
-            if (_run_thread == nilptr && (lastBuildSuccess == false || saveAllFile() || (XPlatform.existsSystemFile(target) == false) || currentProject.detectSourcesModified() )) {
-                build_project(_builder, new BuildListener() {
-                    void onBuild(bool b) {
-                        lastBuildSuccess = b;
-                        if (b) {
-                            runApp();
+            if (target != nilptr){
+                _builder.OutputText("正在检测代码改动...\n", 0);
+                if (_run_thread == nilptr && (lastBuildSuccess == false || saveAllFile() || (XPlatform.existsSystemFile(target) == false) || currentProject.detectSourcesModified() )) {
+                    build_project(_builder, new BuildListener() {
+                        void onBuild(bool b) {
+                            lastBuildSuccess = b;
+                            if (b) {
+                                runApp();
+                            }
                         }
+                    }, nilptr);
+                } else {
+                    if (lastBuildSuccess) {
+                        runApp();
                     }
-                }, nilptr);
-            } else {
-                if (lastBuildSuccess) {
-                    runApp();
                 }
+                return true;
             }
-            return true;
         }
         return false;
     }
@@ -2127,11 +2203,19 @@ class XWorkspace : QXMdiArea
         Project project = currentProject;
         
         if (project != nilptr ){
-            if (project.getLanguage().equals("xlang")){
-                if (id == 0) {
-                    String []files = QXFileDialog.getOpenFileNames("添加已有文件", nilptr,  "X 模块源文件(*.x *.xcs *.xcsm);;Qt UI文件(*.ui);;X 模块源文件(*.x *.xcs *.xcsm);;Make File(makefile);;C/C++ 源文件(*.cpp *.c *.cc *.cxx *.hpp *.h *.mm);;html 网页(*.htm *.html);;纯文本文件 (*.txt);;其他文件 (*.*)", this);
+            bool bCallPlugin = true;
+            
+            if (id == 0) {
+                ProjectPropInterface ppi = project.getPropInterface();
+                String filter = nilptr;
+                if (ppi != nilptr){
+                    filter = ppi.getFileExtensionFilter();
+                }
+                
+                if (filter != nilptr){
+                    String []files = QXFileDialog.getOpenFileNames("添加已有文件", nilptr,  filter + "html 网页(*.htm *.html);;纯文本文件 (*.txt);;其他文件 (*.* *)", this);
+                    
                     if (files != nilptr && files.length > 0) {
-
                         for (int i =0; i < files.length; i++) {
                             String file = String.formatPath(files[i], false);
                             currentProject.addSource(file);
@@ -2139,10 +2223,16 @@ class XWorkspace : QXMdiArea
                         }
                         _builder.OutputText("已添加:" + files.length + "个文件\n", 0);
                     }
-                } else {
-                    AddObjectDlg.requestAddObject(currentProject, id);
+                    bCallPlugin = false;
                 }
-            }else{
+            } else 
+            if (project.getLanguage().equals("xlang")){
+                AddObjectDlg.requestAddObject(currentProject, id);
+                bCallPlugin = false;
+            }
+            
+            if (bCallPlugin)
+            {
                 IXPlugin xplugins = project.getProjectPlugin();
                 if (xplugins != nilptr){
                     xplugins.onMenuTrigged(id == 0 ? "SYS_ADDFILE" : "SYS_ADDOBJECT");
@@ -2151,13 +2241,13 @@ class XWorkspace : QXMdiArea
         }
     }
 
-    public bool XIntelliSenseL(XSourceEditor editor, String originalName,int line, int column)
+    public bool XIntelliSenseL(XSourceEditor editor, String originalName, String content, int line, int column)
     {
         synchronized(xintellisencelock) {
             if (_autoComp_thread == nilptr) {
                 _autoComp_thread = new Thread() {
                     void run()override {
-                        XWorkspace.this.autocomp = XWorkspace.this.getXIntelliSenseL(originalName, line, column);
+                        XWorkspace.this.autocomp = XWorkspace.this.getXIntelliSenseL(originalName, content, line, column);
                         editor.setIntellisense(XWorkspace.this.autocomp);
                         XWorkspace.this._autoComp_thread = nilptr;
                         showXintellisenceComplete();
@@ -2240,7 +2330,7 @@ class XWorkspace : QXMdiArea
                 int c = project.getSourceFileCount();
                 for (int i = 0; i < c; i++) {
                     String _sourcePath = project.getSourcePath(i);
-                    if (_sourcePath.equals(except) == false) {
+                    if (_sourcePath != nilptr && _sourcePath.equals(except) == false) {
                         XSourceEditor wnd = XSourceEditor.findFileWindow(_sourcePath);
                         if (wnd != nilptr) {
                             String _content = wnd.getTextContent();
@@ -2263,12 +2353,12 @@ class XWorkspace : QXMdiArea
         return nilptr;
     }
 
-    public XIntelliSense.XIntelliResult [] getXIntelliSenseL(String sourcePath,int line, int column)
+    public XIntelliSense.XIntelliResult [] getXIntelliSenseL(String sourcePath,String content,int line, int column)
     {
         if (currentProject != nilptr) {
             IXIntelliSense  _intelliSense = currentProject.getIntelliSense();
             if (_intelliSense != nilptr) {
-                return _intelliSense.getIntelliSenseL(sourcePath, line, column);
+                return _intelliSense.getIntelliSenseL(sourcePath, content, line, column);
             }
         }
         return nilptr;
@@ -2282,14 +2372,16 @@ class XWorkspace : QXMdiArea
             FileOutputStream fos = new FileOutputStream(filepath);
             Project project = workspace.getCurrentProject();
             
-            byte[] data  = ("uacdebug\n" + project.getPath()).getBytes();
-            fos.write(data, 0, data.length);
-            fos.close();
+            if (project != nilptr){
+                byte[] data  = ("uacdebug\n" + project.getPath()).getBytes();
+                fos.write(data, 0, data.length);
+                fos.close();
 
-            String path = _system_.getAppDirectory().appendPath("xdbg_uac.exe");
-            QxApp.lastTask = path;
-            workspace.mainWindow.close();
-            QxApp.lastTask = nilptr;
+                String path = _system_.getAppDirectory().appendPath("xdbg_uac.exe");
+                QxApp.lastTask = path;
+                workspace.mainWindow.close();
+                QxApp.lastTask = nilptr;
+            }
         } catch(Exception e) {
             QXMessageBox.Critical("失败", "无法写入调试文件:" + filepath + "请确认目录可写.", QXMessageBox.Ok, QXMessageBox.Ok);
         }
@@ -2408,49 +2500,50 @@ class XWorkspace : QXMdiArea
             
             bool bNeedCompile = false;
             String target = project.getOutputTarget();
-
-            if (Setting.isAutoSave()) {
-                bNeedCompile = saveAllFile();
-                if (bNeedCompile == false) {
-                    if ((XPlatform.existsSystemFile(target) == false) || project.detectSourcesModified()) {
-                        bNeedCompile = true;
-                    }
-                }
-            } else {
-                bNeedCompile = true;
-            }
-
-            bool build_success = false;
-            
-            if (bNeedCompile || (lastBuildSuccess == false)) {
-                build_project(_builder, new BuildListener() {
-                    void onBuild(bool b) {
-                        lastBuildSuccess = b;
-                        if (b){
-                            runOnUi(new Runnable(){
-                                void run()override{
-                                    _builder.OutputText("\n开始部署..\n", 0);
-                                    String deploy_target = String.formatPath(deploy_path.appendPath(project.getOutputName()), false);
-                                    bool bcopyed = XlangProjectProp.copyFile(target, deploy_target);
-                                    _builder.OutputText("\n拷贝文件:" + target + "..." + bcopyed + "\n", 0);
-                                    project.deployto(deploy_path);
-                                    _builder.OutputText("\已部署到位置:" + deploy_path + "\n", 0);
-                                }
-                            });
+    
+            if (target != nilptr){
+                if (Setting.isAutoSave()) {
+                    bNeedCompile = saveAllFile();
+                    if (bNeedCompile == false) {
+                        if ((XPlatform.existsSystemFile(target) == false) || project.detectSourcesModified()) {
+                            bNeedCompile = true;
                         }
                     }
-                }, nilptr);
-            } else {
-                _builder.OutputText(target + "\n自上次编译以来没有检测到任何改动,请使用[清理]命令后重新编译.\n", 0);
-                _builder.OutputText("\n开始部署..\n", 0);
-                String deploy_target = String.formatPath(deploy_path.appendPath(project.getOutputName()), false);
-                bool bcopyed = XlangProjectProp.copyFile(target, deploy_target);
-                _builder.OutputText("\n拷贝文件:" + target + "..." + bcopyed + "\n", 0);
-                project.deployto(deploy_path);
-                _builder.OutputText("\已部署到位置:" + deploy_path + "\n", 0);
-            }
-            
+                } else {
+                    bNeedCompile = true;
+                }
 
+                bool build_success = false;
+                
+                if (bNeedCompile || (lastBuildSuccess == false)) {
+                    build_project(_builder, new BuildListener() {
+                        void onBuild(bool b) {
+                            lastBuildSuccess = b;
+                            if (b){
+                                runOnUi(new Runnable(){
+                                    void run()override{
+                                        _builder.OutputText("\n开始部署..\n", 0);
+                                        String deploy_target = String.formatPath(deploy_path.appendPath(project.getOutputName()), false);
+                                        bool bcopyed = XlangProjectProp.copyFile(target, deploy_target);
+                                        _builder.OutputText("\n拷贝文件:" + target + "..." + bcopyed + "\n", 0);
+                                        project.deployto(deploy_path);
+                                        _builder.OutputText("\已部署到位置:" + deploy_path + "\n", 0);
+                                    }
+                                });
+                            }
+                        }
+                    }, nilptr);
+                } else {
+                    _builder.OutputText(target + "\n自上次编译以来没有检测到任何改动,请使用[清理]命令后重新编译.\n", 0);
+                    _builder.OutputText("\n开始部署..\n", 0);
+                    String deploy_target = String.formatPath(deploy_path.appendPath(project.getOutputName()), false);
+                    bool bcopyed = XlangProjectProp.copyFile(target, deploy_target);
+                    _builder.OutputText("\n拷贝文件:" + target + "..." + bcopyed + "\n", 0);
+                    project.deployto(deploy_path);
+                    _builder.OutputText("\已部署到位置:" + deploy_path + "\n", 0);
+                }
+                
+            }
         }
     }
 };

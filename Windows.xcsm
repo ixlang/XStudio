@@ -8,12 +8,15 @@ class Windows : QXDialog
     QXPushButton btnOk;
     QXPushButton btnActive;
     QXPushButton btnClose;
+    static QXRect rect = nilptr;
 
     onTreeViewItemEvent listlistener = new onTreeViewItemEvent()
     {
-        void onItemClicked(QXTreeView tree,long item, int column)override {
+        void onItemClicked(@NotNilptr QXTreeView tree,long item, int column)override {
             long [] items = tree.getSelectedItems();
-            btnActive.setEnabled(items.length == 1);
+            if (items != nilptr){
+                btnActive.setEnabled(items.length == 1);
+            }
         }
         void onItemDoubleClicked(QXTreeView,long item, int column) {
             try {
@@ -49,7 +52,7 @@ class Windows : QXDialog
         new onClickListener() {
             void onClick(QXObject obj, bool checked)override {
                 long [] items = _listview.getSelectedItems();
-                if (items.length == 1) {
+                if (items != nilptr && items.length == 1) {
                     try {
                         XSourceEditor editor = windows_list.get(items[0]);
                         if (editor != nilptr) {
@@ -68,18 +71,20 @@ class Windows : QXDialog
         new onClickListener() {
             void onClick(QXObject obj, bool checked)override {
                 long [] items = _listview.getSelectedItems();
-                for (int i =0; i < items.length; i++) {
-                    try {
-                        XSourceEditor editor = windows_list.get(items[i]);
-                        if (editor != nilptr) {
-                            editor.close();
-                        }
-                    } catch(Exception e) {
+                if (items != nilptr){
+                    for (int i =0; i < items.length; i++) {
+                        try {
+                            XSourceEditor editor = windows_list.get(items[i]);
+                            if (editor != nilptr) {
+                                editor.close();
+                            }
+                        } catch(Exception e) {
 
+                        }
                     }
+                    loadWindow();
+                    _workspace.updateDocumentStatus();
                 }
-                loadWindow();
-                _workspace.updateDocumentStatus();
             }
         });
 
@@ -102,8 +107,16 @@ class Windows : QXDialog
         });*/
         setWindowIcon("./res/toolbar/winoverlap.png");
         setWindowTitle("窗口");
+        if (rect != nilptr){
+            move(rect.left,rect.top);
+            resize(rect.right,rect.bottom);
+        }
         setModal(true);
         show();
+    }
+    public bool onClose(){
+        rect = new QXRect(x(), y(), width(), height());
+        return true;
     }
     void loadWindow()
     {
@@ -118,14 +131,16 @@ class Windows : QXDialog
 
             iter.next();
 
-            long item = _listview.addItem("./res/toolbar/source.png", val.szTitle);
+            if (val != nilptr){
+                long item = _listview.addItem("./res/toolbar/source.png", val.szTitle);
 
-            windows_list.put(item, val);
+                windows_list.put(item, val);
 
-            if (val.filePath.startWith("#")) {
-                _listview.setItemText(item, 1, "<未保存>");
-            } else {
-                _listview.setItemText(item, 1, val.filePath);
+                if (val.filePath.startWith("#")) {
+                    _listview.setItemText(item, 1, "<未保存>");
+                } else {
+                    _listview.setItemText(item, 1, val.filePath);
+                }
             }
         }
     }

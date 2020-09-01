@@ -36,19 +36,21 @@ class FirstPrepare : QXDialog{
                 
                 Setting.save();
                 ProgressView pv = ProgressView.showWait(-1);
-                pv.centerScreen();
-                pv.setTitleText("正在进行首次设置...");
-                pv.setOnDismissListener(new ProgressView.OnDismissListener(){
-					void onDismissListener(ProgressView v)override{
-							runOnUi(new Runnable(){
-								void run()override{
-									Recently.mkFirstFile();
-									app.createWorkspace();
-                                }
-                            });
-                    }
-                });
-                pv.dismissAfter(2000);
+                if (pv != nilptr){
+                    pv.centerScreen();
+                    pv.setTitleText("正在进行首次设置...");
+                    pv.setOnDismissListener(new ProgressView.OnDismissListener(){
+                        void onDismissListener(ProgressView v)override{
+                                runOnUi(new Runnable(){
+                                    void run()override{
+                                        Recently.mkFirstFile();
+                                        app.createWorkspace();
+                                    }
+                                });
+                        }
+                    });
+                    pv.dismissAfter(2000);
+                }
             }
         });
         

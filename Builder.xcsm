@@ -29,7 +29,7 @@ class Builder : IBuilder
             infownd.clear();
         }
     }
-    public String build(String compilerPath, String []args, String workDir, InformationParser parser, bool bForceArgs)override
+    public String build(@NotNilptr String compilerPath,@NotNilptr String []args,@NotNilptr String workDir, InformationParser parser, bool bForceArgs)override
     {
         String allInfo = nilptr;
         String argfilepath = nilptr;
@@ -105,15 +105,18 @@ class Builder : IBuilder
                                 } else {
                                     lines ="";
                                 }
-
+                                
                                 OutputText(XPlatform.converPlatformCharSetTo(szOut), 0);
+                                
                             }
                         }
 
                     } catch(Exception e) {
 
                     }
+                   
                     OutputText(XPlatform.converPlatformCharSetTo(lines), 0);
+                    
                 }
             } catch(Exception e) {
                 String str = e.getMessage();
@@ -129,10 +132,13 @@ class Builder : IBuilder
         if (argfilepath != nilptr){
             XPlatform.deleteFile(argfilepath);
         }
-        return XPlatform.converPlatformCharSetTo(allInfo);
+        if (allInfo != nilptr){
+            return XPlatform.converPlatformCharSetTo(allInfo);
+        }
+        return nilptr;
     }
 
-    public void OutputText(String text, int id)override
+    public void OutputText(@NotNilptr String text, int id)override
     {
         if (inConsole == false) {
             output.output(text, id);
@@ -146,9 +152,12 @@ class Builder : IBuilder
             infownd.showInfo(infos);
         }
     }
-    public void complete(){
+    public void complete()override{
         if (inConsole == false) {
             infownd.completeCompile();
         } 
+    }
+    public Process getProcess()override{
+        return buildProcess;
     }
 };

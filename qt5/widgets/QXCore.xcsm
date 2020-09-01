@@ -458,17 +458,19 @@ class QXCore : QXNative {
                         ISDOCKNESTINGENABLED = 455,
                         LAYTOUADDWIDGET = 456,
                         SETLAYOUT = 457,
-                        DOCKSETALLOWEDAREAS = 458;
+                        DOCKSETALLOWEDAREAS = 458,
+                        BUTTONGETTEXT = 459,
+                        WIDGETGETTITLE = 460;
 
     public QXCore() {
     }
-    public QXCore(int type) {
+    public QXCore(int type) throws IllegalArgumentException {
         nativehandle = createQObject(type, this, 0);
         if (nativehandle == 0) {
             throw new IllegalArgumentException("can't new Object");
         }
     }
-    public QXCore(int type, QXNative parent) {
+    public QXCore(int type, QXNative parent) throws IllegalArgumentException{
         if (parent == nilptr) {
             throw new IllegalArgumentException("parent is null");
         }
@@ -482,7 +484,7 @@ class QXCore : QXNative {
         super(handle);
     }
 
-    public Object subClass(QXCore object) {
+    public Object subClass(@NotNilptr QXCore object) {
         if (core_sub_class(nativehandle, this, object)) {
             object.nativehandle = nativehandle;
             nativehandle = 0;
@@ -506,7 +508,7 @@ class QXCore : QXNative {
     public static String getClipboardText() {
         return (String)core_getString(0, CLIPBOARDTEXT);
     }
-    public static void setClipboardImage(QXImage img) {
+    public static void setClipboardImage(@NotNilptr QXImage img) {
         widget_set_native_value(0, CLIPBOARDIMAGE, img.himage);
     }
     public static QXImage getClipboardImage() {

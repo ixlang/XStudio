@@ -1,6 +1,6 @@
 class QXListView : QXWidget{
     
-    bool create(){
+    bool create()override {
         nativehandle = createQObject(QType.qtListView, this, 0);
         if (nativehandle == 0){
             return false;
@@ -8,7 +8,7 @@ class QXListView : QXWidget{
         return true;
     }
     
-    bool create(QXWidget parent){
+    bool create(@NotNilptr QXWidget parent)override {
         nativehandle = createQObject(QType.qtListView, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;

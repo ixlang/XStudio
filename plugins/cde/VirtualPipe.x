@@ -2,10 +2,8 @@
 //Date: Wed Mar 20:12:00 2020 
 
 class VirtualPipe{
-    byte [] buffer;
-    int pos;
-    int length;
-    int writed_len;
+
+    
     bool closed = false;
 
     static const int STATE_FREE = 0, STATE_WAIT_READ = 1, STATE_WAIT_WRITE = 2;
@@ -43,69 +41,50 @@ class VirtualPipe{
     bool createstream(){
         return true;
     }
+    
+    byte [] buffer;
+    int pos = 0, length = 0, buffer_len = 0;
+    
     int write(byte [] data, int index, int len){
-        int wrl = 0;
         synchronized(this){
-            while((len > 0) && (closed == false)){
-                while ((buffer == nilptr) && (closed == false)){
-                    state = STATE_WAIT_READ;
-                    this.wait();
-                }
-                if (closed){
-                    return -1;
-                }
-                int al = length - writed_len;
-                if (al > 0){
-                    int wl = Math.min(len, al);
-                    _system_.arrayCopy(data,index,buffer,pos + writed_len,wl);
-                    wrl += wl;
-                    writed_len += wl;
-                    index += wl;
-                    len -= wl;
-                }else{
-                    buffer = nilptr;
-                    if (state == STATE_WAIT_WRITE){
-                        this.notify();
-                    }
-                }
+            while (length != 0 && (closed == false)){
+                this.wait();
             }
-            
-            buffer = nilptr;
-            if (state == STATE_WAIT_WRITE){
-                this.notify();
+            if (closed){ return -1; }
+            if (len > 0){
+                if (buffer_len < len){
+                    buffer_len = len;
+                    buffer = new byte[buffer_len];
+                }
+                pos = 0;
+                length = len;
+                _system_.arrayCopy(data,index,buffer,0,len);
             }
-            if (state == STATE_WAIT_READ){
-                state = STATE_FREE;
-            }
+            this.notify();
         }
-        return wrl;
+        return len;
     }
     
     int read(byte [] data, int index, int len){
         synchronized(this){
-            buffer = data;
-            pos = index;
-            length = len;
-            writed_len = 0;
-            
-            if (state == STATE_WAIT_READ){
-                this.notify();
-            }
-            
-            while ((buffer != nilptr) && (closed == false)){
-                state = STATE_WAIT_WRITE;
+            while ((length == 0) && (closed == false)){
                 this.wait();
             }
-            
-            if (closed){
-                return -1;
+            if (closed){ return -1; }
+            if (len > 0){
+                len = readData(data, index, len);
             }
-                
-            if (state == STATE_WAIT_WRITE){
-                state = STATE_FREE;
-            }
+            this.notify();
         }
-        return writed_len;
+        return len;
+    }
+    
+    int readData(byte [] data, int index, int len){
+        int rd = Math.min(len, length);
+        _system_.arrayCopy(buffer,pos,data,index,rd);
+        pos += rd;
+        length -= rd;
+        return rd;
     }
     
     void close(){

@@ -955,7 +955,7 @@ class QXObject : QXCore {
         return (QXObject)findControl(nativehandle, name);
     }
 
-    public QXObject attachByName(QXObject newObj, String name) {
+    public QXObject attachByName(@NotNilptr QXObject newObj, String name) {
         newObj.nativehandle = attachControl(nativehandle, newObj, name);
         if (newObj.nativehandle != 0) {
             newObj.onAttach();
@@ -964,7 +964,7 @@ class QXObject : QXCore {
         return nilptr;
     }
 
-    public bool attach(QXObject obj) {
+    public bool attach(@NotNilptr QXObject obj) {
         nativehandle = core_attach(obj.nativehandle, this);
         if (nativehandle != 0) {
             onAttach();

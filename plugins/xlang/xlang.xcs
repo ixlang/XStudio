@@ -7,65 +7,70 @@ class XLANGPlugManager{
 	public static class XLangPlugin : IXPlugin{
 		public XTextEditor textPlugin = new XTextEditor();
         
-		String getName(){
+		String getName() override {
 			return "xlang";
 		}
 		
-		void onTextEditorCreated(TextEditorController editor){
+		void onTextEditorCreated(TextEditorController )override{
 		
 		}
-		IProjectPlugin getProjectPlugin(){
+		IProjectPlugin getProjectPlugin()override{
             return nilptr;
         }
-		void onTextEditorClosed(TextEditorController editor){
+		void onTextEditorClosed(TextEditorController )override{
 		
 		}
 		
-		bool initializPlusin(IXStudioController controller, bool enabled){
+		bool initializPlusin(IXStudioController controller, bool )override{
 			xcontroller = controller;
             return true; 
 		}
         
-        TextEditorPlugin getTextEditorPlugin(){
+        TextEditorPlugin getTextEditorPlugin()override{
 			return textPlugin;
         }
         
-        IProject loadProject(JsonObject content, String lang){
+        IProject loadProject(JsonObject , String )override{
 			return nilptr;
         }
         
-        void onMenuTrigged(String name){
+        void onMenuTrigged(String )override{
         
         }
-        String getIcon(){
+        String getIcon()override{
             return "res/package64.png";
         }
-        bool onExit(){
+        bool onExit()override{
             return true;
         }
         
-        long getVersion(){
+        long getVersion()override{
             return 1000;
         } 
-        String getDescrition(){
+        String getDescrition()override{
             return "xlang 基础开发扩展.";
         }
-        String publisher(){
+        String publisher()override{
             return "https://github.com/ixlang/xlibraries";
         }
-        void uninstall(IXStudioController){
+        void uninstall(IXStudioController)override{
             
         }
+        String getSetting()override{
+            return nilptr;
+        }
+        void settingFlushed()override{}
+        void showDocks(bool )override{}
 	};
     
-    static void output(String text){
+    /*static void output(String text){
 		if (xcontroller != nilptr){
 			xcontroller.getWorkspace().output(text, 0);
         }
-    }
+    }*/
 };
 
 
-void _entry(int moduleId, int xvmVer){
+void _entry(int , int ){
     PluginManager.registryPlugins(new XLANGPlugManager.XLangPlugin());
 }

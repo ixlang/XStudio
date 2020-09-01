@@ -36,15 +36,14 @@ class XLANGPlugManager
             if (!enabled){
                 return true; 
             }
-            workspace.addMenu(4, "astyle_single", "AStyle 格式化当前源文件", nilptr,"Ctrl+Shift+A", this);
-            workspace.addMenu(4, "astyle_config", "AStyle 格式化设置", nilptr, nilptr, this);
+            workspace.addMenu(4, "astyle_single", "格式化当前源文件", "plugins/AStyle/astyle.png","Ctrl+Shift+A", this);
             return true;
         }
         String getIcon(){
             return "plugins/AStyle/astyle.png";
         }
         long getVersion(){
-            return 1000;
+            return 1001;
         }
         String getDescrition(){
             return "使用AStyle进行代码格式化的扩展组件.";
@@ -55,7 +54,7 @@ class XLANGPlugManager
         void uninstall(IXStudioController){
             
         }
-        
+        void showDocks(bool){}
         TextEditorPlugin getTextEditorPlugin()
         {
             return nilptr;
@@ -95,14 +94,115 @@ class XLANGPlugManager
                         output("上一个任务进行中");
                     }
                 }
-            } else if (name.equals("astyle_config")) {
-                String apppath = XPlatform.getAppDirectory().appendPath("plugins").appendPath("astyle");
-                String astyleconf  = apppath.appendPath("astyle.conf");
-                workspace.openTextEditor(astyleconf);
             }
+        }
+        
+        
+        JsonObject createBoolOption(){
+            JsonObject item_bk = new JsonObject();
+            item_bk.put("type", "bool");
+            return item_bk;
+        }
+        
+        JsonObject createOptions(String [] options){
+            JsonObject item_bk = new JsonObject();
+            JsonArray swi = new JsonArray();
+            for (int i = 0; i < options.length; i++){
+                swi.put(options[i]);
+            }
+            item_bk.put("list", swi);
+            item_bk.put("type", "options");
+            return item_bk;
+        }
+        
+        String getSetting()override{
+            JsonObject __root = new JsonObject();
+            
+            JsonObject _items = new JsonObject();
+            
+            JsonArray swi = new JsonArray();
+            
+            String [] sll = {"未设置", "BSD/Allman风格(-A1)", "java风格(-A2)", "K&R风格(-A3)", 
+                    "Stroustrup风格(-A4)", "Whitesmith风格(-A5)", "Banner风格(-A6)", 
+                    "gnu风格(-A7)", "linux风格(-A8)", "Horstmann风格(-A9)", "One True Brace风格(-A10)",
+                    "Pico风格(-A11)", "Lisp风格(-A12)", "Google风格(-A14)", "VTK风格(-A15)", "Mozilla风格(-A16)"
+                    };
+            _items.put("格式化风格:astyle_style", createOptions(sll));//
+
+            String [] mls = {"未设置", "C/C++ 模式(--mode=c)", "Java 模式(--mode=java)", "C# 模式(--mode=cs)"};
+            _items.put("格式化风格:astyle_mode", createOptions(mls));//
+            
+            String [] les = {"未设置", "CRLF(-z1)", "LF(-z2)", "CR(-3)"};
+            _items.put("换行模式:astyle_crlf", createOptions(les));//
+            
+            String [] ids = {"未设置", "制表符(-t)", "1个空格(-s1)", "1个空格(-s2)", "3个空格(-s3)", 
+                    "4个空格(-s4)", "5个空格(-s5)", "6个空格(-s6)", "7个空格(-s7)", "8个空格(-s8)"
+                        
+                    };
+            
+            _items.put("缩进:astyle_ids", createOptions(ids));//
+            
+            _items.put("格式化时备份原文件:astyle_backup", createBoolOption());//-n
+            _items.put("删除多余空行:astyle_remove_bl", createBoolOption());//-x
+            _items.put("使用空行分隔无关系的块:astyle_bl_split_block", createBoolOption());//-f
+            _items.put("将 else 放入新行:astyle_else_newline", createBoolOption());//-e
+            
+            _items.put("在操作符两端插入空格:astyle_op_bl", createBoolOption());//-p
+            _items.put("缩进 switch case 语句:astyle_ids_swcase", createBoolOption());//-p
+            
+            _items.put("保留修改日期:astyle_bl_tl", createBoolOption());//-b
+            
+            String [] ops = {"未设置", "括号内外都插入空格(-P)", "括号外部插入空格(-d)", "括号内部插入空格(-D)", "移除括号两端多余空格(-U)"};
+            
+            _items.put("括号与空格设置:astyle_br_bl", createOptions(ops));
+            
+            __root.put("AStyle设置", _items);
+            
+            return __root.toString(true);
+        }
+        
+        void settingFlushed()override{
+            
         }
     };
 
+    static void addItem(@NotNilptr Vector<String> _args, String item){
+        item = Setting.get(item);
+        if (item.length() != 0){
+            _args.add(item);
+        }
+    }
+    
+    static void addBoolItem(@NotNilptr Vector<String> _args, String item, String szTrue, String szFalse){
+        item = Setting.get(item);
+        if (item.equals("True")){
+            if (szTrue != nilptr && szTrue.length() != 0){
+                _args.add(szTrue);
+            }
+        }else
+        if (item.equals("False")){
+            if (szFalse != nilptr && szFalse.length() != 0){
+                _args.add(szFalse);
+            }
+        }
+    }
+    
+    static void buildArgs(Vector<String> _args){
+        addItem(_args, "astyle_style");
+        addItem(_args, "astyle_br_bl");
+        addItem(_args, "astyle_ids");
+        addItem(_args, "astyle_mode");
+        addItem(_args, "astyle_crlf");
+        
+        addBoolItem(_args, "astyle_ids_swcase", "-S", nilptr);
+        addBoolItem(_args, "astyle_bl_tl", "-Z", nilptr);
+        addBoolItem(_args, "astyle_backup", nilptr, "-n");
+        addBoolItem(_args, "astyle_remove_bl", "-s", nilptr);
+        addBoolItem(_args, "astyle_bl_split_block", "-f", nilptr);
+        addBoolItem(_args, "astyle_else_newline", "-e", nilptr);
+        addBoolItem(_args, "astyle_op_bl", "-p", nilptr);
+    }
+    
     static void readForProcess(Process _process)
     {
         try {
@@ -165,7 +265,10 @@ class XLANGPlugManager
         _system_.chmod(astyleExe,0777);
         Vector<String> arglist = new Vector<String>();
         arglist.add(astyleExe);
-        try {
+        
+        buildArgs(arglist);
+        
+        /*try {
             FileInputStream fis = new FileInputStream(astyleconf);
             byte [] data = fis.read();
             String args = new String(data);
@@ -180,7 +283,7 @@ class XLANGPlugManager
             }
         } catch(Exception e) {
 
-        }
+        }*/
         arglist.add(file);
 
         String outputst = astyleExe;

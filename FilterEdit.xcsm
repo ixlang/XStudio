@@ -164,11 +164,12 @@ class FilterEdit : QXDialog {
         }
         
         if (modifyFilter == nilptr){
-			filter.name = filterName.getText();
+			String filname = filterName.getText();
             if (filter.name.length() == 0){
 				QXMessageBox.Critical("提示", "无效的过滤器名称", QXMessageBox.Ok, QXMessageBox.Ok);
 				return ;
             }
+            filter.name = filname;
 			if (XLogcatWnd.addFilter(filter) == false){
 				QXMessageBox.Critical("提示", "过滤器已经存在", QXMessageBox.Ok, QXMessageBox.Ok);
 				return ;

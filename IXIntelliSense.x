@@ -10,8 +10,9 @@ class WordRecognizer{
 };
 
 class IXIntelliSense{
+
     public interface XIntelliResult{
-        String get_name();
+        @NotNilptr String get_name();
         int get_type();
         bool hasProp(char c);
         XIntelliResult get_class();
@@ -19,6 +20,12 @@ class IXIntelliSense{
         String get_source();
         int get_line();
         int get_row();
+        InputDescription makeInputText();
+    };
+    
+    public interface InputDescription{
+        String getInsertText();
+        int [][] getTipsDescription();
     };
     
     public void setCommand(String , String);
@@ -26,7 +33,7 @@ class IXIntelliSense{
     public void appendLib(String path);
     public void appendLink(String path);
     public void addSource(String source);
-    public XIntelliResult [] getIntelliSenseL(String source,int line, int column);
+    public XIntelliResult [] getIntelliSenseL(String source, String content, int line, int column);
     public XIntelliResult [] getIntelliSenseObject(String source,int line, int column, String name);
     public XIntelliResult [] getIntelliSenseObjectM(String source,int line);
     public XIntelliResult [] getIntelliSense(String source,String content, long pos, int line, int column);

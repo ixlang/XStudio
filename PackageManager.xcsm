@@ -16,7 +16,7 @@ class PackageManager{
         public long   dlsize;
         public String cacheFile;
         //String message;
-        public PackageInfo(int _id,JsonObject jo){
+        public PackageInfo(int _id,@NotNilptr JsonObject jo){
 			id = _id;
 			name = jo.getString("package");
             version = jo.getString("version");
@@ -44,16 +44,24 @@ class PackageManager{
             return false;
         }
         
-        public PackageInfo(JsonObject jo){
+        long getJsonLong(@NotNilptr JsonObject jroot, String _name){
+            String str = jroot.getString(_name);
+            if (str != nilptr){
+                return str.parseLong();
+            }
+            return 0;
+        }
+        
+        public PackageInfo(@NotNilptr JsonObject jo){
             name = jo.getString("pkgid");
             version = jo.getString("version");
             descr = jo.getString("description");
-            dlsize = jo.getString("dlsize").parseLong();
+            dlsize = getJsonLong(jo, ("dlsize"));
             url = jo.getString("url");
             author = jo.getString("publisher");
         }
         
-        public PackageInfo(JsonObject jo, String file){
+        public PackageInfo(@NotNilptr JsonObject jo, String file){
 			id = -1;
 			name = jo.getString("package");
             version = jo.getString("version");
@@ -62,43 +70,39 @@ class PackageManager{
             filepath = file;
         }
         
-        public bool extartIconTo(ZipArchive zs, String oufile){
+        public bool extartIconTo(@NotNilptr ZipArchive zs,@NotNilptr String oufile){
             XPlatform.deleteFile(oufile);
 			ZipEntry entry = zs.findEntry("icon.png");
             if (entry != nilptr){
 				ZipFile file = entry.getFile();
-                if (file != nilptr){
-					if (file.open()){
-						byte []buf = new byte[1024];
-						FileOutputStream fos = new FileOutputStream(oufile);
-						int rd = 0;
-						while ((rd = file.read(buf, 0, 1024)) > 0){
-							fos.write(buf, 0, rd);
-						}
-						file.close();
-						fos.close();
+                if (file.open()){
+                    byte []buf = new byte[1024];
+                    FileOutputStream fos = new FileOutputStream(oufile);
+                    int rd = 0;
+                    while ((rd = file.read(buf, 0, 1024)) > 0){
+                        fos.write(buf, 0, rd);
                     }
-                    return true;
+                    file.close();
+                    fos.close();
                 }
+                return true;
             }
             return false;
         }
         
-        public String extartReadME(ZipArchive zs, String oufile){
+        public String extartReadME(@NotNilptr ZipArchive zs, String oufile){
 			String stringout = "";
 			ZipEntry entry = zs.findEntry("readme.md");
             if (entry != nilptr){
 				ZipFile file = entry.getFile();
-                if (file != nilptr){
-					if (file.open()){
-						byte []buf = new byte[1024];
-						
-						int rd = 0;
-						while ((rd = file.read(buf, 0, 1024)) > 0){
-							stringout = stringout + new String(buf, 0, rd);
-						}
-						file.close();
+                if (file.open()){
+                    byte []buf = new byte[1024];
+                    
+                    int rd = 0;
+                    while ((rd = file.read(buf, 0, 1024)) > 0){
+                        stringout = stringout + new String(buf, 0, rd);
                     }
+                    file.close();
                 }
             }
             return stringout;
@@ -151,11 +155,11 @@ class PackageManager{
         return nilptr;
     }
     
-    public Vector<PackageInfo> findPackages(String name, String version){
+    public @NotNilptr Vector<PackageInfo> findPackages(String name, String version){
 		Vector<PackageInfo> outpackages = new Vector<PackageInfo>();
 		for (int i = 0, c = getCount(); i < c; i++){
 			PackageInfo pj = get(i);
-            if (pj.name.equals(name)){
+            if (pj != nilptr && pj.name.equals(name)){
 				if (version == nilptr || pj.version.equals(version)){
 					outpackages.add(pj);
                 }
@@ -167,16 +171,18 @@ class PackageManager{
     public PackageInfo findPackage(String name, String version){
 		for (int i = 0, c = getCount(); i < c; i++){
 			PackageInfo pj = get(i);
-            if (pj.name.equals(name)){
-				if (version == nilptr || version.length() == 0 || pj.version.equals(version)){
-					return pj;
+            if (pj != nilptr){
+                if (pj.name.equals(name)){
+                    if (version == nilptr || version.length() == 0 || pj.version.equals(version)){
+                        return pj;
+                    }
                 }
             }
         }
         return nilptr;
     }
     
-    public bool deletePackage(PackageInfo pi){
+    public bool deletePackage(@NotNilptr PackageInfo pi){
 		JsonArray list = (JsonArray)root.get("list");
         if (list != nilptr){
 			if (pi.id < list.length() && pi.id >= 0){
@@ -192,7 +198,7 @@ class PackageManager{
     }
     
     
-    public PackageInfo previewPackage(String file){
+    public PackageInfo previewPackage(@NotNilptr String file){
 		FileInputStream fis;
         ZipArchive zs;
         
@@ -206,15 +212,13 @@ class PackageManager{
                 
                 JsonObject jo = new JsonObject(info);
                 
-                if (jo != nilptr){
-					PackageInfo pi = new PackageInfo(jo, file);
-                    pi.iconFile = String.formatPath(_system_.getAppDirectory().appendPath("packages/preview.png"), false);
-                    if (false == pi.extartIconTo(zs, pi.iconFile)){
-                        pi.iconFile = nilptr;
-                    }
-                    //pi.message = pi.extartReadME(zs);
-                    return pi;
+                PackageInfo pi = new PackageInfo(jo, file);
+                pi.iconFile = String.formatPath(_system_.getAppDirectory().appendPath("packages/preview.png"), false);
+                if (false == pi.extartIconTo(zs, pi.iconFile)){
+                    pi.iconFile = nilptr;
                 }
+                //pi.message = pi.extartReadME(zs);
+                return pi;
             }
             
             
@@ -233,7 +237,7 @@ class PackageManager{
     }
     
     
-    public static bool copyFile(String dest, String src){
+    public static bool copyFile(@NotNilptr String dest,@NotNilptr  String src){
         try{
 
 			FileOutputStream fos = new FileOutputStream(dest);
@@ -256,13 +260,13 @@ class PackageManager{
         return false;
     }
     
-    public bool installPackage(PackageInfo pi){
+    public bool installPackage(@NotNilptr PackageInfo pi){
 		String install_path = String.formatPath(_system_.getAppDirectory().appendPath("packages/" + pi.name + pi.version), false);
         String install_icon = String.formatPath(_system_.getAppDirectory().appendPath("packages/" + pi.name + pi.version + ".png"), false);
         
         try{
 			JsonArray list = (JsonArray)root.get("list");
-			if (copyFile(install_path, pi.filepath)){
+			if (list != nilptr && copyFile(install_path, pi.filepath)){
 				if (pi.iconFile != nilptr){
 					copyFile(install_icon, pi.iconFile);
                 }
@@ -287,14 +291,10 @@ class PackageManager{
     public bool save(){
 		if (root != nilptr){
 			String pckInfo = String.formatPath(_system_.getAppDirectory().appendPath("packages/packages.info"), false);
-			
 			try{
 				FileOutputStream fis = new FileOutputStream(pckInfo);
-
-				String content = root.toString(true);
-				byte []data = content.getBytes();
-                
-				fis.write(data, 0, data.length);
+                byte []data = root.toString(true).getBytes();
+                fis.write(data, 0, data.length);
                 fis.close();
 				return true;
 			}catch(Exception e){

@@ -6,19 +6,19 @@ class QPrintDialog : QAbstractPrintDialog{
     
     }
     
-    public QPrintDialog(QPrinter pprinter){
+    public QPrintDialog(@NotNilptr QPrinter pprinter) throws IllegalArgumentException{
         if (false == create(nilptr, pprinter)){
             throw new IllegalArgumentException("can not new QPrintDialog");
         }
     }
         
-    public QPrintDialog(QXWidget parent){
+    public QPrintDialog(@NotNilptr QXWidget parent) throws IllegalArgumentException{
         if (false == create(parent)){
             throw new IllegalArgumentException("can not new QPrintDialog");
         }
     }
     
-    public QPrintDialog(QXWidget parent, QPrinter pprinter){
+    public QPrintDialog(@NotNilptr QXWidget parent, @NotNilptr QPrinter pprinter) throws IllegalArgumentException{
         if (false == create(parent, pprinter)){
             throw new IllegalArgumentException("can not new QPrintDialog");
         }
@@ -28,7 +28,7 @@ class QPrintDialog : QAbstractPrintDialog{
         super(handle);
     }
     
-    public bool create(){
+    public bool create()override {
         nativehandle = createQPObject(QType.qtPrintDialog, this, 0, 0, 0, 0, 0);
         if (nativehandle == 0){
             return false;
@@ -36,7 +36,7 @@ class QPrintDialog : QAbstractPrintDialog{
         return true;
     }
     
-    public bool create(QXWidget parent){
+    public bool create(@NotNilptr QXWidget parent)override {
         nativehandle = createQPObject(QType.qtPrintDialog, this, parent.nativehandle, 0, 0, 0, 0);
         if (nativehandle == 0){
             return false;
@@ -44,7 +44,7 @@ class QPrintDialog : QAbstractPrintDialog{
         return true;
     }    
     
-    public bool create(QXWidget parent, QPrinter printer){
+    public bool create(QXWidget parent,@NotNilptr QPrinter printer){
         nativehandle = createQPObject(QType.qtPrintDialog, this, parent == nilptr ? 0 : parent.nativehandle, printer.nativehandle, 0, 0, 0);
         if (nativehandle == 0){
             return false;

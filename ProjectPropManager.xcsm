@@ -48,7 +48,7 @@ class ProjectPropManager{
         return nilptr;
     }
     
-    public static bool registryProp(String name, ProjectPropInterface prop){
+    public static bool registryProp(@NotNilptr String name, ProjectPropInterface prop){
         if (name.equals("C/C++")){
             cppp.setBridge(prop);
         }else{
@@ -59,16 +59,45 @@ class ProjectPropManager{
     
 
     
-    public static DebuggeeManager getDebuggeeManager(){
+    public @NotNilptr  static DebuggeeManager getDebuggeeManager(){
         DebuggeeManager dc = new DebuggeeManager();
         
         Map.Iterator<String, ProjectPropInterface> iter = _props.iterator();
         while (iter.hasNext()){
             ProjectPropInterface pi = iter.getValue();
-            dc.add(pi.getDebuggeeDescription(), pi);
+            if (pi != nilptr){
+                dc.add(pi.getDebuggeeDescription(), pi);
+            }
             iter.next();
         }
         return dc;
     }
     
+    public @NotNilptr  static String getAllExtensionFilter(){
+        String output = "";
+        
+        Map.Iterator<String, ProjectPropInterface> iter = _props.iterator();
+        while (iter.hasNext()){
+            ProjectPropInterface pi = iter.getValue();
+            if (pi != nilptr){
+                String szf = pi.getFileExtensionFilter();
+                if (szf != nilptr){
+                    szf = szf.trim(true);
+                }
+                if (szf != nilptr && szf.length() > 0){
+                    if (output.length() > 0){
+                        if (output.endWith(";;")){
+                            output = output + szf;
+                        }else{
+                            output = output + ";;" + szf;
+                        }
+                    }else{
+                        output = szf;
+                    }
+                }
+            }
+            iter.next();
+        }
+        return output;
+    }
 };

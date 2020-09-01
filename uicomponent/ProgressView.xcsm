@@ -39,7 +39,7 @@ class ProgressView : QXWidget {
         return (int) (dpValue * _scale + 0.5f);
     }
 
-    public void onDrawBackground(QXPainter canvas, double padding, QXPainter.Paint paint) {
+    public void onDrawBackground(@NotNilptr QXPainter canvas, double padding, @NotNilptr QXPainter.Paint paint) {
         QXRect rect = new QXRect();
         canvas.setRenderHint(QXPainter.RenderHint.Antialiasing, true);
         rect.left = rect.top = padding;
@@ -52,11 +52,11 @@ class ProgressView : QXWidget {
         //paint.setShadowLayer(dip2px(5), 4, 4, Color.BLACK);
         double rxy = Math.min(width(), height()) / 12.f;
 
-        canvas.drawRoundedRect(rect, rxy, rxy, paint);
+        canvas.drawRoundedRect(rect, (int)rxy, (int)rxy, paint);
     }
 
 
-    public void DrawComplete(QXPainter canvas,double padding,QXPainter.Paint paint,double subCenterX,
+    public void DrawComplete(@NotNilptr QXPainter canvas,double padding,@NotNilptr QXPainter.Paint paint,double subCenterX,
                       double subCenterY,double minCenterY,double subwidth,double subheight) {
         double width = subwidth * 5.f;
         double height = width / 6;
@@ -78,7 +78,7 @@ class ProgressView : QXWidget {
         canvas.rotate(90.f,subCenterX,subCenterY);
         canvas.rotate(45.f,subCenterX + (width / 2.f),subCenterY );
 
-        canvas.drawRoundedRect(progsub, roundXY,roundXY, paint);
+        canvas.drawRoundedRect(progsub, (int)roundXY,(int)roundXY, paint);
 
         canvas.restore();
         canvas.save();
@@ -86,11 +86,11 @@ class ProgressView : QXWidget {
         canvas.rotate(45,subCenterX,subCenterY);
         progsub.right = progsub.left + (progsub.width() / 2.f) + (height / 2.f);
 
-        canvas.drawRoundedRect(progsub, roundXY,roundXY, paint);
+        canvas.drawRoundedRect(progsub, (int)roundXY,(int)roundXY, paint);
         canvas.restore();
     }
 
-    public void DrawFatal(QXPainter canvas,double padding,QXPainter.Paint paint,double subCenterX,
+    public void DrawFatal(@NotNilptr QXPainter canvas,double padding,@NotNilptr QXPainter.Paint paint,double subCenterX,
                    double subCenterY,double minCenterY,double subwidth,double subheight) {
         double width = subwidth * 5.f;
         double height = width / 5;
@@ -109,12 +109,12 @@ class ProgressView : QXWidget {
         canvas.rotate(45.f,subCenterX,subCenterY);
         for (int i = 0 ; i < 2; i ++) {
             canvas.rotate(90,subCenterX,subCenterY);
-            canvas.drawRoundedRect(progsub, roundXY,roundXY, paint);
+            canvas.drawRoundedRect(progsub,(int) roundXY,(int)roundXY, paint);
         }
         canvas.restore();
     }
 
-    public void DrawWaiting(QXPainter canvas,double padding,QXPainter.Paint paint,double subCenterX,
+    public void DrawWaiting(@NotNilptr QXPainter canvas,double padding,@NotNilptr QXPainter.Paint paint,double subCenterX,
                      double subCenterY,double minCenterY,double subwidth,double subheight) {
         QXRect progsub = new QXRect();
 
@@ -140,29 +140,30 @@ class ProgressView : QXWidget {
                 dis += 360;
             }
             paint.setAlpha(255 * (360 - dis) / 360);
-            canvas.drawRoundedRect(progsub, roundXY,roundXY, paint);
+            canvas.drawRoundedRect(progsub, (int)roundXY, (int)roundXY, paint);
         }
         canvas.restore();
     }
 
-    public void calcTitlePosition(QXPainter canvas,double padding,QXPainter.Paint paint) {
+    public void calcTitlePosition(@NotNilptr QXPainter canvas,double padding,@NotNilptr QXPainter.Paint paint) {
 
         paint.setTextSize(dip2px(_fontSize));
         //paint.setFakeBoldText(true);
         paint.setColor(_titleColor);
         QXFont qf = canvas.getFont();
-        //QXReqf.measure(_titleText);
-        QXRect rect = qf.measure(_titleText);//BitmapUtils.getStringRect(_titleText,paint);
-        _textHeight= rect.height();
-        _textWidth = rect.width();
+        if (qf != nilptr){
+            //QXReqf.measure(_titleText);
+            QXRect rect = qf.measure(_titleText);//BitmapUtils.getStringRect(_titleText,paint);
+            _textHeight= rect.height();
+            _textWidth = rect.width();
 
-        paint.setStyle(QXPainter.Paint.FILL);
-        paint.setAlpha(0xff);
-
+            paint.setStyle(QXPainter.Paint.FILL);
+            paint.setAlpha(0xff);
+        }
     }
 
-    public void drawProgress(QXPainter canvas,double padding,
-                      QXPainter.Paint paint,double progressX,double progressY,
+    public void drawProgress(@NotNilptr QXPainter canvas,double padding,
+                      @NotNilptr QXPainter.Paint paint,double progressX,double progressY,
                       double progressCX,double progressCY) {
 
         QXRect progressRect = new QXRect();
@@ -174,16 +175,16 @@ class ProgressView : QXWidget {
         double prxy =  progressRect.height() / 2.f;
         paint.setStyle(QXPainter.Paint.STROKE);
         paint.setStrokeWidth(dip2px(1));
-        canvas.drawRoundedRect(progressRect, prxy, prxy, paint);
+        canvas.drawRoundedRect(progressRect, (int)prxy, (int)prxy, paint);
 
         paint.setStyle(QXPainter.Paint.FILL);
         progressRect.right = 2 + progressRect.left + (_progressPersent * progressCX );
-        canvas.drawRoundedRect(progressRect, prxy, prxy, paint);
+        canvas.drawRoundedRect(progressRect, (int)prxy, (int)prxy, paint);
     }
 
 
 
-    public void onDraw(QXPainter canvas) {
+    public void onDraw(@NotNilptr QXPainter canvas) {
 
         canvas.setPen(0, QXPainter.PenStyle.NoPen, 0);
 
@@ -216,7 +217,7 @@ class ProgressView : QXWidget {
         if (_bShowProgress) {
             textY = subCenterY + (subwidth * 1.75f) + (_textHeight * 1.2f) ;
         }
-        canvas.drawText(_titleText, textX, textY + (_textHeight * 0.8f), paint);
+        canvas.drawText(_titleText, (int)textX, (int)(textY + (_textHeight * 0.8f)), paint);
 
         paint.setColor(0xbfffffff);
 
@@ -239,33 +240,38 @@ class ProgressView : QXWidget {
             }
             _dismissMillionSecond = millionSecond;
             _animator = new Timer();
-            _animator.schedule(new TimerTask() {
-                long beginTime = _system_.currentTimeMillis();
-                long waitTime = millionSecond;
+            try{
+                _animator.schedule(new TimerTask() {
+                    long beginTime = _system_.currentTimeMillis();
+                    long waitTime = millionSecond;
 
-                void run() {
-                    _angle += 20;
-                    _angle = (_angle) % 360;
-                    ProgressView.this.postUpdate();
-                    if (waitTime != WAIT_INFINITE) {
-                        if (_system_.currentTimeMillis() - beginTime > waitTime) {
-                            synchronized(_timeObj) {
-                                _animator.cancel();
-                                _animator = nilptr;
-                                runOnUi(new Runnable() {
-                                    void run() {
-                                        dismiss();
-                                    }
-                                });
+                    void run() override{
+                        _angle += 20;
+                        _angle = (_angle) % 360;
+                        ProgressView.this.postUpdate();
+                        if (waitTime != WAIT_INFINITE) {
+                            if (_system_.currentTimeMillis() - beginTime > waitTime) {
+                                synchronized(_timeObj) {
+                                    _animator.cancel();
+                                    _animator = nilptr;
+                                    runOnUi(new Runnable() {
+                                        void run() override{
+                                            dismiss();
+                                        }
+                                    });
+                                }
                             }
+                        } else if (_dismissMillionSecond != waitTime) {
+                            waitTime = _dismissMillionSecond;
+                            beginTime = _beginMillionSecond;
                         }
-                    } else if (_dismissMillionSecond != waitTime) {
-                        waitTime = _dismissMillionSecond;
-                        beginTime = _beginMillionSecond;
                     }
-                }
 
-            }, 50,-1);
+                }, 50,-1);
+            }catch(Exception e){
+                
+            }
+            
         }
     }
 
@@ -278,7 +284,7 @@ class ProgressView : QXWidget {
 
         double width = 150;// dm.widthPixels / WIDTH_RATE;//宽度
         double height = width * HEIGHT_RATE ;//高度
-        resize(width, height);
+        resize((int)width, (int)height);
 
         beginAnimation(millionSecond);
         if (bModal) {
@@ -296,7 +302,7 @@ class ProgressView : QXWidget {
         return nilptr;
     }
 
-    public static ProgressView showWait(QXWidget p, long millionSecond) {
+    public static ProgressView showWait(@NotNilptr QXWidget p, long millionSecond) {
         ProgressView _progView = new ProgressView();
         if (_progView.create(p)) {
             _progView.showModal(millionSecond, true);
@@ -357,20 +363,24 @@ class ProgressView : QXWidget {
 
     public void _dismiss() {
         double opacity = 1.f;
-
-        new Timer().schedule(new TimerTask() {
-            void run()override {
-                runOnUi(new Runnable() {
-                    void run() {
-                        opacity -= 0.1;
-                        setOpacity(opacity);
-                        if (opacity < 0.1) {
-                            close();
+        try{
+            new Timer().schedule(new TimerTask() {
+                void run()override {
+                    runOnUi(new Runnable() {
+                        void run() override{
+                            opacity -= 0.1;
+                            setOpacity(opacity);
+                            if (opacity < 0.1) {
+                                close();
+                            }
                         }
-                    }
-                });
-            }
-        }, 20, 10);
+                    });
+                }
+            }, 20, 10);
+        }catch(Exception e){
+            
+        }
+        
     }
 
     public void onPaint(int l, int t, int r, int b, long hpaint) override {

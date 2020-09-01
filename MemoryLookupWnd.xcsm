@@ -14,19 +14,19 @@ class MemoryLookupWnd : QXDockWidget{
 			int start;
 			int length;
 			
-            public Express(String exp){
+            public Express(@NotNilptr String exp){
 				p = exp.getBytes();
                 start = 0;
                 length = exp.length();
             }
             
-			public Express(byte [] _p,int _s,int _l){
+			public Express(@NotNilptr byte [] _p,int _s,int _l){
 				p = _p;
 				start = _s;
 				length = _l;
 			}
 			
-			public Express(Express p2) {
+			public Express(@NotNilptr Express p2) {
 				p = p2.p;
 				start = p2.start;
 				length = p2.length;	
@@ -71,11 +71,11 @@ class MemoryLookupWnd : QXDockWidget{
 			}
 		};
         
-        public static long calc(String text){
+        public static long calc(@NotNilptr String text){
 			return mixcalc(new Express(text), true, false);
         }
         
-		public static long mixcalc(Express p,bool bmain, bool b) {
+		public static long mixcalc(@NotNilptr Express p,bool bmain, bool b) {
 			long result = 1;
 
 			while ( p.getChar() != '(' && false == (p.getChar() >= '0' && p.getChar() <= '9') && false == (p.getChar() >= 'a' && p.getChar() <= 'z')) {
@@ -111,8 +111,7 @@ class MemoryLookupWnd : QXDockWidget{
 					
 					case '+':
 						p.next();
-						result += mixcalc(p,  false, false); 
-					break;
+						result += mixcalc(p,  false, false); break;
 						
 					case '-':
 						p.next();
@@ -125,6 +124,7 @@ class MemoryLookupWnd : QXDockWidget{
 					case '/':
 						p.next();
 						result /= mixcalc(p,  false, true); break;
+                        
 					case ')':
 					case '\0':
 					default:
@@ -139,7 +139,7 @@ class MemoryLookupWnd : QXDockWidget{
 	};
     
     
-    public String getRealAddress(String text){
+    public String getRealAddress(@NotNilptr String text){
         String addrtext = edtaddress.getText().replace(" ", "");
         try{
             long address = caRegMixMath.calc(addrtext.lower());
@@ -152,18 +152,18 @@ class MemoryLookupWnd : QXDockWidget{
     
     public void dump(){
 		String addrtext = getRealAddress(edtaddress.getText());
-		if (addrtext.length() > 0){
+		if (addrtext != nilptr && addrtext.length() > 0){
 			XWorkspace.workspace.debuggee.lookupMemory(addrtext, 512);
 		}
     }
     
     public void dumpFile(){
 		String addrtext = getRealAddress(edtaddress.getText());
-		if (addrtext.length() > 0){
+		if (addrtext != nilptr && addrtext.length() > 0){
             
             InputDialog.requestInput(new InputDialog.onInputListener() {
                 static String filePath = "";
-                bool onInputOk(String text)override {
+                bool onInputOk(@NotNilptr String text)override {
                     if (text.length() == 0 || text.isDigit() == false) {
                         QXMessageBox.Critical("错误", "输入了不正确的长度", QXMessageBox.Ok, QXMessageBox.Ok);
                         return false;
@@ -175,7 +175,7 @@ class MemoryLookupWnd : QXDockWidget{
                         return false;
                     }
                     
-                    String file = QXFileDialog.getSaveFileName("保存文件", filePath,  "All Files(*.*)", MemoryLookupWnd.this);
+                    String file = QXFileDialog.getSaveFileName("保存文件", filePath,  "All Files(*.* *)", MemoryLookupWnd.this);
                     if (file != nilptr && file.length() > 0) {
                         filePath = file;
                         dumpCore(file, addrtext, length);
@@ -238,7 +238,7 @@ class MemoryLookupWnd : QXDockWidget{
         memcontent.init();
     }
     
-    public static void SetData(JsonObject json){
+    public static void SetData(@NotNilptr JsonObject json){
 		memlookupWnd.runOnUi(new Runnable(){
 			void run()override{
 				memlookupWnd.setData(json);
@@ -246,7 +246,7 @@ class MemoryLookupWnd : QXDockWidget{
         });
     }
     
-    public static void SetDumpData(JsonObject json){
+    public static void SetDumpData(@NotNilptr JsonObject json){
 		memlookupWnd.runOnUi(new Runnable(){
 			void run()override{
 				memlookupWnd.setDumpData(json);
@@ -262,24 +262,37 @@ class MemoryLookupWnd : QXDockWidget{
         });
     }
     
-    public void setData(JsonObject json){
+    public void setData(@NotNilptr JsonObject json){
 		String dataCont = json.getString("content");
         String address =json.getString("address");
         int requestlen = json.getInt("request");
         int responselen = json.getInt("response");
-        
+        if (address == nilptr){
+            address = "0";
+        }
         long offset = address.parseLong();
         byte[] data = Base64.decodeString(dataCont);
         memcontent.setData(data, offset, requestlen, responselen);
     }
     
-    public void setDumpData(JsonObject json){
+    long getJsonLong(@NotNilptr JsonObject jroot, String name){
+        String str = jroot.getString(name);
+        if (str != nilptr){
+            return str.parseLong();
+        }
+        return 0;
+    }
+    
+    public void setDumpData(@NotNilptr JsonObject json){
 		String dataCont = json.getString("content");
         String address = json.getString("address");
         String param = json.getString("param");
         int requestlen = json.getInt("request");
         int responselen = json.getInt("response");
         
+        if (address == nilptr){
+            address = "0";
+        }
         long offset = address.parseLong();
         
         
@@ -291,22 +304,23 @@ class MemoryLookupWnd : QXDockWidget{
         try{
             JsonObject localInfo = new JsonObject(param);
             localFile = localInfo.getString("file");
-            long start = localInfo.getString("address").parseLong();
-            long length = localInfo.getString("length").parseLong();
+            long start = getJsonLong(localInfo, ("address"));
+            long length = getJsonLong(localInfo, ("length"));
             long end_ofst = start + length;
             
             long req_endofst = offset + responselen;
-            
-            fos = new FileOutputStream(localFile, true); 
-            
-            if (end_ofst < req_endofst){
-                fos.write(data, 0, end_ofst - offset);
-            }else{
-                fos.write(data);
-            }
-            
-            if (false == dumpfailed){
-                bContinue_req = (req_endofst < end_ofst);
+            if (localFile != nilptr){
+                fos = new FileOutputStream(localFile, true); 
+                
+                if (end_ofst < req_endofst){
+                    fos.write(data, 0, end_ofst - offset);
+                }else{
+                    fos.write(data);
+                }
+                
+                if (false == dumpfailed){
+                    bContinue_req = (req_endofst < end_ofst);
+                }
             }
             
         }catch(Exception e){

@@ -2,7 +2,22 @@
 //Date: Tue Feb 20:38:34 2020 
 
 class CDEProjectPropInterface : ProjectPropInterface{
-    bool setValue(Project object, Configure configure, String key, String value) override {
+    static CDEProjectPropInterface __cdeifce;
+    
+    public @NotNilptr static CDEProjectPropInterface getInstance(){
+        if (__cdeifce == nilptr){
+            __cdeifce = new CDEProjectPropInterface();
+        }
+        __nilptr_safe(__cdeifce);
+        return __cdeifce;
+    }
+    public CDEProjectPropInterface(){
+        __cdeifce = this;
+    }
+    String getFileExtensionFilter(){
+        return "c/c++ 源文件(*.c *.cpp *.cxx *.m *.mm *.cc *.c++ *.cp);;c/c++ 头文件(*.txx *.tpp *.tpl *.h *.hpp);;";
+    }
+    bool setValue(@NotNilptr Project object, @NotNilptr Configure configure, @NotNilptr String key, @NotNilptr String value) override {
         switch(key){
             case "projname":
             return true;
@@ -41,7 +56,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
     }
     
     
-    public String getValue(Project object, Configure configure,  String key) override {
+    public String getValue(@NotNilptr Project object, @NotNilptr Configure configure,  @NotNilptr String key) override {
         switch(key){
             case "projname":
             return object.getName();
@@ -73,7 +88,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return "";
     }
     
-    public static String getDebuggeePath(String kitname) {
+    public static String getDebuggeePath(@NotNilptr String kitname) {
         String text = nilptr;
         JsonObject jconfig = getCCConfigure(kitname);
         if (jconfig != nilptr){
@@ -85,7 +100,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return text;
     }
     
-    public static String getDebuggeePath(Configure configure) {
+    public static String getDebuggeePath(@NotNilptr Configure configure) {
         String text = nilptr;
         JsonObject jconfig = getCCConfigure(configure.getOption("cckit"));
         if (jconfig != nilptr){
@@ -97,7 +112,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return text;
     }
     
-    public static String getCompilerPath(Configure configure) {
+    public static String getCompilerPath(@NotNilptr Configure configure) {
         String text = nilptr;
         JsonObject jconfig = getCCConfigure(configure.getOption("cckit"));
         if (jconfig != nilptr){
@@ -109,7 +124,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return text;
     }
     
-    public static String getMakePath(Configure configure) {
+    public static String getMakePath(@NotNilptr Configure configure) {
         String text = nilptr;
         JsonObject jconfig = getCCConfigure(configure.getOption("cckit"));
         if (jconfig != nilptr){
@@ -121,7 +136,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return text;
     }
     
-    public static String getMacros(Configure configure) {
+    public static String getMacros(@NotNilptr Configure configure) {
         JsonObject jconfig = getCCConfigure(configure.getOption("cckit"));
         if (jconfig != nilptr){
             return jconfig.getString("macros");
@@ -129,7 +144,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return nilptr;
     }
     
-    public static String appendPath(String first, String append){
+    public @NotNilptr static String appendPath(@NotNilptr String first, @NotNilptr String append){
         return String.formatPath(first.appendPath(append), isUnixPath());
     }
     
@@ -140,7 +155,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return false;
     }
     
-    public static JsonArray getCompilerSystemPath(Configure configure) {
+    public static JsonArray getCompilerSystemPath(@NotNilptr Configure configure) {
         JsonArray array = nilptr;
         JsonObject jconfig = getCCConfigure(configure.getOption("cckit"));
         if (jconfig != nilptr){
@@ -150,7 +165,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
             JsonArray jsarray = new JsonArray();
             bool bReslash = isUnixPath();
             try{
-                for (int i = 0; i < array.length(); i++){
+                for (int i = 0, c = array.length(); i < c; i++){
                     jsarray.put(String.formatPath(array.getString(i),bReslash));
                 }
             }catch(Exception e){
@@ -161,7 +176,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return array;
     }
     
-    public static String getDbgArgs(Configure configure) {
+    public static String getDbgArgs(@NotNilptr Configure configure) {
         JsonObject jconfig = getCCConfigure(configure.getOption("cckit"));
         if (jconfig != nilptr){
             return jconfig.getString("dbgparams");
@@ -169,7 +184,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return "";
     }
     
-    public static String getLinkerPath(Configure configure) {
+    public static String getLinkerPath(@NotNilptr Configure configure) {
         String text = nilptr;
         JsonObject jconfig = getCCConfigure(configure.getOption("cckit"));
         if (jconfig != nilptr){
@@ -181,7 +196,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return text;
     }
     
-    public static String getArPath(Configure configure) {
+    public static String getArPath(@NotNilptr Configure configure) {
         String text = nilptr;
         JsonObject jconfig = getCCConfigure(configure.getOption("cckit"));
         if (jconfig != nilptr){
@@ -193,7 +208,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return text;
     }
     
-    public static String getCCArgs(Configure configure) {
+    public static String getCCArgs(@NotNilptr Configure configure) {
         JsonObject jconfig = getCCConfigure(configure.getOption("cckit"));
         if (jconfig != nilptr){
             return jconfig.getString("ccparams");
@@ -201,7 +216,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return "";
     }
     
-    public static String getLDArgs(Configure configure) {
+    public static String getLDArgs(@NotNilptr Configure configure) {
         JsonObject jconfig = getCCConfigure(configure.getOption("cckit"));
         if (jconfig != nilptr){
             return jconfig.getString("ldparams");
@@ -209,7 +224,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return "";
     }
     
-    public static String getArArgs(Configure configure) {
+    public static String getArArgs(@NotNilptr Configure configure) {
         JsonObject jconfig = getCCConfigure(configure.getOption("cckit"));
         if (jconfig != nilptr){
             return jconfig.getString("arparams");
@@ -217,39 +232,37 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return "";
     }
     
-    public static void generateCCArgs(Configure configure, Vector<String> sourceArgs) {
+    public static void generateCCArgs(@NotNilptr Configure configure, @NotNilptr Vector<String> sourceArgs) {
         String cmd = getCCArgs(configure);
         if (cmd != nilptr){
             processArgs(cmd, sourceArgs);
         }
     }
     
-    public static void generateLDArgs(Configure configure, Vector<String> sourceArgs) {
+    public static void generateLDArgs(@NotNilptr Configure configure, @NotNilptr Vector<String> sourceArgs) {
         String cmd = getLDArgs(configure);
         if (cmd != nilptr){
             processArgs(cmd, sourceArgs);
         }
     }
     
-    public static void jarray2Args(String cmd, Vector<String> sourceArgs){
+    public static void jarray2Args(@NotNilptr String cmd, @NotNilptr Vector<String> sourceArgs){
         try{
             JsonArray jary = new JsonArray(cmd);
-            if (jary != nilptr){
-                for (int i =0; i < jary.length(); i++){
-                    sourceArgs.add(jary.getString(i));
-                }
+            for (int i =0, c = jary.length(); i < c; i++){
+                sourceArgs.add(jary.getString(i));
             }
         }catch(Exception e){
             
         }
     }
     
-    public static void generateCommand(Configure configure, Vector<String> sourceArgs) {
+    public static void generateCommand(@NotNilptr Configure configure, @NotNilptr Vector<String> sourceArgs) {
         String cmd = configure.getOption("otheroptions");
         jarray2Args(cmd, sourceArgs);
     }
     
-    public static void processArgs(String args, Vector<String> args_list) {
+    public static void processArgs(@NotNilptr String args, @NotNilptr Vector<String> args_list) {
         byte []data = args.getBytes();
 
         int start = 0;
@@ -277,87 +290,95 @@ class CDEProjectPropInterface : ProjectPropInterface{
 
     }
     
-    public static void generateLinkerCommand(Configure configure, Vector<String> sourceArgs) {
+    public static void generateLinkerCommand(@NotNilptr Configure configure, @NotNilptr Vector<String> sourceArgs) {
         String cmd = configure.getOption("otherlinkoptions");
         jarray2Args(cmd, sourceArgs);
     }
     
-    public Vector<String> getSourceArgs(IBuilder builder, Project object, Configure configure, String workDir, Vector<String> extlist) {
+    public @NotNilptr Vector<String> getSourceArgs(IBuilder builder, @NotNilptr Project object, @NotNilptr Configure configure, String workDir, Vector<String> extlist) {
         Vector<String> sourceArgs = new Vector<String>();
 
         JsonArray sources = object.getSources();
-        Map<String, bool> ext_map = nilptr;
-        if (extlist != nilptr){
-            ext_map = new Map<String, bool>();
-        }
-        for (int i = 0; i < sources.length(); i++) {
-            String srcname = sources.getString(i);
-            String ext = srcname.findExtension();
-            String fname = srcname.findFilenameAndExtension();
-
-            String fullsourcePath ;
-            if (workDir != nilptr){
-                fullsourcePath = appendPath(workDir, srcname);
-            }else{
-                fullsourcePath = srcname;
+        
+        if (sources != nilptr){
+            Map<String, bool> ext_map = nilptr;
+            if (extlist != nilptr){
+                ext_map = new Map<String, bool>();
             }
-            if (fname.equalsIgnoreCase("makefile") && builder != nilptr && workDir != nilptr) {
-                XlangProjectProp.makefile(builder, object, configure, workDir);
-            }
-            if (ext != nilptr && (ext.equalsIgnoreCase(".c") || ext.equalsIgnoreCase(".cpp") || ext.equalsIgnoreCase(".cxx") || ext.equalsIgnoreCase(".m") || 
-                ext.equalsIgnoreCase(".mm") || ext.equalsIgnoreCase(".cc") || ext.equalsIgnoreCase(".c++") || ext.equalsIgnoreCase(".cp") || ext.equalsIgnoreCase(".txx") || 
-                ext.equalsIgnoreCase(".tpp") || ext.equalsIgnoreCase(".tpl"))) 
-            {
-                sourceArgs.add(fullsourcePath);
+            for (int i = 0, c = sources.length(); i < c; i++) {
+                String srcname = sources.getString(i);
                 
-                if (extlist != nilptr){
-                    String uext = ext.upper();
-                    if (ext_map.containsKey(uext) == false){
-                        ext_map.put(uext,true);
-                        extlist.add(ext);
+                if (srcname != nilptr){
+                    String ext = srcname.findExtension();
+                    String fname = srcname.findFilenameAndExtension();
+                    
+                    String fullsourcePath ;
+                    if (workDir != nilptr){
+                        fullsourcePath = appendPath(workDir, srcname);
+                    }else{
+                        fullsourcePath = srcname;
+                    }
+                    
+                    if (fname.equalsIgnoreCase("makefile") && builder != nilptr && workDir != nilptr) {
+                        XlangProjectProp.makefile(builder, object, configure, workDir);
+                    }
+                    if ((ext.equalsIgnoreCase(".c") || ext.equalsIgnoreCase(".cpp") || ext.equalsIgnoreCase(".cxx") || ext.equalsIgnoreCase(".m") || 
+                        ext.equalsIgnoreCase(".mm") || ext.equalsIgnoreCase(".cc") || ext.equalsIgnoreCase(".c++") || ext.equalsIgnoreCase(".cp") || ext.equalsIgnoreCase(".txx") || 
+                        ext.equalsIgnoreCase(".tpp") || ext.equalsIgnoreCase(".tpl"))) 
+                    {
+                        sourceArgs.add(fullsourcePath);
+                        
+                        if (extlist != nilptr){
+                            String uext = ext.upper();
+                            if (ext_map != nilptr && ext_map.containsKey(uext) == false){
+                                ext_map.put(uext,true);
+                                extlist.add(ext);
+                            }
+                        }
                     }
                 }
             }
         }
-        
         return sourceArgs;
     }
     
-    public String getArchArgs(Configure configure) {
-        return configure.getOption("wtype");
+    public String getArchArgs(@NotNilptr Configure configure) {
+        return "";
     }
     
-    public IXIntelliSense allocIntelliSense(Project project, Configure cfg)override{
+    public IXIntelliSense allocIntelliSense(@NotNilptr Project project, @NotNilptr Configure cfg)override{
         return new ClangIXIntelliSense(project, cfg);
     }
     
-    public static void generateJsonArrayArgs(String key, JsonArray incpath, Vector<String> args, bool quot) {
+    public static void generateJsonArrayArgs(String key, JsonArray incpath,@NotNilptr  Vector<String> args, bool quot) {
         if (incpath != nilptr) {
             //String incs = "";
             bool isReslash = isUnixPath();
-            for (int i = 0; i < incpath.length(); i++) {
+            for (int i = 0, c = incpath.length(); i < c; i++) {
                 String inc = incpath.getString(i);
                 
                 if (inc != nilptr && inc.length() > 0) {
-                    if (key != nilptr){
-                        args.add(key);
-                    }
-                    inc = String.formatPath(inc,isReslash);
-                    if (quot && _system_.getPlatformId() == 0) {
-                        args.add("\"" + inc + "\"");
-                    } else {
-                        args.add(inc);
+                    
+                    if (inc.length() > 0){
+                        if (key != nilptr){
+                            args.add(key);
+                        }
+                        if (quot && _system_.getPlatformId() == 0) {
+                            args.add("\"" + inc + "\"");
+                        } else {
+                            args.add(inc);
+                        }
                     }
                 }
             }
         }
     }
     
-    public static void checkOptions(Vector<String> args, Map<String,String> argmap, Configure configure, String []key) {
+    public static void checkOptions(Vector<String> args, Map<String,String> argmap,@NotNilptr  Configure configure, @NotNilptr String []key) {
         for (int i =0; i < key.length; i++) {
             String option = configure.getOption(key[i]);
 
-            if (option != nilptr && option.length() > 0) {
+            if (option.length() > 0) {
                 if (args != nilptr) {
                     args.add(option);
                 }
@@ -365,45 +386,25 @@ class CDEProjectPropInterface : ProjectPropInterface{
                     argmap.put(key[i], option);
                 }
 
-            } else if (key[i].equals("wtype")) {
-                /*String wtype = getArchArgs(configure);
-                if (wtype.length() > 0) {
-                    if (args != nilptr) {
-                        args.add(wtype);
-                    }
-                    if (argmap != nilptr) {
-                        argmap.put(key[i], wtype);
-                    }
-                }*/
-            } else if (key[i].equals("ostype")) {
-                /*String ostype = getXcrossName(configure);
-                if (ostype.length() > 0) {
-                    if (args != nilptr) {
-                        args.add(ostype);
-                    }
-                    if (argmap != nilptr) {
-                        argmap.put(key[i], ostype);
-                    }
-                }*/
             }
         }
     }
     
-    public static void generateWarning(Configure configure, Vector<String> args) {
+    public static void generateWarning(@NotNilptr Configure configure, @NotNilptr Vector<String> args) {
         JsonArray ignorewl = getArrayOption(configure, "ignorewl");
         if (ignorewl != nilptr) {
             generateJsonArrayArgs(nilptr, ignorewl, args, false);
         }
     }
     
-    public static void generateIncPath(Configure configure, Vector<String> args) {
+    public static void generateIncPath(@NotNilptr Configure configure, @NotNilptr Vector<String> args) {
         JsonArray libpath = getArrayOption(configure, "path.incpath");
         if (libpath != nilptr) {
             generateJsonArrayArgs("-I", libpath, args, true);
         }
     }
     
-    public static void generateLibPath(Configure configure, Vector<String> args) {
+    public static void generateLibPath(@NotNilptr Configure configure, @NotNilptr Vector<String> args) {
         JsonArray libpath = getArrayOption(configure, "path.libpath");
         if (libpath != nilptr) {
             generateJsonArrayArgs("-L", libpath, args, true);
@@ -411,17 +412,33 @@ class CDEProjectPropInterface : ProjectPropInterface{
     }
     
     
-    public static String [] generatorCompArgs_s(Project object, Configure configure, String sourfile){
+    public @NotNilptr static String [] generatorCompArgs_s(@NotNilptr Project object,@NotNilptr  Configure configure,@NotNilptr  String sourfile, bool forlsp){
         Vector<String> args = new Vector<String>();
         String ccpath = getCompilerPath(configure);
         
         args.add("%cc%");
         
-        args.add("-c");
+        String ife = ".o";
+        
+        String comp_sec = configure.getOption("genasm");
+        if (forlsp == false && comp_sec.equals("-S")){
+            args.add("-S");
+            ife = ".S";
+        }else if (forlsp == false && comp_sec.equals("-E")){
+            args.add("-E");
+            ife = ".E";
+        }else{
+            args.add("-c");
+            if (_system_.getPlatformId() == 0){
+                ife = ".obj";
+            }
+        }
         
         args.add("%source%");
         // "staticlibgcc", "staticlibcpp",
-        String []options = {"optimize", "gprofile", "dbits", "noexceptions", "ignorew", "debugable", "wtype", "ostype", "fpic", "signed_char", "nostdinc", "nostdincpp", "cpp11", "cstd11", "eversose", "fvisibility"};
+        String []options = {"optimize", "gprofile", "fsanitize", "fundefined", "fdatarace", "fshift", "fsignedio", "fbounds", "funreachable", "freturn", "dbits", "noexceptions", "ignorew", "debugable", "ostype", "fpic", "signed_char", "nostdinc", "nostdincpp", "cpp11", "cstd11", "eversose", "fvisibility",
+            "march", "gccansi", "gccffp", "mfloat", "codealign", "Wshadow", "instructoptimize", "nobuiltin", "enumint", "stackprotected"
+        };
 
         checkOptions(args, nilptr, configure, options);
 
@@ -446,22 +463,22 @@ class CDEProjectPropInterface : ProjectPropInterface{
         String [] szArgs = new String[args.size()];
 
         for (int i = 0; i < args.size(); i++) {
-            szArgs[i] = XPlatform.converToPlatformCharSet(map_variable(object, configure, args.get(i)));
+            szArgs[i] = XPlatform.converToPlatformCharSet(XEnvironment.MapVariable(object, configure, args.get(i)));
         }
                 
         String projdir = object.getProjectDir();
         String out_path = configure.getOption("objdir");
-        out_path = String.formatPath(map_variable(object, configure, out_path), isUnixPath());
+        out_path = String.formatPath(XEnvironment.MapVariable(object, configure, out_path), isUnixPath());
         String destfile = sourfile.toRelativePath(projdir,false,true);
         destfile = destfile.toAbsolutePath(out_path);
             
+        destfile = destfile.replaceExtension(ife);
+        
         if (_system_.getPlatformId() == 0){
-            destfile = destfile.replaceExtension(".obj");
             szArgs[0] = "\""  + ccpath + "\"";
             szArgs[2] = "\""  + sourfile + "\"";
             szArgs[szArgs.length - 1] = "\"" + destfile + "\"";
         }else{
-            destfile = destfile.replaceExtension(".o");
             szArgs[0] = ccpath;
             szArgs[2] = sourfile;
             szArgs[szArgs.length - 1] = destfile;
@@ -470,15 +487,15 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return szArgs;
     }
     
-    public String [] generatorCompArgs(Project object, Configure configure, String sourfile)override{
-        return generatorCompArgs_s(object, configure, sourfile);
+    public String [] generatorCompArgs(@NotNilptr Project object, @NotNilptr Configure configure, @NotNilptr String sourfile)override{
+        return generatorCompArgs_s(object, configure, sourfile, true);
     }
     
     
     int nBuildCancel = 0;//0 没有取消  1已设定取消  2已取消
     
     
-    public void clearObjectFile(IBuilder builder, Project object, Configure configure){
+    public void clearObjectFile(@NotNilptr IBuilder builder,@NotNilptr  Project object,@NotNilptr  Configure configure){
     
         String projdir = object.getProjectDir();
         
@@ -486,10 +503,11 @@ class CDEProjectPropInterface : ProjectPropInterface{
         
         String out_path = configure.getOption("objdir");
         
-        out_path = String.formatPath(map_variable(object, configure, out_path), isUnixPath());
+        out_path = String.formatPath(XEnvironment.MapVariable(object, configure, out_path), isUnixPath());
         
         for (int i = 0; i < __args.size(); i++) {
             String sourfile = __args.get(i);
+            __nilptr_safe(sourfile);
             String destfile = sourfile.toRelativePath(projdir,false,true);
             destfile = String.formatPath(destfile.toAbsolutePath(out_path), isUnixPath());
             destfile = destfile.replaceExtension(".o");
@@ -504,11 +522,11 @@ class CDEProjectPropInterface : ProjectPropInterface{
         }
     }
     
-    public void generateBuildArgs(IBuilder builder,Vector<String> __args, Project object, Configure configure, String workdir) {
+    public void generateBuildArgs(@NotNilptr IBuilder builder,@NotNilptr Vector<String> __args,@NotNilptr Project object,@NotNilptr  Configure configure,@NotNilptr  String workdir) {
     
         String target = getTarget(object, configure);
-
-        if (XPlatform.existsSystemFile(target)) {
+        
+        if (target != nilptr && XPlatform.existsSystemFile(target)) {
             if (false == XPlatform.deleteFile(target)) {
                 builder.OutputText("无法删除文件:" + target + " ,文件正在使用中\n", 0);
                 return ;
@@ -534,12 +552,32 @@ class CDEProjectPropInterface : ProjectPropInterface{
         
         args.add("%cc%");
         
-        args.add("-c");
+        
+        String ife = ".o";
+        int comp_method = 0;
+        
+        String comp_sec = configure.getOption("genasm");
+        if (comp_sec.equals("-S")){
+            args.add("-S");
+            ife = ".S";
+            comp_method = 1;
+        }else if (comp_sec.equals("-E")){
+            args.add("-E");
+            ife = "$";
+            comp_method = 2;
+        }else{
+            args.add("-c");
+            if (_system_.getPlatformId() == 0){
+                ife = ".obj";
+            }
+        }
         
         args.add("%source%");
         // "staticlibgcc", "staticlibcpp",
-        String []options = {"optimize","gprofile", "dbits", "noexceptions", "ignorew", "debugable", "wtype", "ostype", "fpic", "signed_char", "nostdinc", "nostdincpp", "cpp11", "cstd11", "eversose", "fvisibility"};
-
+        String []options = {"optimize", "gprofile", "fsanitize", "fundefined", "fdatarace", "fshift", "fsignedio", "fbounds", "funreachable", "freturn", "dbits", "noexceptions", "ignorew", "debugable", "ostype", "fpic", "signed_char", "nostdinc", "nostdincpp", "cpp11", "cstd11", "eversose", "fvisibility",
+            "march", "gccansi", "gccffp", "mfloat", "codealign", "Wshadow", "instructoptimize", "nobuiltin", "enumint", "stackprotected"
+        };
+        
         checkOptions(args, nilptr, configure, options);
 
         //路径变量
@@ -563,20 +601,20 @@ class CDEProjectPropInterface : ProjectPropInterface{
         String [] szArgs = new String[args.size()];
 
         for (int i = 0; i < args.size(); i++) {
-            szArgs[i] = XPlatform.converToPlatformCharSet(map_variable(object, configure, args.get(i)));
+            szArgs[i] = XPlatform.converToPlatformCharSet(XEnvironment.MapVariable(object, configure, args.get(i)));
         }
         
         String allInfo = "";
         
         String projdir = object.getProjectDir();
         String out_path = configure.getOption("objdir");
-        out_path = String.formatPath(map_variable(object, configure, out_path), isUnixPath());
+        out_path = String.formatPath(XEnvironment.MapVariable(object, configure, out_path), isUnixPath());
         bool bReslash = isUnixPath();
         
         for (int i = 0; i < __args.size(); i++) {
            
             String sourfile = __args.get(i);
-            
+            __nilptr_safe(sourfile);
             String destfile = sourfile.toRelativePath(projdir,false,true);
             
             sourfile = String.formatPath(sourfile, bReslash);
@@ -584,7 +622,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
             
             XlangProjectProp.mkdirs(String.formatPath(destfile.findVolumePath(), false));
             
-            destfile = destfile.replaceExtension(".o");
+            destfile = destfile.replaceExtension(ife);
             
             if (_system_.getPlatformId() == 0){
                 objfiles.add(destfile);
@@ -598,7 +636,12 @@ class CDEProjectPropInterface : ProjectPropInterface{
                 szArgs[szArgs.length - 1] = destfile;
             }
             
-            allInfo = allInfo + builder.build(ccpath, szArgs, workdir, nilptr, false);
+            CDEProjectPropInterface.setEnvir(ccpath);
+            /*String wd = ccpath.findVolumePath();
+            if (wd == nilptr){
+                wd = workdir;
+            }*/
+            allInfo = allInfo + builder.build(ccpath, szArgs,  workdir, nilptr, false);
             
             int start = allInfo.length() - 1;
             
@@ -635,11 +678,12 @@ class CDEProjectPropInterface : ProjectPropInterface{
         if (nBuildCancel == 0){
             builder.OutputText("\n链接...\n",1);
             //ExecuteLinkLib
-            
-            if (cmd.equals("-staticlib")){
-                ExecuteLinkLib(builder, objfiles, object, configure, workdir);
-            }else{
-                ExecuteLinker(builder, objfiles, object, configure, workdir);
+            if (comp_method == 0){
+                if (cmd.equals("-staticlib")){
+                    ExecuteLinkLib(builder, objfiles, object, configure, workdir);
+                }else{
+                    ExecuteLinker(builder, objfiles, object, configure, workdir);
+                }
             }
             
             builder.complete();
@@ -647,7 +691,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         
     }
     
-    public static JsonArray getArrayOption(Configure configure, String key){
+    public static JsonArray getArrayOption(@NotNilptr Configure configure,@NotNilptr  String key){
         try{
             String szlibs = configure.getOption(key);
             return new JsonArray(szlibs);
@@ -658,22 +702,22 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return nilptr;
     }
     
-    public JsonArray getExternLibs(Configure cfg){
+    public JsonArray getExternLibs(@NotNilptr Configure cfg){
         return getArrayOption(cfg, "libs");
     }
     
-    public void generateLibs(Configure configure, Vector<String> args) {
+    public void generateLibs(@NotNilptr Configure configure, @NotNilptr Vector<String> args) {
         JsonArray libs = getArrayOption(configure, "libs");
         generateJsonArrayArgs(nilptr, libs, args, true);
     }
     
     
-    public static String getTarget(Project object, Configure configure) {
-        String out_path = map_variable(object, configure, "$(Output)");
+    public static String getTarget(@NotNilptr Project object, @NotNilptr Configure configure) {
+        String out_path = XEnvironment.MapVariable(object, configure, "$(Output)");
         return String.formatPath(out_path, isUnixPath());
     }
     
-    public void ExecuteLinkLib(IBuilder builder,Vector<String> __args, Project object, Configure configure, String workdir) {
+    public void ExecuteLinkLib(@NotNilptr IBuilder builder,@NotNilptr Vector<String> __args, @NotNilptr Project object, @NotNilptr Configure configure, @NotNilptr String workdir) {
     
         Vector<String> args = new Vector<String>();
         
@@ -696,7 +740,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         
         String out_path = configure.getOption("outpath");
         
-        out_path = String.formatPath(map_variable(object, configure, out_path), isUnixPath());
+        out_path = String.formatPath(XEnvironment.MapVariable(object, configure, out_path), isUnixPath());
         
         if (out_path.length() > 0){
             XlangProjectProp.mkdirs(out_path);
@@ -722,7 +766,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         String [] szArgs = new String[args.size()];
         
         for (int i = 0; i < args.size(); i++) {
-            szArgs[i] = XPlatform.converToPlatformCharSet(map_variable(object, configure, args.get(i)));
+            szArgs[i] = XPlatform.converToPlatformCharSet(XEnvironment.MapVariable(object, configure, args.get(i)));
         }
         
         String allInfo = "";
@@ -732,7 +776,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         builder.setCompileInfor(parseInfo(allInfo));
     }
     
-    public void ExecuteLinker(IBuilder builder,Vector<String> __args, Project object, Configure configure, String workdir) {
+    public void ExecuteLinker(@NotNilptr IBuilder builder,@NotNilptr Vector<String> __args,@NotNilptr  Project object,@NotNilptr  Configure configure, String workdir) {
     
         Vector<String> args = new Vector<String>();
         
@@ -747,6 +791,20 @@ class CDEProjectPropInterface : ProjectPropInterface{
             args.add(ldpath);
         }
         
+        // "staticlibgcc", "staticlibcpp",
+        String []options = {"wl_ld_v", "optimize", "gprofile", "fsanitize", "fundefined", "fdatarace", "fshift", "fsignedio", "fbounds", "funreachable", "freturn", "dbits", "noexceptions", "ignorew", "fpic", "pie", "debugable", "ostype", "compdest", "nostdlib", "staticlibcpp", "staticlibgcc", "staticlink","ldsymbols", "noinhibitexec", "ldformat", 
+            "wl_ld_zdefs", "wl_ld_muldefs", "wholearchive"
+        };
+        
+        checkOptions(args, nilptr, configure, options);
+        
+        for (int i =0; i < args.size(); i++){
+            if (args[i].startWith("-fsanitize=")){
+                args.add("-static-libasan");
+                break;
+            }
+        }
+        
         for (int i = 0; i < __args.size(); i++) {
             String objf = __args.get(i);
             if (_system_.getPlatformId() == 0){
@@ -756,21 +814,19 @@ class CDEProjectPropInterface : ProjectPropInterface{
             }
         }
         
-        // "staticlibgcc", "staticlibcpp",
-        String []options = {"staticlink", "optimize", "gprofile", "dbits", "noexceptions", "ignorew", "fpic", "pie", "debugable", "wtype", "ostype", "compdest", "staticlibcpp", "staticlibgcc", "wl_ld_v", "nostdlib"};
-
-        checkOptions(args, nilptr, configure, options);
         //路径变量
         generateWarning(configure, args);
         //路径变量
         generateLibPath(configure, args);
 
+        //C++ Setting 
         generateLDArgs(configure, args);
         
-        generateLinkerCommand(configure, args);
         //外部库
         generateLibs(configure, args);
 
+        // other cmds
+        generateLinkerCommand(configure, args);
 
         String speclds = configure.getOption("speclds");
         
@@ -791,11 +847,12 @@ class CDEProjectPropInterface : ProjectPropInterface{
         if (ptype.equals("-shared")){
             args.add("-shared");
         }
+        
         args.add("-o");
 
         String out_path = configure.getOption("outpath");
         
-        out_path = String.formatPath(map_variable(object, configure, out_path), isUnixPath());
+        out_path = String.formatPath(XEnvironment.MapVariable(object, configure, out_path), isUnixPath());
         
         if (out_path.length() > 0){
             XlangProjectProp.mkdirs(out_path);
@@ -811,7 +868,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         String [] szArgs = new String[args.size()];
         
         for (int i = 0; i < args.size(); i++) {
-            szArgs[i] = XPlatform.converToPlatformCharSet(map_variable(object, configure, args.get(i)));
+            szArgs[i] = XPlatform.converToPlatformCharSet(XEnvironment.MapVariable(object, configure, args.get(i)));
         }
         
         String allInfo = "";
@@ -822,7 +879,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
            
     }
     
-    public bool verifyFileContent(String file, String content){
+    public bool verifyFileContent(@NotNilptr String file, @NotNilptr String content){
         try{
             FileInputStream fis = new FileInputStream(file);
             byte [] data = fis.read();
@@ -833,7 +890,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return false;
     }
     
-    public bool writeFileContent(String file, String content){
+    public bool writeFileContent(@NotNilptr String file,@NotNilptr  String content){
         if (verifyFileContent(file, content) == false){
             try{
                 FileOutputStream fos = new FileOutputStream(file);
@@ -846,9 +903,31 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return true;
     }
     
-    bool cleanByMake(IBuilder builder, Project object, Configure configure, Object param)  {
+    public static void setEnvir(String gdbPath){
+        if (gdbPath != nilptr){
+            String envLInk = _system_.getPlatformId() == _system_.PLATFORM_WINDOWS ? ";" : ":";
+            String path = EnvironmentMgr.getEnvironmentPath();
+            if (path != nilptr){
+                String gdbDir = gdbPath.findVolumePath();
+                if (gdbDir.length() > 0){
+                    String gdbDirprt = gdbDir.findVolumePath();
+                    if (gdbDirprt.length() > 0){
+                        path = gdbDirprt + envLInk + path;
+                    }
+                    path = gdbDir + envLInk + path;
+                }
+                path =  "." + envLInk + path;
+                _system_.setEnvironmentVariable("path", path, false, false);
+            }
+        }
+    }
+    
+    bool cleanByMake(@NotNilptr IBuilder builder,@NotNilptr  Project object,@NotNilptr  Configure configure, Object param)  {
         String makecont = generateMake(object, configure);
-        String makefile = appendPath(object.getProjectDir(), "makefile");
+        
+        String projectdir = object.getProjectDir();
+
+        String makefile = appendPath(projectdir, "Makefile");
         
         if (writeFileContent(makefile, makecont) == false){
             builder.OutputText("无法写入文件:" + makefile,0);
@@ -868,12 +947,13 @@ class CDEProjectPropInterface : ProjectPropInterface{
             processArgs(makepath, args_list);
 
             String make = args_list[0];
+            __nilptr_safe(make);
             if (make.startWith("\"" ) && make.endWith("\"" )){
                 make = make.substring(1, make.length() - 1);
             }
 
             String batch = "@echo off\nset PATH=\""  +  make.findVolumePath() + "\";%PATH%\n@echo on\n" + makepath;
-            String batchfile = appendPath(object.getProjectDir(), "clean.cmd");
+            String batchfile = appendPath(projectdir, "clean.cmd");
             
             if (writeFileContent(batchfile, batch) == false){
                 builder.OutputText("无法写入文件:" + batchfile,0);
@@ -898,7 +978,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
             
         if (args_list.size() > 0){    
             InformationParser ip = new InformationParser(){
-                String parse(String text)override{
+                String parse(@NotNilptr String text)override{
                     if (text.length() > 1){
                         int pos = text.lastIndexOf('\n', text.length() - 1);
                         if (pos != -1){
@@ -914,8 +994,10 @@ class CDEProjectPropInterface : ProjectPropInterface{
             };
             
             String text = builder.build(execute, args_list.toArray(new String[0]), object.getProjectDir(), ip, true);
-            builder.setCompileInfor(parseInfo(text));
             
+            if (text != nilptr){
+                builder.setCompileInfor(parseInfo(text));
+            }
             builder.complete();
             
             return true;
@@ -924,9 +1006,13 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return false;
     }
      
-    bool buildByMake(IBuilder builder, Project object, Configure configure, Object param)  {
+    bool buildByMake(@NotNilptr IBuilder builder, @NotNilptr Project object, @NotNilptr Configure configure, Object param)  {
         String makecont = generateMake(object, configure);
-        String makefile = appendPath(object.getProjectDir(), "makefile");
+        String projectdir = object.getProjectDir();
+
+
+
+        String makefile = appendPath(projectdir, "Makefile");
         
         if (writeFileContent(makefile, makecont) == false){
             builder.OutputText("无法写入文件:" + makefile,0);
@@ -939,21 +1025,19 @@ class CDEProjectPropInterface : ProjectPropInterface{
             return false;
         }
         
-        
-        
         Vector<String> args_list = new Vector<String>();
-     
+
         String execute = "";
         if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
             processArgs(makepath, args_list);
 
-            String make = args_list[0];
+            String make = args_list[0]; __nilptr_safe(make);
             if (make.startWith("\"" ) && make.endWith("\"" )){
                 make = make.substring(1, make.length() - 1);
             }
 
             String batch = "@echo off\nset PATH=\""  +  make.findVolumePath() + "\";%PATH%\n@echo on\n" + makepath;
-            String batchfile = appendPath(object.getProjectDir(), "build.cmd");
+            String batchfile = appendPath(projectdir, "build.cmd");
             
             if (writeFileContent(batchfile, batch) == false){
                 builder.OutputText("无法写入文件:" + batchfile,0);
@@ -977,7 +1061,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
             
         if (args_list.size() > 0){    
             InformationParser ip = new InformationParser(){
-                String parse(String text)override{
+                String parse(@NotNilptr String text)override{
                     if (text.length() > 1){
                         int pos = text.lastIndexOf('\n', text.length() - 1);
                         if (pos != -1){
@@ -991,10 +1075,22 @@ class CDEProjectPropInterface : ProjectPropInterface{
                     return text;
                 }
             };
+            int thread = CPPGPlugManager.getMultiMake();
+            if (thread > 1){
+                args_list.add("-j" + thread);
+            }
             
-            String text = builder.build(execute, args_list.toArray(new String[0]), object.getProjectDir(), ip, true);
-            builder.setCompileInfor(parseInfo(text));
+            String text = builder.build(execute, args_list.toArray(new String[0]), projectdir, ip, true);
             
+            if (text != nilptr){
+                builder.setCompileInfor(parseInfo(text));
+            }
+            if (nBuildCancel != 0){
+                if (nBuildCancel == 1){
+                    nBuildCancel = 2;
+                    builder.OutputText("\n已取消组建\n", 0);
+                }
+            }
             builder.complete();
             
             return true;
@@ -1003,34 +1099,38 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return false;
     }
     
-    bool build(IBuilder builder, Project object, Configure configure, Object param) override {
+    bool build(@NotNilptr IBuilder builder, @NotNilptr Project object, @NotNilptr Configure configure, Object param) override {
         nBuildCancel = 0;
         String target = getTarget(object, configure);
 
-        if (XPlatform.existsSystemFile(target)) {
+        if (target != nilptr && XPlatform.existsSystemFile(target)) {
             if (false == XPlatform.deleteFile(target)) {
                 builder.OutputText("无法删除文件:" + target + " ,文件正在使用中\n", 0);
                 return false;
             }
         }
 
+        String cmd = configure.getOption("command");
         String usemake = configure.getOption("usemake");
-        if (usemake.length() > 0){
+        if (usemake.length() > 0 || cmd.equals("-driver")){
             return buildByMake(builder, object, configure, param);
         }
         
         XlangProjectProp.batchbuild(builder, object, configure, "prebuild");
 
         String workdir = object.projpath.findVolumePath();
-
+        
+        
+        
         Vector<String> _args = getSourceArgs(builder, object, configure, workdir, nilptr);
 
         if (configure == nilptr) {
-            Map<String, Configure> conf_map = object.configures;
+            Map<String, Configure> conf_map = object.configures; __nilptr_safe(conf_map);
             Map.Iterator<String, Configure> iter = conf_map.iterator();
 
             while (iter.hasNext()) {
                 Configure conf = iter.getValue();
+                __nilptr_safe(conf);
                 generateBuildArgs(builder, _args, object, conf, workdir);
                 if (nBuildCancel != 0){
                     if (nBuildCancel == 1){
@@ -1052,7 +1152,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return true;
     }
     
-    int detectInfo(String lineText) {
+    int detectInfo(@NotNilptr String lineText) {
         String [] prefix = {": 附注", ": 警告", ": 错误"};
         String [] prefix_en = {": note", ": warning", ": error", ": fatal error"};
         if (lineText.length() < prefix[0].length()){
@@ -1093,7 +1193,6 @@ class CDEProjectPropInterface : ProjectPropInterface{
         public CPPCompileInfo(String text, int t, String _tips) {
             type = t;
             tip = _tips;
-            
         }
 
         public int getType()override {
@@ -1108,42 +1207,44 @@ class CDEProjectPropInterface : ProjectPropInterface{
         public int getRow()override {
             return row;
         }
-        public String getTips() {
+        public @NotNilptr String getTips() {
+            __nilptr_safe(tip);
+            if (tip == nilptr){
+                return "";
+            }
             return tip;
         }
     };
     
-    Vector<ICompileInfo> parseInfo(String info) {
+    @NotNilptr Vector<ICompileInfo> parseInfo(@NotNilptr String info) {
         Vector<ICompileInfo> infos = new Vector<ICompileInfo>();
         String [] list = info.split("\n");
-        if (list != nilptr) {
-            for (int i = 0; i < list.length; i++) {
-                String message = list[i].trim(true);
-                int t = detectInfo(message);
-                if (t != -1) {
-                    String tips_block = message;
-                    i++;
-                    for (; i < list.length; i++) {
-                        if (list[i].startWith(" ")) {
-                            tips_block = tips_block + "\n" + list[i];
-                        } else {
-                            i--;
-                            break;
-                        }
+        for (int i = 0; i < list.length; i++) {
+            String message = list[i].trim(true);
+            int t = detectInfo(message);
+            if (t != -1) {
+                String tips_block = message;
+                i++;
+                for (; i < list.length; i++) {
+                    if (list[i].startWith(" ")) {
+                        tips_block = tips_block + "\n" + list[i];
+                    } else {
+                        i--;
+                        break;
                     }
-                    CPPCompileInfo ccinfo = (CPPCompileInfo)parseInformation(message);
-                    ccinfo.tip = tips_block;
-                    infos.add(ccinfo);
                 }
+                CPPCompileInfo ccinfo = (CPPCompileInfo)parseInformation(message); __nilptr_safe(ccinfo);
+                ccinfo.tip = tips_block;
+                infos.add(ccinfo);
             }
         }
         return infos;
     }
     
-    static String getArch(Configure configure) {
+    static String getArch(@NotNilptr Configure configure) {
         String [] archs = {"i386", "i686", "x86_64", "armv7-a", "armv8-a"};
 
-        String arch = configure.getOption("wtype");
+        String arch = "";
         if (arch.equals("")) {
             int aid = _system_.getArchId();
 
@@ -1161,7 +1262,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         }
     }
     
-    public static String map_variable(Project object, Configure configure, String text) {
+    public @NotNilptr String map_variable(@NotNilptr Project object, @NotNilptr Configure configure,@NotNilptr  String text) override{
         text = text.replace("$(Output)", appendPath(configure.getOption("outpath"), configure.getOption("outname")));
         text = text.replace("$(IntermediateFolder)", configure.getOption("objdir"));
         text = text.replace("$(Configure)", configure.getName());
@@ -1202,7 +1303,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         
         text = text.replace("$(Ext)", ext);
 
-        return object.map_variable(text);
+        return (text);
     }
     
     
@@ -1217,31 +1318,32 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return XDEBUG_SERIAL;
     }
     
-    void cleanup(IBuilder builder, Project object, Configure configure) override {
+    void cleanup(@NotNilptr IBuilder builder, @NotNilptr Project object, @NotNilptr Configure configure) override {
         nBuildCancel = 0;
         String target = getTarget(object, configure);
 
-        if (XPlatform.existsSystemFile(target)) {
+        if (target != nilptr && XPlatform.existsSystemFile(target)) {
             if (false == XPlatform.deleteFile(target)) {
                 builder.OutputText("无法删除文件:" + target + " ,文件正在使用中\n", 0);
             }
         }
 
+        String cmd = configure.getOption("command");
         String usemake = configure.getOption("usemake");
-        if (usemake.length() > 0){
+        if (usemake.length() > 0 || cmd.equals("-driver")){
             cleanByMake(builder, object, configure, nilptr);
         }else{
             clearObjectFile(builder, object, configure);
         }
     }
     
-    String getExecuteCmd(Project object, Configure configure) {
+    String getExecuteCmd(@NotNilptr Project object, @NotNilptr Configure configure) {
         String out_path = configure.getOption("cmd");
-        out_path = map_variable(object, configure, out_path);
+        out_path = XEnvironment.MapVariable(object, configure, out_path);
         return String.formatPath(out_path, isUnixPath());
     }
     
-    Vector<String> getExecuteArgs(Project object, Configure configure) {
+    @NotNilptr Vector<String> getExecuteArgs(@NotNilptr Project object,@NotNilptr  Configure configure) {
 
         String out_path = configure.getOption("args");
         Vector<String> argve = XlangProjectProp.processArgs(out_path);
@@ -1249,90 +1351,103 @@ class CDEProjectPropInterface : ProjectPropInterface{
         Vector<String> finalargs = new Vector<String>();
         bool bisUnixPath = isUnixPath();
         for (int i =0; i < argve.size(); i++) {
-            finalargs.add(XlangProjectProp.formatArgs(String.formatPath(map_variable(object, configure, argve.get(i)), bisUnixPath)));
+            finalargs.add(XlangProjectProp.formatArgs(String.formatPath(XEnvironment.MapVariable(object, configure, argve.get(i)), bisUnixPath)));
         }
 
         return finalargs;
     }
     
-    String getExecuteWd(Project object, Configure configure) {
+    @NotNilptr String getExecuteWd(@NotNilptr Project object,@NotNilptr  Configure configure) {
         String out_path = configure.getOption("workdir");
-        out_path = map_variable(object, configure, out_path);
+        out_path = XEnvironment.MapVariable(object, configure, out_path);
         return String.formatPath(out_path, false);
     }
     
     Process process ;
     GDBShell dbg_shell;
     
+    public GDBShell getGdb(){
+        return dbg_shell;
+    }
     
-    public static void attachDebug(String kitname, int pid){
+    public void attachDebug(@NotNilptr String kitname, int pid){
         String dbgpath = getDebuggeePath(kitname);
-        String []args__ = new String[4];
-        if (_system_.getPlatformId() == 0){
-            args__[0] = "\"" + XPlatform.converToPlatformCharSet(dbgpath) + "\"";
-        }else{
-            args__[0] = XPlatform.converToPlatformCharSet(dbgpath);
-        }
-        args__[1] = "--interpreter=mi2";
-        args__[2] = "-quiet";
-        args__[3] = "--nx";
         
-        GDBShell _gdb = new GDBShell();
-        if (_gdb.prepareForPipe() == false){
-            CPPGPlugManager.output("\n无法创建调试端口!\n", 1);
-            return ;
-        } 
-        
-        Process dbg_pro = _gdb.createProcess(XPlatform.converToPlatformCharSet(dbgpath), args__, nilptr);
-        if (XWorkspace.workspace.requestDebug(_gdb.getPipe())){
-            String [] dbg_arg = {"" + pid};
-            if (_gdb.attachProcess(dbg_arg)) {
-                CPPGPlugManager.output("\n已创建进程 ID: " + dbg_pro.id() + "\n", 0);
-                dbg_pro.waitFor(-1);
-                CPPGPlugManager.output("\n退出代码: " + dbg_pro.getExitCode() + "\n", 0);
-            } else {
-                CPPGPlugManager.output("\n运行失败.\n", 0);
+        if (dbgpath != nilptr){
+            String []args__ = new String[4];
+            if (_system_.getPlatformId() == 0){
+                args__[0] = "\"" + XPlatform.converToPlatformCharSet(dbgpath) + "\"";
+            }else{
+                args__[0] = XPlatform.converToPlatformCharSet(dbgpath);
             }
+            args__[1] = "--interpreter=mi2";
+            args__[2] = "-quiet";
+            args__[3] = "--nx";
+            
+            GDBShell _gdb = new GDBShell();
+            if (_gdb.prepareForPipe() == false){
+                CPPGPlugManager.output("\n无法创建调试端口!\n", 1);
+                return ;
+            } 
+            
+            Process dbg_pro = _gdb.createProcess(XPlatform.converToPlatformCharSet(dbgpath), args__, nilptr);
+            
+            dbg_shell = _gdb;
+            
+            if (dbg_pro != nilptr && XWorkspace.workspace.requestDebug(_gdb.getPipe())){
+                String [] dbg_arg = {"" + pid};
+                if (_gdb.attachProcess(dbg_arg)) {
+                    CPPGPlugManager.output("\n已创建进程 ID: " + dbg_pro.id() + "\n", 0);
+                    dbg_pro.waitFor(-1);
+                    CPPGPlugManager.output("\n退出代码: " + dbg_pro.getExitCode() + "\n", 0);
+                } else {
+                    CPPGPlugManager.output("\n运行失败.\n", 0);
+                }
+            }
+            dbg_shell = nilptr;
         }
     }
     
-    public static void remoteDebug(String kitname, String host, int port, String exePath){
+    public void remoteDebug(@NotNilptr String kitname, String host, int port, String exePath){
         String dbgpath = getDebuggeePath(kitname);
-        String []args__ = new String[5];
-        if (_system_.getPlatformId() == 0){
-            args__[0] = "\"" + XPlatform.converToPlatformCharSet(dbgpath) + "\"";
-        }else{
-            args__[0] = XPlatform.converToPlatformCharSet(dbgpath);
-        }
-        args__[1] = "--interpreter=mi2";
-        if (_system_.getPlatformId() == 0){
-            args__[2] = "\"" + (exePath) + "\"";
-        }else{
-            args__[2] = (exePath);
-        }
-        args__[3] = "-quiet";
-        args__[4] = "--nx";
-        
-        GDBShell _gdb = new GDBShell();
-        if (_gdb.prepareForPipe() == false){
-            CPPGPlugManager.output("\n无法创建调试端口!\n", 1);
-            return ;
-        } 
-        
-        Process dbg_pro = _gdb.createProcess(XPlatform.converToPlatformCharSet(dbgpath), args__, nilptr);
-        if (XWorkspace.workspace.requestDebug(_gdb.getPipe())){
-            String [] dbg_arg = {host, "" + port, exePath};
-            if (_gdb.remoteDebug(dbg_arg)) {
-                CPPGPlugManager.output("\n已创建进程 ID: " + dbg_pro.id() + "\n", 0);
-                dbg_pro.waitFor(-1);
-                CPPGPlugManager.output("\n退出代码: " + dbg_pro.getExitCode() + "\n", 0);
-            } else {
-                CPPGPlugManager.output("\n运行失败.\n", 0);
+        if (dbgpath != nilptr){
+            String []args__ = new String[5];
+            if (_system_.getPlatformId() == 0){
+                args__[0] = "\"" + XPlatform.converToPlatformCharSet(dbgpath) + "\"";
+            }else{
+                args__[0] = XPlatform.converToPlatformCharSet(dbgpath);
             }
+            args__[1] = "--interpreter=mi2";
+            if (_system_.getPlatformId() == 0){
+                args__[2] = "\"" + (exePath) + "\"";
+            }else{
+                args__[2] = (exePath);
+            }
+            args__[3] = "-quiet";
+            args__[4] = "--nx";
+            
+            GDBShell _gdb = new GDBShell();
+            if (_gdb.prepareForPipe() == false){
+                CPPGPlugManager.output("\n无法创建调试端口!\n", 1);
+                return ;
+            } 
+            dbg_shell = _gdb;
+            Process dbg_pro = _gdb.createProcess(XPlatform.converToPlatformCharSet(dbgpath), args__, nilptr);
+            if (dbg_pro != nilptr && XWorkspace.workspace.requestDebug(_gdb.getPipe())){
+                String [] dbg_arg = {host, "" + port, exePath};
+                if (_gdb.remoteDebug(dbg_arg)) {
+                    CPPGPlugManager.output("\n已创建进程 ID: " + dbg_pro.id() + "\n", 0);
+                    dbg_pro.waitFor(-1);
+                    CPPGPlugManager.output("\n退出代码: " + dbg_pro.getExitCode() + "\n", 0);
+                } else {
+                    CPPGPlugManager.output("\n运行失败.\n", 0);
+                }
+            }
+            dbg_shell = nilptr;
         }
     }
     
-    void debugRun(IBuilder builder, Project proj, Configure conf) override {
+    void debugRun(@NotNilptr IBuilder builder, @NotNilptr Project proj, @NotNilptr Configure conf) override {
         if (XWorkspace.isDebugging()) {
             builder.OutputText("\调试器已在运行中,请等待当前调试工作结束.\n", 0);
             return ;
@@ -1346,7 +1461,18 @@ class CDEProjectPropInterface : ProjectPropInterface{
         }
         
         String exePath = getExecuteCmd(proj, conf);
-
+        
+        if (exePath == nilptr){
+            builder.OutputText("\n没有找到目标程序", 0);
+            return;
+        }
+        
+        if (XPlatform.existsSystemFile(exePath) == false){
+            builder.OutputText("\n没有找到目标程序:" + exePath + ",请先编译生成.\n", 0);
+            XWorkspace.workspace.executeNotExists();
+            return ;
+        }
+        
         Vector<String> args = getExecuteArgs(proj, conf);
  
         String []args__ = new String[5];
@@ -1376,13 +1502,14 @@ class CDEProjectPropInterface : ProjectPropInterface{
             }
         }
         
-        dbg_shell = new GDBShell();
+        GDBShell _gdb =new GDBShell();
         
-        if (dbg_shell.prepareForPipe() == false){
+        if (_gdb.prepareForPipe() == false){
             builder.OutputText("\n无法创建调试端口!\n", 1);
             return ;
         } 
         
+        dbg_shell = _gdb;
         process = dbg_shell.createProcess(XPlatform.converToPlatformCharSet(dbgpath), args__, XPlatform.converToPlatformCharSet(getExecuteWd(proj, conf)));
    
         String statusoutput = "\n运行: " + exePath + " ";
@@ -1396,7 +1523,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         try {
             if (XWorkspace.workspace.debugPrepare(getDebugPipe())) {
                 if (dbg_shell.startDebuggee(dbg_args__)) {
-                    builder.OutputText("\n已创建进程 ID: " + process.id() + "\n", 0);
+                    builder.OutputText("\n已创建调试器进程 ID: " + process.id() + "\n", 0);
                     
                     if (XWorkspace.workspace.debug() == false) {
                         builder.OutputText("\n调试器失败.\n", 0);
@@ -1436,24 +1563,112 @@ class CDEProjectPropInterface : ProjectPropInterface{
         }
         
         dbg_shell.close();
+        dbg_shell = nilptr;
     }
     
-    void Run(IBuilder builder, Project proj, Configure conf) override {
+    void Run(@NotNilptr IBuilder builder, @NotNilptr Project proj,@NotNilptr  Configure conf) override {
         
+        String exePath = getExecuteCmd(proj, conf);/*getBuildFile(proj, conf);*/
+
+        if (exePath == nilptr || XPlatform.existsSystemFile(exePath) == false) {
+            builder.OutputText("\n没有找到目标程序:" + exePath + ",请先编译生成.\n", 0);
+            return ;
+        }
+
+        Vector<String> args = getExecuteArgs(proj, conf);
+
+        String []args__ = new String[args.size() + 1];
+        
+        args__[0] = exePath;
+        
+        if (args.size() > 0) {
+            for (int i =0; i < args__.length; i++) {
+                String argval = args.get(i);
+                if (argval != nilptr){
+                    args__[i + 1] = XPlatform.converToPlatformCharSet(argval);
+                }
+            }
+        }
+
+        process = new Process(XPlatform.converToPlatformCharSet(exePath), args__);
+        process.setWorkDirectory(XPlatform.converToPlatformCharSet(getExecuteWd(proj, conf)));
+
+        builder.OutputText("\n运行: " + exePath + "\n", 0);
+
+        try {
+            bool readforstdout = Setting.isRelocalStdout();
+            if (process.create(readforstdout ? (Process.StdOut | Process.RedirectStdErr) : Process.Visible)) {
+                if (readforstdout) {
+                    Utils.readForProcess(builder, process);
+                }
+                process.waitFor(-1);
+                builder.OutputText("\n退出代码: " + process.getExitCode() + "\n", 0);
+            } else {
+                builder.OutputText("\n运行失败.\n", 0);
+            }
+        } catch(Exception e) {
+            String str = e.getMessage();
+            if (_system_.getPlatformId() == 0) {
+                builder.OutputText("\n错误:" + new String(str.getBytes(), "GB18030//IGNORE") + "\n", 0);
+            } else {
+                builder.OutputText("\n错误:" + str + "\n", 0);
+            }
+        }
     }
     
 	void stopRun() override {
         dbg_shell.exit();
     }
     
-
+    @NotNilptr  String  generateMakeForDriver(@NotNilptr Project object, @NotNilptr Configure configure) {
+        Vector<String> _srcs = getSourceArgs(nilptr, object, configure, nilptr, nilptr);
+        
+        String content = "#Generated by XStudio, Date:" + String.formatDate("%c", _system_.currentTimeMillis()) + "\n\n" +
+        "ifneq ($(KERNELRELEASE),)\n\nobj-m +=" ;
+        
+        String projdir = object.getProjectDir();
+        
+        for (int i =0; i < _srcs.size(); i++){
+            if (_srcs[i].lower().findExtension().equals(".c")){
+                content = content + " " + (_srcs[i].replaceExtension(".o")); 
+            }
+        }
+        
+        content = content + "\nelse\n\nKERNELDIR?=/lib/modules/$(shell uname -r)/build\n\nPWD :=$(shell pwd)\n\n.PHONY: clean all\n\nall:\n" + 
+        "	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules\n\nclean:\n	rm -rf *.o *~ core .depend .*.cmd *.ko *.mod.c .tmp_versionsm *.order *.symvers\nendif";
+        
+        return content;
+    }
     
-    String generateMake(Project object, Configure configure) override {
+    @NotNilptr  String  generateMake(@NotNilptr Project object, @NotNilptr Configure configure) override {
         String cmd = configure.getOption("command");
         
         if (cmd.length() == 0){
             //builder.OutputText("未配置项目类型, 请在 [项目属性] 页面配置项目类型.", 0);
             return "invalid project type";
+        }
+        
+        if (cmd.equals("-driver")){
+            return generateMakeForDriver(object, configure);
+        }
+        
+        String comp_sec = configure.getOption("genasm");
+        
+        String dext = ".o";
+        String comp_amd = "-c";
+        if (_system_.getPlatformId() == 0){
+            dext = ".obj";
+        }
+
+        if (comp_sec.equals("-S") || comp_sec.equals("-E") ){
+            if (comp_sec.equals("-S")){
+                dext = ".S";
+                comp_amd = "-S";
+            }else{
+                dext = ".E";
+                comp_amd = "-E";
+            }
+            cmd = "echo";
         }
         
         String projname = object.getName();
@@ -1463,7 +1678,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         String ldpath = getLinkerPath(configure);
         String arpath = getArPath(configure);
         
-        String [] _args = generatorCompArgs_s(object, configure, "source.cpp");
+        String [] _args = generatorCompArgs_s(object, configure, "source.cpp", false);
         
         String CCFLAGS = "";
         
@@ -1491,9 +1706,18 @@ class CDEProjectPropInterface : ProjectPropInterface{
         
         Vector<String> ldArgs = new Vector<String>();
         
-        String []options = {"staticlink", "optimize","gprofile", "dbits", "noexceptions", "ignorew", "fpic", "pie", "debugable", "wtype", "ostype", "compdest", "staticlibcpp", "staticlibgcc", "wl_ld_v", "nostdlib"};
+        String []options = {"wl_ld_v", "optimize", "gprofile", "fsanitize", "fundefined", "fdatarace", "fshift", "fsignedio", "fbounds", "funreachable", "freturn", "dbits", "noexceptions", "ignorew", "fpic", "pie", "debugable", "ostype", "compdest", "nostdlib", "staticlibcpp", "staticlibgcc", "staticlink", "ldsymbols", "noinhibitexec", "ldformat", 
+            "wl_ld_zdefs", "wl_ld_muldefs", "wholearchive"
+        };
         
         checkOptions(ldArgs, nilptr, configure, options);
+        
+        for (int i =0; i < ldArgs.size(); i++){
+            if (ldArgs[i].startWith("-fsanitize=")){
+                ldArgs.add("-static-libasan");
+                break;
+            }
+        }
         
         if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
             String sstype = configure.getOption("sstype");
@@ -1514,13 +1738,9 @@ class CDEProjectPropInterface : ProjectPropInterface{
 
         //路径变量
         generateWarning(configure, ldArgs);
-
-        //路径变量
-        generateLibPath(configure, ldArgs);
-
+        // c++setting 
         generateLDArgs(configure, ldArgs);
         
-        generateLinkerCommand(configure, ldArgs);
         //外部库
         
         String LDFLAGS = "";
@@ -1528,7 +1748,32 @@ class CDEProjectPropInterface : ProjectPropInterface{
             if (LDFLAGS.length() != 0){
                 LDFLAGS = LDFLAGS + "\\\n\t";
             }
-            LDFLAGS = LDFLAGS + ldArgs[i];
+            LDFLAGS = LDFLAGS + XEnvironment.MapVariable(object, configure, ldArgs[i]);
+        }
+        
+        ldArgs.clear();
+        //other 
+        
+        
+        
+        generateLinkerCommand(configure, ldArgs);
+        String USERLDFLAGS = "";
+        for (int i = 0; i < ldArgs.size(); i++){
+            if (USERLDFLAGS.length() != 0){
+                USERLDFLAGS = USERLDFLAGS + "\\\n\t";
+            }
+            USERLDFLAGS = USERLDFLAGS + XEnvironment.MapVariable(object, configure, ldArgs[i]);
+        }
+        
+        ldArgs.clear();
+        //路径变量
+        generateLibPath(configure, ldArgs);
+        String LIBDIR = "";
+        for (int i = 0; i < ldArgs.size(); i++){
+            if (LIBDIR.length() != 0){
+                LIBDIR = LIBDIR + "\\\n\t";
+            }
+            LIBDIR = LIBDIR + XEnvironment.MapVariable(object, configure, ldArgs[i]);
         }
         
         
@@ -1540,10 +1785,11 @@ class CDEProjectPropInterface : ProjectPropInterface{
         
         if (libsArgs.size() != 0){
             for (int i =0; i < libsArgs.size(); i++){
+                String dependlibs = XEnvironment.MapVariable(object, configure, libsArgs[i]);
                 if (strlibs.length() == 0){
-                    strlibs = "IMPORTLIB=" + libsArgs[i];
+                    strlibs = "IMPORTLIB=" + dependlibs;
                 }else{
-                    strlibs = strlibs + "\\\n\t" + libsArgs[i];
+                    strlibs = strlibs + "\\\n\t" + dependlibs;
                 }
             }
             liblink = "$(IMPORTLIB)";
@@ -1553,11 +1799,13 @@ class CDEProjectPropInterface : ProjectPropInterface{
         
         String content = "#Generated by XStudio, Date:" + String.formatDate("%c", _system_.currentTimeMillis()) + "\n";
         
+        String ouputPath = String.formatPath(XEnvironment.MapVariable(object, configure, configure.getOption("outpath")), isUnixPath());
+        
         //content = content + "ARCH := $(shell arch)\n\n"
         
         content = content + "ARCH := " + szarch + "\n\n"
         
-        + "OUTPUTPATH = ./$(ARCH)/" + confname + "/\n\n"
+        + "OUTPUTPATH = ./" + String.formatPath(ouputPath.toRelativePath(projdir, false, true), isUnixPath()) + "/\n\n"
         + "OBJPATH := ./objs\n\n"
         + "$(shell mkdir -p $(OUTPUTPATH))\n\n"
         + "CC = \""  + ccpath + "\"\n\n"  
@@ -1570,56 +1818,63 @@ class CDEProjectPropInterface : ProjectPropInterface{
         }
                 
         String midContent = "SOURCE = " + sources + "\n\n" 
-        + "OBJECTS = $(addprefix $(OBJPATH)/, $(addsuffix .o, $(basename $(SOURCE))))\n\n"
+        + "OBJECTS = $(addprefix $(OBJPATH)/, $(addsuffix " + dext + ", $(basename $(SOURCE))))\n\n"
         + "all: $(TARGET)\n\n"
         + "target: $(TARGET)\n\n";
         
         for (int i = 0; i < _exts.size(); i++){
-            midContent = midContent + "$(OBJPATH)/%.o: %" + _exts[i] + "\n\tif [ ! -d $(dir $@) ]; then mkdir -p $(dir $@);  fi;\\\n\t$(CC) $(CCFLAGS) -o $@ -c $<\n\n";
-        }
-        target = String.formatPath(target.toRelativePath(projdir, false, true), isUnixPath());
-        
-        if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
-            target = "\"" + target +  "\"";
-        }
-         
-        content = content + "TARGET = " + target + "\n\n" ;
-        
-        switch(cmd){
-            case "-staticlib":
-                content = content + midContent
-                + "$(TARGET): $(OBJECTS)\n\t$(AR) rcs $(TARGET) $(OBJECTS)\n\n" + 
-                "clean:\n\trm -f $(TARGET) $(OBJECTS)\n";
-            break;
-            
-            case "-shared":
-                content = content + "LDFLAGS = -shared " + LDFLAGS + "\n\n"
-                + midContent
-                + "$(TARGET): $(OBJECTS)\n\t$(LD) -o $(TARGET) $(OBJECTS) $(LDFLAGS) " + liblink + "\n\n" + 
-                "clean:\n\trm -f $(TARGET) $(OBJECTS)\n";
-            break;
-            
-            case "-execute":
-                content = content + "LDFLAGS = " + LDFLAGS + "\n\n"
-                + midContent
-                + "$(TARGET): $(OBJECTS)\n\t$(LD) -o $(TARGET) $(OBJECTS) $(LDFLAGS) " + liblink + "\n\n" + 
-                "clean:\n\trm -f $(TARGET) $(OBJECTS)\n";
-            break;
-            
-            case "-driver":
-                content = content + "LDFLAGS = " + LDFLAGS + "\n\n"
-                + midContent
-                + "$(TARGET): $(OBJECTS)\n\t$(LD) -o $(TARGET) $(OBJECTS) $(LDFLAGS) " + liblink + " \n\n" + 
-                "clean:\n\trm -f $(TARGET) $(OBJECTS)\n";
-            break;
+            midContent = midContent + "$(OBJPATH)/%" + dext + ": %" + _exts[i] + "\n\tif [ ! -d $(dir $@) ]; then mkdir -p $(dir $@);  fi;\\\n\t$(CC) $(CCFLAGS) -o $@ " + comp_amd + " $<\n\n";
         }
         
+        if (target != nilptr){
+            target = String.formatPath(target.toRelativePath(projdir, false, true), isUnixPath());
+            
+            if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
+                target = "\"" + target +  "\"";
+            }
+             
+            content = content + "TARGET = " + target + "\n\n" ;
+            
+            switch(cmd){
+                case "echo":
+                    content = content + midContent
+                    + "$(TARGET): $(OBJECTS)\n\techo $(OBJECTS)\n\n" + 
+                    "clean:\n\trm -f $(TARGET) $(OBJECTS)\n";
+                break;
+                case "-staticlib":
+                    content = content + midContent
+                    + "$(TARGET): $(OBJECTS)\n\t$(AR) rcs $(TARGET) $(OBJECTS)\n\n" + 
+                    "clean:\n\trm -f $(TARGET) $(OBJECTS)\n";
+                break;
+                
+                case "-shared":
+                    content = content + "LIBDIR = " + LIBDIR + "\n\nLDFLAGS = -shared " + LDFLAGS + "\n\n" + "USERLDFLAGS = " + USERLDFLAGS + "\n\n"
+                    + midContent
+                    + "$(TARGET): $(OBJECTS)\n\t$(LD) $(LDFLAGS) -o $(TARGET) $(OBJECTS) $(LIBDIR) " + liblink + " $(USERLDFLAGS)\n\n" + 
+                    "clean:\n\trm -f $(TARGET) $(OBJECTS)\n";
+                break;
+                
+                case "-execute":
+                    content = content + "LIBDIR = " + LIBDIR + "\n\nLDFLAGS = " + LDFLAGS + "\n\n" + "USERLDFLAGS = " + USERLDFLAGS + "\n\n"
+                    + midContent
+                    + "$(TARGET): $(OBJECTS)\n\t$(LD) $(LDFLAGS) -o $(TARGET) $(OBJECTS) $(LIBDIR) " + liblink + " $(USERLDFLAGS)\n\n" + 
+                    "clean:\n\trm -f $(TARGET) $(OBJECTS)\n";
+                break;
+                
+                case "-driver":
+                    content = content + "LIBDIR = " + LIBDIR + "\n\nLDFLAGS = " + LDFLAGS + "\n\n" + "USERLDFLAGS = " + USERLDFLAGS + "\n\n"
+                    + midContent
+                    + "$(TARGET): $(OBJECTS)\n\t$(LD) $(LDFLAGS) -o $(TARGET) $(OBJECTS) $(LIBDIR) " + liblink + " $(USERLDFLAGS)\n\n" + 
+                    "clean:\n\trm -f $(TARGET) $(OBJECTS)\n";
+                break;
+            }
+        }
         return content;
     }
     
     
     
-    bool extartToDir(String zfile, String dir, String projName) {
+    bool extartToDir(@NotNilptr String zfile, @NotNilptr String dir, @NotNilptr String projName) {
 
         FileInputStream fis;
 
@@ -1636,7 +1891,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
             
             for (int i =0; i < c; i ++) {
                 ZipEntry entry = zs.getEntry(i);
-                if (bSuccess == false) {
+                if (bSuccess == false || entry == nilptr) {
                     break;
                 }
                 
@@ -1676,7 +1931,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return bSuccess;
     }
     
-	bool create(WizardLoader loader, String projectName, String projectDir, String uuid, Project object, bool isAddToProject, String userType) override {
+	bool create(@NotNilptr WizardLoader loader,@NotNilptr  String projectName, String projectDir,@NotNilptr  String uuid, Project object, bool isAddToProject, String userType) override {
         if (uuid.equals(CPPProjectPlugin.cpp_guiuuid)){
             
         }else
@@ -1702,16 +1957,38 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return nilptr;
     }
     
+    public @NotNilptr static String [] getConfigures(){
+        Vector<String> kits = new Vector<String>();
+        JsonArray ccc = loadConfigures();
+        if (ccc != nilptr){
+            for (int i = 0; i < ccc.length(); i++){
+                JsonObject cconf = (JsonObject)ccc.get(i);
+                if (cconf != nilptr){
+                    String name = cconf.getString("name");
+                    if (name != nilptr && name.length() != 0){
+                        kits.add(name);
+                    }
+                }
+            }
+        }
+        return kits.toArray(new String[0]);
+    }
+    
     static JsonObject getCCConfigure(String name){
-        if (name == nilptr){
+        if (name == nilptr || name.length() == 0){
+            name = Setting.get("default_kit");
+        }
+        if (name.length() == 0){
             return nilptr;
         }
         JsonArray ccc = loadConfigures();
         if (ccc != nilptr){
             for (int i = 0; i < ccc.length(); i++){
                 JsonObject cconf = (JsonObject)ccc.get(i);
-                if (cconf.getString("name").equals(name)){
-                    return cconf;
+                if (cconf != nilptr){
+                    if (cconf.getString("name").equals(name)){
+                        return cconf;
+                    }
                 }
             }
         }
@@ -1720,22 +1997,23 @@ class CDEProjectPropInterface : ProjectPropInterface{
     
     JsonObject getProperitiesConfigure() override {
         JsonObject _root = nilptr;
-        String file = _system_.getAppDirectory();
-        file = appendPath(appendPath(appendPath(file, "plugins"), "cde"), "cpp.prop");
-        String content = CPPGPlugManager.CPPLangPlugin.readFileContent(file);
-        if (content != nilptr){
+        String content = new String(__xPackageResource("cde.prop"));
+
+         try{
             _root = new JsonObject(content);
-            if (_root != nilptr){
-                JsonArray cckitary = loadConfigures();
-                if (cckitary != nilptr){
-                    JsonArray lists = new JsonArray();
-                    for (int i = 0; i < cckitary.length(); i++){
-                        lists.put(((JsonObject)cckitary.get(i)).getString("name"));
-                    }
-                    ((JsonObject)( (JsonObject)_root.get("项目属性")).get("编译套件:cckit")).put("list", lists);
+        
+            JsonArray cckitary = loadConfigures();
+            if (cckitary != nilptr){
+                JsonArray lists = new JsonArray();
+                lists.put("未配置");
+                for (int i = 0; i < cckitary.length(); i++){
+                    lists.put(((JsonObject)cckitary.get(i)).getString("name"));
                 }
+                ((JsonObject)( (JsonObject)_root.get("项目属性")).get("编译套件:cckit")).put("list", lists);
             }
-        }
+         }catch(Exception e){
+             
+         }
         return _root;
     }
     
@@ -1747,7 +2025,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return dbg_shell.getPipe();
     }
     
-    ICompileInfo parseInformation(String lineText){
+    ICompileInfo parseInformation(@NotNilptr String lineText){
         String [] prefix = {": 附注", ": 警告", ": 错误"};
         String [] prefix_en = {": note", ": warning", ": error", ": fatal error"};
         
@@ -1805,8 +2083,14 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return info;
     }
     
-    void stopBuild()override{
+    void stopBuild(IBuilder builer)override{
         nBuildCancel = 1;
+        if (builer != nilptr){
+            Process ps = builer.getProcess();
+            if (ps != nilptr){
+                ps.raise(_system_.SIGINT);
+            }
+        }
     }
     
     void onProjectSettingChange(Project object)override{
@@ -1820,7 +2104,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return CPPGPlugManager.CPPLangPlugin.getInstance();
     }
     
-    ICompileInfo parseOutputLine(QXSci sci, int position, int line, String lineText){
+    ICompileInfo parseOutputLine(@NotNilptr QXSci sci, int position, int line,@NotNilptr  String lineText){
         String [] prefix = {": 错误", ": 附注", ": 警告"};
         String [] prefix_en = {": note", ": warning", ": error", ": fatal error"};
         

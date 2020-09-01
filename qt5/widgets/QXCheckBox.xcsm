@@ -6,7 +6,7 @@ class QXCheckBox : QXWidget{
         super(handle);
     }
     
-    public bool create(){
+    public bool create()override {
         nativehandle = createQObject(QType.qtCheckBox, this, 0);
         if (nativehandle == 0){
             return false;
@@ -14,7 +14,7 @@ class QXCheckBox : QXWidget{
         return true;
     }
     
-    public bool create(QXWidget parent){
+    public bool create(@NotNilptr QXWidget parent)override {
         nativehandle = createQObject(QType.qtCheckBox, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;

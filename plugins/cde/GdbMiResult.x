@@ -28,6 +28,10 @@ class GdbMiResult
 	 */
 	public String toString()
 	{
-		return variable + (": ") + (value.toString());
+        String var = variable;
+        if (var == nilptr){
+            var = "";
+        }
+		return var + (": ") + (value.toString());
 	}
 };

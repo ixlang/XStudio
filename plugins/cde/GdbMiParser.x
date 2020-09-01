@@ -59,7 +59,7 @@ class GdbMiParser
 	 * are processed.
 	 * @return A list of unprocessed records.
 	 */
-	public List<GdbMiRecord> getRecords()
+	public @NotNilptr  List<GdbMiRecord> getRecords()
 	{
 		return m_records;
 	}
@@ -68,7 +68,7 @@ class GdbMiParser
 	 * Processes the given data.
 	 * @param data Data read from the GDB process.
 	 */
-	public void process(byte[] data)
+	public void process(@NotNilptr byte[] data)
 	{
 		process(data, data.length);
 	}
@@ -80,17 +80,23 @@ class GdbMiParser
 	 */
 	public void process(byte[] data, int length)
 	{
+        m_state.clear();
+        m_state.push(FsmState.Idle);
 		// Run the data through the lexer first
 		m_lexer.process(data, length);
 
 		// Parse the data
 		List<GdbMiToken> tokens = m_lexer.getTokens();
         
+        
         List.Iterator<GdbMiToken> iter = tokens.iterator();
         
 		while (iter.hasNext())
 		{
             GdbMiToken token = iter.next();
+            if (token == nilptr){
+                break;
+            }
 			if (m_state.isEmpty())
 			{
 				throw_new_IllegalArgumentException(iter, "Mismatched tuple or list detected");
@@ -163,6 +169,8 @@ class GdbMiParser
 					setState(FsmState.MessageSuffix);
 					break;
 
+                case GdbMiToken.Type.NewLine:
+                    break;
 				default:
                     
 					throw_new_IllegalArgumentException(iter, "Unexpected token of type " + token.type.name());
@@ -365,7 +373,9 @@ class GdbMiParser
 						// Currently reading a value
 						GdbMiValue value = m_valueStack.pop();
 						//assert value.type == GdbMiValue.Type.String;
-						value.string = m_sb.toString();
+                        if (value != nilptr){
+                            value.string = m_sb.toString();
+                        }
 						m_state.pop();
 					}
 					else
@@ -601,12 +611,14 @@ class GdbMiParser
 				case GdbMiToken.Type.TuplePrefix:
 					{
 						GdbMiList list = m_valueStack.lastElement().list;
-						list.type = GdbMiList.Type.Values;
-						list.values = new Vector<GdbMiValue>();
-						GdbMiValue value = new GdbMiValue(GdbMiValue.Type.Tuple);
-						value.tuple = new Vector<GdbMiResult>();
-						list.values.add(value);
-						m_valueStack.push(value);
+                        if (list != nilptr){
+                            list.type = GdbMiList.Type.Values;
+                            list.values = new Vector<GdbMiValue>();
+                            GdbMiValue value = new GdbMiValue(GdbMiValue.Type.Tuple);
+                            value.tuple = new Vector<GdbMiResult>();
+                            list.values.add(value);
+                            m_valueStack.push(value);
+                        }
 					}
 					m_state.pop();
 					m_state.push(FsmState.ListValueSeparator);
@@ -780,11 +792,14 @@ class GdbMiParser
 		tokens.clear();
 	}
 
-    void throw_new_IllegalArgumentException(List.Iterator<GdbMiToken> iter, String msg){
-        while (iter.hasNext()){
-            GdbMiToken token = iter.next();
-            if (token.type == GdbMiToken.Type.NewLine){
-                break;
+    void throw_new_IllegalArgumentException(@NotNilptr List.Iterator<GdbMiToken> iter, String msg){
+        GdbMiToken gmt = iter.get();
+        if (gmt != nilptr && gmt.type != GdbMiToken.Type.NewLine){
+            while (iter.hasNext()){
+                GdbMiToken token = iter.next();
+                if (token.type == GdbMiToken.Type.NewLine){
+                    break;
+                }
             }
         }
        // throw new IllegalArgumentException(msg);

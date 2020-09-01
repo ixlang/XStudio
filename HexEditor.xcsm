@@ -45,8 +45,9 @@ class HexEditor : QXWidget{
     }
 	public void onPaint(int l,int t,int r,int b,long hpaint)override{
         QXPainter canvas = new QXPainter(hpaint);
-        if (_font != nilptr){
-			canvas.setFont(_font);
+        QXFont _f = _font;
+        if (_f != nilptr){
+			canvas.setFont(_f);
         }
         if (fontsize == nilptr){
 			calcFontHeight(canvas);
@@ -65,7 +66,7 @@ class HexEditor : QXWidget{
         drawScroll(canvas, l, t, r, b);
 	}
     
-    public void setData(byte [] d, long baseAddress, int reqlen, int avalen){
+    public void setData( byte [] d, long baseAddress, int reqlen, int avalen){
 		if (baseAddress == baseOffset){
 			old_hexdata = hexdata;
         }else{
@@ -79,7 +80,7 @@ class HexEditor : QXWidget{
         updateDraw();
     }
     
-    public void calcFontHeight(QXPainter canvas){
+    public void calcFontHeight(@NotNilptr QXPainter canvas){
 		fontsize = canvas.measureText(0,0,"X");
         fontwidth = fontsize.width();
         fontheight = fontsize.height();
@@ -89,12 +90,12 @@ class HexEditor : QXWidget{
         topbegin = fontheight * 2.5;
     }
     
-    public void drawBack(QXPainter canvas, int l,int t,int r,int b){
+    public void drawBack(@NotNilptr QXPainter canvas, int l,int t,int r,int b){
         canvas.fillRect(l,t,r - 20,b,backColor,QXBrush.Style.SolidPattern);
         canvas.fillRect(l,t,r - 20,lineheight,0x3fefefef,QXBrush.Style.SolidPattern);
     }
     
-    public void drawGrid(QXPainter canvas, int l,int t,int r,int b){
+    public void drawGrid(@NotNilptr QXPainter canvas, int l,int t,int r,int b){
 
         //canvas.drawText("offset",40,15);
         canvas.save();
@@ -117,7 +118,7 @@ class HexEditor : QXWidget{
         canvas.restore();
     }
     
-    public void drawTextInRect(QXPainter canvas, int l,int t,int r,int b, String text){
+    public void drawTextInRect(@NotNilptr QXPainter canvas, int l,int t,int r,int b, String text){
 		QXRect rc = canvas.measureText(0,0,text);
         canvas.drawText(text, (l+r - rc.width()) / 2, t + (t+b - rc.height()) / 2 + rc.height());
     }
@@ -154,7 +155,7 @@ class HexEditor : QXWidget{
 	public void clear(){
     
     }
-	public void drawData(QXPainter canvas){
+	public void drawData(@NotNilptr QXPainter canvas){
 		int totalLine = height() / lineheight + 1;
         for (int i =0; i < totalLine; i++){
 			drawLine(canvas, hexbegin, topbegin + i * lineheight, hexdata, currentposition + i * 16);
@@ -168,7 +169,7 @@ class HexEditor : QXWidget{
 		return String.format("0x%X%08X", (addr >> 32) & 0xffffffff, addr & 0xffffffff);
     }
     
-	public void drawLine(QXPainter canvas, int x,int y, byte [] data, int position){
+	public void drawLine(@NotNilptr QXPainter canvas, int x,int y, @NotNilptr byte [] data, int position){
 		long max = Math.min(16l,data.length - position);
         if (max > 0){
         
@@ -212,7 +213,7 @@ class HexEditor : QXWidget{
         }
     }
 
-	public void drawScroll(QXPainter canvas, int l,int t,int r,int b){
+	public void drawScroll(@NotNilptr QXPainter canvas, int l,int t,int r,int b){
 		if (hexdata != nilptr && hexdata.length > 16){
 			double pos = (double)currentposition / (double)hexdata.length;
 			scrollbarheight = ((b - t) / lineheight)  * (b - t) / (hexdata.length / 16);
@@ -380,7 +381,7 @@ class HexEditor : QXWidget{
 		public QXMenu contextMenu = new QXMenu();
 		public QXAction [] actions;
 		
-		public void create(QXWidget parent, String [] acts, onEventListener listener){
+		public void create(@NotNilptr QXWidget parent,@NotNilptr  String [] acts, onEventListener listener){
 			if (contextMenu.create(parent)){
 				actions = new QXAction[acts.length];
 				for (int i = 0; i < acts.length; i ++){

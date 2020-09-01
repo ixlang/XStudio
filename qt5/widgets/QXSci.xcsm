@@ -2,30 +2,30 @@
 class QXSci : QXWidget {
 
     public static class QSciPrinter : QPrinter{
-        public QSciPrinter(){
+        public QSciPrinter()throws IllegalArgumentException{
             nativehandle = createQPObject(QType.qtSciPrinter, this, 0, PrinterMode.ScreenResolution, 0, 0, 0);
             if (nativehandle == 0) {
                 throw new IllegalArgumentException("can't new Object");
             }
         }
         
-        public QSciPrinter(long handle){
+        public QSciPrinter(long handle)throws IllegalArgumentException{
             need_delloc = false;
             nativehandle = handle;
         } 
         
-        public QSciPrinter(PrinterMode mode){
+        public QSciPrinter(PrinterMode mode) throws IllegalArgumentException {
             nativehandle = createQPObject(QType.qtSciPrinter, this, 0, mode, 0, 0, 0);
             if (nativehandle == 0) {
                 throw new IllegalArgumentException("can't new Object");
             }
         }
         
-        public void printRange(QXSci sci, int from, int to){
+        public void printRange(@NotNilptr QXSci sci, int from, int to){
             widget_set_intlongint_value(nativehandle, PRINTSCIRANGE, sci.nativehandle, from, to);
         }
         
-        public void finalize(){
+        public void finalize()override {
             if (need_delloc){
                 widget_slot(nativehandle, SCIPRINTERDTOR);    
             }
@@ -2247,7 +2247,7 @@ class QXSci : QXWidget {
     public QXSci() {
 
     }
-    public bool create() {
+    public bool create()override  {
         nativehandle = createQObject(QType.qtSci, this, 0);
         if (nativehandle == 0) {
             return false;
@@ -2255,7 +2255,7 @@ class QXSci : QXWidget {
         return true;
     }
 
-    public bool create(QXWidget parent) {
+    public bool create(@NotNilptr QXWidget parent)override  {
         nativehandle = createQObject(QType.qtSci, this, parent.nativehandle);
         if (nativehandle == 0) {
             return false;
@@ -2278,7 +2278,7 @@ class QXSci : QXWidget {
     public int yFromPosition(int position) {
         return sendEditor(SCI_POINTYFROMPOSITION, position, position);
     }
-    public void setFont(QXFont font) {
+    public void setFont(@NotNilptr QXFont font) {
         widget_set_native_value(nativehandle, SCIFONT, font.nativehandle);
     }
     public int getLineHeight() {
@@ -2302,10 +2302,10 @@ class QXSci : QXWidget {
     public void setProperty(String key, String val){
         sendEditor(QXSci.SCI_SETPROPERTY,key, val);
     }
-    public int appendText(String text) {
+    public int appendText(@NotNilptr String text) {
         return widget_set_intintstring_value(nativehandle, SCICMD, SCI_APPENDTEXT, text.length(), text);
     }
-    public int setText(String text) {
+    public int setText(@NotNilptr String text) {
         return widget_set_intintstring_value(nativehandle, SCICMD, SCI_SETTEXT, text.length(), text);
     }
     public int positionToLine(int position) {
@@ -2320,22 +2320,28 @@ class QXSci : QXWidget {
     public int getWordStart(int pos) {
         return sendEditor(SCI_WORDSTARTPOSITION, pos, 0);
     }
-    public String getText() {
-        return (String)core_getString(nativehandle, QSCIGETTEXT);
+    public @NotNilptr String getText() {
+        String __txt = (String)core_getString(nativehandle, QSCIGETTEXT);
+        __nilptr_safe(__txt);
+        return __txt;
     }
-    public String getSelectedText() {
-        return (String)core_getString(nativehandle, QSCIGETSELTXT);
+    public @NotNilptr String getSelectedText() {
+        String __txt =  (String)core_getString(nativehandle, QSCIGETSELTXT);
+        __nilptr_safe(__txt);
+        return __txt;
     }
     public void setKeywords(int id, String keywords){
         sendEditor(SCI_SETKEYWORDS, id, keywords);
     }
-    public String getText(int start, int end) {
+    public @NotNilptr String getText(int start, int end) {
         if (end <= start) {
             return "";
         }
-        return (String)core_getStringlongint(nativehandle, QSCIGETRANGE, start, end);
+        String __txt =   (String)core_getStringlongint(nativehandle, QSCIGETRANGE, start, end);
+        __nilptr_safe(__txt);
+        return __txt;
     }
-    public String getText(int line) {
+    public @NotNilptr String getText(int line) {
         int start = getPosition(line);
         int end = getEndOfLine(line);
         return getText(start, end);
@@ -2364,7 +2370,7 @@ class QXSci : QXWidget {
         sendEditor(SCI_DELETEBACK, 0, 0);
     }
     public void insertText(long position, String Text) {
-        sendEditor(SCI_INSERTTEXT, position,Text);
+        sendEditor(SCI_INSERTTEXT, (int)position,Text);
     }
     public void setWrap(bool bWrap) {
         sendEditor(SCI_SETWRAPMODE, bWrap ? SC_WRAP_WORD : SC_WRAP_NONE, 0);
@@ -2431,7 +2437,7 @@ class QXSci : QXWidget {
     }
 
     public int gotoPos(long pos) {
-        return sendEditor(SCI_GOTOPOS, pos, 0);
+        return sendEditor(SCI_GOTOPOS, (int)pos, 0);
     }
 
     public int getPosition(int line) {
@@ -2491,7 +2497,7 @@ class QXSci : QXWidget {
         sendEditor(SCI_INDICATORCLEARRANGE, length);
     }
 
-    public void setCursor(int cursor) {
+    public void setCursor(int cursor)override  {
         sendEditor(SCI_SETCURSOR, cursor);
     }
 

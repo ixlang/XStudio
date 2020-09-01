@@ -28,16 +28,16 @@ class XLogcatWnd : QXDockWidget{
     };
     
     public onTreeViewItemEvent filterlistener = new onTreeViewItemEvent(){
-        public void onItemClicked(QXTreeView tree,long item, int column)override{
+        public void onItemClicked(@NotNilptr QXTreeView tree,long item, int column)override{
 			onFilterItemClicked(tree, item, column);
         }
-        public void onItemDoubleClicked(QXTreeView tree,long item, int column){
+        public void onItemDoubleClicked(@NotNilptr QXTreeView tree,long item, int column){
 			onFilterItemDBClicked(tree, item, column);
         }
     };
     
     public onTreeViewItemEvent logcatlistener = new onTreeViewItemEvent(){
-        void onItemDoubleClicked(QXTreeView tree,long item, int column){
+        void onItemDoubleClicked(@NotNilptr QXTreeView tree,long item, int column){
 			TextDetail td = new TextDetail();
 			String text = tree.getItemText(item, column);
 			td.create("logcat", text.replace(" ↩ ", "\n")
@@ -78,7 +78,7 @@ class XLogcatWnd : QXDockWidget{
             
         public List<Logcat> logcats = new List<Logcat>();
         
-        public bool filter(Logcat log){
+        public bool filter(@NotNilptr Logcat log){
 			if (type == 0){
 				return false;
             }
@@ -117,7 +117,7 @@ class XLogcatWnd : QXDockWidget{
             return true;
         }
         
-        public List<Logcat> getLogs(){
+        public @NotNilptr List<Logcat> getLogs(){
 			return logcats;
         }
         
@@ -131,15 +131,15 @@ class XLogcatWnd : QXDockWidget{
     
     Map<String, Filter> filter_list = new Map<String, Filter>();
     
-	public void onFilterItemClicked(QXTreeView tree,long item, int column){
+	public void onFilterItemClicked(@NotNilptr QXTreeView tree,long item, int column){
 		setCurrentFilter(tree.getItemText(item, 0));
     }
     
-    public void onFilterItemDBClicked(QXTreeView tree,long item, int column){
+    public void onFilterItemDBClicked(@NotNilptr QXTreeView tree,long item, int column){
 		updateFilter(tree.getItemText(item, 0));
 	}
     
-    public void updateFilter(String name){
+    public void updateFilter(@NotNilptr String name){
 		synchronized(prepare_list){
 			if (name.equals("All")){
 				currentFilter = nilptr;
@@ -171,7 +171,7 @@ class XLogcatWnd : QXDockWidget{
         return true;
     }
     
-    public static bool addFilter(Filter filter){
+    public static bool addFilter(@NotNilptr Filter filter){
 		if (filter.name.equals("All")){
 			return false;
 		}
@@ -184,7 +184,7 @@ class XLogcatWnd : QXDockWidget{
         }
     }
 
-    public static void sendLogcat(JsonObject json){
+    public static void sendLogcat(@NotNilptr JsonObject json){
 		XLogcatWnd.Logcat log = new XLogcatWnd.Logcat(json.getString("time"), json.getString("thread"), json.getString("tag"), json.getString("content"), json.getInt("level"));
         synchronized(logcatWnd.prepare_list){
 
@@ -194,11 +194,11 @@ class XLogcatWnd : QXDockWidget{
         logcatWnd.Notify(LOGCAT_INFO_NOTIFY);
     }
     
-   public  void updateFilter(Logcat log){
+   public  void updateFilter(@NotNilptr Logcat log){
 		Map.Iterator<String, Filter> iter = filter_list.iterator();
         while (iter.hasNext()){
 			Filter filter = iter.getValue();
-			if (filter.filter(log)){
+			if (filter != nilptr && filter.filter(log)){
 				if (filter.item != 0){
 					filterlist.setItemText(filter.item , 1 , "" + filter.logcats.size());
 				}
@@ -219,17 +219,19 @@ class XLogcatWnd : QXDockWidget{
             while (iter.hasNext()){
 				Logcat log = iter.next();
             
-                logcat_list.add(log);
-                updateFilter(log);
-                
-                while (logcat_list.size() > logcat_maxitems){
-					logcat_list.remove(logcat_list.iterator());
-                }
-				if (allRoot != 0){
-					filterlist.setItemText(allRoot , 1 , "" + logcat_list.size());
-				}
-                if (currentFilter == nilptr){
-					addToList(log);
+                if (log != nilptr){
+                    logcat_list.add(log);
+                    updateFilter(log);
+                    
+                    while (logcat_list.size() > logcat_maxitems){
+                        logcat_list.remove(logcat_list.iterator());
+                    }
+                    if (allRoot != 0){
+                        filterlist.setItemText(allRoot , 1 , "" + logcat_list.size());
+                    }
+                    if (currentFilter == nilptr){
+                        addToList(log);
+                    }
                 }
             }            
             prepare_list.clear();
@@ -258,7 +260,7 @@ class XLogcatWnd : QXDockWidget{
         }
     }
     
-    public void addToList(Logcat log){
+    public void addToList(@NotNilptr Logcat log){
 		long item = logcatlist.addItem(nilptr, log.time);
         while (logcatlist.getTopLevelCount() > logcat_maxitems){
 			long ritem = logcatlist.getTopItem(0);
@@ -355,7 +357,7 @@ class XLogcatWnd : QXDockWidget{
         }
     }
 
-    public void setCurrentFilter(String name){
+    public void setCurrentFilter(@NotNilptr String name){
 		synchronized(prepare_list){
 			if (name.equals("All")){
 				currentFilter = nilptr;
@@ -364,11 +366,10 @@ class XLogcatWnd : QXDockWidget{
 			}else{
 				try{
 					Filter filter = filter_list.get(name);
-					
-					loadLogcat(filter.getLogs());
-					
-					currentFilter = filter;
-					
+					if (filter != nilptr){
+                        loadLogcat(filter.getLogs());
+                        currentFilter = filter;
+                    }
 					updateFilterList();
 				}catch(Exception e){
 						
@@ -377,12 +378,15 @@ class XLogcatWnd : QXDockWidget{
 		}
     }
     
-    public void loadLogcat(List<Logcat> logcats){
+    public void loadLogcat(@NotNilptr List<Logcat> logcats){
 		logcatlist.clear();
         
         List.Iterator<Logcat> iter = logcats.iterator();
         while (iter.hasNext()){
-			addToList(iter.next());
+            Logcat l = iter.next();
+            if (l != nilptr){
+                addToList(l);
+            }
         }
     }
     
@@ -397,10 +401,12 @@ class XLogcatWnd : QXDockWidget{
         
         while (iter.hasNext()){
 			Filter f = iter.getValue();
-			f.item = filterlist.addItem(nilptr, f.name);
-            filterlist.setItemText(f.item, 1, "" + f.logcats.size());
-            if (f == currentFilter){
-				filterlist.setItemBackColor(f.item, 0, 0xff666666);
+            if (f != nilptr){
+                f.item = filterlist.addItem(nilptr, f.name);
+                filterlist.setItemText(f.item, 1, "" + f.logcats.size());
+                if (f == currentFilter){
+                    filterlist.setItemBackColor(f.item, 0, 0xff666666);
+                }
             }
             iter.next();
         }
@@ -420,7 +426,7 @@ class XLogcatWnd : QXDockWidget{
 		public QXMenu contextMenu = new QXMenu();
 		public QXAction [] actions;
 		
-		public void create(QXWidget parent, String [] acts, onEventListener listener){
+		public void create(@NotNilptr QXWidget parent,@NotNilptr String [] acts, onEventListener listener){
 			if (contextMenu.create(parent)){
 				actions = new QXAction[acts.length];
 				for (int i = 0; i < acts.length; i ++){
@@ -452,18 +458,18 @@ class XLogcatWnd : QXDockWidget{
                 }else
 				if (obj == _contextMenu.actions[1]){
 					long [] items = filterlist.getSelectedItems();      
-                    for (int i = 0; i < items.length; i++){
-						String label = filterlist.getItemText(items[i], 0);
-                        if (label != nilptr){
-							Map.Iterator<String, Filter> iter = filter_list.find(label);
-							if (iter != nilptr){
-								if (iter.getValue() == currentFilter){
-									currentFilter = nilptr;
-								}
-								filterlist.removeItem(items[i]);
+                    if (items != nilptr){
+                        for (int i = 0; i < items.length; i++){
+                            String label = filterlist.getItemText(items[i], 0);
+                            Map.Iterator<String, Filter> iter = filter_list.find(label);
+                            if (iter != nilptr){
+                                if (iter.getValue() == currentFilter){
+                                    currentFilter = nilptr;
+                                }
+                                filterlist.removeItem(items[i]);
                                 filter_list.remove(iter);
                                 updateFilterList();
-							}
+                            }
                         }
                     }
                 }
@@ -471,6 +477,7 @@ class XLogcatWnd : QXDockWidget{
 		};
 
 		String []acts = {"新建过滤器","删除过滤器"};
+        __nilptr_safe(filterlist);
 		_contextMenu.create(filterlist, acts, menuListener);
         _contextMenu.actions[0].setEnable(true);
         _contextMenu.actions[1].setEnable(true);

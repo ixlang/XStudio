@@ -40,9 +40,11 @@ class OverrideDlg : QXDialog {
             
 				String def ="";
 				long [] items = _treeview.getTopItems();
-                for (int i =0; i < items.length; i++){
-					if (_treeview.isItemCheck(items[i], 0)){
-						def = def + "\n\t" + _treeview.getItemText(items[i],1) + "override{\n\t\t//TODO \n\t}\n\n";
+                if (items != nilptr){
+                    for (int i = 0; i < items.length; i++){
+                        if (_treeview.isItemCheck(items[i], 0)){
+                            def = def + "\n\t" + _treeview.getItemText(items[i],1) + "override{\n\t\t//TODO \n\t}\n\n";
+                        }
                     }
                 }
                 editwnd._sci.insertText(editpos, def);
@@ -88,10 +90,13 @@ class OverrideDlg : QXDialog {
     }
 
 
-    public String getFunctionDefine(XIntelliSense.XIntelliResult proc){
+    public String getFunctionDefine(@NotNilptr XIntelliSense.XIntelliResult proc){
 		String txt = nilptr;
 		if (proc.get_class() != nilptr){
-			txt = proc.get_class().get_name();
+            XIntelliSense.XIntelliResult cls = proc.get_class();
+            if (cls != nilptr){
+                txt = cls.get_name();
+            }
         }
         if (proc.hasProp('C') || proc.hasProp('S')){
 			return nilptr;
@@ -111,7 +116,11 @@ class OverrideDlg : QXDialog {
                         if (i != 0){
                             txt = txt + ",";
                         }
-                        txt = txt + param.get_class().get_name() + " " + param.get_name();
+                        XIntelliSense.XIntelliResult _pclass = param.get_class();
+                        
+                        if (_pclass != nilptr){
+                            txt = txt + _pclass.get_name() + " " + param.get_name();
+                        }
                     }
                 }else{
                     return nilptr;
@@ -122,37 +131,35 @@ class OverrideDlg : QXDialog {
         return txt;
     }
     
-    public void loadObject(XIntelliSense.XIntelliResult [] res){
+    public void loadObject(@NotNilptr XIntelliSense.XIntelliResult [] res){
 		for (int i =0, c = res.length; i < c; i++){
 			XIntelliSense.XIntelliResult obj = res[i];
             
-			int type = obj.get_type();
-            
-			long item = 0;
-			if (type == 23){
-				String txt = getFunctionDefine(obj);
-                if (txt != nilptr){
-					Map.Iterator<String, long> iter = expand_data.find(txt);
-                    
-                    bool exists = (iter != nilptr);
-					if (exists == false){
-						item = _treeview.addItem("res/toolbar/function.png", obj.get_name());
-
-						_treeview.setItemText(item,1,txt);
-						if (exists == false){
-							expand_data.put(txt,item);
-						}
-                    }else{
-						item = iter.getValue();
-                        if (item != 0){
-							_treeview.setItemText(item,0,obj.get_name()  + "(已存在)");
+            if (obj != nilptr){
+                int type = obj.get_type();
+                
+                long item = 0;
+                if (type == 23){
+                    String txt = getFunctionDefine(obj);
+                    if (txt != nilptr){
+                        Map.Iterator<String, long> iter = expand_data.find(txt);
+                        
+                        if (iter == nilptr){
+                            item = _treeview.addItem("res/toolbar/function.png", obj.get_name());
+                            _treeview.setItemText(item,1,txt);
+                            expand_data.put(txt,item);
+                        }else{
+                            item = iter.getValue();
+                            if (item != 0){
+                                _treeview.setItemText(item,0,obj.get_name()  + "(已存在)");
+                            }
                         }
                     }
                 }
-			}
-            if (item != 0){
-				_treeview.modifyItemFlags(item, QXTreeView.ItemIsUserCheckable, 0);
-                _treeview.setItemCheck(item, 0, false);
+                if (item != 0){
+                    _treeview.modifyItemFlags(item, QXTreeView.ItemIsUserCheckable, 0);
+                    _treeview.setItemCheck(item, 0, false);
+                }
             }
 		}
 	}

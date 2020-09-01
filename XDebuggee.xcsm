@@ -59,7 +59,10 @@ class XDebuggee{
     Object pipeLock = new Object();
     Stream _pipe;
     XWorkspace _workspace;
-
+    bool bQuit = false;
+    Thread __sendThread = nilptr;
+    List<byte[]> _sendArray = new List<byte[]>();
+        
     Map<int,bool> threadStatus = new Map<int,bool>();
 
 	public XDebuggee(XWorkspace workspace){
@@ -99,9 +102,9 @@ class XDebuggee{
     }
     
     public bool debug_start(Stream _stream){
-            
+        bool bret = false;
+        
         if (_stream != nilptr){
-
 			if (_stream.write(debug_helo, 0, debug_helo.length) > 0){
 				byte []recvdata = new byte[22];
 
@@ -128,17 +131,16 @@ class XDebuggee{
 							}
 						}
 						//_system_.consoleWrite("\n调试器已分离!\n");
-						return true;
+						bret = true;
 					}
 				}
-			}else{
-				_stream.close();
 			}
+			_stream.close();
         }
-        return false;
+        return bret;
     }
     
-    public bool connect(IBuilder builder, String url, int port){
+    public bool connect(@NotNilptr IBuilder builder, String url, int port){
 		StreamSocket _socket = new StreamSocket();
         builder.OutputText("\n正在连接到调试端口:" + port + "...\n", 1);
                 
@@ -199,8 +201,10 @@ class XDebuggee{
         json.put("end", "" + end);
         
         String text = json.toString(false);
-        byte [] data = text.getBytes();
-        sendCommand(QueryObject, 0, data, data.length);
+        if (text.length() > 0){
+            byte [] data = text.getBytes();
+            sendCommand(QueryObject, 0, data, data.length);
+        }
     }
     
     public void lookupMemory(String address, int len){
@@ -208,8 +212,10 @@ class XDebuggee{
         json.put("address",address);
         json.put("size",len);
         String text = json.toString(false);
-        byte [] data = text.getBytes();
-        sendCommand(LookupMemory, 0, data, data.length);
+        if (text.length() > 0){
+            byte [] data = text.getBytes();
+            sendCommand(LookupMemory, 0, data, data.length);
+        }
     }
     
     public void dumpMemory(String address, int len, String param){
@@ -218,17 +224,21 @@ class XDebuggee{
         json.put("param",param);
         json.put("size",len);
         String text = json.toString(false);
-        byte [] data = text.getBytes();
-        sendCommand(DumpMemory, 0, data, data.length);
+        if (text.length() > 0){
+            byte [] data = text.getBytes();
+            sendCommand(DumpMemory, 0, data, data.length);
+        }
     }
     
-    public void onQueryObject(JsonObject json){
+    public void onQueryObject(@NotNilptr JsonObject json){
 		String param = json.getString("param");
-        if (param.startWith("auto")){
-			AutoWnd.auto_wnd.onQueryObject(json);
-        }else
-        if (param.startWith("watch")){
-			WatchWnd.watchesWnd.onQueryObject(json);
+        if (param != nilptr){
+            if (param.startWith("auto")){
+                AutoWnd.auto_wnd.onQueryObject(json);
+            }else
+            if (param.startWith("watch")){
+                WatchWnd.watchesWnd.onQueryObject(json);
+            }
         }
     }
     
@@ -236,19 +246,23 @@ class XDebuggee{
 		JsonObject json = new JsonObject();
         json.put("frame", frame);
         String text = json.toString(false);
-        byte [] data = text.getBytes();
-        sendCommand(QueryFrame, thread, data, data.length);
+        if (text.length() > 0){
+            byte [] data = text.getBytes();
+            sendCommand(QueryFrame, thread, data, data.length);
+        }
     }
     
-    public void updateWatch(JsonArray objects, long thread, int frame, bool delete){
+    public void updateWatch(@NotNilptr JsonArray objects, long thread, int frame, bool delete){
 		JsonObject root = new JsonObject();
         root.put("names", objects);
         root.put("frame", frame);
         root.put("delete", delete ? 1 : 0);
         
         String text = root.toString(false);
-        byte [] data = text.getBytes();
-        sendCommand(WatchObject, thread, data, data.length);
+        if (text.length() > 0){
+            byte [] data = text.getBytes();
+            sendCommand(WatchObject, thread, data, data.length);
+        }
     }
     
     public void setBreak(long tid){
@@ -279,20 +293,25 @@ class XDebuggee{
     };
     
     public void cancelAllRequest(){
+        
 		synchronized(threadObject){
 			Map.Iterator<long,QueryThread> iter = threadObject.iterator();
             
             while (iter.hasNext()){
 				QueryThread qt = iter.getValue();
-                synchronized(qt){
-					qt.cancel = true;
-					qt.notify();
-				}
+                if (qt != nilptr){
+                    synchronized(qt){
+                        qt.cancel = true;
+                        qt.notify();
+                    }
+                }
                 iter.next();
             }
             
             threadObject.clear();
 		}
+        
+        exitSender();
     }
     
     Map<long,QueryThread> threadObject = new Map<long,QueryThread>();
@@ -306,6 +325,7 @@ class XDebuggee{
         json.put("frame", frame);
         
         String text = json.toString(false);
+    
         byte [] data = text.getBytes();
         
         QueryThread qt = new QueryThread();
@@ -314,9 +334,9 @@ class XDebuggee{
             threadObject.put(Thread.getId(), qt);
         }
         synchronized(qt){
-			sendCommand(QueryByName, 0, data, data.length);
+            sendCommand(QueryByName, 0, data, data.length);
             while (qt.cancel == false && qt.object == nilptr){
-				qt.wait();
+                qt.wait();
             }
         }
         synchronized(threadObject){
@@ -325,11 +345,11 @@ class XDebuggee{
         return qt.object;
     }
     
-    public void onLookupMemory(JsonObject json){
+    public void onLookupMemory(@NotNilptr JsonObject json){
 		MemoryLookupWnd.SetData(json);
     }
 
-    public void onDumpMemory(JsonObject json){
+    public void onDumpMemory(@NotNilptr JsonObject json){
 		MemoryLookupWnd.SetDumpData(json);
     }
     
@@ -477,7 +497,7 @@ class XDebuggee{
         return v;
     }
     
-    public void onMessageBox(JsonObject json){
+    public void onMessageBox(@NotNilptr JsonObject json){
         XWorkspace.workspace.mainWindow.runOnUi(new Runnable(){
             void run()override{
                 try{
@@ -489,14 +509,14 @@ class XDebuggee{
         });
     }
     
-    public void showMessageBox(JsonObject json){
+    public void showMessageBox(@NotNilptr JsonObject json){
         String type = checkValue(json.getString("type"), "Critical");
         String message = checkValue(json.getString("message"), "");
         String title = checkValue(json.getString("title"), "注意");
         String button = checkValue(json.getString("button"), "NoButton");
         String dmid = checkValue(json.getString("dmid"), "");
         
-        if (message.length() == 0 || title.length() == 0){
+        if (message == nilptr || message.length() == 0 || title == nilptr || title.length() == 0){
             return;
         }
         
@@ -526,7 +546,7 @@ class XDebuggee{
                 String defaultValue = json.getString("value");
                 
                 result = InputDialog.requestInputDlg(new InputDialog.onInputListener() {
-                    bool onInputOk(String text)override {
+                    bool onInputOk(@NotNilptr String text)override {
                         return true;
                     }
                     bool onInputCancel()override {
@@ -548,31 +568,33 @@ class XDebuggee{
             case "List":
             { 
                 JsonArray array = (JsonArray)json.get("list");
-                String defval  = json.getString("value");
-                
-                String [] lists = new String[array.length()];
-                
-                for (int i = 0; i < array.length(); i++){
-                    lists[i] = array.getString(i);
+                if (array != nilptr){
+                    String defval  = json.getString("value");
+                    
+                    String [] lists = new String[array.length()];
+                    
+                    for (int i = 0, c = array.length(); i < c; i++){
+                        lists[i] = array.getString(i);
+                    }
+                    
+                    result = "" + MultiSelectDialog.requestSelect(new InputDialog.onInputListener(){
+                            bool onInputOk(@NotNilptr String text)override{ return true;}
+                            bool onInputCancel()override{ return true;}
+                            bool onSelectOk(int id){
+                                return true;
+                            }
+                            String getTitle()override{return title;}
+                            String getTips()override{return message;}
+                            String getDefault()override{
+                                return defval;
+                            }
+                        },lists);
                 }
-                
-                result = "" + MultiSelectDialog.requestSelect(new InputDialog.onInputListener(){
-                        bool onInputOk(String text)override{ return true;}
-                        bool onInputCancel()override{ return true;}
-                        bool onSelectOk(int id){
-                            return true;
-                        }
-                        String getTitle()override{return title;}
-                        String getTips()override{return message;}
-                        String getDefault()override{
-                            return defval;
-                        }
-                    },lists);
             }
             break;
         }
         
-        if (dmid.length() > 0){
+        if (dmid != nilptr && dmid.length() > 0){
             JsonObject reply = new JsonObject();
             
             reply.put("dmid", dmid);
@@ -584,17 +606,19 @@ class XDebuggee{
         }
     }
     
-    public void onLoadModule(JsonObject json){
+    public void onLoadModule(@NotNilptr JsonObject json){
 		String module = json.getString("module");
         bool bSymbol = json.getBool("symbol");
         
-        XWndOutput.Output(module + (bSymbol ? " 已加载调试信息.\n" : " 未找到调试信息.\n"), 1);
+        if (module != nilptr){
+            XWndOutput.Output(module + (bSymbol ? " 已加载调试信息.\n" : " 未找到调试信息.\n"), 1);
+        }
         
 		BreakPointWnd.SendBreakPoint();
         sendCommand(ModuleLoaded, 0, new byte[0], 0);
     }
     
-    public void onQueryByName(JsonObject json){
+    public void onQueryByName(@NotNilptr JsonObject json){
     
 		String qid = json.getString("queryid");
         
@@ -649,7 +673,52 @@ class XDebuggee{
 		sendCommand(StepOut, tid, new byte[0], 0);
     }
     
+    void exitSender(){
+        synchronized(_sendArray){
+            _sendArray.notify();
+        }
+    }
+    
+    class CommandSender : public Thread{
+        void run()override{
+            Thread.setName("DbgSender");
+            byte [] data = nilptr;
+            while (isDebugging){
+                synchronized(_sendArray){
+                    while (_sendArray.size() == 0 && isDebugging){
+                        _sendArray.wait();
+                    }
+                    if (_sendArray.size() > 0){
+                        data = _sendArray.pollHead();
+                    }
+                }
+                
+                if (data != nilptr){
+                    sendToPipe(data);
+                    data = nilptr;
+                }
+            }
+            
+            synchronized(_sendArray){
+                __sendThread = nilptr;
+            }
+        }
+    };
+    
+    void sendToPipe(byte [] data){
+        synchronized(pipeLock){
+            if (_pipe != nilptr && data != nilptr){
+                _pipe.write(data, 0, data.length); 
+            }
+        }
+    }
+    
     public void sendCommand(int cmd, long tid, byte[] data, int length){
+
+        if (isDebugging == false){
+            return;
+        }
+        
 		int buf_size = 16 + length;
 		byte [] buffer = new byte[buf_size];
 
@@ -673,17 +742,20 @@ class XDebuggee{
 		buffer[15] = (byte)((length >> 24) & 0xff);
 
 		_system_.arrayCopy(data, 0, buffer, 16, length);
-                
-        new Thread(){
-			void run()override{
-				synchronized(pipeLock){
-					if (_pipe != nilptr){
-						_pipe.write(buffer, 0, buf_size); 
-					}
-				}
+        
+        synchronized(_sendArray){
+            _sendArray.add(buffer);
+            
+            if (__sendThread == nilptr){
+                __sendThread = new CommandSender();
+                __sendThread.start();
             }
-        }.start();
+            
+            _sendArray.notify();
+        }
 	}  
+    
+    
             
     public void debug(){
         byte [] buffer = new byte[1024];
@@ -713,36 +785,30 @@ class XDebuggee{
 					XRegular.Result result = nilptr;
 				 
 					while(nilptr != (result = XRegular.Match(buffer, 0, length, "[FFFE]{c:LEBB}<len:2>{t:LEBB}<len:8>{l:LEBB}<len:4>*<len:l>"))){
-						if (result != nilptr){
-							int cmd = result.getValue('c');
-							long tid = result.getValue('t');
-							int conlen = result.getValue('l');
-							
-							JsonObject json;
-							
-							try{
-								json = new JsonObject(new String(buffer, 16, conlen));
-							}catch(Exception e){
-								_system_.consoleWrite("XDebuggee 181 Exception :" + e.getMessage());
-							}
-							
-							if (json == nilptr){
-								json = new JsonObject();
-							}
-
-							if (analyzeCommand(cmd, tid, json) == false){
-                                break;
+                        int cmd = result.getValue('c');
+                        long tid = result.getValue('t');
+                        int conlen = result.getValue('l');
+                        
+                        JsonObject json;
+                        
+                        try{
+                            json = new JsonObject(new String(buffer, 16, conlen));
+                        }catch(Exception e){
+                            json = new JsonObject();
+                        }
+                        
+                        if (analyzeCommand(cmd, tid, json) == false){
+                            break;
+                        }
+                        int al = result.getRegularLength();
+                        if (al > 0){
+                            length -= al;
+                            if (length > 0){
+                                for (int i = 0, c = length;i < c; i++){
+                                    buffer[i] = buffer[i + al];
+                                }
                             }
-							int al = result.getRegularLength();
-							if (al > 0){
-								length -= al;
-								if (length > 0){
-									for (int i = 0, c = length;i < c; i++){
-										buffer[i] = buffer[i + al];
-									}
-								}
-							}
-						}
+                        }
 					}
 				}else{
 					break;
@@ -757,7 +823,7 @@ class XDebuggee{
         }
     }
     
-    public void onInterrupt(long tid, JsonObject json){
+    public void onInterrupt(long tid,@NotNilptr JsonObject json){
         ThreadManager.Update(json, tid == 0);
     }
     
@@ -785,11 +851,13 @@ class XDebuggee{
         json.put("line", line);
         json.put("set", add ? 1 : 0);
         String content = json.toString(false);
-        byte [] data = content.getBytes();
-        sendCommand(SetBreakPoint, 0, data, data.length);
+        if (content.length() > 0){
+            byte [] data = content.getBytes();
+            sendCommand(SetBreakPoint, 0, data, data.length);
+        }
     }
     
-    public void onSetBreakPoint(JsonObject json){
+    public void onSetBreakPoint(@NotNilptr JsonObject json){
 		String file = json.getString("file");
         int reqline = json.getInt("reqline");
         int realine = json.getInt("realine");
@@ -798,10 +866,10 @@ class XDebuggee{
         BreakPointWnd.setBreakPoint(file, reqline, realine, set != 0, error);
     }
     
-    public void onQueryFrame(long tid, JsonObject json){
+    public void onQueryFrame(long tid,@NotNilptr  JsonObject json){
 		AutoWnd.setFrameInfo(tid, json);
     }
-    public bool analyzeCommand(int cmd, long tid, JsonObject json){
+    public bool analyzeCommand(int cmd, long tid,@NotNilptr  JsonObject json){
 		switch(cmd){
 			case Unknow:
             
@@ -900,15 +968,17 @@ class XDebuggee{
             }
             case Debug:
 				String message = json.getString("message");
-				if (_system_.getPlatformId() == 0){
-					byte [] data = message.getBytes();
-                    try{
-						message = new String(data, 0, data.length, "CP936");
-                    }catch(Exception e){
-						message = new String(data, 0, data.length);
+                if (message != nilptr){
+                    if (_system_.getPlatformId() == 0){
+                        byte [] data = message.getBytes();
+                        try{
+                            message = new String(data, 0, data.length, "CP936");
+                        }catch(Exception e){
+                            message = new String(data, 0, data.length);
+                        }
                     }
-				}
-				XWndOutput.Output(message + "\n", 1);
+                    XWndOutput.Output(message + "\n", 1);
+                }
             break;
             
             case Active:

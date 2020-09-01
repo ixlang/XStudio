@@ -4,7 +4,7 @@ class QXMenu : QXWidget{
     }
 	public QXMenu(){
 	}
-    public bool create(){
+    public bool create()override {
         nativehandle = createQObject(QType.qtMenu, this, 0);
         if (nativehandle == 0){
             return false;
@@ -12,7 +12,7 @@ class QXMenu : QXWidget{
         return true;
     }
     
-    public bool create(QXWidget parent){
+    public bool create(@NotNilptr QXWidget parent)override {
         nativehandle = createQObject(QType.qtMenu, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
@@ -28,19 +28,19 @@ class QXMenu : QXWidget{
         return (QXAction)object_get_string2(nativehandle, ADDACT, icon, text);
     }
     
-    public QXAction addAction(String text, QXObject receiver, String member, String key){
+    public QXAction addAction(String text, @NotNilptr QXObject receiver, String member, String key){
         return (QXAction)object_get_string_handle_string2(nativehandle, ADDACT, text, receiver.nativehandle, member, key);
     }
     
-    public QXAction addAction(String text, QXObject receiver, String member, int key){
+    public QXAction addAction(String text, @NotNilptr QXObject receiver, String member, int key){
         return (QXAction)object_get_string_handle_string_int(nativehandle, ADDACT, text, receiver.nativehandle, member, key);
     }
     
-    public QXAction addAction(String icon, String text, QXObject receiver, String member, String shortcutKey){
+    public QXAction addAction(String icon, String text, @NotNilptr QXObject receiver, String member, String shortcutKey){
         return (QXAction)object_get_string2_handle_string2(nativehandle, ADDACT, icon, text, receiver.nativehandle, member, shortcutKey);
     }
     
-    public QXAction addAction(String icon, String text, QXObject receiver, String member, int shortcutKey){
+    public QXAction addAction(String icon, String text, @NotNilptr QXObject receiver, String member, int shortcutKey){
         return (QXAction)object_get_string2_handle_string_int(nativehandle, ADDACT, icon, text, receiver.nativehandle, member, shortcutKey);
     }
     

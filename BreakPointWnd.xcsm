@@ -25,11 +25,11 @@ class BreakPointWnd : ListDockWidget{
     
 	public static Map<String,Map<int,BreakPointRequest>> breakPoints = new Map<String,Map<int,BreakPointRequest>>();
     
-    public static void toggleBreakPoint(XSourceEditor editor, String file, int line, bool add){
+    public static void toggleBreakPoint(@NotNilptr XSourceEditor editor, String file, int line, bool add){
 		bpWnd.toggleBreakPoint(editor, new BreakPointRequest(file, line, line, add, 0));
     }
      
-    public void toggleBreakPoint(XSourceEditor editor, BreakPointRequest brp){
+    public void toggleBreakPoint(@NotNilptr XSourceEditor editor,@NotNilptr  BreakPointRequest brp){
 		Map<int,BreakPointRequest> lineMap = nilptr;
         
         try{
@@ -67,19 +67,22 @@ class BreakPointWnd : ListDockWidget{
 	public void sendBreakPoint(){
 		Map.Iterator<String,Map<int,BreakPointRequest>> iter = breakPoints.iterator();
 		while (iter.hasNext()){
-			applyBreakpoint(iter.getValue());
+            Map<int,BreakPointRequest> brp = iter.getValue();
+            if (brp != nilptr){
+                applyBreakpoint(brp);
+            }
 			iter.next();
 		}
     }
     
-    public void applyBreakpoint(Map<int,BreakPointRequest> itemmap){
-		if (itemmap != nilptr){
-			Map.Iterator<int,BreakPointRequest> iter = itemmap.iterator();
-			while (iter.hasNext()){
-				BreakPointRequest bpr = iter.getValue();
-				XWorkspace.workspace.debuggee.toggleBreakpoint(bpr.file, bpr.reqline, bpr.set);
-				iter.next();
-			}
+    public void applyBreakpoint(@NotNilptr Map<int,BreakPointRequest> itemmap){
+        Map.Iterator<int,BreakPointRequest> iter = itemmap.iterator();
+        while (iter.hasNext()){
+            BreakPointRequest bpr = iter.getValue();
+            if (bpr != nilptr){
+                XWorkspace.workspace.debuggee.toggleBreakpoint(bpr.file, bpr.reqline, bpr.set);
+            }
+            iter.next();
         }
     }
     
@@ -97,26 +100,27 @@ class BreakPointWnd : ListDockWidget{
         }
     }
     
-    public void addToList(QXTreeView list , String file, Map<int,BreakPointRequest> mbp){
+    public void addToList(@NotNilptr QXTreeView list , String file,@NotNilptr  Map<int,BreakPointRequest> mbp){
     	Map.Iterator<int,BreakPointRequest> iter =  mbp.iterator();
         while (iter.hasNext()){
 			BreakPointRequest brp =  iter.getValue();
             
-			long item = list.addItem("res/toolbar/bps.png", "常规断点");
-			list.setItemText(item, 1, "-");
-			list.setItemText(item, 2, brp.file );
-            
-            if (brp.realine != brp.reqline){
-				list.setItemText(item, 3, "" + brp.reqline + " -> " + brp.realine);
-            }else{
-				list.setItemText(item, 3, "" + brp.reqline);
+            if (brp != nilptr){
+                long item = list.addItem("res/toolbar/bps.png", "常规断点");
+                list.setItemText(item, 1, "-");
+                list.setItemText(item, 2, brp.file );
+                
+                if (brp.realine != brp.reqline){
+                    list.setItemText(item, 3, "" + brp.reqline + " -> " + brp.realine);
+                }else{
+                    list.setItemText(item, 3, "" + brp.reqline);
+                }
             }
-
             iter.next();
         }
     }
     
-	public void onListItemClicked(QXTreeView tree,long item, int column)override{
+	public void onListItemClicked(@NotNilptr QXTreeView tree,long item, int column)override{
 		String sfile = tree.getItemText(item, 2);
 		String sline = tree.getItemText(item, 3);
         
@@ -124,7 +128,7 @@ class BreakPointWnd : ListDockWidget{
     }
         
         
-    public void deleteBreakPoint(long [] items){
+    public void deleteBreakPoint(@NotNilptr long [] items){
 		QXTreeView list = getList();
         
 		for (int i = 0;i < items.length; i++){
@@ -171,9 +175,11 @@ class BreakPointWnd : ListDockWidget{
 
 	public void onNotification(long id){
 		 synchronized(requestlist){
-			for (int i =0; i < requestlist.size(); i++){
+			for (int i = 0, c = requestlist.size(); i < c; i++){
 				BreakPointRequest bpr = requestlist.get(i);
-                parseBreakPoint(bpr);
+                if (bpr != nilptr){
+                    parseBreakPoint(bpr);
+                }
             }
             refreshBreakPoints();
             requestlist.clear();
@@ -181,7 +187,7 @@ class BreakPointWnd : ListDockWidget{
 	}
     
     
-    public void setBreakPointEnable(BreakPointRequest bpr, bool enabled){
+    public void setBreakPointEnable(@NotNilptr BreakPointRequest bpr, bool enabled){
 		QXTreeView list = getList();
         
         int count = list.getTopLevelCount();
@@ -205,7 +211,7 @@ class BreakPointWnd : ListDockWidget{
         }
     }
     
-    public void parseBreakPoint(BreakPointRequest bpr){
+    public void parseBreakPoint(@NotNilptr BreakPointRequest bpr){
 		//QXTreeView list = getList();
 		runOnUi( new Runnable(){
 			void run(){
@@ -248,7 +254,7 @@ class BreakPointWnd : ListDockWidget{
 		public QXMenu contextMenu = new QXMenu();
 		public QXAction [] actions;
 		
-		public void create(QXWidget parent, String [] acts, onEventListener listener){
+		public void create(@NotNilptr QXWidget parent,@NotNilptr  String [] acts,@NotNilptr  onEventListener listener){
 			if (contextMenu.create(parent)){
 				actions = new QXAction[acts.length];
 				for (int i = 0; i < acts.length; i ++){

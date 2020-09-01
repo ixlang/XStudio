@@ -8,7 +8,7 @@ class ICompileInfo{
     public String getFile();
     public int getLine();
     public int getRow();
-    public String getTips();
+    public @NotNilptr String getTips();
 };
 
 class InformationParser{
@@ -35,5 +35,7 @@ class IBuilder{
     
     /** @brief 编译结束时调用 告诉Ide编译完成了 */
     public void complete();
+    
+    public Process getProcess();
 }; 
  

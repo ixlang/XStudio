@@ -110,7 +110,7 @@ class AddObjectDlg : QXDialog {
                     return ;
                 }
 				String name = edtName.getText();
-                if (name == nilptr){
+                if (name.length() == 0){
 					QXMessageBox.Critical("注意", "输入了不正确的类名", QXMessageBox.Ok, QXMessageBox.Ok);
                     return ;
                 }
@@ -120,6 +120,7 @@ class AddObjectDlg : QXDialog {
 				}
                 
 				String sourceFile = currentProject.generateFullPath(edtFile.getText());
+                
                 if (XPlatform.existsSystemFile(sourceFile)){
  					QXMessageBox.Critical("注意", "文件已存在", QXMessageBox.Ok, QXMessageBox.Ok);
                     return ;
@@ -193,7 +194,7 @@ class AddObjectDlg : QXDialog {
         loadObject(root_item, heap);
         
         edtName.setOnEditEventListener(new onEditEventListener(){
-            void onTextChanged(QXObject, String text)override{
+            void onTextChanged(QXObject, @NotNilptr String text)override{
 				edtFile.setText(text + ".x");
             }
         });
@@ -246,16 +247,20 @@ class AddObjectDlg : QXDialog {
     public void setChildrenUnChecked(long item){
 		_treeview.setItemCheck(item, 0, false);
 		long []children = _treeview.getItemChildren(item);
-        for (int i =0; i < children.length; i++){
-			setChildrenUnChecked(children[i]);
+        if (children != nilptr){
+            for (int i =0; i < children.length; i++){
+                setChildrenUnChecked(children[i]);
+            }
         }
     }
     
     public void checkCheck(long item){
 		long []children = _treeview.getItemChildren(root_item);
-        for (int i =0; i < children.length; i++){
-			if (children[i] != item){
-				setChildrenUnChecked(children[i]);
+        if (children != nilptr){
+            for (int i =0; i < children.length; i++){
+                if (children[i] != item){
+                    setChildrenUnChecked(children[i]);
+                }
             }
         }
     }
@@ -298,56 +303,58 @@ class AddObjectDlg : QXDialog {
 		for (int i =0, c = objs.length(); i < c; i++){
 			JsonObject obj = (JsonObject)objs.get(i);
             
-			int type = obj.getInt("type");
-			long item = 0;
-            
-			if (type == 34){
-				item = _treeview.insertItem(root, "res/toolbar/template.png", obj.getString("name"));
-                _treeview.setItemTag(item, 0, TYPE_CLASS | TYPE_TEMPLATE);
-			}else
-			if (type == 31){
-				int tag = TYPE_CLASS;
+            if (obj != nilptr){
+                int type = obj.getInt("type");
+                long item = 0;
                 
-				if (obj.has("template")){
-					item = _treeview.insertItem(root, "res/toolbar/tempinstance.png", obj.getString("name"));
-				}else
-				if (obj.has("interface")){
-					item = _treeview.insertItem(root, "res/toolbar/interface.png", obj.getString("name"));
-                    tag |= TYPE_INTERFACE;
+                if (type == 34){
+                    item = _treeview.insertItem(root, "res/toolbar/template.png", obj.getString("name"));
+                    _treeview.setItemTag(item, 0, TYPE_CLASS | TYPE_TEMPLATE);
+                }else
+                if (type == 31){
+                    int tag = TYPE_CLASS;
                     
-				}else{
-					item = _treeview.insertItem(root, "res/toolbar/class.png", obj.getString("name"));
-				}
-                
-                JsonArray dynamic_method = (JsonArray)obj.get("method");
-                
-                if (dynamic_method != nilptr && dynamic_method.length() > 0){
-					long method = _treeview.insertItem(item, "res/toolbar/function.png", "可重载方法");
-                    _treeview.setItemTag(method, 0, TYPE_FUNCTION);
-					expand_data.put(method, new ItemLoader(insertLoad(method),  dynamic_method));
+                    if (obj.has("template")){
+                        item = _treeview.insertItem(root, "res/toolbar/tempinstance.png", obj.getString("name"));
+                    }else
+                    if (obj.has("interface")){
+                        item = _treeview.insertItem(root, "res/toolbar/interface.png", obj.getString("name")); 
+                        tag |= TYPE_INTERFACE;
+                        
+                    }else{
+                        item = _treeview.insertItem(root, "res/toolbar/class.png", obj.getString("name"));
+                    }
+                    
+                    JsonArray dynamic_method = (JsonArray)obj.get("method");
+                    
+                    if (dynamic_method != nilptr && dynamic_method.length() > 0){
+                        long method = _treeview.insertItem(item, "res/toolbar/function.png", "可重载方法");
+                        _treeview.setItemTag(method, 0, TYPE_FUNCTION);
+                        expand_data.put(method, new ItemLoader(insertLoad(method),  dynamic_method));
+                    }
+                    
+                    JsonArray static_sub_class = (JsonArray)obj.get("static_properites");
+                    if (static_sub_class != nilptr && static_sub_class.length() > 0){
+                        long static_prop = _treeview.insertItem(item, "res/toolbar/static.png", "可继承成员类");
+                        _treeview.setItemTag(static_prop, 0, TYPE_SUBCLASS);
+                        expand_data.put(static_prop,new ItemLoader(insertLoad(static_prop),   static_sub_class));
+                    }
+                    
+                    _treeview.setItemTag(item, 0, tag);
+                }else
+                if (type == 23){
+                    if (obj.has("interface")){
+                        item = _treeview.insertItem(root, "res/toolbar/interfacefun.png", obj.getString("name"));
+                    }else
+                    if (root != root_item){
+                        item = _treeview.insertItem(root, "res/toolbar/function.png", obj.getString("name"));
+                    }
                 }
                 
-                JsonArray static_sub_class = (JsonArray)obj.get("static_properites");
-                if (static_sub_class != nilptr && static_sub_class.length() > 0){
-					long static_prop = _treeview.insertItem(item, "res/toolbar/static.png", "可继承成员类");
-                    _treeview.setItemTag(static_prop, 0, TYPE_SUBCLASS);
-					expand_data.put(static_prop,new ItemLoader(insertLoad(static_prop),   static_sub_class));
+                if (item != 0){
+                    _treeview.modifyItemFlags(item, QXTreeView.ItemIsUserCheckable, 0);
+                    _treeview.setItemCheck(item, 0, false);
                 }
-                
-                _treeview.setItemTag(item, 0, tag);
-			}else
-			if (type == 23){
-				if (obj.has("interface")){
-					item = _treeview.insertItem(root, "res/toolbar/interfacefun.png", obj.getString("name"));
-				}else
-                if (root != root_item){
-					item = _treeview.insertItem(root, "res/toolbar/function.png", obj.getString("name"));
-				}
-			}
-            
-            if (item != 0){
-				_treeview.modifyItemFlags(item, QXTreeView.ItemIsUserCheckable, 0);
-                _treeview.setItemCheck(item, 0, false);
             }
 		}
 	}
@@ -379,6 +386,9 @@ class AddObjectDlg : QXDialog {
         }
         
         long []children = _treeview.getItemChildren(item);
+        if (children == nilptr){
+            return nilptr;
+        }
         for (int i =0; i < children.length; i++){
 			bool checked = _treeview.isItemCheck(children[i], 0);
 			if (checked){
@@ -414,7 +424,7 @@ class AddObjectDlg : QXDialog {
 								text = parentClass + "." + text;
 							}
 							String headStr = prefix + " " + edtName.getText() ;
-							if (text != nilptr){
+							if (text.length() > 0){
 								headStr = headStr + " : " + text + "{\n";
 							}else{
 								headStr = headStr + "{\n";
@@ -432,24 +442,26 @@ class AddObjectDlg : QXDialog {
         return nilptr;
     }
     
-    public String generateOverride(long item, String parentName){
+    public String generateOverride(long item,@NotNilptr  String parentName){
 		String bodyStr = "";
 		String destName = edtName.getText() ;
         long []children = _treeview.getItemChildren(item);
-        for (int i =0; i < children.length; i++){
-			bool checked = _treeview.isItemCheck(children[i], 0);
-			if (checked){
-				String text = _treeview.getItemText(children[i], 0);
-                if (text.startWith(parentName + "(")){
-					text = destName + text.substring(parentName.length(), text.length());
-                    text = "	" + text + " {//构造\n		//TODO:	\n	\n	}\n\n";
-                }else{
-					text = "	" + text + " override {\n		//TODO:	\n	\n	}\n\n";
+        
+        if (children != nilptr){
+            for (int i =0; i < children.length; i++){
+                bool checked = _treeview.isItemCheck(children[i], 0);
+                if (checked){
+                    String text = _treeview.getItemText(children[i], 0);
+                    if (text.startWith(parentName + "(")){
+                        text = destName + text.substring(parentName.length(), text.length());
+                        text = "	" + text + " {//构造\n		//TODO:	\n	\n	}\n\n";
+                    }else{
+                        text = "	" + text + " override {\n		//TODO:	\n	\n	}\n\n";
+                    }
+                    bodyStr = bodyStr + text;
                 }
-                bodyStr = bodyStr + text;
             }
         }
-        
         return bodyStr;
     }
 };

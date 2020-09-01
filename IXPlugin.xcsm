@@ -185,17 +185,17 @@ interface IProject
     JsonArray getSources();
     String getComment();
     void setComment(String comment);
-    String map_variable(String text);
-    String getName();
-    String getLanguage();
+    String MapVariable(String text);
+    @NotNilptr String getName();
+    @NotNilptr String getLanguage();
     bool addSource(String filePath);
     String replaceSource(int index, String filePath);
     bool save();
     bool saveAs(String path);
     String getSourcePath(int id);
     String generateFullPath(String source_path);
-    String getFullPath(String source_path);
-    String getProjectDir();
+    @NotNilptr String getFullPath(String source_path);
+    @NotNilptr String getProjectDir();
     int getSourceFileCount();
     String getSourceItem(int id);
     void removeSource(int id);
@@ -318,6 +318,7 @@ interface IProjectPlugin{
     bool onpreRun(IProject project, bool debug);
     void onpostRun(IProject project, bool debug);
     String getTargetPath(IProject project);
+    
 };
 
 interface IXPlugin 
@@ -336,6 +337,9 @@ interface IXPlugin
     String publisher();
     void uninstall(IXStudioController);
     String getIcon();
+    String getSetting();
+    void settingFlushed();
+    void showDocks(bool restore);
 };
 
 interface UIRunnable
@@ -401,11 +405,14 @@ class PluginsController
         Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
         while (iter.hasNext()) {
             XPluginShell splug = iter.getValue();
-            
-            if ((splug._plugin != nilptr) && (splug.inited == false) && (splug.disable == false)) {
+            if (splug != nilptr && (splug._plugin != nilptr) && (splug.inited == false) && (splug.disable == false)) {
                 splug.disable = !ExtensionManager.isEnabled(iter.getKey());
-                splug._plugin.initializPlusin(ic, !splug.disable);
-                splug.inited = true;
+                try{
+                    splug._plugin.initializPlusin(ic, !splug.disable);
+                    splug.inited = true;
+                }catch(Exception e){
+                    
+                }
             }
             iter.next();
         }
@@ -416,10 +423,23 @@ class PluginsController
         Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
         while (iter.hasNext()) {
             XPluginShell splug = iter.getValue();
-            if ((splug._plugin != nilptr) && (splug.inited)) {
+            if (splug != nilptr && (splug._plugin != nilptr) && (splug.inited)) {
                 if (false == splug._plugin.onExit()){
                     return false;
                 }
+            }
+            iter.next();
+        }
+        return true;
+    }
+    
+    public static bool showPluginsDocks(bool show)
+    {
+        Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
+        while (iter.hasNext()) {
+            XPluginShell splug = iter.getValue();
+            if (splug != nilptr && splug._plugin != nilptr) {
+                splug._plugin.showDocks(show);
             }
             iter.next();
         }
@@ -432,8 +452,8 @@ class PluginsController
         
         if (iter != nilptr) {
             XPluginShell splug = iter.getValue();
-            if (splug.disable == false){
-                return iter.getValue()._plugin;
+            if (splug != nilptr && splug.disable == false){
+                return splug._plugin;
             }
         }
         return nilptr;
@@ -446,7 +466,7 @@ class PluginsController
         Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
         while (iter.hasNext()) {
             XPluginShell splug = iter.getValue();
-            if (splug.disable == false){
+            if (splug != nilptr && splug.disable == false){
                 IProjectPlugin pplugin = splug._plugin.getProjectPlugin();
                 if (pplugin != nilptr){
                     switch(step){
@@ -487,7 +507,7 @@ class PluginsController
         Map.Iterator<String, XPluginShell> iter = plugins_list.find(language);
         if (iter != nilptr) {
             XPluginShell splug = iter.getValue();
-            if (splug._plugin != nilptr&& (splug.disable == false)) {
+            if (splug != nilptr && splug._plugin != nilptr&& (splug.disable == false)) {
                 return splug._plugin.loadProject(content, language);
             }
         }
@@ -499,10 +519,13 @@ class PluginsController
         Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
         while (iter.hasNext()) {
             XPluginShell splug = iter.getValue();
-            if ( (splug.disable == false)){
-                IProjectPlugin pplugin = splug._plugin.getProjectPlugin();
-                if (pplugin != nilptr){
-                    list.add(pplugin);
+            if (splug != nilptr && (splug.disable == false)){
+                IXPlugin _plugin = splug._plugin;
+                if (_plugin != nilptr) {
+                    IProjectPlugin pplugin = _plugin.getProjectPlugin();
+                    if (pplugin != nilptr){
+                        list.add(pplugin);
+                    }
                 }
             }
             iter.next();
@@ -515,7 +538,7 @@ class PluginsController
         Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
         while (iter.hasNext()) {
             XPluginShell splug = iter.getValue();
-            if ( (splug.disable == false)){
+            if (splug != nilptr && (splug.disable == false)){
                 IProjectPlugin pplugin = splug._plugin.getProjectPlugin();
                 if (pplugin != nilptr){
                     target = pplugin.getTargetPath(project);
@@ -533,7 +556,11 @@ class PluginsController
     {
         try{
             ExtensionManager.setEnabled(plugins, !disabled);
-            plugins_list.get(plugins).disable = disabled;
+            XPluginShell xps = plugins_list.get(plugins);
+            
+            if (xps != nilptr){
+                xps.disable = disabled;
+            }
             return true;
         }catch(Exception e){
             
@@ -543,7 +570,10 @@ class PluginsController
     public static bool uninstallPlugin(String plugins)
     {
         try{
-            plugins_list.get(plugins)._plugin.uninstall(QxApp._theApp._xstudio_controller);
+            XPluginShell xps = plugins_list.get(plugins);
+            if (xps != nilptr){
+                xps._plugin.uninstall(QxApp._theApp._xstudio_controller);
+            }
             return true;
         }catch(Exception e){
             

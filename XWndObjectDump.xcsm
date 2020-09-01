@@ -117,12 +117,14 @@ class XWndObjectDump : QXDockWidget{
         
         JsonArray classes = (JsonArray)root.get("classes");
         
-        int count = classes.length();
-        
-        for (int i = 0; i < count; i ++){
-			JsonObject classObj = (JsonObject)classes.get(i);
-            if (classObj != nilptr){
-				additem(root_items[2], classObj.getString("type"), classObj.getInt("count"));
+        if (classes != nilptr){
+            int count = classes.length();
+            
+            for (int i = 0; i < count; i ++){
+                JsonObject classObj = (JsonObject)classes.get(i);
+                if (classObj != nilptr){
+                    additem(root_items[2], classObj.getString("type"), classObj.getInt("count"));
+                }
             }
         }
     }

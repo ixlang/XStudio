@@ -61,10 +61,19 @@ class DebuggeeSelector : QXDialog{
         
         setWindowIcon("./res/toolbar/dbg.png");
         
+        btnCancel.setOnClickListener(
+        new onClickListener(){
+            void onClick(QXObject obj, bool checked)override{
+				close();
+            }
+        });
+        
         btnRefresh.setOnClickListener(
         new onClickListener(){
             void onClick(QXObject obj, bool checked)override{
 				refreshProcess();
+                
+                filterProcess(edtfilter.getText());
             }
         });
         
@@ -94,7 +103,7 @@ class DebuggeeSelector : QXDialog{
         btnBrowser.setOnClickListener(
         new onClickListener(){
             void onClick(QXObject obj, bool checked)override{
-				String progpath = QXFileDialog.getOpenFileName("选择被调试程序文件",edtProg.getText(),"*.*",DebuggeeSelector.this);
+				String progpath = QXFileDialog.getOpenFileName("选择被调试程序文件",edtProg.getText(),"*.* *",DebuggeeSelector.this);
                 if (progpath != nilptr){
                     edtProg.setText(progpath);
                 }
@@ -109,17 +118,8 @@ class DebuggeeSelector : QXDialog{
         });
         
         edtfilter.setOnEditEventListener(new onEditEventListener() {
-            void onTextChanged(QXObject, String text)override {
-                String key = text.upper();
-                if (_processesItems != nilptr){
-                    for (int i = 0; i < _processesItems.length; i++){
-                        if (_processesItems[i].test(key)){
-                            treeWidget.setItemVisible(_processesItems[i].item, true);
-                        } else {
-                            treeWidget.setItemVisible(_processesItems[i].item, false);
-                        }
-                    }
-                }
+            void onTextChanged(QXObject,@NotNilptr String text)override {
+                filterProcess(text);
             }
         });
         
@@ -137,13 +137,30 @@ class DebuggeeSelector : QXDialog{
         show();
 	}
     
+    void filterProcess(@NotNilptr String text){
+        if (text.length() == 0){
+            return;
+        }
+        String key = text.upper();
+        if (_processesItems != nilptr){
+            for (int i = 0; i < _processesItems.length; i++){
+                if (_processesItems[i].test(key)){
+                    treeWidget.setItemVisible(_processesItems[i].item, true);
+                } else {
+                    treeWidget.setItemVisible(_processesItems[i].item, false);
+                }
+            }
+        }
+    }
     void loadKits(){
         JsonArray ccc = CDEProjectPropInterface.loadConfigures();
         if (ccc != nilptr){
             String [] kitlist = new String[ccc.length()];
             for (int i = 0; i < ccc.length(); i++){
                 JsonObject cconf = (JsonObject)ccc.get(i);
-                kitlist[i] = cconf.getString("name");
+                if (cconf != nilptr){
+                    kitlist[i] = cconf.getString("name");
+                }
             }
             cmbKit.addItems(kitlist);
         }
@@ -166,7 +183,7 @@ class DebuggeeSelector : QXDialog{
                 if (pid > 0){
                     new Thread(){
                         void run()override{
-                            CDEProjectPropInterface.attachDebug(kitstr, pid);
+                            CDEProjectPropInterface.getInstance().attachDebug(kitstr, pid);
                         }
                     }.start();
                     bSuccess = true;
@@ -198,7 +215,7 @@ class DebuggeeSelector : QXDialog{
             
             new Thread(){
                 void run()override{
-                    CDEProjectPropInterface.remoteDebug(kitstr, host, port, prog);
+                    CDEProjectPropInterface.getInstance().remoteDebug(kitstr, host, port, prog);
                 }
             }.start();
             bSuccess = true;
@@ -219,14 +236,16 @@ class DebuggeeSelector : QXDialog{
             List.Iterator<Runtime.OSProcess> iter = processes.iterator();
             while (iter.hasNext()){
                 Runtime.OSProcess process = iter.next();
-                String name = process.getName();
-                String path = process.getPath();
-                int id = process.getId();
-                
-                long item = treeWidget.addItem(nilptr, name);
-                _processesItems[idx++] = new ProcessItem(item, name, path);
-                treeWidget.setItemText(item, 1, "" + id);
-                treeWidget.setItemText(item, 2, path);
+                if (process != nilptr){
+                    String name = process.getName();
+                    String path = process.getPath();
+                    int id = process.getId();
+                    
+                    long item = treeWidget.addItem(nilptr, name);
+                    _processesItems[idx++] = new ProcessItem(item, name, path);
+                    treeWidget.setItemText(item, 1, "" + id);
+                    treeWidget.setItemText(item, 2, path);
+                }
             }
         }
     }

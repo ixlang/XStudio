@@ -11,7 +11,7 @@ class XWndInfor : QXDockWidget
 
     onTreeViewItemEvent listlistener = new onTreeViewItemEvent()
     {
-        void onItemClicked(QXTreeView tree,long item, int column)override {
+        void onItemClicked(@NotNilptr QXTreeView tree,long item, int column)override {
             synchronized(infoLock) {
                 triggeInfo(tree, item);
             }
@@ -22,7 +22,7 @@ class XWndInfor : QXDockWidget
     Vector<ICompileInfo> infoList = new Vector<ICompileInfo>();
     Object infoLock = new Object();
 
-    void triggeInfo(QXTreeView tree,long item)
+    void triggeInfo(@NotNilptr QXTreeView tree,long item)
     {
         String file = tree.getItemText(item, 1);
         String line = tree.getItemText(item, 2);
@@ -32,7 +32,10 @@ class XWndInfor : QXDockWidget
         String infotips = nilptr;
         if (tag >= 0 && tag < infoList.size()) {
             infotips = "问题" + tag + ":\n";
-            infotips = infotips + infoList.get(tag).getTips();
+            ICompileInfo cii = infoList.get(tag);
+            if (cii != nilptr){
+                infotips = infotips + cii.getTips();
+            }
         }
         XSourceEditor.openForFileInfo(XWndInfor.this._mdi_area, file, line.parseInt(), row.parseInt(), infotips);
     }
@@ -101,6 +104,7 @@ class XWndInfor : QXDockWidget
 
     public void nextInfo()
     {
+        __nilptr_safe(_listview);
         synchronized(infoLock) {
             if (current_click_item < infoItems.size()) {
                 long item = infoItems.get(current_click_item++);
@@ -166,26 +170,29 @@ class XWndInfor : QXDockWidget
             }
             
             bool [] allMap = {allTip, allWarning, allError};
+            if (infos != nilptr){
+                for (int i = 0, c = infos.size(); i < c; i++) {
+                    ICompileInfo ci = infos.get(i);
+                    if (ci != nilptr){
+                        int type = ci.getType();
+                        if (type >= 0 && type < 3) {
+                            if (allMap[type]) {
+                                long item = _listview.addItem(icons[type], columns[type]);
 
-            for (int i = 0; i < infos.size(); i++) {
-                ICompileInfo ci = infos.get(i);
-                int type = ci.getType();
-                if (type >= 0 && type < 3) {
-                    if (allMap[type]) {
-                        long item = _listview.addItem(icons[type], columns[type]);
-
-                        _listview.setItemTag(item, 0, start_index + i);
-                        infoItems.add(item);
-                        _listview.setItemText(item, 1, ci.getFile());
-                        _listview.setItemText(item, 2, "" + ci.getLine());
-                        _listview.setItemText(item, 3, "" + ci.getRow());
-                        //_listview.setItemBackColor(item, 0, colors[type]);
-                        countsOfInfo[type]++;
+                                _listview.setItemTag(item, 0, start_index + i);
+                                infoItems.add(item);
+                                _listview.setItemText(item, 1, ci.getFile());
+                                _listview.setItemText(item, 2, "" + ci.getLine());
+                                _listview.setItemText(item, 3, "" + ci.getRow());
+                                //_listview.setItemBackColor(item, 0, colors[type]);
+                                countsOfInfo[type]++;
+                            }
+                        }
+                        
+                        if (bFilter == false){
+                            infoList.add(ci);
+                        }
                     }
-                }
-                
-                if (bFilter == false){
-                    infoList.add(ci);
                 }
             }
         }

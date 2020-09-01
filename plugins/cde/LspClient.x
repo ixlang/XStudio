@@ -38,11 +38,14 @@ class LspClient{
        
        lsp_process = new Process(_serverPath, _args);
        lsp_process.setWorkDirectory(workdir);
-       if (lsp_process.create(Process.StdOut | Process.StdIn | Process.StdErr)){
+       try{
+          if (lsp_process.create(Process.StdOut | Process.StdIn | Process.StdErr)){
            readLoop();
            return true;
+          } 
+       }catch(Exception e){
+           
        }
-       
        return false;
     }
     
@@ -91,7 +94,7 @@ class LspClient{
             return length;
         }
         
-        public String substring(int s, int e){
+        public @NotNilptr String substring(int s, int e){
             return text.substring(s, e);
         }
         
@@ -113,6 +116,7 @@ class LspClient{
     void readLoop(){       
         new Thread(){
             void run()override{
+                Thread.setName("LSP Err Reader");
                 byte [] buf = new byte[4096];
 
                 int n = 0;
@@ -130,6 +134,7 @@ class LspClient{
         
         new Thread(){
             void run()override{
+                Thread.setName("LSP Reader");
                 byte [] buf = new byte[4096];
                 //_system_.createConsole();
                 String text = "";
@@ -153,7 +158,7 @@ class LspClient{
         }.start();
     }
     
-    void processText(jsonrpcContext jrpc){
+    void processText(@NotNilptr jsonrpcContext jrpc){
         int d2rn = jrpc.get_d2rn();
         
         while (d2rn != -1){
@@ -223,10 +228,11 @@ class LspClient{
         MethodDeclaration = "textDocument/declaration",
         MethodCompletionItemResolve = "completionItem/resolve",
         MethodDocumentSymbol = "textDocument/documentSymbol", //{"jsonrpc":"2.0","id":2,"method":"textDocument/documentSymbol","params":{"textDocument":{"uri":"test:///main.cpp"}}}
-        MethodWorkspaceSymbol = "workspace/symbol";//{"jsonrpc":"2.0","id":1,"method":"workspace/symbol","params":{"query":"vector"}}
-        
+        MethodWorkspaceSymbol = "workspace/symbol",//{"jsonrpc":"2.0","id":1,"method":"workspace/symbol","params":{"query":"vector"}}
+        MethodImplementation = "textDocument/implementation",
+        MethodReferences = "textDocument/references";
     
-    void notify(String method, JsonNode params){
+    void notify(@NotNilptr String method, JsonNode params){
         JsonObject json = new JsonObject();
         json.put("jsonrpc","2.0");
         json.put("method",method);
@@ -240,7 +246,7 @@ class LspClient{
         notify("exit", nilptr);
     }
 
-    String request(int id, String method, JsonNode params){
+    String request(int id, String method,@NotNilptr  JsonNode params){
         JsonObject json = new JsonObject();
         json.put("jsonrpc","2.0");
         json.put("id", method);
@@ -249,7 +255,7 @@ class LspClient{
         return writeJsonRpc(json);
     }
 
-    String writeJsonRpc(JsonObject json){
+    String writeJsonRpc(@NotNilptr JsonObject json){
         String jsstr = json.toString(false) + "\n";
         String final_Str = "Content-Length: " + jsstr.length() + 
             "\r\n" + "Content-Type:charset-utf-8" + 
@@ -382,6 +388,36 @@ class LspClient{
         return request(0, MethodDeclaration, doc);
     }
     
+    
+    
+    public String getReferences(String filename, int line, int col){
+        JsonObject param = new JsonObject();
+        param.put("uri", "file:///" + filename);
+        
+        JsonObject position = new JsonObject();
+        position.put("line", line);
+        position.put("character", col);
+            
+        JsonObject doc = new JsonObject();
+        doc.put("textDocument",param);
+        doc.put("position", position);
+        return request(0, MethodReferences, doc);
+    }
+    
+    public String getImplement(String filename, int line, int col){
+        JsonObject param = new JsonObject();
+        param.put("uri", "file:///" + filename);
+        
+        JsonObject position = new JsonObject();
+        position.put("line", line);
+        position.put("character", col);
+            
+        JsonObject doc = new JsonObject();
+        doc.put("textDocument",param);
+        doc.put("position", position);
+        return request(0, MethodImplementation, doc);
+    }
+    
     public String getDocumentSymbols(String filename){
         JsonObject param = new JsonObject();
         param.put("uri", "file:///" + filename);
@@ -404,27 +440,29 @@ class LspClient{
         return request(0, MethodCompletion, doc);
     }
     
-    String readFileUTF8(String file){
+    String readFileUTF8(@NotNilptr String file){
         long hfile = _system_.openFile(file,"r");
         if (hfile != 0 ){
             long fl = _system_.fileLength(hfile);
             byte [] data = new byte [fl];
             _system_.readFile(hfile,data,0,fl);
             _system_.closeFile(hfile);
-            String charset = String.detectCharset(data,0,fl);
-            if (charset == nilptr){
+            try{
+                String charset = String.detectCharset(data,0,fl);
+                                
+                switch(charset){
+                    case "ASCII":
+                    case "UTF-8":
+                    case "UTF8":
+                    return new String(data);
+                    break;
+                    
+                    default:
+                    return new String(data, 0, fl, charset);
+                    break;
+                }
+            }catch(Exception e){
                 return new String(data);
-            }
-            switch(charset){
-                case "ASCII":
-                case "UTF-8":
-                case "UTF8":
-                return new String(data);
-                break;
-                
-                default:
-                return new String(data, 0, fl, charset);
-                break;
             }
         }
         return nilptr;
@@ -437,6 +475,7 @@ class LspClient{
             Map.Iterator<String, LSPRequest> iter = _resuestList.iterator();
             while (iter.hasNext()){
                 LSPRequest lsq = iter.getValue();
+                __nilptr_safe(lsq);
                 synchronized(lsq){
                     lsq.notifyAll();
                 }

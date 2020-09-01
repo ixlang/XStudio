@@ -17,9 +17,10 @@ class Recently{
     
 	JsonObject recently; 
     
-	public String getRecentlyPath(){
+	public @NotNilptr  String getRecentlyPath(){
 		String file = XPlatform.getAppDirectory();
-		return String.formatPath(file.appendPath("config").appendPath("recently.prop"), false);
+        
+        return String.formatPath(file.appendPath("config").appendPath("recently.prop"), false);
 	}
     
 	public void loadRecently(){
@@ -52,7 +53,9 @@ class Recently{
 	public int getCount(){
 		try{
 			JsonArray  node = (JsonArray)recently.get("projects");
-            return node.length();
+            if (node != nilptr){
+                return node.length();
+            }
         }catch(Exception e){
         
         }
@@ -64,14 +67,14 @@ class Recently{
 			JsonNode node = recently.get("projects");
 			if (node != nilptr){
 				JsonArray rootnode = (JsonArray)node;
-				
-				JsonObject project = (JsonObject)rootnode.get(i);
-				
-				RecentlyObject ro = new RecentlyObject();
-				ro.name = project.getString("name");
-				ro.path = project.getString("path");
-				ro.date = project.getString("date");
-				return ro;
+                JsonObject project = (JsonObject)rootnode.get(i);
+                if (project != nilptr){
+                    RecentlyObject ro = new RecentlyObject();
+                    ro.name = project.getString("name");
+                    ro.path = project.getString("path");
+                    ro.date = project.getString("date");
+                    return ro;
+                }
 			}
         }catch(Exception e){
         
@@ -79,7 +82,7 @@ class Recently{
         return nilptr;
     }
     
-    public void checktoArray(JsonArray node, String name , String path){
+    public void checktoArray(@NotNilptr JsonArray node, String name , String path){
 		try{
 			for (int i = 0, c = node.length(); i < c; i++){
 				JsonObject obj = (JsonObject )node.get(i);
@@ -140,12 +143,14 @@ class Recently{
 		
 		if (fos != nilptr){
 			String content = recently.toString(true);
-			byte []data = content.getBytes();
-			try{
-				fos.write(data);
-			}catch(Exception e){
-				
-			}
+            
+            byte []data = content.getBytes();
+            try{
+                fos.write(data);
+            }catch(Exception e){
+                
+            }
+        
 			fos.close();
 		}
 	}

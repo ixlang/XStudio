@@ -33,11 +33,11 @@ class QXMdiArea : QXWidget{
         widget_set_vint_value(nativehandle, MDISETSCROLLV, v);
     }
     
-    public void removeSubWindow(QXWidget subWindow){
+    public void removeSubWindow(@NotNilptr QXWidget subWindow){
         widget_set_native_value(nativehandle, REMSUBWIN, subWindow.nativehandle);
     }
     
-    public void addSubWindow(QXWidget subWindow){
+    public void addSubWindow(@NotNilptr QXWidget subWindow){
         widget_set_native_value(nativehandle, ADDSUBWIN, subWindow.nativehandle);
     }
     
@@ -53,7 +53,7 @@ class QXMdiArea : QXWidget{
         widget_slot(nativehandle, TILESUBWIN);
     }
     
-    public void setActiveSubWindow(QXMdiSubWindow window){
+    public void setActiveSubWindow(@NotNilptr QXMdiSubWindow window){
         widget_set_native_value(nativehandle, SETACTSUBWIN, window.nativehandle);
     }
 };

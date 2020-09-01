@@ -21,13 +21,13 @@ class ConfigMgr : QXDialog {
         new onClickListener() {
             void onClick(QXObject obj, bool checked)override {
                 long [] items = _listview.getSelectedItems();
-                if (items.length == 0) {
+                if (items == nilptr || items.length == 0) {
                     QXMessageBox.Critical("错误", "请先选择一个现有配置", QXMessageBox.Ok, QXMessageBox.Ok);
                     return ;
                 }
                 String oldConfigName = _listview.getItemText(items[0], 0);
                 InputDialog.requestInput(new InputDialog.onInputListener() {
-                    bool onInputOk(String text)override {
+                    bool onInputOk(@NotNilptr String text)override {
 
                         if (Pattern.test(text, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true) == false) {
                             QXMessageBox.Critical("错误", "配置名称不合法, 含有不允许的字符", QXMessageBox.Ok, QXMessageBox.Ok);
@@ -67,14 +67,16 @@ class ConfigMgr : QXDialog {
         new onClickListener() {
             void onClick(QXObject obj, bool checked)override {
                 long [] items = _listview.getSelectedItems();
-                if (items.length == 0) {
+                if (items == nilptr || items.length == 0) {
                     QXMessageBox.Critical("错误", "请先选择一个现有配置", QXMessageBox.Ok, QXMessageBox.Ok);
                     return ;
                 }
 
                 String oldConfigName = _listview.getItemText(items[0], 0);
-
-                if (oldConfigName.equals(_curproject.getCurrentConfig().getName())) {
+                
+                Configure cif = _curproject.getCurrentConfig();
+                
+                if (cif != nilptr && oldConfigName.equals(cif.getName())) {
                     QXMessageBox.Critical("错误", "不能删除正在使用的配置", QXMessageBox.Ok, QXMessageBox.Ok);
                     return ;
                 }
@@ -127,7 +129,10 @@ class ConfigMgr : QXDialog {
             //String key = iter.getKey();
             Configure cfg = iter.getValue();
             iter.next();
-            _listview.addItem(nilptr, cfg.getName());
+            
+            if (cfg != nilptr){
+                _listview.addItem(nilptr, cfg.getName());
+            }
         }
     }
 

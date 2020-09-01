@@ -3,7 +3,7 @@ class QXMainWindow : QXWidget{
     public QXMainWindow(){
     }
     
-    public bool create(){
+    public bool create()override {
         nativehandle = createQObject(QType.qtMainWindow, this, 0);
         if (nativehandle == 0){
             return false;
@@ -11,7 +11,7 @@ class QXMainWindow : QXWidget{
         return true;
     }
     
-    public bool create(QXWidget parent){
+    public bool create(@NotNilptr QXWidget parent)override {
         nativehandle = createQObject(QType.qtMainWindow, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
@@ -47,7 +47,7 @@ class QXMainWindow : QXWidget{
 		return (QXStatusBar)widget_get_object(nativehandle, QXCore.STATUSBAR);
 	}
     
-    public void addDockWidget(int area, QXDockWidget widget, Orientation ori){
+    public void addDockWidget(int area, @NotNilptr QXDockWidget widget, Orientation ori){
         int_long_int_long_int_int(nativehandle, ADDDOCKWIDGET, widget.nativehandle, area, ori);
     }
     
@@ -55,7 +55,7 @@ class QXMainWindow : QXWidget{
         widget_set_vint_value(nativehandle, SETDOCKNESTINGENABLED, b ? 1:  0);
     }
     
-    public void tabifyDockWidget(QXDockWidget a, QXDockWidget b){
+    public void tabifyDockWidget(@NotNilptr QXDockWidget a,@NotNilptr  QXDockWidget b){
         object_set_long_int_long(nativehandle, TABIFYDOCKWIDGET, a.nativehandle, 0, b.nativehandle);
     }
     

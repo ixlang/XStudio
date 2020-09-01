@@ -37,7 +37,7 @@ class GdbMiLexer
 	 * are processed.
 	 * @return A list of unprocessed tokens.
 	 */
-	public List<GdbMiToken> getTokens()
+	public @NotNilptr List<GdbMiToken> getTokens()
 	{
 		return m_tokens;
 	}
@@ -47,7 +47,7 @@ class GdbMiLexer
 	 * @param data Data read from the GDB process.
 	 * @param length Number of bytes from data to process.
 	 */
-	public void process(byte[] data, int length)
+	public void process(byte[] data, int length) throws IllegalArgumentException
 	{
 		for (int i = 0; i != length; ++i)
 		{

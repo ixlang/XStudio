@@ -13,7 +13,7 @@ class ArgsProcessor {
                      CMD_LOADXPRJ = 2,
                      CMD_BUILD = 3;
 
-    public ArgsProcessor(String []_arg) {
+    public ArgsProcessor(@NotNilptr String []_arg) {
         args = _arg;
 
         if (args.length > 1) {
@@ -31,7 +31,7 @@ class ArgsProcessor {
         return cmd;
     }
 
-    public bool parse() {
+    public bool parse() throws IllegalArgumentException {
         if (cmd == CMD_BUILD) {
             if (args[1].equals("-build")) {
                 for (int i = 2; i < args.length; i++) {
@@ -107,7 +107,7 @@ class QxApp : QXApplication {
         }
     };
 
-    Object onCreateXObject(long object, String objectClass) {
+    Object onCreateXObject(long object,@NotNilptr String objectClass) {
         if (objectClass.equals("QMdiArea")) {
             return new XWorkspace(object);
         }
@@ -191,6 +191,10 @@ class QxApp : QXApplication {
         createDocks();
 
         _mdispace = (XWorkspace)mainWindow.findByName("mdiArea");
+        if (_mdispace == nilptr){
+            return false;
+        }
+        __nilptr_safe(_mdispace);
         _mdispace.setMainWindow(mainWindow);
         _mdispace.setSlnView(wndsln);
         _mdispace.setStackView(wndStack);
@@ -257,7 +261,14 @@ class QxApp : QXApplication {
         Builder.infownd = wndInfor;
         XMenuManager.setProjectLoaded(false);
         XMenuManager.setDocumentOpened(false);
-
+        
+        try{
+            loadPlugins();
+        }catch(Exception e){
+            
+        }
+        
+        
         String statefile = XPlatform.getAppDirectory().appendPath("x.save");
 
         try {
@@ -273,7 +284,7 @@ class QxApp : QXApplication {
 
         }
 
-        loadPlusins();
+        
 
         if (Setting.welcomeOnStart()){
             _mdispace.openIndexPage();
@@ -281,10 +292,31 @@ class QxApp : QXApplication {
         
         processArgs();
         Setting.applySetting();
+        
+        _system_.registryCrashHandler( new ICrashHandler(){
+            void onCrash(String message)override{
+            
+               String crashfile = "crash_" + _system_.currentTimeMillis() + ".log";
+               long hcrash = _system_.openFile(crashfile,"w");
+               if (hcrash != 0){
+                   byte [] data = message.getBytes();
+                   _system_.writeFile(hcrash,data,0,data.length);
+                   _system_.closeFile(hcrash);
+               }
+               
+                mainWindow.runOnUi(new Runnable(){
+                   void run() override{
+                       QXMessageBox.Warning("注意","XStudio 内部发生了一个不可挽回的错误并即将退出.\n详细信息已保存到应用目录下的log文件中:\n" + message,QXMessageBox.Ok,QXMessageBox.Ok);
+                       mainWindow.close();
+                   }
+                });
+            }
+        });
+        
         return true;
     }
 
-    public void loadPlusins() {
+    public void loadPlugins() throws IllegalArgumentException {
         ExtensionManager.load();
         
         FSObject fp = new FSObject(_system_.getAppDirectory().appendPath("plugins"));
@@ -298,7 +330,7 @@ class QxApp : QXApplication {
                         _system_.loadLibrary(pfile.getPath());
                     }
                 } catch (Exception e) {
-                    
+                    wndOutput.Output( "初始化扩展失败:" + pfile.getPath() + " \t[Exception Message:" + e.getMessage() + "]\n",0);
                 }
             }
             fp.closeDir(hfind);
@@ -340,10 +372,18 @@ class QxApp : QXApplication {
     }
 
 
-    public static void runConsoleBuild(ArgsProcessor argspro) {
+    public static void runConsoleBuild(@NotNilptr ArgsProcessor argspro) {
         _system_.createConsole();
-
-        if (argspro.parse()) {
+        
+        bool bParsed = false;
+        
+        try{
+            bParsed = argspro.parse();
+        }catch(Exception e){
+            
+        }
+        
+        if (bParsed) {
             Project proj = new Project();
             Builder _builder = new Builder(true);
             ProjectPropManager.registryAllProp();
@@ -356,19 +396,23 @@ class QxApp : QXApplication {
                         return ;
                     }
                 }
+                
+                Configure cconfig = proj.getCurrentConfig();
+                
+                if (cconfig != nilptr){
+                    if (argspro.targetpath != nilptr) {
+                        cconfig.setOption("outpath", argspro.targetpath);
+                    }
 
-                if (argspro.targetpath != nilptr) {
-                    proj.getCurrentConfig().setOption("outpath", argspro.targetpath);
+                    if (argspro.arch != nilptr) {
+                        cconfig.setOption("wtype", "-arch:" + argspro.arch);
+                    }
+
+                    if (argspro.xcross != nilptr) {
+                        cconfig.setOption("ostype", "-xcross-" + argspro.xcross);
+                    }
                 }
-
-                if (argspro.arch != nilptr) {
-                    proj.getCurrentConfig().setOption("wtype", "-arch:" + argspro.arch);
-                }
-
-                if (argspro.xcross != nilptr) {
-                    proj.getCurrentConfig().setOption("ostype", "-xcross-" + argspro.xcross);
-                }
-
+                
                 proj.thread_build(_builder, new BuildListener() {
                     void onBuild(bool success)override {
                         _system_.consoleWrite(XPlatform.converToPlatformCharSet("\n组建" + (success ? "已执行." : "未能执行.") + "\n"));
@@ -379,8 +423,9 @@ class QxApp : QXApplication {
         }
     }
 
-    public static int main(String [] args) {
+    public static int main(@NotNilptr String [] args) {
         _system_.chdir(_system_.getAppDirectory());
+        //_system_.disableZGC(true);
         ArgsProcessor argspro = new ArgsProcessor(args);
 
         if (argspro.getCommand() == ArgsProcessor.CMD_BUILD) {

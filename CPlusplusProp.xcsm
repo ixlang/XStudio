@@ -9,7 +9,7 @@ class CPlusplusProp : ProjectPropInterface{
        _bridge = ppi;
    }
    
-   public void makefile(IBuilder builder, String projectDir){
+   public void makefile(@NotNilptr IBuilder builder, String projectDir){
 		String [] margs = {"make"};
 		Process _mprocess = new Process("/usr/bin/make", margs);
         _mprocess.setWorkDirectory(projectDir);
@@ -37,12 +37,24 @@ class CPlusplusProp : ProjectPropInterface{
             _bridge.onProjectSettingChange(object);
         }
     }
-    
+    String getFileExtensionFilter(){
+        if (_bridge != nilptr){
+            return _bridge.getFileExtensionFilter();
+        } 
+        return "C/C++ 源文件(*.cpp *.c *.cc *.cxx *.hpp *.h *.mm);;";
+    }
     public IXPlugin getXPlugin()override{
         if (_bridge != nilptr){
             return _bridge.getXPlugin();
         } 
         return nilptr;
+    }
+    
+    public @NotNilptr String map_variable(Project object,@NotNilptr  Configure configure,@NotNilptr  String text) override{
+        if (_bridge != nilptr){
+            return _bridge.map_variable(object, configure, text);
+        } 
+        return text;
     }
     
     public String getDebuggeeDescription()override{
@@ -111,13 +123,13 @@ class CPlusplusProp : ProjectPropInterface{
         return nilptr;
     }
     
-	public bool createNormalFileToProject(WizardLoader loader,String projectName, String projectDir, String uuid, Project ownProject, bool addToProject, String ext){
+	public bool createNormalFileToProject(@NotNilptr WizardLoader loader,@NotNilptr String projectName,@NotNilptr  String projectDir,@NotNilptr  String uuid, Project ownProject, bool addToProject, String ext){
 		XPlatform.mkdir(projectDir);
 		try{
 			String extsion = projectName.findExtension();
 			String filename ;
             
-			if (extsion != nilptr){
+			if (extsion.length() != 0){
 				filename = projectName;
 			}else{
 				filename = projectName + ext;
@@ -155,7 +167,7 @@ class CPlusplusProp : ProjectPropInterface{
 			fos.write(preContent.getBytes());
 			fos.close();
 			loader.openTextFile(destProj);
-			if (addToProject){
+			if (addToProject && ownProject != nilptr){
 				return ownProject.addSource(destProj);
 			}
 			return true;
@@ -165,7 +177,7 @@ class CPlusplusProp : ProjectPropInterface{
 		return false;
 	}
     
-	public bool create(WizardLoader loader, String projectName, String projectDir, String uuid, Project ownProject, bool isAddToProject, String userType) override {
+	public bool create(@NotNilptr WizardLoader loader,@NotNilptr String projectName,@NotNilptr  String projectDir, @NotNilptr String uuid, Project ownProject, bool isAddToProject, String userType) override {
 		if (uuid.equals("c480d6ff-10ba-483a-8a76-927ea81a2403")){
 			return createNormalFileToProject(loader, projectName, projectDir, uuid, ownProject, isAddToProject, ".cpp");
 		}
@@ -175,6 +187,9 @@ class CPlusplusProp : ProjectPropInterface{
 		if (uuid.equals("c4279b52-c866-4c90-bdd1-5780e721dbc7")){
 			return createNormalFileToProject(loader, projectName, projectDir, uuid, ownProject, isAddToProject, "");
 		}
+        if (_bridge != nilptr){
+            return _bridge.create(loader,projectName, projectDir, uuid,ownProject, isAddToProject, userType);
+        }
         return false;
 	}
 
@@ -184,7 +199,7 @@ class CPlusplusProp : ProjectPropInterface{
         }
 	}
 
-    public ICompileInfo parseOutputLine(QXSci sci,int position, int line, String text)override{
+    public ICompileInfo parseOutputLine(@NotNilptr QXSci sci,int position, int line, String text)override{
         if (_bridge != nilptr){
             return _bridge.parseOutputLine(sci,position, line, text);
         }
@@ -225,9 +240,9 @@ class CPlusplusProp : ProjectPropInterface{
         return nilptr;
     }
     
-    public void stopBuild()override{
+    public void stopBuild(IBuilder builder)override{
         if (_bridge != nilptr){
-            _bridge.stopBuild();
+            _bridge.stopBuild(builder);
         }
     }
 };

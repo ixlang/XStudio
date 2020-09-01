@@ -81,7 +81,7 @@ class PackageViewer : QXDialog{
             if (error == 0){ 
                 JsonArray pkgs = (JsonArray)root.get("data");
                 if (pkgs != nilptr){
-                    for (int i = 0; i < pkgs.length(); i++){
+                    for (int i = 0, c = pkgs.length(); i < c; i++){
                          JsonObject item = (JsonObject)pkgs.get(i);
                          if (item != nilptr){ 
                              PackageManager.PackageInfo pinfo = new PackageManager.PackageInfo(item);
@@ -109,7 +109,7 @@ class PackageViewer : QXDialog{
     }
     
     
-    public void onloadSuccess(PackageManager.PackageInfo [] pkgs){
+    public void onloadSuccess(@NotNilptr PackageManager.PackageInfo [] pkgs){
         loadList();
         loadNetList(pkgs);
     }
@@ -159,7 +159,7 @@ class PackageViewer : QXDialog{
         pcklist.setColumnWidth(4,150);
         
         pcklist.setOnTreeViewItemEvent( new onTreeViewItemEvent(){
-			void onItemClicked(QXTreeView tree,long item, int column){
+			void onItemClicked(@NotNilptr QXTreeView tree,long item, int column){
 				if (column == 4){
 					String txt = tree.getItemText(item, column);
                     if (txt.upper().startWith("HTTP")){
@@ -239,7 +239,7 @@ class PackageViewer : QXDialog{
 
         keyedit.setOnEditEventListener(new onEditEventListener() {
 
-            void onTextChanged(QXObject, String text)override {
+            void onTextChanged(QXObject, @NotNilptr String text)override {
                 String key = text.upper();
                 long [] items = pcklist.getTopItems();
                 int c = pcklist.getTopLevelCount();
@@ -284,7 +284,7 @@ class PackageViewer : QXDialog{
     public void editSrcaddress()
     {
         InputDialog.requestInput(new InputDialog.onInputListener() {
-            bool onInputOk(String text)override {
+            bool onInputOk(@NotNilptr String text)override {
                 if (text.length() == 0) {
                     QXMessageBox.Critical("错误", "输入了不正确的地址", QXMessageBox.Ok, QXMessageBox.Ok);
                     return false;
@@ -311,13 +311,13 @@ class PackageViewer : QXDialog{
     public void installSelPkgs(){
        long []items = pcklist.getSelectedItems();
         
-        if (items.length > 0){
+        if (items != nilptr &&  items.length > 0){
             for (int i =0; i < items.length; i++){
                 long dlid = pcklist.getItemTag(items[i], 3);
                 if (dlid > 0 && dlid < net_cache_pis.length){
                     int nid = dlid - 1;
                     PackageManager.PackageInfo pinfo = net_cache_pis[nid];
-                    if (pinfo.detectCache()){
+                    if (pinfo != nilptr && pinfo.detectCache()){
                         install(pinfo.cacheFile);
                     }else{
                         QXMessageBox.Critical("注意","未获取完成,无法进行安装",QXMessageBox.Ok,QXMessageBox.Ok);
@@ -330,13 +330,13 @@ class PackageViewer : QXDialog{
     public void downloadSelPkgs(){
        long []items = pcklist.getSelectedItems();
         
-        if (items.length > 0){
+        if (items != nilptr && items.length > 0){
             for (int i =0; i < items.length; i++){
                 long dlid = pcklist.getItemTag(items[i], 3);
                 if (dlid > 0){
                     int nid = dlid - 1;
                     PackageManager.PackageInfo pinfo = net_cache_pis[nid];
-                    if (pinfo.detectCache()){
+                    if (pinfo != nilptr && pinfo.detectCache()){
                         install(pinfo.cacheFile);
                     }else{ 
                         DownloadCenter.createDownload(net_cache_pis[nid].name, net_cache_pis[nid].url, net_cache_pis[nid].cacheFile, net_cache_pis[nid].dlsize, new DownloadListener(){
@@ -375,28 +375,30 @@ class PackageViewer : QXDialog{
         int c = pcklist.getTopLevelCount();
         PackageManager.PackageInfo pinfo = (PackageManager.PackageInfo)tag;
         
-        for (int i = 0; i < c; i++){
-            bool visible = false;
-            String itemtext = pcklist.getItemText(items[i],0);
-            if (pinfo.name.equals(itemtext)){
-                switch(status){
-                    case DownloadStatus.DL_BEGIN:
-                    pcklist.setItemText(items[i],3,"开始下载...");
-                    break;
-                    case DownloadStatus.DL_INPROCESSING:
-                    pcklist.setItemText(items[i],3,"已下载:" + prog + "%...");
-                    break;
-                    case DownloadStatus.DL_DONE:
-                    if (prog == 100){
-                        pcklist.setItemText(items[i],3,"下载完成");
-                        install(pinfo.cacheFile);
-                    }else{
-                        pcklist.setItemText(items[i],3,"下载失败");
+        if (pinfo != nilptr){
+            for (int i = 0; i < c; i++){
+                bool visible = false;
+                String itemtext = pcklist.getItemText(items[i],0);
+                if (pinfo.name.equals(itemtext)){
+                    switch(status){
+                        case DownloadStatus.DL_BEGIN:
+                        pcklist.setItemText(items[i],3,"开始下载...");
+                        break;
+                        case DownloadStatus.DL_INPROCESSING:
+                        pcklist.setItemText(items[i],3,"已下载:" + prog + "%...");
+                        break;
+                        case DownloadStatus.DL_DONE:
+                        if (prog == 100){
+                            pcklist.setItemText(items[i],3,"下载完成");
+                            install(pinfo.cacheFile);
+                        }else{
+                            pcklist.setItemText(items[i],3,"下载失败");
+                        }
+                        
+                        break;
                     }
-                    
                     break;
                 }
-                break;
             }
         }
         updateProgress();
@@ -407,7 +409,7 @@ class PackageViewer : QXDialog{
 	public void exportPackage(){
 		long []items = pcklist.getSelectedItems();
         
-        if (items.length > 0){
+        if (items != nilptr && items.length > 0){
 			for (int i = 0; i < items.length; i++){
 				int id = pcklist.getItemTag(items[i], 0);
 				PackageManager.PackageInfo pi = pm.get(id);
@@ -426,7 +428,7 @@ class PackageViewer : QXDialog{
 		public QXMenu contextMenu = new QXMenu();
 		public QXAction [] actions;
 		
-		public void create(QXWidget parent, String [] acts, onEventListener listener){
+		public void create(@NotNilptr QXWidget parent,@NotNilptr String [] acts, onEventListener listener){
 			if (contextMenu.create(parent)){
 				actions = new QXAction[acts.length];
 				for (int i = 0; i < acts.length; i ++){
@@ -462,6 +464,7 @@ class PackageViewer : QXDialog{
     public void createContextMenu(){
 		QXTreeView list = pcklist;
         
+        
 		onEventListener menuListener = new onEventListener(){
 		   public void onTrigger(QXObject obj) override{
 				if (obj == _contextMenu.actions[0]){
@@ -491,11 +494,12 @@ class PackageViewer : QXDialog{
 		};
         
 		
-		
-		String []acts = {"从文件安装...","-", "刷新","-", "添加到当前项目", "-", "获取包", "安装", "导出", "-", "删除"};
-		_contextMenu.create(list, acts, menuListener);
-        for (int i =0; i < acts.length; i++){
-            _contextMenu.setEnable(i, true);
+		if (list != nilptr){
+            String []acts = {"从文件安装...","-", "刷新","-", "添加到当前项目", "-", "获取包", "安装", "导出", "-", "删除"};
+            _contextMenu.create(list, acts, menuListener);
+            for (int i =0; i < acts.length; i++){
+                _contextMenu.setEnable(i, true);
+            }
         }
 	}
     
@@ -503,7 +507,7 @@ class PackageViewer : QXDialog{
 		long []items = pcklist.getSelectedItems();
         
         String tips = "将删除包:\n";
-        if (items.length > 0){
+        if (items != nilptr && items.length > 0){
 			int count = 0;
 			for (int i = 0; i < items.length; i++){
 				int id = pcklist.getItemTag(items[i], 0);
@@ -531,7 +535,7 @@ class PackageViewer : QXDialog{
         }
     }
 
-	public void install(String file){
+	public void install(@NotNilptr String file){
 		PackageManager.PackageInfo pi = pm.previewPackage(file);
         if (pi == nilptr){
 			QXMessageBox.Critical("错误", file + " 不是一个有效的X包.", QXMessageBox.Ok, QXMessageBox.Ok);
@@ -541,6 +545,7 @@ class PackageViewer : QXDialog{
         long newVersion = Utils.getVersionValue(pi.version);
         
 		Vector<PackageManager.PackageInfo> pl = pm.findPackages(pi.name, nilptr);
+        
         
         if (pl.size() == 0){
 			if (QXMessageBox.Information("提示", "将安装包 " + pi.name + " " + pi.version + "?" + "<br /><br />简介:<br /><b>" + pi.descr + "</b><br /><br />发布者:<a href=\"" + pi.author + "\">" + pi.author + "<em>", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Ok) == QXMessageBox.Ok){
@@ -552,16 +557,18 @@ class PackageViewer : QXDialog{
 			}
         }else{
 			bool bExists = false, bUpgrade = false, bDowngrade = false;
-			for (int i = 0; i < pl.size(); i ++){
+			for (int i = 0, c = pl.size(); i < c; i ++){
 				PackageManager.PackageInfo pe = pl.get(i);
-                long v = Utils.getVersionValue(pe.version);
-                if (v == newVersion){
-					bExists = true;
-                }else
-                if (v < newVersion){
-					bUpgrade = true;
-                }else{
-					bDowngrade = true;
+                if (pe != nilptr ){
+                    long v = Utils.getVersionValue(pe.version);
+                    if (v == newVersion){
+                        bExists = true;
+                    }else
+                    if (v < newVersion){
+                        bUpgrade = true;
+                    }else{
+                        bDowngrade = true;
+                    }
                 }
             }
             
@@ -627,49 +634,56 @@ class PackageViewer : QXDialog{
             QXMessageBox.Critical("错误","当前工作区没有载入一个有效的项目",QXMessageBox.Ok,QXMessageBox.Ok);
             return ;
         }
+        
 		ProgressView pv = ProgressView.showWait(-1);
-        pv.setTitleText("正在导入...");
-        pv.EnableProgress(true , 0);
-        pv.centerScreen();
-		long []items = pcklist.getSelectedItems();
         
-        if (items.length > 0){
-			PackageManager.PackageInfo [] pis = new PackageManager.PackageInfo[items.length];
-			for (int i = 0; i < items.length; i++){
-				int id = pcklist.getItemTag(items[i], 0);
-				pis[i] = pm.get(id);
-			}
-        
-        
-			btnAdd.setEnabled(false);
-			new Thread(){
-				void run()override{
-					for (int i = 0; i < pis.length; i++){
-						pv.setTitleText("正在导入 " + (i + 1) + "/" + pis.length);
-						
-						PackageManager.PackageInfo pi = pis[i];
-						if (pi != nilptr){
-							XWndOutput.Output("\n导入 " + pi.name + " 版本:" + pi.version  + " ....\n", 0);
-							XWorkspace.workspace.getCurrentProject().importPkg(pi);
-						}else{
-							XWndOutput.Output("\n第 " + (i + 1) + " 是无效的包.\n", 0);
-						}
-						pv.EnableProgress(true,  (double)i + 1 / (double)items.length);
-					}
-					pv.EnableProgress(true,  1.f);
-					pv.showResult(true, true);
-					pv.setTitleText("已导入");
-					pv.dismissAfter(2000);
-					XWndOutput.Output("\n已全部导入完毕\n", 0);
-                    
-                    runOnUi(new Runnable(){
-						void run()override{
-							btnAdd.setEnabled(true);
-                            XWorkspace.workspace.XIntelliSense();
+        if (pv != nilptr){
+            pv.setTitleText("正在导入...");
+            pv.EnableProgress(true , 0);
+            pv.centerScreen();
+            long []items = pcklist.getSelectedItems();
+            
+            if (items != nilptr && items.length > 0){
+                PackageManager.PackageInfo [] pis = new PackageManager.PackageInfo[items.length];
+                for (int i = 0; i < items.length; i++){
+                    int id = pcklist.getItemTag(items[i], 0);
+                    pis[i] = pm.get(id);
+                }
+            
+            
+                btnAdd.setEnabled(false);
+                new Thread(){
+                    void run()override{
+                        for (int i = 0; i < pis.length; i++){
+                            pv.setTitleText("正在导入 " + (i + 1) + "/" + pis.length);
+                            
+                            PackageManager.PackageInfo pi = pis[i];
+                            if (pi != nilptr){
+                                XWndOutput.Output("\n导入 " + pi.name + " 版本:" + pi.version  + " ....\n", 0);
+                                Project cproj = XWorkspace.workspace.getCurrentProject();
+                                if (cproj != nilptr){
+                                    cproj.importPkg(pi);
+                                }
+                            }else{
+                                XWndOutput.Output("\n第 " + (i + 1) + " 是无效的包.\n", 0);
+                            }
+                            pv.EnableProgress(true,  (double)i + 1 / (double)items.length);
                         }
-                    });
-				}
-			}.start();
+                        pv.EnableProgress(true,  1.f);
+                        pv.showResult(true, true);
+                        pv.setTitleText("已导入");
+                        pv.dismissAfter(2000);
+                        XWndOutput.Output("\n已全部导入完毕\n", 0);
+                        
+                        runOnUi(new Runnable(){
+                            void run()override{
+                                btnAdd.setEnabled(true);
+                                XWorkspace.workspace.XIntelliSense();
+                            }
+                        });
+                    }
+                }.start();
+            }
         }
     }
     
@@ -684,47 +698,51 @@ class PackageViewer : QXDialog{
 		int c = pm.getCount();
 		for (int i =0; i < c; i++){
 			PackageManager.PackageInfo pi = pm.get(i);
-            String icon = pi.iconFile;
-            if (icon == nilptr || icon.length() == 0){
-				icon = "res/package64.png";
+            if (pi != nilptr){
+                String icon = pi.iconFile;
+                if (icon == nilptr || icon.length() == 0){
+                    icon = "res/package64.png";
+                }
+                long item = pcklist.addItem(icon, pi.name);
+                pcklist.modifyItemFlags(item, QXTreeView.ItemIsUserCheckable, 0);
+                pcklist.setItemText(item, 1, pi.version);
+                pcklist.setItemText(item, 2, pi.descr);
+                pcklist.setItemText(item, 3, "已安装");
+                pcklist.setItemText(item, 4, pi.author);
+                pcklist.setItemTag(item, 0, i);
             }
-            long item = pcklist.addItem(icon, pi.name);
-            pcklist.modifyItemFlags(item, QXTreeView.ItemIsUserCheckable, 0);
-            pcklist.setItemText(item, 1, pi.version);
-            pcklist.setItemText(item, 2, pi.descr);
-            pcklist.setItemText(item, 3, "已安装");
-            pcklist.setItemText(item, 4, pi.author);
-            pcklist.setItemTag(item, 0, i);
         }
     }
     
     
-    public void loadNetList(PackageManager.PackageInfo [] pis){
+    public void loadNetList(@NotNilptr PackageManager.PackageInfo [] pis){
 		int c = pis.length;
         net_cache_pis = pis;
 		for (int i =0; i < c; i++){
 			PackageManager.PackageInfo pi = pis[i];
-            if (nilptr != pm.findPackage(pi.name, pi.version)){
-                continue;
+            if (pi != nilptr){
+                if (nilptr != pm.findPackage(pi.name, pi.version)){
+                    continue;
+                }
+                String icon = pi.iconFile;
+                if (icon == nilptr || icon.length() == 0){
+                    icon = "res/package64.png";
+                }
+                long item = pcklist.addItem(icon, pi.name);
+                pcklist.setItemTag(item,3,i + 1);
+                pcklist.modifyItemFlags(item, QXTreeView.ItemIsUserCheckable, 0);
+                pcklist.setItemText(item, 1, pi.version);
+                pcklist.setItemText(item, 2, pi.descr);
+                
+                if (pi.detectCache()){
+                    pcklist.setItemText(item, 3, String.format("已下载,待安装", pi.dlsize));
+                }else{
+                    pcklist.setItemText(item, 3, String.format("未安装[大小:%d]", pi.dlsize));
+                }
+                
+                pcklist.setItemText(item, 4, pi.author);
+                pcklist.setItemTag(item, 0, -1);
             }
-            String icon = pi.iconFile;
-            if (icon == nilptr || icon.length() == 0){
-				icon = "res/package64.png";
-            }
-            long item = pcklist.addItem(icon, pi.name);
-            pcklist.setItemTag(item,3,i + 1);
-            pcklist.modifyItemFlags(item, QXTreeView.ItemIsUserCheckable, 0);
-            pcklist.setItemText(item, 1, pi.version);
-            pcklist.setItemText(item, 2, pi.descr);
-            
-            if (pi.detectCache()){
-                pcklist.setItemText(item, 3, String.format("已下载,待安装", pi.dlsize));
-            }else{
-                pcklist.setItemText(item, 3, String.format("未安装[大小:%d]", pi.dlsize));
-            }
-            
-            pcklist.setItemText(item, 4, pi.author);
-            pcklist.setItemTag(item, 0, -1);
         }
     }
     
@@ -751,7 +769,7 @@ class PackageViewer : QXDialog{
         return true;
     }
     
-	public static bool Install(String file){
+	public static bool Install(@NotNilptr String file){
     
         QXDialog newDlg = new QXDialog();
         

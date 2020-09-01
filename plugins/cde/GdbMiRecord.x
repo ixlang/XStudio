@@ -26,4 +26,8 @@ class GdbMiRecord
 	 * The user token from the record. May be null if none was specified.
 	 */
 	public long userToken;
+    
+    public bool processed = false;
+    
+    public String toString();
 };

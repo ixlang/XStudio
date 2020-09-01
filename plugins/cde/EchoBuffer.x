@@ -34,7 +34,7 @@ class EchoBuffer{
         length -= size;
     }
     
-    public bool endWith(byte [] cdata){
+    public bool endWith(@NotNilptr byte [] cdata){
         if (length >= cdata.length){
             int start = length - cdata.length;
             for (int i =0; i < cdata.length; i++){
@@ -47,7 +47,7 @@ class EchoBuffer{
         return false;
     }
     
-    public bool endWithLine(String line){
+    public bool endWithLine(@NotNilptr String line){
         int offset = length - line.length();
         while (offset > 0){
             if (data[offset] == '\n'){
@@ -81,7 +81,16 @@ class EchoBuffer{
         return out;
     }
     
-    public String toString(){
+    int indexOf(char c){
+        for (int i = 0; i < length; i++){
+            if (data[i] == c){
+                return i;
+            }
+        }
+        return -1;
+    }
+    
+    public @NotNilptr  String toString(){
         try{
             if (_system_.getPlatformId() == 0){
                 return new String(data, 0, length, "GB18030//IGNORE");
@@ -92,5 +101,21 @@ class EchoBuffer{
             
         }
         return new String(data, 0, length);
+    }
+    
+    public @NotNilptr  String toRawString(int start, int len){
+        return new String(data, start, len);
+    }
+    
+    public @NotNilptr  String toRawString(){
+        return new String(data, 0, length);
+    }
+    
+    public @NotNilptr int match(@NotNilptr Pattern pattern){
+        Pattern.Result res = pattern.match(new String(data, 0, length),Pattern.NOTEMPTY);
+        if (res.length() != 0){
+            return res.get(res.length() - 1).end();
+        }
+        return -1;
     }
 };

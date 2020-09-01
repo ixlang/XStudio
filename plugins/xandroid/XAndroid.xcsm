@@ -144,11 +144,17 @@ class XAndroid : IXPlugin{
     void onTextEditorCreated(TextEditorController)override{
         
     }
+    void settingFlushed(){
     
+    }
     void onTextEditorClosed(TextEditorController)override{
         
     }
-    
+    void showDocks(bool bs){
+    }
+    String getSetting(){
+        return nilptr;
+    }
     public static void setDefaultDevice(String serial){
         defaultDevice = serial;
         saveConfig();
@@ -1307,7 +1313,7 @@ class XAndroid : IXPlugin{
             iconFile = iconFile.trim(true);
         }
         if (iconFile != nilptr && iconFile.length() > 0){
-            iconFile = project.map_variable(iconFile);
+            iconFile = project.MapVariable(iconFile);
             
             if (XPlatform.existsSystemFile(iconFile) == false){
                 iconFile = String.formatPath(originalProjectDir.appendPath(iconFile), false);

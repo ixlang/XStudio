@@ -17,7 +17,7 @@ class XWndSln : QXDockWidget
         public long item;
         public String sourceName;
 
-        public ProjectSource(Project proj, long _item, int sid)
+        public ProjectSource(@NotNilptr Project proj, long _item, int sid)
         {
             item = _item;
             project = proj;
@@ -32,7 +32,7 @@ class XWndSln : QXDockWidget
         {
             project.removeSource(sourceID);
         }
-        public String rename(String newname)
+        public String rename(@NotNilptr String newname)
         {
             return project.rename(sourceID, newname);
         }
@@ -43,7 +43,7 @@ class XWndSln : QXDockWidget
         QXMenu contextMenu = new QXMenu();
         public QXAction [] actions;
 
-        public void create(QXWidget parent, String [] acts, onEventListener listener)
+        public void create(@NotNilptr QXWidget parent,@NotNilptr  String [] acts,@NotNilptr  onEventListener listener)
         {
             if (contextMenu.create(parent)) {
                 actions = new QXAction[acts.length];
@@ -108,16 +108,20 @@ class XWndSln : QXDockWidget
             if (obj == XWndSln.this._contextMenu.actions[10]) {
                 if (current_ps != nilptr) {
                     String file = current_ps.getSourcePath();
-                    QXCore.openLocal(String.formatPath(file.findVolumePath(), false));
+                    if (file != nilptr){
+                        QXCore.openLocal(String.formatPath(file.findVolumePath(), false));
+                    }
                 }
                 return ;
             }
             if (obj == XWndSln.this._contextMenu.actions[11]) {
                 if (current_ps != nilptr) {
                     String file = current_ps.getSourcePath();
-                    String ext = file.findExtension();
-                    if (ext != nilptr && ext.upper().equals(".UI")) {
-                        openWithDesigner(file);
+                    if (file != nilptr){
+                        String ext = file.findExtension();
+                        if (ext.upper().equals(".UI")) {
+                            openWithDesigner(file);
+                        }
                     }
                 }
                 return ;
@@ -148,7 +152,7 @@ class XWndSln : QXDockWidget
                         }
                         bool fileDeleted = false;
                         String file = current_ps.getSourcePath();
-                        if (XPlatform.existsSystemFile(file)) {
+                        if (file != nilptr && XPlatform.existsSystemFile(file)) {
                             fileDeleted = XPlatform.deleteFile(file);
                         }
                         if (fileDeleted == false) {
@@ -176,13 +180,13 @@ class XWndSln : QXDockWidget
                 ProjectSource ps = sourceItem.get(item);
                 if (ps != nilptr) {
                     String source = ps.getSourcePath();
-
-                    if (XPlatform.existsSystemFile(source) == false) {
-                        QXMessageBox.Critical("文件不存在", "找不到文件:" + ps.getSourcePath() + "该位置的文件已不存在.", QXMessageBox.Ok, QXMessageBox.Ok);
-                    } else {
-                        workspace.openTextFile(source);
+                    if (source != nilptr){
+                        if (XPlatform.existsSystemFile(source) == false) {
+                            QXMessageBox.Critical("文件不存在", "找不到文件:" + ps.getSourcePath() + "该位置的文件已不存在.", QXMessageBox.Ok, QXMessageBox.Ok);
+                        } else {
+                            workspace.openTextFile(source);
+                        }
                     }
-
                 }
             } catch(Exception e) {
 
@@ -204,9 +208,12 @@ class XWndSln : QXDockWidget
 
             if (current_ps != nilptr) {
                 String file = current_ps.getSourcePath();
-                String ext = file.findExtension();
-                if (ext != nilptr && ext.upper().equals(".UI")) {
-                    designer_enable = true;
+                
+                if (file != nilptr){
+                    String ext = file.findExtension();
+                    if (ext.upper().equals(".UI")) {
+                        designer_enable = true;
+                    }
                 }
             }
 
@@ -214,7 +221,7 @@ class XWndSln : QXDockWidget
         }
     };
 
-    public String quotePath(String arg)
+    public String quotePath(@NotNilptr String arg)
     {
         if (_system_.getPlatformId() == 0) {
             if (arg.indexOf(' ') != -1) {
@@ -224,7 +231,7 @@ class XWndSln : QXDockWidget
         return arg;
     }
 
-    public String generateArgs(String arg)
+    public String generateArgs (@NotNilptr String arg)
     {
         if (_system_.getPlatformId() == 0) {
             try {
@@ -236,7 +243,7 @@ class XWndSln : QXDockWidget
         return quotePath(arg);
     }
 
-    public void openWithDesigner(String path)
+    public void openWithDesigner(@NotNilptr String path)
     {
         String degpath = String.formatPath(_system_.getAppPath().findVolumePath().appendPath("designer/designer"), false);
         if (_system_.getPlatformId() == 0) {
@@ -254,11 +261,11 @@ class XWndSln : QXDockWidget
         }
     }
 
-    public void renameItem(ProjectSource ps)
+    public void renameItem(@NotNilptr ProjectSource ps)
     {
         InputDialog.requestInput(new InputDialog.onInputListener() {
             String oldname = ps.getSourcePath();
-            bool onInputOk(String text)override {
+            bool onInputOk(@NotNilptr String text)override {
                 if (text.length() == 0) {
                     QXMessageBox.Critical("错误", "输入了不正确的文件名", QXMessageBox.Ok, QXMessageBox.Ok);
                     return false;
@@ -318,12 +325,12 @@ class XWndSln : QXDockWidget
 
         editSearch.setOnEditEventListener(new onEditEventListener() {
 
-            void onTextChanged(QXObject, String text)override {
+            void onTextChanged(QXObject,@NotNilptr  String text)override {
                 String key = text.upper();
                 Map.Iterator<long, ProjectSource> iter = sourceItem.iterator();
                 while (iter.hasNext()) {
                     ProjectSource ps = iter.getValue();
-                    if (ps.item != 0) {
+                    if (ps != nilptr && ps.item != 0) {
                         try {
                             if (Pattern.test(ps.sourceName.upper(), key, 0, false)) {
                                 _treesln.setItemVisible(ps.item, true);
@@ -345,6 +352,7 @@ class XWndSln : QXDockWidget
     public void createContextMenu()
     {
         String []acts = {"构建项目\tF7", "-", "移除文件(&R)", "删除文件(&D)","重命名(&R)","-", "添加项","-","运行\tF5", "项目属性(&P)", "打开所在目录(&F)", "UI设计器中打开(&U)"};
+        __nilptr_safe(_treesln);
         _contextMenu.create(_treesln, acts, menuListener);
     }
 
@@ -381,7 +389,7 @@ class XWndSln : QXDockWidget
         if (items != nilptr) {
             for (int i =0 ; i < items.length; i++) {
                 String lab = _treesln.getItemText(items[i], 0);
-                if (lab != nilptr && lab.equals(name)) {
+                if (lab.equals(name)) {
                     return items[i];
                 }
             }
@@ -393,25 +401,28 @@ class XWndSln : QXDockWidget
         return _treesln.addItem(icon, name);
     }
 
-    public void loadProject(Project project)
+    public void loadProject(@NotNilptr Project project)
     {
         String name = project.getName();
         project.viewItem = _treesln.addItem("res/toolbar/project.png", name);
         project.sourcesRoot = _treesln.insertItem(project.viewItem, "res/toolbar/sources.png", "源文件");
 
         JsonArray sources = project.getSources();
-        for (int i =0; i < sources.length(); i++) {
-            String pathfile = sources.getString(i);
+        if (sources != nilptr){
+            for (int i = 0, c = sources.length(); i < c; i++) {
+                String pathfile = sources.getString(i);
+                
+                if (pathfile != nilptr){
+                    if (pathfile.startWith("./") || pathfile.startWith(".\\")) {
+                        pathfile = pathfile.substring(2,pathfile.length());
+                    }
 
-            if (pathfile.startWith("./") || pathfile.startWith(".\\")) {
-                pathfile = pathfile.substring(2,pathfile.length());
+                    String iconFile = "res/toolbar/source.png";
+                    long item = addItem(project.sourcesRoot, iconFile, pathfile);
+                    sourceItem.put(item, new ProjectSource(project,item, i));
+                }
             }
-
-            String iconFile = "res/toolbar/source.png";
-            long item = addItem(project.sourcesRoot, iconFile, pathfile);
-            sourceItem.put(item, new ProjectSource(project,item, i));
         }
-
         _treesln.setExpand(project.viewItem, true);
         _treesln.setExpand(project.sourcesRoot, true);
         currentProject = project;
@@ -433,14 +444,16 @@ class XWndSln : QXDockWidget
             loadProject(_pro);
         }
     }
-    public void updateAppendSource(Project project, int size)
+    public void updateAppendSource(@NotNilptr Project project, int size)
     {
         if (project.sourcesRoot != 0) {
             JsonArray sources = project.getSources();
-            for (int i = 0; i < size; i ++) {
-                int id = sources.length() - (i + 1);
-                long item = addItem(project.sourcesRoot, "res/toolbar/source.png", sources.getString(id));
-                sourceItem.put(item, new ProjectSource(project,item, id));
+            if (sources != nilptr){
+                for (int i = 0; i < size; i ++) {
+                    int id = sources.length() - (i + 1);
+                    long item = addItem(project.sourcesRoot, "res/toolbar/source.png", sources.getString(id));
+                    sourceItem.put(item, new ProjectSource(project,item, id));
+                }
             }
         }
     }

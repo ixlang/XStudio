@@ -115,7 +115,7 @@ class XStackInfor : QXDockWidget{
         return c >= 'a' && c <= 'z' ||c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c== '_';
     }
     
-    String convertPathToMethod(String path){
+    String convertPathToMethod(@NotNilptr String path){
         byte [] bppath = path.getBytes();
         for (int i = 0; i < bppath.length; i++){
             if (bppath[i] == '/'){
@@ -135,7 +135,7 @@ class XStackInfor : QXDockWidget{
     
  
     
-     void updateToItem(long item, ThreadManager.ThreadObject to, bool bLocate){
+     void updateToItem(long item,@NotNilptr  ThreadManager.ThreadObject to, bool bLocate){
 		_listview.setItemText(item, 0, to.name);
         _listview.setItemText(item, 1, "" + to.id);
         
@@ -144,7 +144,7 @@ class XStackInfor : QXDockWidget{
         if (to.id == ThreadManager.currentThreadId){
             bCurrentThread = true;
         }
-        
+        _listview.setItemSelected(item, false);
         _listview.setItemBackColor(item,0,bCurrentThread ? 0xffcccccc : 0x00000000);
         _listview.setItemBackColor(item,1,bCurrentThread ? 0xffcccccc : 0x00000000);
         _listview.setItemBackColor(item,2,bCurrentThread ? 0xffcccccc : 0x00000000);
@@ -164,8 +164,10 @@ class XStackInfor : QXDockWidget{
 		if (to.frames != nilptr){
 			for (int i = 0; i < to.frames.length; i++){
 				ThreadManager.StackFrame sf = to.frames[i];
-				
-				String ip = String.format("0x%08X", sf.ip);
+				if (sf == nilptr){
+                    continue;
+                }
+				String ip = String.format("0x%p", sf.ip);
 				
 				long fitem = _listview.insertItem(item, nilptr, "#frame:" + i);
 				_listview.setItemText(fitem, 1, "" + i);
@@ -184,7 +186,7 @@ class XStackInfor : QXDockWidget{
                     }
                     if (sf.method != nilptr){
                         String shortname = sf.source.findFilenameAndExtension();
-                        if (shortname != nilptr){
+                        if (shortname.length() != 0){
                             _listview.setItemText(fitem, 3,  sf.method + "  -  [" + path + "@" + shortname + " + " + String.format("0x%08X", sf.moffset) + "]");
                         }else{
                             _listview.setItemText(fitem, 3, sf.method);
@@ -196,28 +198,28 @@ class XStackInfor : QXDockWidget{
 					_listview.setItemText(fitem, 4, sf.source);
 					
 					if (i == 0){
-                    
                         if (sf.source != nilptr && sf.source.length() > 0){
                             BreakPosition bp = new BreakPosition(sf.source, sf.line, sf.column, bLocate);
                         
                             Map.Iterator<long, BreakPosition> iter = breakList.find(to.id);
                             if (iter != nilptr){
                                 BreakPosition old_bp = iter.getValue();
-                                
-                                if (old_bp.file.equals(sf.source) && old_bp.line == sf.line && old_bp.row == sf.column){
-                                    if (old_bp.active == false){
-                                        XSourceEditor.setBreak(bp, true);
+                                if (old_bp != nilptr){
+                                    if (old_bp.file.equals(sf.source) && old_bp.line == sf.line && old_bp.row == sf.column){
+                                        if (old_bp.active == false){
+                                            XSourceEditor.setBreak(bp, true, to.bSender);
+                                        }
+                                        continue;
+                                        //onlyActive = true;
+                                    }else{
+                                        XSourceEditor.removeBreak(old_bp);
+                                        iter.setValue(bp);
                                     }
-                                    continue;
-                                    //onlyActive = true;
-                                }else{
-                                    XSourceEditor.removeBreak(iter.getValue());
-                                    iter.setValue(bp);
                                 }
                             }
                         
                             breakList.put(to.id ,bp);
-                            XSourceEditor.setBreak(bp, false);
+                            XSourceEditor.setBreak(bp, false, to.bSender);
                         }
                         
 					}
@@ -297,9 +299,7 @@ class XStackInfor : QXDockWidget{
                 
                 raise();
                 
-                if (msgInfo != nilptr){
-                    QXMessageBox.Warning("异常中断", msgInfo, QXMessageBox.Ok, QXMessageBox.Ok);
-                }
+                QXMessageBox.Warning("异常中断", msgInfo, QXMessageBox.Ok, QXMessageBox.Ok);
             }
         }
     }
@@ -344,7 +344,10 @@ class XStackInfor : QXDockWidget{
     void removeBreak(long tid){
 		Map.Iterator<long, BreakPosition> iter = breakList.find(tid);
         if (iter != nilptr){
-			XSourceEditor.removeBreak(iter.getValue());
+            BreakPosition bp = iter.getValue();
+            if (bp != nilptr){
+                XSourceEditor.removeBreak(bp);
+            }
             breakList.remove(iter);
         }
     }

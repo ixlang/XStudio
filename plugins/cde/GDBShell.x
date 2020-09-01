@@ -8,7 +8,7 @@ class GDBShell{
     Process _gdb_process;
     Stream _xp, _client_pipe;
     IBuilder __builder;
-    
+    String gdbPath = nilptr;
     int DEBUG_TYPE = 0; //0 normal 1 attach 2 remote
     
     String [] target_args;
@@ -81,6 +81,7 @@ class GDBShell{
     public Process createProcess(String exec, String [] args, String dir){
         try{
             _gdb_process = new Process(exec, args);
+            gdbPath = exec;
             if (dir != nilptr){
                 _gdb_process.setWorkDirectory(dir);
             }
@@ -91,34 +92,67 @@ class GDBShell{
     }
     
     
-    public bool beginDebug(){
-        if (_gdb_process.create(Process.StdOut | Process.StdIn | Process.RedirectStdErr)){
-            bExit = false;
-            new Thread(){
-                void run(){
-                    Thread.setName("threadReadloop");
-                    threadReadloop();
-                }
-            }.start();
-            
-            new Thread(){
-                void run(){
-                    Thread.setName("readresp");
-                    readresp();
-                    if (termina_process != nilptr){
-                        termina_process.exit(5);
+    void setEnvir(String gdbPath){
+        if (gdbPath != nilptr && _system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
+            String path = EnvironmentMgr.getEnvironmentPath();
+            if (path != nilptr){
+                String gdbDir = gdbPath.findVolumePath();
+                if (gdbDir.length() != 0){
+                    String gdbDirprt = gdbDir.findVolumePath();
+                    if (gdbDirprt.length() > 0){
+                        path = gdbDirprt + ";" + path;
                     }
+                    path = gdbDir + ";" + path;
                 }
-            }.start();
-            
-            new Thread(){
-                void run(){
-                    Thread.setName("threadSendloop");
-                    threadSendloop();
+                path =  ".;" + path;
+                writeGdbCommand("set environment path " + path + "\n");
+            }
+        }
+    }
+
+
+    public bool beginDebug(){
+        try{
+            if (_gdb_process.create(Process.StdOut | Process.StdIn | Process.RedirectStdErr)){
+                bExit = false;
+                
+                new Thread(){
+                    void run(){
+                        Thread.setName("threadSendloop");
+                        threadSendloop();
+                    }
+                }.start();
+                
+                
+                new Thread(){
+                    void run(){
+                        Thread.setName("readresp");
+                        readresp();
+                        if (termina_process != nilptr){
+                            termina_process.exit(5);
+                        }
+                        exitSender();
+                    }
+                }.start();
+                
+                setEnvir(gdbPath);
+                writeGdbCommand("set confirm off\n");
+                writeGdbCommand("set breakpoint pending on\n");
+                writeGdbCommand("set unwindonsignal on\n");
+                if (CPPGPlugManager.isCacheThrow()){
+                    writeGdbCommand("catch throw\n");
                 }
-            }.start();
-            
-            return true;
+                writeGdbCommand(CPPGPlugManager.isATTDisasmMode() ? "set disassembly-flavor att\n" : "set disassembly-flavor intel\n");
+                new Thread(){
+                    void run(){
+                        Thread.setName("threadReadloop");
+                        threadReadloop();
+                    }
+                }.start();
+                
+                return true;
+            }
+        }catch(Exception  e){
         }
         return false;
     }
@@ -176,7 +210,7 @@ class GDBShell{
     
     Object cmdlock = new Object();
     
-    int writeGdbCommand(String cmd){
+    public int writeGdbCommand(String cmd){
     
         int ncmd = 0;
         
@@ -187,20 +221,64 @@ class GDBShell{
         return writeGdbCommand(ncmd, cmd);
     }
     
+    void sendToGdbPipe(@NotNilptr byte [] data){
+        try{
+            //_system_.consoleWrite(finalcmd + "\n");
+            _gdb_process.write(data,0,data.length);
+        }catch(Exception e){
+            
+        }
+    }
+    
+    Thread __sendThread = nilptr;
+    List<byte[]> _sendArray = new List<byte[]>();
+    
+    void exitSender(){
+        synchronized(_sendArray){
+            _sendArray.notify();
+        }
+    }
+    
+    class CommandSender : public Thread{
+        void run()override{
+            Thread.setName("GdbSender");
+            byte [] data = nilptr;
+            while (bExit == false){
+                synchronized(_sendArray){
+                    while (_sendArray.size() == 0 && bExit == false){
+                        _sendArray.wait();
+                    }
+                    if (_sendArray.size() > 0){
+                        data = _sendArray.pollHead();
+                    }
+                }
+                
+                if (data != nilptr){
+                    //_system_.output("send:\n" + new String(data));
+                    sendToGdbPipe(data);
+                    data = nilptr;
+                }
+            }
+            
+            synchronized(_sendArray){
+                __sendThread = nilptr;
+            }
+        }
+    };
+    
     int writeGdbCommand(int token, String cmd){        
         String finalcmd = "" + token + " " + cmd;
         
         byte [] data = finalcmd.getBytes();
-        
-        try{
-            if (data.length == _gdb_process.write(data,0,data.length)){
-                return token;
+        synchronized(_sendArray){
+            _sendArray.add(data);
+            if (__sendThread == nilptr){
+                __sendThread = new CommandSender();
+                __sendThread.start();
             }
-        }catch(Exception e){
-            
+            _sendArray.notify();
         }
-        
-        return 0;
+        return token;
     }
     
     void threadReadloop(){
@@ -226,12 +304,14 @@ class GDBShell{
                         _xp.write(helr.getBytes(),0,helr.length());
                         //_system_.output("debuggee connected!");
                         debug();
-                        
+                      /*  bExit = true;
+                        exit();*/
                     }
                 }
             }
             _xp.close(); 
         }
+        
     }
     
     void debug(){
@@ -253,7 +333,7 @@ class GDBShell{
     }
     
     
-    int analyzeCommand(EchoBuffer buf){
+    int analyzeCommand(@NotNilptr EchoBuffer buf){
     
         byte [] buffer = buf.getData();
         
@@ -262,36 +342,30 @@ class GDBShell{
         int offset = 0;
         
         while(nilptr != (result = XRegular.Match(buffer, offset, buf.getLength() - offset, "[FFFE]{c:LEBB}<len:2>{t:LEBB}<len:8>{l:LEBB}<len:4>*<len:l>"))){
-            if (result != nilptr){
-                int cmd = result.getValue('c');
-                long tid = result.getValue('t');
-                int conlen = result.getValue('l');
-                
-                JsonObject json;
-                
-                try{
-                    json = new JsonObject(new String(buffer, 16 + offset, conlen));
-                }catch(Exception e){
-                    _system_.consoleWrite("XDebuggee 181 Exception :" + e.getMessage());
-                }
-                
-                if (json == nilptr){
-                    json = new JsonObject();
-                }
-
-                processCommand(cmd, tid, json);
-                int al = result.getRegularLength();
-                if (al > 0){
-                    offset += al;
-                }
+            int cmd = result.getValue('c');
+            long tid = result.getValue('t');
+            int conlen = result.getValue('l');
+            
+            JsonObject json;
+            
+            try{
+                json = new JsonObject(new String(buffer, 16 + offset, conlen));
+            }catch(Exception e){
+                json = new JsonObject();
+            }
+            
+            processCommand(cmd, tid, json);
+            
+            int al = result.getRegularLength();
+            if (al > 0){
+                offset += al;
             }
         }
         return offset;
     }
     
     
-    void setupBreakPoint(String file, int line ,bool bset){
-    
+    void setupBreakPoint(@NotNilptr String file, int line ,bool bset){
         BreakpointCreator bpc = new BreakpointCreator(file, line);
         addtoqueue(bpc);
         bpc.set(bset);
@@ -363,11 +437,13 @@ class GDBShell{
         }
     }
     
-    void requestResp(GdbMiRecord [] _records, int offset, bool bDone){
+    void requestResp(@NotNilptr GdbMiRecord [] _records, int offset, bool bDone){
         GdbMiRecord resord = _records[offset];
+        __nilptr_safe(resord);
         GdbRequest rq = getRequest(resord.userToken);
         if (rq != nilptr){
-            if (rq.next(_records, offset, bDone) == false){
+            int start = rq.findStart(_records,offset);
+            if (rq.next(_records, start, offset, bDone) == false){
                 removeRequest(resord.userToken);
             }
         }else{
@@ -390,17 +466,24 @@ class GDBShell{
         public int userToken = 0;
         public RequestType type;
         String command;
-        public bool next(GdbMiRecord [] _records,int offset, bool bDone);
+        public bool next(@NotNilptr GdbMiRecord [] _records,int start, int end, bool bDone);
         
         public bool sendtogdb(String cmd){
-            command = cmd + "\n";
-            return userToken == writeGdbCommand(userToken,command);
+            if (cmd != nilptr){
+                command = cmd + "\n";
+                return userToken == writeGdbCommand(userToken,command);
+            }
+            return false;
         }
         
         public int findStart(GdbMiRecord [] _records,int offset){
+            int _end = offset;
             while (offset >= 0){
                 if (_records[offset].type == GdbMiRecord.Type.Log){
                     if (( (GdbMiStreamRecord)_records[offset]).message.equals(command)){
+                        for (int i = offset; i < _end; i++){
+                            _records[i].processed = true;
+                        }
                         offset++;
                         break;
                     }else{
@@ -414,6 +497,46 @@ class GDBShell{
         }
     };
     
+    public interface Receiver{
+        void onComplete(String content, bool res);
+    };
+    
+    void updateDisassemble(){
+        new DisassembleReq(new CPPGPlugManager.DisassembleReceiver()).exec();
+    }
+    
+    public class DisassembleReq : GdbRequest{
+        public String content = "";
+        Receiver __recv;
+        long address = -1;
+        public DisassembleReq(Receiver  _r){
+            __recv = _r;
+        }
+        public bool next(@NotNilptr GdbMiRecord [] _records,int start, int end, bool bDone)override{
+
+            for (int i = start; i < end; i ++){
+                GdbMiRecord gmr = _records[i];
+                if (isEndRecord(gmr)){
+                    break;
+                }
+                content = content + ((GdbMiStreamRecord)gmr).message;
+            }
+            
+            if (__recv != nilptr){
+                __recv.onComplete(content,bDone);
+            }
+            return false;
+        }
+                
+        public void exec(){
+            addtoqueue(this);
+            if (address == -1){
+                sendtogdb("x/64i $pc");
+            }else{
+                sendtogdb("x/64i " + address);
+            }
+        }
+    };
     
     class TypeRequest 
         : GdbRequest{
@@ -430,7 +553,7 @@ class GDBShell{
             name = text;
             bDetaile = detaile;
         }
-        public bool next(GdbMiRecord [] _records,int offset, bool bDone)override{
+        public bool next(GdbMiRecord [] _records,int start, int end, bool bDone)override{
             if (step == 0){
                 if (bDetaile){
                     sendtogdb("ptype " + name);
@@ -439,8 +562,9 @@ class GDBShell{
                 }
                 step++;
                 return true;
-            }else{
-                setType(_records, offset);
+            }else
+            if (_records != nilptr){
+                setType(_records, start, end);
                 if (major != nilptr){
                     if (major.instanceOf(FrameRequest)){
                         FrameRequest fr = (FrameRequest)major;
@@ -455,18 +579,19 @@ class GDBShell{
             return false;
         }
         
-        public void setType(GdbMiRecord [] _records,int offset){
-            int count = offset;
-            offset = findStart(_records,offset);
+        public void setType(GdbMiRecord [] _records,int start, int end){
+            int count = end;
             
-            if (offset > 0){
-                for (int i = offset; i < count; i++){
+            if (start > 0){
+                for (int i = start; i < count; i++){
                     GdbMiStreamRecord _rec = (GdbMiStreamRecord)_records[i];
                     String message  = _rec.message;
-                    if (message.startWith("type = ")){
-                        sztype = message.substring(7, message.length()).trim(true);
-                    }else{
-                        sztype = "unknow" ;
+                    if (message != nilptr){
+                        if (message.startWith("type = ")){
+                            sztype = message.substring(7, message.length()).trim(true);
+                        }else{
+                            sztype = "unknow" ;
+                        }
                     }
                 }
             }
@@ -488,48 +613,50 @@ class GDBShell{
         String param;
         int size;
         
-        bool next(GdbMiRecord [] _records,int offset, bool bDone)override{
-            int count = offset;
+        bool next(@NotNilptr GdbMiRecord [] _records,int start, int end, bool bDone)override{
+            int count = end;
             bool hasError = false;
             buffer.clear();
-            offset = findStart(_records,offset);
+            
             String szOffset = address;
-            for (int i = offset; i < count; i ++){
+            
+            for (int i = start; i < count; i ++){
                 GdbMiRecord gmr = _records[i];
                 if (isEndRecord(gmr)){
                     break;
                 }else{
                     GdbMiStreamRecord srec = (GdbMiStreamRecord)gmr;
                     String msg = srec.message;
-                    int op = msg.indexOf(':');
-                    if (op !=- 1){
-                        if (szOffset == nilptr){
-                            int pos = msg.indexOf(' ');
-                            if (pos > op){
-                                pos = op;
+                    if (msg != nilptr){
+                        int op = msg.indexOf(':');
+                        if (op !=- 1){
+                            if (szOffset == nilptr){
+                                int pos = msg.indexOf(' ');
+                                if (pos > op){
+                                    pos = op;
+                                }
+                                if (pos != -1){
+                                    szOffset = msg.substring(0, pos);
+                                }
                             }
-                            if (pos != -1){
-                                szOffset = msg.substring(0, pos);
+                            String [] dbs = msg.substring(op+ 1, msg.length()).trim(true).split("\t");
+                            byte [] bdat = new byte[dbs.length];
+                            int bds = 0;
+                            for (int x = 0; x < dbs.length; x++){
+                                String nb = dbs[x].trim(true);
+                                if (nb.length() > 0){
+                                    bdat[bds++] = nb.parseHex();
+                                }else{
+                                    hasError = true;
+                                    break;
+                                }
                             }
-                        }
-                        String [] dbs = msg.substring(op+ 1, msg.length()).trim(true).split("\t");
-                        byte [] bdat = new byte[dbs.length];
-                        int bds = 0;
-                        for (int x = 0; x < dbs.length; x++){
-                            String nb = dbs[x].trim(true);
-                            if (nb.length() > 0){
-                                bdat[bds++] = nb.parseHex();
-                            }else{
-                                hasError = true;
+                            if (hasError){
                                 break;
                             }
+                            buffer.append(bdat, 0, bds);
                         }
-                        if (hasError){
-                            break;
-                        }
-                        buffer.append(bdat, 0, bds);
                     }
-                    
                 }
             }
             
@@ -538,9 +665,19 @@ class GDBShell{
                 content = Base64.encodeToString(buffer.getData(),0,buffer.getLength(), false);
             }
             
+            if (szOffset == nilptr){
+                szOffset = "0";
+            }
+            
             JsonObject json = new JsonObject();
             json.put("content", content);
-            json.put("address", szOffset.parseHex());
+            
+            if (szOffset.startWith("0x")){
+                json.put("address", szOffset.parseHex());
+            }else{
+                json.put("address", szOffset.parseLong());
+            }
+            
             json.put("request",  size);
             json.put("response",  buffer.getLength());
             
@@ -565,21 +702,26 @@ class GDBShell{
         public TypeRequest type;
         public JsonObject jsonValue;
         public String value;
+        public long parseRet;
     };
         
     class BreakpointCreator
          : GdbRequest{
          
-        public BreakpointCreator(String f, int l){
+        public BreakpointCreator(@NotNilptr String f, int l){
+            if (f.equals(CPPGPlugManager.disassemble_pipe)){
+                address = CPPGPlugManager.getDisassembleAddress(l + 1);
+            }
             filepath = f;
             line = l;
         }
         
         String filepath;
         int line;
+        long address;
         bool bEnable;
         
-        bool next(GdbMiRecord [] _records,int offset, bool bDone)override{
+        bool next(@NotNilptr GdbMiRecord [] _records,int start, int end, bool bDone)override{
             JsonObject json = new JsonObject();
             
             if (bDone){
@@ -596,23 +738,43 @@ class GDBShell{
             byte [] data = json.toString(false).getBytes();
             sendCommand(SetBreakPoint, 0, data, data.length);
             
+            if (address != 0 && bDone){
+                CPPGPlugManager.toggleBreakPoint(address, line, bEnable);
+            }
+            
             return false;
         }
         
         public void set(bool enable){
             bEnable = enable;
-            if (bEnable){
-                sendtogdb("b " + filepath + ":" + line);
-            }else{
-                sendtogdb("clear " + filepath + ":" + line);
+            if (address == 0){
+                String srcpath = filepath;
+                if (filepath.indexOf(' ') != -1){
+                    String fn = filepath.findFilenameAndExtension();
+                    if (fn != nilptr){
+                        srcpath = fn;
+                    }
+                }
+                if (bEnable){
+                    sendtogdb("b \""  + srcpath + "\":" + (line + 1));
+                }else{
+                    sendtogdb("clear \""  + srcpath + "\":" + (line + 1));
+                }
+            }else
+            {
+                if (bEnable){
+                    sendtogdb("b *"  + address);
+                }else{
+                    sendtogdb("clear *"  + address);
+                }
             }
         }
     };
     
-    int findValuePos(String text, int pos, char end){
+    int findValuePos(@NotNilptr String text, int pos, char end){
         bool se = false, de = false, escape = false;
         int deep = 0;
-        
+        int abdeep = 0;
         while (pos < text.length()){
             char b = text.charAt(pos);
                         
@@ -637,11 +799,13 @@ class GDBShell{
                 }
                 continue;
             }
-            
+            if (b == '>'){
+                abdeep--;
+            }
             if (b == '}'){
                 deep--;
             }
-            if (deep == 0){
+            if (deep == 0 && abdeep == 0){
                 if (b == end){
                     return pos;
                 }
@@ -649,63 +813,35 @@ class GDBShell{
             if (b == '{'){
                 deep++;
             }
+            if (b == '<'){
+                abdeep++;
+            }
             pos++;
         }
         return -1;
     }
 
-    bool parseValue(String text, JsonObject object, bool bTop){
-        
-        int equ = text.indexOf('=');
-        String name = "", value = "";
-        if (equ != -1){
-            name = text.substring(0, equ).trim(true);
-            value = text.substring(equ + 1, text.length()).trim(true);
-        }else{
-            name = value = text.trim(true);
-        }
-        
-        object.put("name", name);
-        
-        int st = findValuePos(text, 0, '{');
-        if (st == -1){
-            if (bTop){
-                JsonObject __value = new JsonObject();
-                __value.put("valuetype", 0);
-                __value.put("value", value);
-                object.put(("value"),__value);
-            }else{
-                object.put("valuetype", 0);
-                object.put("value", value);
-            }
-            return true;
-        }
-        int end = findValuePos(text, st, '}');
-        if (end == -1){
-            if (bTop){
-                JsonObject __value = new JsonObject();
-                __value.put("valuetype", 0);
-                __value.put("value", value);
-                object.put(("value"),__value);
-            }else{
-                object.put("valuetype", 0);
-                object.put("value", value);
-            }
-            return true;
-        }
-        
-        String substr = text.substring(st + 1,end );
-        
+    bool parseArrayValue(@NotNilptr String substr, @NotNilptr JsonObject object, bool bTop){
         int offset = 0;
         JsonArray members = new JsonArray();
         JsonObject jobj;
         
         int dp = findValuePos(substr, offset, ',');
         while (dp != -1){
-            String txt = substr.substring(offset,dp);
+            String txt = substr.substring(offset,dp).trim(true);
             offset = dp + 1; 
-            jobj = new JsonObject();
-            if (parseValue(txt, jobj, false)){
+            if (txt.startWith("{")){
+                txt = "__unnamed = " + txt;
+            }
+             
+            if (txt.indexOf('=') == -1){
+                JsonObject __value = new JsonObject();
+                __value.put("valuetype", 0);
+                __value.put("value", txt);
+                members.put(__value);
+            }else{
+                jobj = new JsonObject();
+                parseValue(txt, jobj, '=',false);
                 members.put(jobj);
             }
             dp = findValuePos(substr, offset, ',');
@@ -714,10 +850,10 @@ class GDBShell{
         String txt = substr.substring(offset,substr.length());
         if (txt.length() > 0){
             jobj = new JsonObject();
-            if (parseValue(txt, jobj, false)){
-                members.put(jobj);
-            }
+            parseValue(txt, jobj, '=', false);
+            members.put(jobj);
         }
+        
         if (bTop){
             JsonObject __value = new JsonObject();
             __value.put("valuetype", 1);
@@ -729,11 +865,70 @@ class GDBShell{
         }        
         return true;
     }
+    bool parseComplexValue(@NotNilptr String text, @NotNilptr JsonObject object, char eq, bool bTop){
+        int st = findValuePos(text, 0, '{');
+        int end = -1;
+        bool bComplexValue = true;
+        if (st == -1){
+            bComplexValue = false;
+        }else{
+            end = findValuePos(text, st, '}');
+            if (end == -1){
+                bComplexValue = false;
+            }
+        }
+        
+        if (bComplexValue == false){
+            return true;
+        }
+        
+        String substr = text.substring(st + 1,end);
+        if (substr.startWith("{")){
+            parseComplexValue(substr, object, eq, bTop);
+        }else{
+            parseArrayValue(substr.trim(true), object, bTop);
+        }
+        return true;
+    }
+    long parseValue(@NotNilptr String text, @NotNilptr JsonObject object, char eq, bool bTop){
+        
+        int equ = text.indexOf(eq);
+        String name = "", value = "";
+        if (equ != -1){
+            name = text.substring(0, equ).trim(true);
+            value = text.substring(equ + 1, text.length()).trim(true);
+        }else{
+            name = value = text.trim(true);
+        }
+        
+        object.put("name", name);
+        if (value.startWith("@")){
+            int op = value.indexOf(':');
+            if (op != -1){
+                value = value.substring(op + 1,value.length()).trim(true);
+            }
+        }
+        if (value.startWith("{")){
+            parseComplexValue(text, object, eq, bTop);
+            return 1;
+        }else{
+            if (bTop){
+                JsonObject __value = new JsonObject();
+                __value.put("valuetype", 0);
+                __value.put("value", value);
+                object.put(("value"),__value);
+            }else{
+                object.put("valuetype", 0);
+                object.put("value", value);
+            }
+            return value.parseHex();
+        }
+    }
 
     
     void updateAllThread(JsonObject tag, String reson){
-        ThreadUpdater.Reson res = ThreadUpdater.Reson.RES_EXCEPTION;
-        switch(reson){
+        ThreadUpdater.Reson res = ThreadUpdater.Reson.RES_BREAKPOINTHIT;
+        switch(reson){ 
             case "end-stepping-range":
             case "function-finished":
             case "watchpoint-trigger":
@@ -743,7 +938,6 @@ class GDBShell{
             case "watchpoint-scope":
             case "breakpoint-hit":
                 res = ThreadUpdater.Reson.RES_BREAKPOINTHIT;
-                
             break;
             case "exception-received":
             case "signal-received":
@@ -786,7 +980,7 @@ class GDBShell{
         
 
         
-        bool parseFrame(String item, JsonObject recv){
+        bool parseFrame(@NotNilptr String item,@NotNilptr JsonObject recv){
             
             if (item.indexOf('\n') != -1){
                 item = item.split('\n')[0].trim(true);
@@ -794,7 +988,10 @@ class GDBShell{
             
             Pattern.Result rt = nilptr;
             int matchedId = -1;
-            for (int i = 0; i < frmpattern.length; i++){
+            
+            bool showInDisam = CPPGPlugManager.isInDisassemble();
+            
+            for (int i = 0 ;i < frmpattern.length; i++){
                 rt = frmpattern[i].match(item, Pattern.NOTEMPTY);
                 if (rt.length() > 0){
                     matchedId = i;
@@ -806,7 +1003,7 @@ class GDBShell{
             String source = "", method = "", path = "", ip = "0";
             
             int line , row;
-             if (rt.length() > 0){
+             if (rt != nilptr && rt.length() > 0){
                 switch(matchedId){
                     case 0:
                     if (rt.length() > 10){
@@ -841,6 +1038,9 @@ class GDBShell{
                     break;
                 }
             
+                if (showInDisam){
+                    path = "";
+                }
                 recv.put("source", path);
                 if (ip.length() > 0){
                     recv.put("method", method + "(" + ip  + ")");
@@ -864,7 +1064,7 @@ class GDBShell{
             return false;
         }
         
-        int generateThreadObject(JsonObject thread, GdbMiRecord [] _records, int offset){
+        int generateThreadObject(@NotNilptr JsonObject thread, @NotNilptr GdbMiRecord [] _records, int offset){
             int p = offset;
             if (_records[p].type == GdbMiRecord.Type.Immediate){
                 return 1;
@@ -918,20 +1118,19 @@ class GDBShell{
             return 0;
         }
         
-        int updateThreadStatus(GdbMiRecord [] _records, int offset){
+        int updateThreadStatus(@NotNilptr GdbMiRecord [] _records, int start, int end){
             int cnt = 0;
             JsonArray tarrs = new JsonArray();
             JsonObject thread = new JsonObject();
-            int count = offset;
-            offset = findStart(_records,offset);
+            int count = end;
             
-            if (offset == -1){
+            if (start == -1){
                 return 0;
             }
             long spectid = 0;
             
             if (_reson == Reson.RES_BREAKPOINTHIT){
-                String bktid = attach_object.getString("msg");
+                String bktid = attach_object.getString("gid");
                 if (bktid != nilptr){
                     spectid = /*gid2id*/( bktid.parseInt());
                 }
@@ -939,18 +1138,20 @@ class GDBShell{
             
             Map<long,long> currentThread = new Map<long,long>();
             
-            while ((cnt = generateThreadObject(thread, _records, offset)) > 0){
+            bool isInDisassemble = CPPGPlugManager.isInDisassemble();
+            
+            while ((cnt = generateThreadObject(thread, _records, start)) > 0){
                 if (cnt > 1){
                     long id = thread.getLong("id");
                     if (id == spectid){
-                        thread.put("sender",true);
+                        thread.put("sender",isInDisassemble ? false : true);
                     }
                     currentThread.put(id, id);
                     tarrs.put(thread);
                 }
                 thread = new JsonObject();
-                offset += cnt;
-                if (offset >= count){
+                start += cnt;
+                if (start >= count){
                     break;
                 }
             }
@@ -999,8 +1200,8 @@ class GDBShell{
             return 0;
         }
 
-        bool next(GdbMiRecord [] _records,int offset, bool bDone)override{
-            updateThreadStatus(_records, offset);
+        bool next(@NotNilptr GdbMiRecord [] _records,int start, int end, bool bDone)override{
+            updateThreadStatus(_records, start, end);
             return false;
         }
         
@@ -1018,6 +1219,7 @@ class GDBShell{
         public int frame;
         int step = 0;
         int notifySeted = 0;
+        int nEndId = /*CPPGPlugManager.isInDisassemble() ? 5 : */4;
         bool canComplete = false;
         Vector<GdbVariable> vars = new Vector<GdbVariable>();
         
@@ -1030,19 +1232,24 @@ class GDBShell{
             return true;
         }
         
-        bool next(GdbMiRecord [] _records,int offset, bool bDone)override{
-            if (step == 3 || step == 4){
-                parseLocals(_records, offset);
-                if (step == 4){
-                    canComplete = notifySeted > 0;
-                }
+        bool next(@NotNilptr GdbMiRecord [] _records, int start, int end,  bool bDone)override{
+            if (step >= 3 && step <= nEndId){
+                parseLocals(_records, start, end, step == 5);
             }
-            if (step < 4){
+            
+            if (step == nEndId){
+                canComplete = notifySeted > 0;
+            }
+                
+            if (step < nEndId){
                 exec();
                 return true;
             }else
-            if (step == 4 && notifySeted == 0){
-                docomplete();
+            if (step == nEndId){
+                CPPGPlugManager.threadUpdateDisassemble();
+                if (notifySeted == 0){
+                    docomplete();
+                }
             }
             return false;
         }
@@ -1064,12 +1271,18 @@ class GDBShell{
                 case 3:
                     sendtogdb("info locals");
                 break;
+                
+                case 4:
+                    sendtogdb("info all-registers");
+                break;
             }
             step++;
         }
         
-        void parseItem(String msg){
-            int op = msg.find(" = ");
+        
+        void parseItem(@NotNilptr String msg, char eq){
+            
+            int op = msg.find(" " + eq + " ");
             if (op != -1){
                 String name = msg.substring(0, op);
                 String value = msg.substring(op + 3, msg.length());
@@ -1077,29 +1290,39 @@ class GDBShell{
                 GdbVariable gv = new GdbVariable();
                 gv.name = name;
                 JsonObject object = new JsonObject();
-                if (parseValue(msg, object, false)){
-                    gv.jsonValue = object;
-                }else{
+                gv.parseRet = parseValue(msg, object,  eq,false);
+                
+                gv.jsonValue = object;
+                /*}else{
                     gv.value = value;
-                }
+                }*/
                 gv.type = new TypeRequest(name);
                 addtoqueue(gv.type);
-                gv.type.next(nilptr, 0, true);
+                gv.type.next(nilptr, 0, 0, true);
                 gv.type.major = this;
                 notifySeted++;
                 vars.add(gv);
             }
         }
         
-        void parseLocals(GdbMiRecord [] _records,int offset){
-            int count = offset;
-            
-            offset = findStart(_records,offset);
-            
-            if (offset > 0){
+        void parseObjects(@NotNilptr String msg, bool bRegister){
+            if (bRegister){
+                String [] msgs = msg.split('\n');
+                for (int i =0; i < msgs.length;i++){
+                    parseItem(msgs[i], bRegister ? ' ' : '=');
+                }
+            }else{
+                parseItem(msg, bRegister ? ' ' : '=');
+            }
+        }
+        
+        void parseLocals(@NotNilptr GdbMiRecord [] _records,int start, int end, bool bRegister){
+            int count = end;
+                        
+            if (start > 0){
                 String msg = "";
                 
-                for (int i = offset; i < count; i++){
+                for (int i = start; i < count; i++){
                     if (_records[i].type == GdbMiRecord.Type.Immediate){
                         return;
                     }
@@ -1113,20 +1336,19 @@ class GDBShell{
                         msg = msg.trim(true);
                         
                         if (msg.length() != 0){
-                            parseItem(msg);
+                            parseObjects(msg, bRegister);
                         }
                         msg = "";
                     }
                 }
                 
                 if (msg.length() > 0){
-                        msg = msg.trim(true);
-                        
-                        if (msg.length() != 0){
-                            parseItem(msg);
-                        }
-                        msg = "";
+                    msg = msg.trim(true);
+                    if (msg.length() != 0){
+                        parseObjects(msg, bRegister);
                     }
+                    msg = "";
+                }
             }
         }
         
@@ -1143,14 +1365,25 @@ class GDBShell{
             root.put("count", vars.size());
             
             JsonArray js = new JsonArray();
-            
+            clearStandby();
             for (int i =0; i < vars.size(); i++){
                 JsonObject _var = new JsonObject();
                 GdbVariable gvs = vars[i];
                 _var.put("name", gvs.name);
                 _var.put("type", gvs.type.sztype);
                 
+                bool hasString = false;
                 
+                if (gvs.jsonValue != nilptr){
+                    String value_str = gvs.jsonValue.getString("value");
+                    if (value_str != nilptr && value_str.indexOf("\"") != -1){
+                        hasString = true;
+                    }
+                }
+                if (hasString == false && ((gvs.type.sztype.endWith("*") || gvs.type.sztype.endWith("* const")) && gvs.parseRet != 0 && gvs.jsonValue != nilptr)){
+                    putStanby(gvs.parseRet,"p *" + gvs.name);
+                    gvs.jsonValue.put("object_id", "" + gvs.parseRet);
+                }
                 
                 if (gvs.jsonValue == nilptr){
                     JsonObject valobj = new JsonObject();
@@ -1176,7 +1409,7 @@ class GDBShell{
         mreq.exec();
     }
     
-    void addtoqueue(GdbRequest fr){
+    void addtoqueue(@NotNilptr GdbRequest fr){
        synchronized(__request){
            __request.put(fr.userToken,fr);
        }
@@ -1188,15 +1421,20 @@ class GDBShell{
        fr.gid = tid;
        fr.frame = frm;
        fr.type = RequestType.SwitchFrame;
-
        addtoqueue(fr);
        fr.exec();
+       
+       updateWatch();
+       
+       if (lastLookupMemory != nilptr && lastLookupMemory.length() > 0){
+           dumpmemory(nilptr, lastLookupMemory, lookuplen);
+       }
     }
     
     
     Map<String, bool> watches_object = new Map<String, bool>();
     
-    void addWatch(JsonArray names, bool bDelete){
+    void addWatch(@NotNilptr JsonArray names, bool bDelete){
         synchronized(watches_object){
             for (int i = 0; i < names.length(); i++){
                 String objname = names.getString(i);
@@ -1216,6 +1454,47 @@ class GDBShell{
     }
     
     
+    void onQueryObject(String queryId, String id, String param, long offset, long end){
+        long addr = id.parseLong();
+        String cmd = queryStanby(addr);
+        if (cmd != nilptr){
+            new ObjectDetail(cmd,queryId, id, param, offset, end).exec();
+        }else{
+            JsonObject object = new JsonObject();
+            object.put("error", 0);
+            object.put("queryid", queryId);
+            object.put("param", param);
+            object.put("id", id);
+            byte [] data = object.toString(false).getBytes();
+            sendCommand(QueryObject, 0, data, data.length);
+        }
+    }
+    
+    Map<long, String> object_stanby_list = new Map<long, String> ();
+    
+    void putStanby(long addr, String cmd){
+        synchronized(object_stanby_list){
+            object_stanby_list.put(addr, cmd);
+        }
+    }
+    
+    String queryStanby(long addr){
+        try{
+           synchronized(object_stanby_list){
+                return object_stanby_list.get(addr);
+           } 
+        }catch(Exception e){
+            
+        }
+        return nilptr;
+    }
+    
+    void clearStandby(){
+        synchronized(object_stanby_list){
+            object_stanby_list.clear();
+        }
+    }
+    
     class Watcher: GdbRequest{
         WatchRequest _parent;
         
@@ -1231,18 +1510,20 @@ class GDBShell{
         public void exec(){
             _type = new TypeRequest(objname);
             addtoqueue(_type);
-            _type.next(nilptr, 0, true);
+            _type.next(nilptr, 0, 0, true);
             _type.major = this;
         }
         
         public void docomplete(){
-            typeName = _type.sztype;
+            typeName = _type.sztype.trim(true);
             addtoqueue(this);
             sendtogdb("p " + objname);
         }
-        bool next(GdbMiRecord [] _records,int offset, bool bDone){
-            int pos = findStart(_records, offset);
-            _parent.update(objname, typeName, _records, pos, offset, bDone);
+        
+        bool next(@NotNilptr GdbMiRecord [] _records,int start, int end, bool bDone){
+            if (objname != nilptr){
+                _parent.update(objname, typeName, _records, start, end, bDone);
+            }
             return false;
         }
     };
@@ -1253,12 +1534,38 @@ class GDBShell{
             sendtogdb("c");
         }
         
-        bool next(GdbMiRecord[] _records,int offset,bool bDone){
+        bool next(@NotNilptr GdbMiRecord[] _records, int start, int offset,bool bDone){
             sendStateRun(nilptr);
             return false;
         }
     };
         
+    class CustomRequest : GdbRequest{
+        String _cmd;
+        Receiver _r;
+        String result = "";
+        public CustomRequest(String cmd, Receiver r){
+            _cmd = cmd;
+            _r = r;
+        }
+        public void exec(){
+            addtoqueue(this);
+            sendtogdb(_cmd);
+        }
+        bool next(@NotNilptr GdbMiRecord[] _records,int start, int end,bool bDone){
+            if (start != -1){
+                for (;start < end; start++){
+                    result = result + _records[start].toString();
+                }
+            }
+            _r.onComplete(result,bDone);
+            return false;
+        }
+    };
+    
+    public void runCustomCommand(String cmd, Receiver r){
+        new CustomRequest(cmd, r).exec();
+    }
         
     void sendStateRun(int [] gids){
         Map.Iterator<int, long> iter = gidThreadmap.iterator();
@@ -1290,6 +1597,41 @@ class GDBShell{
         sendCommand(Interrupt, -1, data, data.length);
     }
     
+    class ObjectDetail
+         : GdbRequest{
+        String obj_cmd;
+        String queryId,  id,  param;
+        
+        public ObjectDetail(String cmd, String _queryId, String _id, String _param, long _offset, long _end){
+            obj_cmd = cmd;
+            queryId = _queryId;
+            id = _id;
+            param = _param;
+        }
+        
+        public void exec(){
+            addtoqueue(this);
+            sendtogdb(obj_cmd);
+        }
+        
+        bool next(@NotNilptr GdbMiRecord [] _records, int start, int end, bool bDone){
+            String content = "";
+            for (int i = start; i < end; i ++){
+                content = content + ((GdbMiStreamRecord)_records[i]).message;
+            }
+            
+            JsonObject object = new JsonObject();
+            parseValue(content, object,  '=', true);
+            object.put("error", 0);
+            object.put("queryid", queryId);
+            object.put("param", param);
+            object.put("id", id);
+            byte [] data = object.toString(false).getBytes();
+            sendCommand(QueryObject, 0, data, data.length);
+            return false;
+        }
+    };
+    
     class WatchRequest 
         : GdbRequest
     {
@@ -1298,7 +1640,7 @@ class GDBShell{
         Map<String, JsonObject> _objects = new Map<String, JsonObject>();
         int request_cnt = 0;
         
-        public WatchRequest(Map<String, bool> watches){
+        public WatchRequest(@NotNilptr Map<String, bool> watches){
             Map.Iterator<String, bool> iter = watches.iterator();
             while(iter.hasNext()){
                 String key = iter.getKey();
@@ -1307,7 +1649,7 @@ class GDBShell{
             }
         }
         
-        public void update(String name, String typename, GdbMiRecord [] _records,int offset, int end, bool bDone){
+        public void update(@NotNilptr String name,@NotNilptr  String typename, @NotNilptr GdbMiRecord [] _records,int offset, int end, bool bDone){
             request_cnt++;
             
             String content = "";
@@ -1316,22 +1658,22 @@ class GDBShell{
             }
             
             JsonObject object = new JsonObject();
-            parseValue(content, object, true);
+            int rt = parseValue(content, object,  '=', true);
             object.remove("name");
             object.put("name", name);
             object.put("type", typename);
             _objects.put(name,object);
-            
+
             if (request_cnt == _objects.size()){
                 docomplete();
             }
         }
         
-        bool next(GdbMiRecord [] _records,int offset, bool bDone){
+        bool next(@NotNilptr GdbMiRecord [] _records,int,  int offset, bool bDone){
             return false;
         }
         
-        JsonObject getWatch(){
+        @NotNilptr JsonObject getWatch(){
             JsonObject json = new JsonObject();
             JsonArray jarr = new JsonArray();
             Map.Iterator<String, JsonObject> iter = _objects.iterator();
@@ -1380,19 +1722,26 @@ class GDBShell{
     
     class FeedbackRequest : GdbRequest{
         String textcmd;
+        
         public FeedbackRequest(String cmd){
             textcmd = cmd;
         }
+        
         public void exec(){
             addtoqueue(this);
             sendtogdb(textcmd);
         }
         
-        bool next(GdbMiRecord[] _records,int offset,bool bDone){
+        bool next(@NotNilptr GdbMiRecord[] _records,int start, int end,bool bDone){
             try{
-                int pos = findStart(_records,offset);
+                int pos = start;
                 String szMsg = ((GdbMiStreamRecord)_records[pos]).message;
                 if (bDone == false){
+                    switch(szMsg.trim(true)){
+                        case "Cannot find bounds of current function":
+                        szMsg = "所选线程无法进行源码单步.";
+                        break;
+                    }
                     JsonObject message = new JsonObject();
                     message.put("type", "Critical");
                     message.put("message", "Error:" + szMsg);
@@ -1410,7 +1759,10 @@ class GDBShell{
         }
     };
     
-    void processCommand(int cmd,int tid,JsonObject json){
+    static String lastLookupMemory = nilptr;
+    static int lookuplen = 0;
+    
+    void processCommand(int cmd,int tid,@NotNilptr JsonObject json){
     //_system_.output("recv : cmd = " + cmd + " req = " + json.toString(true));
     
 	switch (cmd){
@@ -1441,7 +1793,10 @@ class GDBShell{
         String file = json.getString("file");
         int line = json.getInt("line");
         int set = json.getInt("set");
-        setupBreakPoint(file, line, set != 0);
+        
+        if (file != nilptr){
+            setupBreakPoint(file, line, set != 0);
+        }
 	}
 	break;
 	case SetMemoryBreakPoint:
@@ -1490,8 +1845,9 @@ class GDBShell{
 	{
         JsonArray names = (JsonArray)json.get("names");
         bool bDelete = json.getInt("delete") != 0;
-        
-        addWatch(names, bDelete);
+        if (names != nilptr){
+            addWatch(names, bDelete);
+        }
         
 		/*cajson::array ary = root.root().getElement("names");
 		int frame = root.root().get_int_value("frame");
@@ -1541,20 +1897,20 @@ class GDBShell{
 
 	case QueryObject:
 	{
-		/*const char * qid = root.root().value("queryid");
-		const char * oid = root.root().value("id");
-		const char * param = root.root().value("param");
-		const char * offset = root.root().value("offset");
-		const char * end = root.root().value("end");
+		String qid = json.getString("queryid");
+		String oid = json.getString("id");
+		String param = json.getString("param");
+		String offset = json.getString("offset");
+		String end = json.getString("end");
 
-		long64 noffset = -1, nend = -1;
-		if (offset != 0){
-			noffset = cacharset::tolong(offset);
+		long noffset = -1, nend = -1;
+		if (offset != nilptr){
+			noffset = offset.parseLong();
 		}
-		if (end != 0){
-			nend = cacharset::tolong(end);
+		if (end != nilptr){
+			nend = end.parseLong();
 		}
-		onQueryObject(qid, oid, param, noffset, nend);*/
+		onQueryObject(qid, oid, param, noffset, nend);
 	}
 		break;
 
@@ -1587,10 +1943,13 @@ class GDBShell{
 		lookuplen = size;
 
 		onLookupMemory(addr, size, nilptr);*/
-        dumpmemory(nilptr, json.getString("address"), json.getInt("size"));
+        lastLookupMemory = json.getString("address");
+		lookuplen = json.getInt("size");
+        dumpmemory(nilptr, lastLookupMemory, lookuplen);
 	}
 		break;
 
+    
 	case DumpMemory:{
 		/*const char * addr = root.root().value("address");
 		const char * param = root.root().value("param");
@@ -1628,7 +1987,7 @@ class GDBShell{
         static Pattern createthreadprt = new Pattern("(^\\[New Thread )([0-9a-fA-F]{1,16})(\\.0x)([0-9a-fA-F]{1,16})\\]$");
         
        
-        public ThreadTag(String text){
+        public ThreadTag(@NotNilptr String text){
             int t_type = 0;
 
             Pattern.Result rt = nilptr;
@@ -1640,7 +1999,7 @@ class GDBShell{
                }
             } 
                         
-            if (rt.length() > 0){
+            if (rt != nilptr && rt.length() > 0){
                Pattern.Result item = rt.get(0);
                int pl = item.length() ;
                
@@ -1681,30 +2040,28 @@ class GDBShell{
             }
         } 
         
-        ThreadTag(String _name, String nameid){
+        ThreadTag(String _name, @NotNilptr String nameid){
             gId = nameid.parseInt();
             name = _name;
         }
-        ThreadTag(String _name, String nameid, String crt_text){
+        ThreadTag(String _name, @NotNilptr String nameid,@NotNilptr  String crt_text){
              
             Pattern.Result rt = createthreadprt.match(crt_text, Pattern.NOTEMPTY);
             if (rt.length() > 0){
                Pattern.Result item = rt.get(0);
-               if (item != nilptr){
-                   String proId = crt_text.substring(item.get(2).start(),item.get(2).end());
-                   String thrId = crt_text.substring(item.get(4).start(),item.get(4).end());
-                    
-                   processid = proId.parseInt();
-                   gId = nameid.parseInt();
-                   name = _name;
-               }
+               String proId = crt_text.substring(item.get(2).start(),item.get(2).end());
+               String thrId = crt_text.substring(item.get(4).start(),item.get(4).end());
+                
+               processid = proId.parseInt();
+               gId = nameid.parseInt();
+               name = _name;
             }
         }
     };
 
     
     
-    void handleRecord(GdbMiRecord record)
+    void handleRecord(@NotNilptr GdbMiRecord record)
 	{
 		switch (record.type)
 		{
@@ -1731,14 +2088,18 @@ class GDBShell{
 		}*/
 	}
     
-    void notifyLibraryLoaded(GdbMiResultRecord record){
+    void notifyLibraryLoaded(@NotNilptr GdbMiResultRecord record){
         if (record.results.size() > 0){
             String path = record.results[0].value.string;
             JsonObject object = new JsonObject();
             object.put("module", path);
             if (record.results.size() > 2){
                 String symbol = record.results[3].value.string;
-                object.put("symbol", (symbol != nilptr && symbol.length() > 0));
+                if (symbol == nilptr){
+                    object.put("symbol", false);
+                }else{
+                    object.put("symbol", symbol.parseInt() != 0);
+                }
             }else{
                 object.put("symbol", false);
             }
@@ -1819,47 +2180,65 @@ class GDBShell{
     }
     
     void stepin(){
-        new FeedbackRequest("s").exec();
+        CPPGPlugManager.clearBreakOn();
+        if (CPPGPlugManager.isInDisassemble()){
+            new FeedbackRequest("si").exec();
+        }else{
+            new FeedbackRequest("s").exec();
+        }
         //writeGdbCommand("s\n");
     }
     
     void stepover(){
-        new FeedbackRequest("n").exec();
+        CPPGPlugManager.clearBreakOn();
+        
+        if (CPPGPlugManager.isInDisassemble()){
+            new FeedbackRequest("ni").exec();
+        }else{
+            new FeedbackRequest("n").exec();
+        }
+        
         //writeGdbCommand("n\n");
     }
     
     void stepout(){
+        CPPGPlugManager.clearBreakOn();
         new FeedbackRequest("fin").exec();
         //writeGdbCommand("fin\n");
     }
     
     void conrun(){
+        CPPGPlugManager.clearBreakOn();
         new ContinueEnv().exec();
     }
     
-    void notifyStoped(GdbMiResultRecord record){
+    void notifyStoped(@NotNilptr GdbMiResultRecord record){
         JsonObject to = new JsonObject();
         if (record.results.size() > 0){
-            String reson ,signal_name = "",signal_mean = "",addr = "", tid = "";
+            String reson ,signal_name = "",signal_mean = "",addr = "", tid = "", frame = "";
             
-            reson = record.results[0].value.string;
-            
-            if (record.results.size() > 1){
-                signal_name = record.results[1].value.string;
-            }
-            
-            if (record.results.size() > 2){
-                signal_mean = record.results[2].value.string;
-            }
-            
-            if (record.results.size() > 3){
-                if (record.results[3].value.tuple != nilptr && record.results[3].value.tuple.size() > 0){
-                    addr = record.results[3].value.tuple[0].value.string;
+            for (int i = 0; i < record.results.size(); i++){
+                GdbMiResult gmr = record.results[i];
+                switch(gmr.variable){
+                    case "reason":
+                        reson = gmr.value.string;
+                    break;
+                    case "thread-id":
+                        tid = gmr.value.string;
+                    break;
+                    case "frame":
+                        frame = gmr.value.string;
+                        if (gmr.value.tuple != nilptr && gmr.value.tuple.size() > 0){
+                            addr = gmr.value.tuple[0].value.string;
+                        }
+                    break;
+                    case "signal-name":
+                        signal_name = gmr.value.string;
+                    break;
+                    case "signal-meaning":
+                        signal_mean = gmr.value.string;
+                    break;
                 }
-            }
-            
-            if (record.results.size() > 4){
-                tid = record.results[4].value.string;
             }
             
             JsonObject _exception_obj = new JsonObject();
@@ -1869,10 +2248,12 @@ class GDBShell{
             _exception_obj.put("gid", tid.parseInt());
             
             updateAllThread(_exception_obj, reson);
+        }else{
+            writeGdbCommand("q\n");
         }
     }
     
-    ThreadTag parseThreadInfo(String item, JsonObject jobj){
+    ThreadTag parseThreadInfo(@NotNilptr String item, @NotNilptr JsonObject jobj){
         if (item.startWith("Thread")){
             ThreadTag tg = new ThreadTag(item);
             jobj.put("name", tg.name);
@@ -1884,13 +2265,16 @@ class GDBShell{
         return nilptr;
     }
     
-    bool isEndRecord(GdbMiRecord rec){
+    bool isEndRecord(@NotNilptr GdbMiRecord rec){
         return rec.type == GdbMiRecord.Type.Immediate;
     }
     
-    void handleResponse(List<GdbMiRecord> records){
+    void handleResponse(@NotNilptr List<GdbMiRecord> records){
         GdbMiRecord [] _records = records.toArray(new GdbMiRecord[0]);
         int lastError = -1;
+        int _stopres = -1;
+        int replyId = -1;
+        
         for (int i = 0; i < _records.length; i++){
             switch(_records[i].type){
                 case GdbMiRecord.Type.Immediate:
@@ -1915,8 +2299,10 @@ class GDBShell{
                         break;
                         
                         case "stopped":
-                            notifyStoped(_result);
+                            _stopres = i;
+                            //notifyStoped(((GdbMiResultRecord)_records[i]));
                         break;
+                        
                         case "breakpoint-created":
                         
                         break;
@@ -1930,7 +2316,7 @@ class GDBShell{
                             }else{
                                 requestResp(_records, i, true);
                             }
-                            
+                            replyId = i;
                         break;
                     }
                     
@@ -1948,9 +2334,14 @@ class GDBShell{
                 break;
             }
         }
+        
+        if (_stopres != -1 && _records[_stopres].processed == false){
+            notifyStoped(((GdbMiResultRecord)_records[_stopres]));
+        }
                
     }
     
+
     class GDBDetect : GdbRequest{
         int step = 0;
         int state_result = 0;
@@ -1959,15 +2350,18 @@ class GDBShell{
             
         }
         
-        void parseThreads(GdbMiRecord[] _records,int offset){
-            int count = offset;
-            offset = findStart(_records,offset);
+        void parseThreads(@NotNilptr GdbMiRecord[] _records,int start, int end){
+            int count = end;
+            int offset = start;
             
             if (offset > 0){
                 for (int i = offset; i < count; i++){
                     GdbMiStreamRecord _rec = (GdbMiStreamRecord)_records[i];
                     String message  = _rec.message;
-                    int tid = message.parseInt();
+                    if (message.startWith("*")){
+                        message = message.substring(1,message.length());
+                    }
+                    int tid = message.trim(true).parseInt();
                     if (tid > 0){
                         sendThreadStatus(message.parseInt(), false, XDBG_STATE_CREATE);
                     }
@@ -1975,7 +2369,7 @@ class GDBShell{
             }
         }
         
-        bool next(GdbMiRecord[] _records,int offset,bool bDone){
+        bool next(@NotNilptr GdbMiRecord[] _records,int start, int end,bool bDone){            
             switch(step){
                 case 0 :
                     if (bDone){
@@ -2058,9 +2452,9 @@ class GDBShell{
                         CPPGPlugManager.output("无法进行调试.");
                         return debugCancel();
                     }else{
-                        parseThreads(_records, offset);
+                        parseThreads(_records, start, end);
                         continue_target();
-                        step = 13;
+                        step = 14;
                     }
                     return true;
                 break;
@@ -2081,6 +2475,7 @@ class GDBShell{
                         return debugCancel();
                     }else{
                         run_target();
+                        step = 13;
                         return true;
                     }
                 break;
@@ -2089,6 +2484,15 @@ class GDBShell{
                     if (bDone == false){
                         CPPGPlugManager.output("目标程序无法运行.",0);
                         return debugCancel();
+                    }
+                    return false;
+                break;
+                case 14:
+                    if (bDone == false){
+                        CPPGPlugManager.output("目标程序无法运行.",0);
+                        return debugCancel();
+                    }else{
+                        sendStateRun(nilptr);
                     }
                     return false;
                 break;
@@ -2124,15 +2528,36 @@ class GDBShell{
         }
         
         String findTerminal(){
-            String [] uri = { "/usr/bin/konsole", "/usr/bin/gnome-terminal", "/usr/bin/xfce4-terminal", "/usr/bin/lxterminal", "/usr/bin/xterm"};
-            for (int i =0; i < uri.length; i++){
-                if (XPlatform.existsSystemFile(uri[i])){
-                    return uri[i];
+            String termpath = "";
+            if (Setting.get("cde_gdb_autovmterm").equals("False")){
+                termpath = Setting.get("cde_gdb_setvmterm");
+            }
+            if ((termpath.length() == 0) || (XPlatform.existsSystemFile(termpath) == false)){
+                String [] uri = { "/usr/bin/konsole", "/usr/bin/gnome-terminal", "/usr/bin/xfce4-terminal", "/usr/bin/lxterminal", "/usr/bin/xterm"};
+                for (int i =0; i < uri.length; i++){
+                    if (XPlatform.existsSystemFile(uri[i])){
+                        return uri[i];
+                    }
                 }
             }
-            return nilptr;
+            return termpath;
         }
         
+        String [] getTermArgs(String arg){
+            String param = Setting.get("cde_gdb_params");
+            if (param.length() == 0){
+                String [] _default_args = {"konsole", "-e", "bash", "-c", arg};
+                return _default_args;
+            }
+            Vector<String> args_list = new Vector<String>();
+            args_list.add("$term");
+            CDEProjectPropInterface.processArgs(param,args_list);
+            for (int i = 0; i < args_list.size(); i++){
+                args_list[i] = args_list[i].replace("$(arg)", arg);
+            }
+            return args_list.toArray(new String[0]);
+        }
+    
         String setNewConsole(){
             String  output_tty = nilptr;
             if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
@@ -2156,7 +2581,7 @@ class GDBShell{
                     byte [] bc = ps.getBytes();
                     fos.write(bc);
                 }catch(Exception e){
-                    _system_.output("can not write to " + dbg_script);
+                    //_system_.output("can not write to " + dbg_script);
                     return nilptr;
                 }finally{
                     if (fos != nilptr){
@@ -2164,10 +2589,13 @@ class GDBShell{
                     }
                 }
                 _system_.chmod(dbg_script,0777);
-                String [] args = {"konsole", "-e", "bash -c \\\"" + dbg_script + "\\\"" };
+                
+                String [] args = getTermArgs(dbg_script);
+
                 String teruri = findTerminal();
                 
                 if (teruri != nilptr){
+                    args[0] = teruri;
                     termina_process = new Process(teruri, args);
                     if (termina_process.create(Process.Visible)){
                         int retry = 1000;
@@ -2177,10 +2605,10 @@ class GDBShell{
                                 output_tty = CPPGPlugManager.CPPLangPlugin.readFileContent(dbg_ps);
                                 if (output_tty == nilptr || output_tty.length() == 0){
                                     output_tty = nilptr;
-                                    Thread.sleep(10);
+                                    _system_.sleep(10);
                                 }
                             }else{
-                                Thread.sleep(10);
+                                _system_.sleep(10);
                             }
                         }
                         
@@ -2195,9 +2623,9 @@ class GDBShell{
                 int retry = 1000;
                 if (output_tty != nilptr){
                     while (_system_.fileExists(output_tty) == false && retry-- > 0){
-                        Thread.sleep(20);
+                        _system_.sleep(20);
                     }
-                    Thread.sleep(150);
+                    _system_.sleep(150);
                 }
                 return output_tty;   
             }
@@ -2215,7 +2643,6 @@ class GDBShell{
             sendtogdb("info threads");
         }
     };
-    
     
 
     
@@ -2262,23 +2689,22 @@ class GDBShell{
             sendList.notify();
         }
 	}
-    
-
-    
+        
     void readresp(){
         byte [] buffer = new byte [4096];
 
         GdbMiParser parser = new GdbMiParser();
         EchoBuffer ebuffer = new EchoBuffer();
-        
+        Pattern pattern = new Pattern("(?m)^(\\s*)\\(gdb\\)(\\s*)$");
         
         int bytes;
         while (bExit == false )
         {
             // Process the data
+            int gdbend = -1;
             try
             {
-                ebuffer.clear();
+                //ebuffer.clear();
                 do{
                     bytes = _gdb_process.read(buffer, 0, 4096);
                     if (bytes > 0){
@@ -2287,29 +2713,32 @@ class GDBShell{
                     }else{
                         throw new IllegalArgumentException("read failed");
                     }
-                }while (ebuffer.endWithLine("(gdb)") == false );
+                }while ((gdbend = ebuffer.match(pattern)) == -1 && bExit == false);
             }catch (Exception ex)
             {
+                //_system_.output(ex.getMessage());
                 setExit();
                 return ;
             }
             
-            if (bytes > 0){
+            
+            if (gdbend > 0){
                 try{
                     //_system_.output("parse:\n" + ebuffer.toString());
-                    parser.process(ebuffer.getData(), ebuffer.getLength());
+                    parser.process(ebuffer.getData(), gdbend);
                 }catch (IllegalArgumentException e){
                     _system_.output(e.getMessage());
-                    //_system_.output("GDB/MI parsing error. Current buffer contents: \"" + new String(buffer, 0, bytes) + "\"");
+                    _system_.output("GDB/MI parsing error. Current buffer contents: \"" + new String(buffer, 0, bytes) + "\"");
                 }
 
+            
                 // Handle the records
                 List<GdbMiRecord> records = parser.getRecords();
                 handleResponse(records);
                 records.clear();
+                ebuffer.remove(gdbend);
             }
         }
         
-        return ;
     }
 };

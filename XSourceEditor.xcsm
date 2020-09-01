@@ -113,7 +113,7 @@ class XSourceEditor : QXMdiSubWindow {
         "const continue default do double else final finally cdecl for " +
         "if import interface stdcall fastcall pascal operator " +
         "new package include using require synchronized_read synchronized_write " +
-        "return static super switch synchronized this throw " +
+        "return static super switch synchronized this throws throw " +
         "try void while @Declare @NotNilptr public private protected override bool byte long char int long short String _system_ " +
         "Thread nilptr Exception Vector Map List Iterator Timer TimerTask true false enum finalize" ;
 
@@ -210,7 +210,7 @@ class XSourceEditor : QXMdiSubWindow {
         return _controller;
     }
 
-    public static String getEditingContent(String file) {
+    public static String getEditingContent(@NotNilptr String file) {
         XSourceEditor wnd = findDocumentWindow(nilptr, file, false);
         if (wnd != nilptr) {
             return wnd.getTextContent();
@@ -268,7 +268,7 @@ class XSourceEditor : QXMdiSubWindow {
         return wnd;
     }
     
-    public static bool openForFileInfo(XWorkspace parent,@NotNilptr String source,int line, int column, String Tips) {
+    public static bool openForFileInfo(@NotNilptr XWorkspace parent,@NotNilptr String source,int line, int column, String Tips) {
         XSourceEditor wnd =  findDocumentWindow(parent, source, true);
 
         if (wnd != nilptr) {
@@ -279,11 +279,30 @@ class XSourceEditor : QXMdiSubWindow {
                 wnd.showTips(line - 1,  column, Tips);
             }
             return true;
-        }
+        }else
+        if (QXMessageBox.Question("提示", "无法找到源代码文件:" + source + ",是否浏览文件?", QXMessageBox.Yes | QXMessageBox.No, QXMessageBox.No ) == QXMessageBox.Yes) {
+                String filename = source.findFilenameAndExtension();
+                if (filename.length() == 0) {
+                    filename = source;
+                }
+                String file = QXFileDialog.getOpenFileName("打开文件:" + filename, source,  getDocumentExtension(), XWorkspace.workspace);
+                if (file != nilptr && file.length() > 0) {
+                    wnd = findDocumentWindow(XWorkspace.workspace, file, true);
+                    if (wnd != nilptr) {
+                        parent.setActiveSubWindow(wnd);
+                        wnd.goto(line -1, column);
+                        wnd.setFocus();
+                        if (Tips != nilptr) {
+                            wnd.showTips(line - 1,  column, Tips);
+                        }
+                        return true;
+                    }
+                }
+            }
         return false;
     }
 
-    public static bool locateForPosition(XWorkspace parent,@NotNilptr String source,int position, int len) {
+    public static bool locateForPosition(@NotNilptr XWorkspace parent,@NotNilptr String source,int position, int len) {
         XSourceEditor wnd =  findDocumentWindow(parent, source, true);
 
         if (wnd != nilptr) {
@@ -294,7 +313,7 @@ class XSourceEditor : QXMdiSubWindow {
         return false;
     }
 
-    public static bool locateForLineRow(XWorkspace parent,@NotNilptr String source,int line, int column, int len) {
+    public static bool locateForLineRow(@NotNilptr XWorkspace parent,@NotNilptr String source,int line, int column, int len) {
         XSourceEditor wnd =  findDocumentWindow(parent, source, true);
 
         if (wnd != nilptr) {
@@ -312,7 +331,7 @@ class XSourceEditor : QXMdiSubWindow {
         _sci.sendEditor(QXSci.SCI_SETSELECTIONEND, pos + len);
     }
 
-    public static bool openForFile(XWorkspace parent,@NotNilptr String sourcepath) {
+    public static bool openForFile(@NotNilptr XWorkspace parent,@NotNilptr String sourcepath) {
         XSourceEditor wnd =  findDocumentWindow(parent, sourcepath, true);
 
         if (wnd != nilptr) {
@@ -350,7 +369,7 @@ class XSourceEditor : QXMdiSubWindow {
         while (iterator.hasNext()) {
             XSourceEditor wnd = iterator.getValue();
 
-            if (wnd.requestClose() == false) {
+            if (wnd != nilptr && wnd.requestClose() == false) {
                 return false;
             }
 
@@ -383,7 +402,7 @@ class XSourceEditor : QXMdiSubWindow {
         return bclose;
     }
 
-    public static XSourceEditor findFileWindow(String file) {
+    public static XSourceEditor findFileWindow(@NotNilptr String file) {
 
         try {
             file = String.formatPath(file, _system_.getPlatformId() == _system_.PLATFORM_WINDOWS);
@@ -502,12 +521,21 @@ class XSourceEditor : QXMdiSubWindow {
         for (int i = 50; i < c; i ++) {
             long item = 0;
             XIntelliSense.XIntelliResult names = result[i];
-            XIntelliSense.XIntelliResult _class = names.get_class();
             
-            String label = names.get_name();
-            if (names == nilptr) {
+            
+            if (names == nilptr ) {
                 return ;
             }
+            
+            XIntelliSense.XIntelliResult _class = names.get_class();
+            if (_class == nilptr) {
+                return ;
+            }
+            
+            String _class_name = _class.get_name();
+  
+            String label = names.get_name();
+
             if (names.get_type() == 23) {
                 if (names.hasProp('S')) {
                     item = autoWnd.addItem("res/toolbar/staticfunction.png", label);
@@ -519,15 +547,22 @@ class XSourceEditor : QXMdiSubWindow {
                 if (params != nilptr){
                     for (int x = 0; x < params.length; x ++) {
                         XIntelliSense.XIntelliResult param = params[x];
-                        descr = descr + param.get_class().get_name() + " " + param.get_name();
-                        if (x + 1 < params.length) {
-                            descr = descr + ", ";
+                        if (param != nilptr){
+                            XIntelliSense.XIntelliResult param_class = param.get_class();
+                            if (param_class != nilptr){
+                                descr = descr + param_class.get_name() + " " + param.get_name();
+                            }else{
+                                descr = descr + "? " + param.get_name();
+                            }
+                            if (x + 1 < params.length) {
+                                descr = descr + ", ";
+                            }
                         }
                     }
                 }
                 descr = descr + ")";
 
-                autoWnd.setItemText(item, 1, _class.get_name());
+                autoWnd.setItemText(item, 1, _class_name);
                 autoWnd.setItemText(item, 2, descr);
                 autoWnd.setItemColor(item, 1, 0xff7f7f7f);
                 autoWnd.setItemColor(item, 2, 0xff7f7f7f);
@@ -541,7 +576,7 @@ class XSourceEditor : QXMdiSubWindow {
                     item = autoWnd.addItem("res/toolbar/member.png", label);
                 }
 
-                autoWnd.setItemText(item, 1, _class.get_name());
+                autoWnd.setItemText(item, 1, _class_name);
                 autoWnd.setItemColor(item, 1, 0xff7f7f7f);
             }
 
@@ -575,6 +610,9 @@ class XSourceEditor : QXMdiSubWindow {
             long item = 0;
             XIntelliSense.XIntelliResult names = result[i];
 
+            if (names == nilptr){
+                continue;
+            }
             current_autocmp = result;
 
             if (names.get_type() == 23) {
@@ -589,15 +627,27 @@ class XSourceEditor : QXMdiSubWindow {
                 if (params != nilptr){
                     for (int x = 0; x < params.length; x ++) {
                         XIntelliSense.XIntelliResult param = params[x];
-                        descr = descr + param.get_class().get_name() + " " + param.get_name();
-                        if (x + 1 < params.length) {
-                            descr = descr + ", ";
+                        if (param != nilptr){
+                            XIntelliSense.XIntelliResult pclass = param.get_class();
+                            if (pclass != nilptr){
+                                descr = descr + pclass.get_name() + " " + param.get_name();
+                            }else{
+                                descr = descr + "? " + param.get_name();
+                            }
+                            if (x + 1 < params.length) {
+                                descr = descr + ", ";
+                            }
                         }
                     }
                 }
                 descr = descr + ")";
-
-                autoWnd.setItemText(item, 1, names.get_class().get_name());
+                
+                XIntelliSense.XIntelliResult pclass = names.get_class();
+                if (pclass != nilptr){
+                    autoWnd.setItemText(item, 1, pclass.get_name());
+                }else{
+                    autoWnd.setItemText(item, 1, "?");
+                }
                 autoWnd.setItemText(item, 2, descr);
                 autoWnd.setItemColor(item, 1, 0xff7f7f7f);
                 autoWnd.setItemColor(item, 2, 0xff7f7f7f);
@@ -611,7 +661,13 @@ class XSourceEditor : QXMdiSubWindow {
                     item = autoWnd.addItem("res/toolbar/member.png", names.get_name());
                 }
 
-                autoWnd.setItemText(item, 1, names.get_class().get_name());
+                
+                XIntelliSense.XIntelliResult pclass = names.get_class();
+                if (pclass != nilptr){
+                    autoWnd.setItemText(item, 1, pclass.get_name());
+                }else{
+                    autoWnd.setItemText(item, 1, "?");
+                }
                 autoWnd.setItemColor(item, 1, 0xff7f7f7f);
             }
 
@@ -692,23 +748,24 @@ class XSourceEditor : QXMdiSubWindow {
 
     public void setSciEvent() {
         QXWidget viewport = _sci.viewPort();
-
-        viewport.setOnMouseEventListener(new onMouseEventListener() {
-            void onMouseButtonPress(QXObject obj, int Button, int x, int y, int flags, int source)override {
-                XSourceEditor.this.hideAutoWnd();
-            }
-            void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source)override {
-                onSciMouseButtonPress(Button, x, y, flags, source);
-            }
-            void onMouseMove(QXObject obj, int Button, int x, int y, int flags, int source)override {
-                if (XWorkspace.workspace.isDebugging()) {
-                    if (ThreadManager.isCurrentInterrupt()) {
-                        int pos = _sci.positionFromPoint(x, y);
-                        showRuntimeInfo(pos);
+        if (viewport != nilptr){
+            viewport.setOnMouseEventListener(new onMouseEventListener() {
+                void onMouseButtonPress(QXObject obj, int Button, int x, int y, int flags, int source)override {
+                    XSourceEditor.this.hideAutoWnd();
+                }
+                void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source)override {
+                    onSciMouseButtonPress(Button, x, y, flags, source);
+                }
+                void onMouseMove(QXObject obj, int Button, int x, int y, int flags, int source)override {
+                    if (XWorkspace.workspace.isDebugging()) {
+                        if (ThreadManager.isCurrentInterrupt()) {
+                            int pos = _sci.positionFromPoint(x, y);
+                            showRuntimeInfo(pos);
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
     Object rtLock = new Object();
@@ -742,7 +799,7 @@ class XSourceEditor : QXMdiSubWindow {
                     if (rtThread == nilptr) {
                         rtThread = new Thread() {
                             void run()override {
-                                Thread.sleep(500);
+                                _system_.sleep(500);
                                 String thekey = lastKey.trim(true);
                                 if (thekey.length() > 0) {
                                     JsonObject json = XWorkspace.workspace.debuggee.queryObjectByName(ThreadManager.currentThreadId, ThreadManager.currentFrameId, thekey);
@@ -772,10 +829,13 @@ class XSourceEditor : QXMdiSubWindow {
         }
     }
 
-    public void showRtInfos(int pos, JsonArray watches) {
+    public void showRtInfos(int pos, @NotNilptr JsonArray watches) {
         JsonObject obj = (JsonObject)watches.get(0);
         if (obj != nilptr) {
             String name = obj.getString("name");
+            if (name == nilptr){
+                name = "unknow";
+            }
             int error = obj.getInt("error");
             try {
 
@@ -788,32 +848,28 @@ class XSourceEditor : QXMdiSubWindow {
                     if (values != nilptr && values.length() > 0) {
                         try {
                             JsonObject valueroot = new JsonObject(values);
-
-                            if (valueroot != nilptr) {
-                                //int valueType = valueroot.getInt("valuetype");
-                                if (valueroot.has("thumb")){
-                                    values = valueroot.getString("thumb");
-                                }else{
-                                    values = valueroot.getString("value");
-                                }
-                                if (values == nilptr) {
-                                    if (valueroot.has("object_id")){
-                                        values = "[]";
-                                    }else{
-                                        values = "nilptr";
-                                    }
-                                }
-                                String tips = name + "\n" + "类型:" + stype + "\n" + "值:" + values;
-
-                                runOnUi(new Runnable() {
-                                    void run() {
-                                        if (bClosed == false) {
-                                            _sci.showTips(pos, tips);
-                                        }
-                                    }
-                                });
-
+                            //int valueType = valueroot.getInt("valuetype");
+                            if (valueroot.has("thumb")){
+                                values = valueroot.getString("thumb");
+                            }else{
+                                values = valueroot.getString("value");
                             }
+                            if (values == nilptr) {
+                                if (valueroot.has("object_id")){
+                                    values = "[]";
+                                }else{
+                                    values = "nilptr";
+                                }
+                            }
+                            String tips = name + "\n" + "类型:" + stype + "\n" + "值:" + values;
+
+                            runOnUi(new Runnable() {
+                                void run() {
+                                    if (bClosed == false) {
+                                        _sci.showTips(pos, tips);
+                                    }
+                                }
+                            });
                         } catch(Exception e) {
                             //_system_.consoleWrite("error:" + e.getMessage());
                         }
@@ -872,7 +928,7 @@ class XSourceEditor : QXMdiSubWindow {
         }
     }
 
-    public static void toggleBreakPointOnFile(XWorkspace parent, String source,int line, bool set) {
+    public static void toggleBreakPointOnFile(XWorkspace parent,@NotNilptr String source,int line, bool set) {
         XSourceEditor wnd =  findDocumentWindow(parent, source, true);
 
         if (wnd != nilptr) {
@@ -929,6 +985,7 @@ class XSourceEditor : QXMdiSubWindow {
                 }
             }
         }
+        __nilptr_safe(editor_actions);
         _sci.addActions(editor_actions);
         _sci.setContextMenuPolicy(ActionsContextMenu);
     }
@@ -992,7 +1049,7 @@ class XSourceEditor : QXMdiSubWindow {
         return  (c == ' ' ||c == '\t' ||c == '\r' ||c == '\n' ||c == '\v' ||c == '\f');
     }
 
-    public void identguide(QXSci sci, int lastChar) {
+    public void identguide(@NotNilptr QXSci sci, int lastChar) {
         long pos = sci.currentPosition();
         int line = sci.positionToLine(pos);
         //如果最后输入的字符是右括号的话就自动让当前行缩进和它匹配的左括号所在行一致
@@ -1081,7 +1138,7 @@ class XSourceEditor : QXMdiSubWindow {
         int lastAddedChar;
 
 
-        void ON_MARGINCLICK(QXSci sci, int position, int modifiers, int margin)override {
+        void ON_MARGINCLICK(@NotNilptr QXSci sci, int position, int modifiers, int margin)override {
             if (margin == BREAKPOINT_INDEX) {
                 int line = _sci.positionToLine(position);
                 BreakPointWnd.toggleBreakPoint(XSourceEditor.this, filePath, line, testMark(line, MARK_BREAKPOINT) == false);
@@ -1090,7 +1147,7 @@ class XSourceEditor : QXMdiSubWindow {
                 _sci.sendEditor(QXSci.SCI_TOGGLEFOLD, line);
             }
         }
-        void ON_UPDATEUI(QXSci sci, int updated)override {
+        void ON_UPDATEUI(@NotNilptr QXSci sci, int updated)override {
             int position = sci.sendEditor(QXSci.SCI_GETCURRENTPOS, 0, 0);
             XWorkspace.recordAction(filePath, position);
 
@@ -1129,12 +1186,12 @@ class XSourceEditor : QXMdiSubWindow {
             }
         }
 
-        void QON_SELCHANGED(QXSci sci, bool yes) {
+        void QON_SELCHANGED(@NotNilptr QXSci sci, bool yes) {
             XMenuManager.setStatusSel(yes);
         }
-        void ON_MODIFIED(QXSci sci,
+        void ON_MODIFIED(@NotNilptr QXSci sci,
                          int position, int modType,
-                         String text, int length,
+                         @NotNilptr String text, int length,
                          int linesAdded, int line,
                          int foldLevelNow, int foldLevelPrev,
                          int token, int annotationLinesAdded) {
@@ -1154,8 +1211,8 @@ class XSourceEditor : QXMdiSubWindow {
                 XSourceEditor.this.intellisense_modified = true;
             }
         }
-
-        void ON_CHARADDED(QXSci sci,int charadded)override {
+        
+        void ON_CHARADDED(@NotNilptr QXSci sci,int charadded)override {
             lastAddedChar = charadded;
             long position = sci.currentPosition();
             int cstyle = sci.getStyleAtPosition(position);
@@ -1193,7 +1250,7 @@ class XSourceEditor : QXMdiSubWindow {
                         last_autopos = -1;
                         strpretext = content.substring(auto_position, position);
                         int column = position - sci.getPosition(cur_line);
-                        _mdi_area.XIntelliSenseL(XSourceEditor.this, filePath, cur_line, column);
+                        _mdi_area.XIntelliSenseL(XSourceEditor.this, filePath, content, cur_line, column);
                     }
                 } else {
                     if (false == isInWord(lastAddedChar, true)) {
@@ -1314,7 +1371,7 @@ class XSourceEditor : QXMdiSubWindow {
         }
         return true;
     }
-    public bool create(QXWidget parent) {
+    public bool create(@NotNilptr QXWidget parent) {
         if (super.create(parent)) {
             _sci = new QXSci();
             if (_sci.create() == false) {
@@ -1368,9 +1425,9 @@ class XSourceEditor : QXMdiSubWindow {
                             XSourceEditor.this.autoCompleteDone();
                             return false;
                         }
-                        if (key == Key_Escape) {
+                        if (key == Key_Escape || key == Key_Delete || key == Key_Home || key == Key_End|| key == Key_PageUp|| key == Key_PageDown || key == Key_HomePage) {
                             XSourceEditor.this.hideAutoWnd();
-                            return false;
+                            return true;
                         }
                     }
 
@@ -1411,16 +1468,18 @@ class XSourceEditor : QXMdiSubWindow {
                         }
                     }
                     if (key == Key_Tab) {
-                        hideAutoWnd();
-                        int pos = _sci.getCurrentPosition();
-                        int[] ind = getNextIndic(pos);
-                        if (ind != nilptr) {
-                            if (ind.length > 0) {
-                                _sci.gotoPos(ind[1]);
+                        if (_sci.getSelectStart() == _sci.getSelectEnd()){
+                            hideAutoWnd();
+                            int pos = _sci.getCurrentPosition();
+                            int[] ind = getNextIndic(pos);
+                            if (ind != nilptr) {
+                                if (ind.length > 0) {
+                                    _sci.gotoPos(ind[1]);
+                                }
+                                return false;
                             }
-                            return false;
+                            return true;
                         }
-                        return true;
                     }
 
 
@@ -1493,7 +1552,7 @@ class XSourceEditor : QXMdiSubWindow {
         return true;
     }
 
-    public String mapType(String type) {
+    public String mapType(@NotNilptr String type) {
         int t = type.parseInt();
         switch(t) {
         case 18:
@@ -1592,10 +1651,12 @@ class XSourceEditor : QXMdiSubWindow {
                                 OverrideDlg.requesOverrideObject(XSourceEditor.this, pos, res);
                             } else {
                                 ProgressView pv = ProgressView.showWait(1000);
-                                pv.centerScreen();
-                                pv.showResult(true, false);
-                                pv.setTitleText("找不到对象");
-                                pv.dismissAfter(1000);
+                                if (pv != nilptr){
+                                    pv.centerScreen();
+                                    pv.showResult(true, false);
+                                    pv.setTitleText("找不到对象");
+                                    pv.dismissAfter(1000);
+                                }
                             }
                         }
                     }
@@ -1635,7 +1696,8 @@ class XSourceEditor : QXMdiSubWindow {
                                         XFinder.FindResult fres = new XFinder.FindResult();
 
                                         for (int i = 0; i < res.length; i++) {
-                                            if (res[i].get_source() != nilptr && res[i].get_source().length() > 0) {
+                                            String rsrc = res[i].get_source();
+                                            if (rsrc != nilptr && rsrc.length() > 0) {
                                                 fres.add(new XFinder.FindItem(res[i].get_source(), res[i].get_line(), res[i].get_row(), 1, mapType("" + res[i].get_type())));
                                             }
                                         }
@@ -1645,10 +1707,12 @@ class XSourceEditor : QXMdiSubWindow {
 
                                 } else {
                                     ProgressView pv = ProgressView.showWait(1000);
-                                    pv.centerScreen();
-                                    pv.showResult(true, false);
-                                    pv.setTitleText("找不到对象");
-                                    pv.dismissAfter(1000);
+                                    if (pv != nilptr){
+                                        pv.centerScreen();
+                                        pv.showResult(true, false);
+                                        pv.setTitleText("找不到对象");
+                                        pv.dismissAfter(1000);
+                                    }
                                 }
                             }
                         }
@@ -1680,14 +1744,16 @@ class XSourceEditor : QXMdiSubWindow {
             XWorkspace.workspace.setActiveSubWindow(editor);
         } else {
             ProgressView pv = ProgressView.showWait(1000);
-            pv.centerScreen();
-            pv.showResult(true, false);
-            pv.setTitleText("对象不在源代码中");
-            pv.dismissAfter(1000);
+            if (pv != nilptr){
+                pv.centerScreen();
+                pv.showResult(true, false);
+                pv.setTitleText("对象不在源代码中");
+                pv.dismissAfter(1000);
+            }
         }
     }
 
-   public static	void localtion(String source, int pos) {
+   public static	void localtion(@NotNilptr String source, int pos) {
         XSourceEditor editor = findDocumentWindow(XWorkspace.workspace, source, true);
         if (editor != nilptr) {
             editor.goto(pos);
@@ -1787,39 +1853,22 @@ class XSourceEditor : QXMdiSubWindow {
                 if (current_autocmp != nilptr && id < current_autocmp.length) {
                     XIntelliSense.XIntelliResult names = current_autocmp[id];
 
-                    if (names.get_type() == 23) {
-                        XIntelliSense.XIntelliResult [] params = names.get_params();
-                        if (params != nilptr && params.length > 0) {
-                            int [][] current_idincs = new int[params.length][2];
-
-                            String descr = names.get_name() + "(";
-                            for (int x = 0; x < params.length; x ++) {
-                                XIntelliSense.XIntelliResult param = params[x];
-                                current_idincs[x][0] = auto_position + descr.length();
-                                descr = descr + param.get_class().get_name() + " " + param.get_name() + ":";
-                                current_idincs[x][1] = auto_position + descr.length();
-                                if (x + 1 < params.length) {
-                                    descr = descr + ",";
-                                } else {
-                                    descr = descr;
+                    if (names != nilptr && names.get_type() == 23) {
+                        IXIntelliSense.InputDescription input = names.makeInputText();
+                        
+                        if (input != nilptr){
+                            _sci.replaceRange(auto_position, curpos, input.getInsertText());
+                            int [][] current_idincs = input.getTipsDescription();
+                            if (current_idincs != nilptr){
+                                _sci.setIndicCurrent(1);
+                                for (int i = 0; i < current_idincs.length; i++) {
+                                    _sci.applyIndic(auto_position + current_idincs[i][0], current_idincs[i][1] - current_idincs[i][0]);
                                 }
+                                _sci.gotoPos(auto_position + current_idincs[0][1]);
                             }
-
-                            descr = descr + ")";
-
-                            _sci.replaceRange(auto_position, curpos, descr);
-                            _sci.setIndicCurrent(1);
-
-                            for (int i = 0; i < current_idincs.length; i++) {
-                                _sci.applyIndic(current_idincs[i][0], current_idincs[i][1] - current_idincs[i][0]);
-                            }
-
-                            _sci.gotoPos(current_idincs[0][1]);
-                            tips = "";
-                        } else {
-                            text = text + "()";
-                            _sci.replaceRange(auto_position, curpos, text);
                         }
+                        
+                        /**/
                     } else {
                         _sci.replaceRange(auto_position, curpos, text);
                     }
@@ -1846,7 +1895,8 @@ class XSourceEditor : QXMdiSubWindow {
                 Map.Iterator<String,long> iter = autoCompMap.iterator();
                 long selItem = 0;
                 while (iter.hasNext()) {
-                    if (iter.getKey().startWith(entenedText)) {
+                    String key = iter.getKey();
+                    if (key != nilptr && key.startWith(entenedText)) {
                         selItem = iter.getValue();
                         break;
                     }
@@ -1874,7 +1924,7 @@ class XSourceEditor : QXMdiSubWindow {
         reserve_modify_mark = swap;
     }
 
-    public void replaceText(int start, int len, String text) {
+    public void replaceText(int start, int len,@NotNilptr  String text) {
         _sci.sendEditor(QXSci.SCI_SETTARGETSTART, start);
         _sci.sendEditor(QXSci.SCI_SETTARGETEND, start + len);
         _sci.sendEditor(QXSci.SCI_REPLACETARGET, text.length(), text);
@@ -2430,7 +2480,9 @@ class XSourceEditor : QXMdiSubWindow {
 
         while (iterator.hasNext()) {
             XSourceEditor wnd = iterator.getValue();
-            wnd.updateSyntax();
+            if (wnd != nilptr){
+                wnd.updateSyntax();
+            }
             iterator.next();
         }
     }
@@ -2612,7 +2664,7 @@ class XSourceEditor : QXMdiSubWindow {
         }
     }
 
-    public static void updateDocumentTo(String path,String newname) {
+    public static void updateDocumentTo(@NotNilptr String path,String newname) {
         XSourceEditor wnd = findDocumentWindow(nilptr, path, false);
         if (wnd != nilptr) {
             wnd.removeFromMap(path);
@@ -2653,7 +2705,7 @@ class XSourceEditor : QXMdiSubWindow {
     }
 
 
-    public static void notifyFileChange(String path, bool autoLoad) {
+    public static void notifyFileChange(@NotNilptr String path, bool autoLoad) {
         XSourceEditor editor = findDocumentWindow(nilptr, path, false);
         if (editor != nilptr) {
             XWorkspace.workspace.setActiveSubWindow(editor);
@@ -2662,6 +2714,9 @@ class XSourceEditor : QXMdiSubWindow {
     }
 
     public void notifyFileChange(bool autoLoad) {
+        if (Setting.getBoolean("changeautoload")){
+            reloadFile(loadAsCharset);
+        }else
         if (autoLoad == true || QXMessageBox.Yes == QXMessageBox.Question("注意", "检测到文件:" + filePath + "已被外部程序改变,是否重新加载?", QXMessageBox.Yes, QXMessageBox.No)) {
             reloadFile(loadAsCharset);
         }
@@ -2686,7 +2741,7 @@ class XSourceEditor : QXMdiSubWindow {
     
     public void UpdateCodepage(){
         MultiSelectDialog.requestSelect(new InputDialog.onInputListener(){
-            bool onInputOk(String text)override{ return true;}
+            bool onInputOk(@NotNilptr String text)override{ return true;}
             bool onInputCancel()override{ return true;}
             bool onSelectOk(int id){
                 try{
@@ -2715,7 +2770,7 @@ class XSourceEditor : QXMdiSubWindow {
     
     public void convertCharset(){
         MultiSelectDialog.requestSelect(new InputDialog.onInputListener(){
-            bool onInputOk(String text)override{ return true;}
+            bool onInputOk(@NotNilptr String text)override{ return true;}
             bool onInputCancel()override{ return true;}
             bool onSelectOk(int id){
                 try{
@@ -2761,7 +2816,7 @@ class XSourceEditor : QXMdiSubWindow {
         return nilptr;
     }
     
-    public void setEditorText(String fullpath, byte [] data, String asCharset){
+    public void setEditorText(String fullpath,@NotNilptr  byte [] data, String asCharset){
         bool readOnly = false;
         String content = "";
         String charset = asCharset;
@@ -2804,7 +2859,7 @@ class XSourceEditor : QXMdiSubWindow {
                     if (bMana){
                         QXMessageBox.Information("注意","无法识别此文件编码,请手动选择一个文件编码尝试载入",QXMessageBox.Ok,QXMessageBox.Ok);
                         retry = MultiSelectDialog.requestSelect(new InputDialog.onInputListener(){
-                            bool onInputOk(String text)override{ return true;}
+                            bool onInputOk(@NotNilptr String text)override{ return true;}
                             bool onInputCancel()override{ 
                                 retry = false;
                                 return true;
@@ -2867,7 +2922,9 @@ class XSourceEditor : QXMdiSubWindow {
             try {
                 int line = _sci.getFirstVisibleLine();
                 long pos = _sci.currentPosition();
-                setEditorText(filePath, data, asCharset);
+                if (data != nilptr){
+                    setEditorText(filePath, data, asCharset);
+                }
                 _sci.setSavePoint();
                 resetAllModified();
                 fis.close();
@@ -2881,12 +2938,15 @@ class XSourceEditor : QXMdiSubWindow {
         }
     }
 
-    public bool loadFile(String file, String asCharset) {
+    public bool loadFile(@NotNilptr String file, String asCharset) {
         try {
             FileInputStream fis = new FileInputStream(file);
-            byte [] data = fis.read();
+            
             try {
-                setEditorText(file, data, asCharset);
+                byte [] data = fis.read();
+                if (data != nilptr){
+                    setEditorText(file, data, asCharset);
+                }
                 removeFromMap(filePath);
                 filePath = String.formatPath(file,false).replace("\\","/");
                 _sci.setSavePoint();
@@ -2924,9 +2984,9 @@ class XSourceEditor : QXMdiSubWindow {
         String savepath = filePath;
         bool saved = false;
         while (saved == false) {
-            if (savepath.startWith("#")) {
+            if (savepath != nilptr && savepath.startWith("#")) {
                 while (saved == false) {
-                    String file = QXFileDialog.getSaveFileName("保存文件", filePath,  "X Source (Module) (*.x *.xcs *.xcsm)", this);
+                    String file = QXFileDialog.getSaveFileName("保存文件", filePath,  getDocumentExtension(), this);
                     if (file != nilptr && file.length() > 0) {
                         //另存
                         saved = saveAs(file);
@@ -2935,36 +2995,34 @@ class XSourceEditor : QXMdiSubWindow {
                         return false;
                     }
                 }
-            } else {
+            } else 
+            if (savepath != nilptr){
                 pauseWatch();
                 try {
                     String content = _sci.getText();
-                    if (content != nilptr) {
-                        byte [] data = nilptr;
-
-                        if (defaultCharset != nilptr){
-                            try{
-                                data = content.getBytes(defaultCharset);
-                            }catch(Exception e){
-                                QXMessageBox.Warning("注意","文件不能以编码 " + defaultCharset + " 进行保存, 将存储为 UTF-8 编码.",QXMessageBox.Ok,QXMessageBox.Ok);
-                                defaultCharset = nilptr;
-                                data = content.getBytes();
-                            }
-                        }else{
+                    byte [] data = nilptr;
+                    if (defaultCharset != nilptr){
+                        try{
+                            data = content.getBytes(defaultCharset);
+                        }catch(Exception e){
+                            QXMessageBox.Warning("注意","文件不能以编码 " + defaultCharset + " 进行保存, 将存储为 UTF-8 编码.",QXMessageBox.Ok,QXMessageBox.Ok);
+                            defaultCharset = nilptr;
                             data = content.getBytes();
                         }
-                        FileOutputStream fis = new FileOutputStream(savepath);
-                        fis.write(data);
-                        fis.close();//必须close 不然GC 关闭文件的时候在watch之后 , watch 会报告被更改
+                    }else{
+                        data = content.getBytes();
+                    }
+                    FileOutputStream fis = new FileOutputStream(savepath);
+                    fis.write(data);
+                    fis.close();//必须close 不然GC 关闭文件的时候在watch之后 , watch 会报告被更改
 
-                        _sci.setSavePoint();
-                        removeAllModified();
-                        updateTitle();
-                        saved = true;
-                        String ext = savepath.findExtension();
-                        if (isDocument(ext)) {
-                            updateXIntellisence(savepath, content);
-                        }
+                    _sci.setSavePoint();
+                    removeAllModified();
+                    updateTitle();
+                    saved = true;
+                    String ext = savepath.findExtension();
+                    if (isDocument(ext)) {
+                        updateXIntellisence(savepath, content);
                     }
                 } catch(Exception e) {
                     //保存失败  跳到另存
@@ -2988,19 +3046,40 @@ class XSourceEditor : QXMdiSubWindow {
         _sci.sendEditor(QXSci.SCI_MARKERDELETEALL,MARK_SAVED);
     }
 
+    static String getDocumentExtension(){
+        String filter = nilptr;
+        ProjectPropInterface prop = XWorkspace.workspace.getCurrentProjectProp();
+        if (prop != nilptr){
+            filter = prop.getFileExtensionFilter();
+        }
+        if (filter != nilptr){
+            filter = filter.trim(true);
+        }
+        
+        if (filter == nilptr){
+            filter = "";
+        }else
+        if (filter.length() > 0){
+            if (filter.endWith(";;") == false){
+                filter = filter + ";;";
+            }
+        }
+        return filter + "All Files(*.* *)";
+    }
+    
     public void saveFileAs() {
         if (readonlyResp == ReadResp.NO_CHARSET){
             QXMessageBox.Critical("注意","未选择有效的编码,文件将锁定为只读,保存或者编辑将使文件损坏.",QXMessageBox.Ok,QXMessageBox.Ok);
             return;
         }
         
-        String file = QXFileDialog.getSaveFileName("保存文件", filePath,  "X Source (Module) (*.x *.xcs *.xcsm)", this);
+        String file = QXFileDialog.getSaveFileName("保存文件", filePath,  getDocumentExtension(), this);
         if (file != nilptr && file.length() > 0) {
             saveAs(file);
         }
     }
 
-    public bool saveAs(String path) {
+    public bool saveAs(@NotNilptr String path) {
         pauseWatch();
         try {
             FileOutputStream fis = new FileOutputStream(path);
@@ -3110,39 +3189,41 @@ class XSourceEditor : QXMdiSubWindow {
         _sci.sendEditor(QXSci.SCI_LINEDELETE,0);
     }
 
-    public static void clearBreakInfo(Map<long, XStackInfor.BreakPosition> breakList) {
+    public static void clearBreakInfo(@NotNilptr Map<long, XStackInfor.BreakPosition> breakList) {
         Map.Iterator<long, XStackInfor.BreakPosition> iter = breakList.iterator();
         while (iter.hasNext()) {
             XStackInfor.BreakPosition bp = iter.getValue();
-            XSourceEditor wnd = findDocumentWindow(nilptr, bp.file, false);
-            if (wnd != nilptr) {
-                //wnd.breakOn(bp.line, bp.row, false, bp.active);
-                wnd.clearBreakOn();
+            if (bp != nilptr){
+                XSourceEditor wnd = findDocumentWindow(nilptr, bp.file, false);
+                if (wnd != nilptr) {
+                    //wnd.breakOn(bp.line, bp.row, false, bp.active);
+                    wnd.clearBreakOn();
+                }
             }
             iter.next();
         }
 
     }
 
-    public static void removeBreak(XStackInfor.BreakPosition bp) {
+    public static void removeBreak(@NotNilptr XStackInfor.BreakPosition bp) {
         XSourceEditor wnd = findDocumentWindow(nilptr, bp.file, false);
         if (wnd != nilptr) {
             wnd.breakOn(bp.line, bp.row, false, bp.active, false);
         }
     }
 
-    public static void setBreak(XStackInfor.BreakPosition bp, bool onlyActive) {
+    public static void setBreak(@NotNilptr XStackInfor.BreakPosition bp, bool onlyActive, bool bSender) {
         XSourceEditor wnd = findDocumentWindow(XWorkspace.workspace, bp.file, bp.active);
         if (wnd != nilptr) {
             wnd.breakOn(bp.line, bp.row, true, bp.active, onlyActive);
         } else 
         if (bp.file != nilptr){
-            if (QXMessageBox.Question("提示", "无法找到该位置的源代码文件,是否浏览文件?", QXMessageBox.Yes | QXMessageBox.No, QXMessageBox.No ) == QXMessageBox.Yes) {
+            if (bSender && QXMessageBox.Question("提示", "无法找到源代码文件:" + bp.file + ",是否浏览文件?", QXMessageBox.Yes | QXMessageBox.No, QXMessageBox.No ) == QXMessageBox.Yes) {
                 String filename = bp.file.findFilenameAndExtension();
-                if (filename == nilptr) {
+                if (filename.length() == 0) {
                     filename = bp.file;
                 }
-                String file = QXFileDialog.getOpenFileName("打开文件:" + filename, bp.file,  "X Souerces Module(*.x *.xcs *.xcsm)", XWorkspace.workspace);
+                String file = QXFileDialog.getOpenFileName("打开文件:" + filename, bp.file,  getDocumentExtension(), XWorkspace.workspace);
                 if (file != nilptr && file.length() > 0) {
                     wnd = findDocumentWindow(XWorkspace.workspace, file, bp.active);
                     if (wnd != nilptr) {

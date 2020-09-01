@@ -19,7 +19,7 @@ class QXDockWidget : QXWidget{
         AllDockWidgetAreas = 0xf,
         NoDockWidgetArea = 0;
     
-    public bool create(QXWidget parent) {
+    public bool create(@NotNilptr QXWidget parent) override {
         nativehandle = createQObject(QType.qtDockWidget, this, parent.nativehandle);
         if (nativehandle == 0) {
             return false;
@@ -55,7 +55,7 @@ class QXDockWidget : QXWidget{
         widget_set_vint_value(nativehandle, QXCore.DOCKSETALLOWEDAREAS, area);
     }
     
-    public void setWidget(QXWidget w){
+    public void setWidget(@NotNilptr QXWidget w){
         widget_set_native_value(nativehandle, QXCore.SETWIDGET, w.nativehandle);
     }
     

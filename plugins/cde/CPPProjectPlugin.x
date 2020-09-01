@@ -25,6 +25,9 @@ class CPPProjectPlugin : IProjectPlugin{
 	}
 
     static bool mkdirs(String path) {
+        if (path == nilptr || path.length() == 0){
+            return false;
+        }
         if (XPlatform.existsSystemFile(path) == false) {
             if (XPlatform.mkdir(path) == false) {
                 mkdirs(path.findVolumePath());
@@ -34,14 +37,78 @@ class CPPProjectPlugin : IProjectPlugin{
         return true;
     }
     
-	bool createProject(WizardLoader loader, String projectName, String projectDir, String uuid, IProject ownProject, bool addToProject) override {
-		//TODO:	
+    
+    bool write2file(@NotNilptr String file,@NotNilptr String content){
+        try{
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(content.getBytes());
+            fos.close();
+            return true;
+        }catch(Exception e){
+            
+        }
+        return false;
+    }
+    
+    bool createAddition(@NotNilptr WizardLoader loader,@NotNilptr  String projectName,@NotNilptr  String projectDir,@NotNilptr  String uuid, IProject ownProject, bool addToProject) {
+        String date = String.formatDate("%c", _system_.currentTimeMillis());
+        __nilptr_safe(ownProject);
+        if (uuid.equals(cpp_clsuuid)){
+            String outcppFile = CDEProjectPropInterface.appendPath(projectDir, projectName + ".cpp");
+            String outhppFile = CDEProjectPropInterface.appendPath(projectDir, projectName + ".h");
+            
+            String cpp_content = ("//XAMH class " + projectName + " 实现,由 XStudio [https://xlang.link] 创建 \n//文件名: " + projectName + ".cpp" + " \n" + "//创建时间: " + date + " \n/**@caution 注意:不要删除或改动由XAMH开头的注释，它由XStudio自动生成并进行项目辅助管理**/\n\n") + 
+            "#include \""  + projectName + ".h\"\n\n//XAMH Static object initialization End\n" +
+            "\n//默认构造\n" + 
+            projectName + "::" + projectName + "(){" + "\n\n}\n\n" + 
+            "\n//析构\n" + 
+            projectName + "::~" + projectName + "(){" + "\n\n}\n\n//XAMH Implenment End\n"; 
+            
+            String header_content = ("//XAMH class " + projectName + " 定义,由 XStudio [https://xlang.link] 创建 \n//文件名: " + projectName + ".h" + " \n" + "//创建时间: " + date + " \n/**@caution 注意:不要删除或改动由XAMH开头的注释，它由XStudio自动生成并进行项目辅助管理**/\n\n") + 
+       
+            "class " + projectName + "{ \npublic:\n\t" + projectName + "();\n\t~" + projectName + "();\n\nprivate:\n\n\n\n\n\n//XAMH Properities End\n\npublic:\n\n\n\n\n\n//XAMH Method End\n};\n\n//XAMH Definition End";
+            
+            write2file(outcppFile, cpp_content);
+            write2file(outhppFile, header_content);
+            
+            ownProject.addSource(outhppFile);
+            ownProject.addSource(outcppFile);
+            
+            loader.openTextFile(outcppFile);
+            loader.openTextFile(outhppFile);
+            
+            return true;
+        }else
+        if (uuid.equals(cpp_clsuuid)){
+            String outhppFile = CDEProjectPropInterface.appendPath(projectDir, projectName + ".h");
+          
+            String header_content = ("//XAMH interface接口 " + projectName + " 定义,由 XStudio [https://xlang.link] 创建 \n//文件名: " + projectName + ".h" + " \n" + "//创建时间: " + date + " \n/**@caution 注意:不要删除或改动由XAMH开头的注释，它由XStudio自动生成并进行项目辅助管理**/\n\n") + 
+       
+            "interface " + projectName + "{\npublic:\n\n//XAMH Method End\n\n};\n\n//XAMH Definition End";
+            
+            write2file(outhppFile, header_content);
+            
+            ownProject.addSource(outhppFile);
+            
+            loader.openTextFile(outhppFile);
+            
+            return true;
+        }
         
+        return false;
+    }
+    
+	bool createProject(@NotNilptr WizardLoader loader,@NotNilptr  String projectName,@NotNilptr  String projectDir,@NotNilptr  String uuid, IProject ownProject, bool addToProject) override {
+		//TODO:	
+
         if (Pattern.test(projectName, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true) == false) {
             QXMessageBox.Critical("错误", "项目名称不合法", QXMessageBox.Ok, QXMessageBox.Ok);
             return false;
         }
         
+        if (addToProject){
+            return createAddition(loader, projectName, projectDir, uuid, ownProject, addToProject);
+        }
         String priject_dir = CDEProjectPropInterface.appendPath(projectDir, projectName);
         if (XPlatform.existsSystemFile(priject_dir)) {
             QXMessageBox.Critical("错误", "该位置已存在同名项目, 请重新选择路径或者改变项目名", QXMessageBox.Ok, QXMessageBox.Ok);
@@ -128,45 +195,58 @@ class CPPProjectPlugin : IProjectPlugin{
             break;
         }
         
-        String project_file = CPPGPlugManager.CPPLangPlugin.readFileContent(projfile);
-        String source_file = CPPGPlugManager.CPPLangPlugin.readFileContent(tempfile);
-        
-        project_file = project_file.replace("${ProjectName}", projectName)
-            .replace("${ProjectType}", projectType)
-            .replace("${nostdinc__}", nostdinc__)
-            .replace("${nostdinc}", nostdinc)
-            .replace("${LinkOptions}", otherlink)
-            .replace("${SubSystem}", subsystem)
-            .replace("${Headers}", headerArray.toString(true).replace("\"", "\\\""));
-        
-        String outFile = CDEProjectPropInterface.appendPath(priject_dir, projectName + ".xprj");
-        String srcFile = CDEProjectPropInterface.appendPath(priject_dir, projectName + ".cpp");
-        
-        try{
-            FileOutputStream fos = new FileOutputStream(outFile);
-            fos.write(project_file.getBytes());
-            fos.close();
+        if (tempfile != nilptr){
+            bool bDriver = projectType.equals("-driver");
+            String project_file = CPPGPlugManager.CPPLangPlugin.readFileContent(projfile);
+            String source_file = CPPGPlugManager.CPPLangPlugin.readFileContent(tempfile);
             
-            fos = new FileOutputStream(srcFile);
-            fos.write(source_file.getBytes());
-            fos.close();
-            
-            loader.loadProject(outFile);
-            
-            return true;
-        }catch(Exception e){
-            
+            if (project_file != nilptr && source_file != nilptr){
+                if (bDriver){
+                    project_file = project_file.replace("${ProjectName}.cpp", "${ProjectName}.c");
+                }
+                project_file = project_file.replace("${ProjectName}", projectName)
+                    .replace("${ProjectType}", projectType)
+                    .replace("${nostdinc__}", nostdinc__)
+                    .replace("${nostdinc}", nostdinc)
+                    .replace("${LinkOptions}", otherlink)
+                    .replace("${SubSystem}", subsystem)
+                    .replace("${Headers}", headerArray.toString(true).replace("\"", "\\\""));
+                
+                String outFile = CDEProjectPropInterface.appendPath(priject_dir, projectName + ".xprj");
+                String srcFile = CDEProjectPropInterface.appendPath(priject_dir, projectName + (bDriver ? ".c" : ".cpp"));
+                
+                try{
+                    FileOutputStream fos = new FileOutputStream(outFile);
+                    fos.write(project_file.getBytes());
+                    fos.close();
+                    
+                    fos = new FileOutputStream(srcFile);
+                    fos.write(source_file.getBytes());
+                    fos.close();
+                    
+                    loader.loadProject(outFile);
+                    
+                    return true;
+                }catch(Exception e){
+                    
+                }
+                
+            }
         }
-        
-        
         return false;
 	}
 
-	String getTargetPath(IProject project) override {
+	String getTargetPath(@NotNilptr IProject project) override {
         if (project != nilptr){
             Configure configure = project.getCurrentConfig();
-            String out_path = CDEProjectPropInterface.appendPath(configure.getOption("outpath"), configure.getOption("outname"));
-            return String.formatPath(CDEProjectPropInterface.map_variable((Project)project, configure, out_path), false);
+            if (configure != nilptr){
+                String cmd = configure.getOption("command");
+                if (cmd.equals("-driver")){
+                    return project.getProjectDir().appendPath(project.getName() + ".ko");
+                }
+                String out_path = CDEProjectPropInterface.appendPath(configure.getOption("outpath"), configure.getOption("outname"));
+                return String.formatPath(XEnvironment.MapVariable((Project)project, configure, out_path), false);
+            }
         }
         return nilptr;
 	}
@@ -182,7 +262,9 @@ class CPPProjectPlugin : IProjectPlugin{
     public static const String cpp_stauuid = "661c2c22-5cca-4556-a01c-f2c9ca0495b6";
     public static const String cpp_dynuuid = "8f75b511-8c85-4a7d-8951-9f5e8735cf7b";
     public static const String cpp_drvuuid = "19f532bc-a23d-4e23-ae65-3a420374aa7a";
-
+    
+    public static const String cpp_clsuuid = "c3890f0e-ef56-4c41-acfd-e09a30d839eb";
+    public static const String cpp_ifcuuid = "5456d902-540e-4ce0-a455-a4b7175cab91";
 
     public void createWizard(){
         wizard = new JsonObject();
@@ -252,6 +334,33 @@ class CPPProjectPlugin : IProjectPlugin{
         
         project.put("C/C++" , Xlang);
         Navigation.put("project" , project);
+        
+        
+        project = new JsonObject();
+        Xlang = new JsonArray();
+        
+        mobile = new JsonObject();
+        mobile.put("name", "类");
+        mobile.put("uuid", cpp_clsuuid);
+        mobile.put("ext", ".cpp");
+        mobile.put("language", "C++");
+        mobile.put("icon", "config/sys.png");
+        mobile.put("platform", "支持C/C++开发的目的平台");
+        mobile.put("details", "适用于C++项目");
+        Xlang.put(mobile);
+        
+        mobile = new JsonObject();
+        mobile.put("name", "接口");
+        mobile.put("uuid", cpp_ifcuuid);
+        mobile.put("ext", ".h");
+        mobile.put("language", "C++");
+        mobile.put("icon", "config/sys.png");
+        mobile.put("platform", "支持C/C++开发的目的平台");
+        mobile.put("details", "适用于C++项目");
+        Xlang.put(mobile);
+        project.put("C++" , Xlang);
+        Navigation.put("file" , project);
+        
         wizard.put("Navigation" , Navigation);
     }
 };

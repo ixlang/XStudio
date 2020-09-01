@@ -11,10 +11,10 @@ class QXBuffer : QXCore{
         Text = 0x0010,
         Unbuffered = 0x0020;
         
-    public QXBuffer(){
+    public QXBuffer() throws IllegalArgumentException{
 		nativehandle = createNObject(QType.qtBuffer, 0);
         if (nativehandle == 0){
-			throw new Exception("can not create buffer");
+			throw new IllegalArgumentException("can not create buffer");
         }
     }
 	public bool open(int openFlags){
@@ -24,7 +24,7 @@ class QXBuffer : QXCore{
     public void setBuffer(byte [] data, int position, int length){
 		array_int2(nativehandle, BUFFERSETDATA, data, position, length);
     }
-    public void setBuffer(QXByteArray array){
+    public void setBuffer(@NotNilptr QXByteArray array){
 		long_intlong(nativehandle, BUFFERSETDATA, array.nativehandle);
     }
     public void finalize(){

@@ -21,7 +21,7 @@ class QXTreeView : QXWidget{
         super(handle);
     }
     
-    public bool create(){
+    public bool create()override {
         nativehandle = createQObject(QType.qtTreeView, this, 0);
         if (nativehandle == 0){
             return false;
@@ -29,7 +29,7 @@ class QXTreeView : QXWidget{
         return true;
     }
     
-    public bool create(QXWidget parent){
+    public bool create(@NotNilptr QXWidget parent)override {
         nativehandle = createQObject(QType.qtTreeView, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
@@ -40,7 +40,7 @@ class QXTreeView : QXWidget{
     public long addItem(String icon, String Text){
         return long_string2(nativehandle, TREEWIDGETADD, icon, Text);
     }
-    public long addItemWithIcon(QXIcon icon, String Text){
+    public long addItemWithIcon(@NotNilptr QXIcon icon, String Text){
         return long_longstring(nativehandle, TREEWIDGETADD, icon.nativehandle, Text);
     }
     public long insertItem(long parent, String icon, String Text){
@@ -66,11 +66,11 @@ class QXTreeView : QXWidget{
         widget_set_intlongint_value(nativehandle, SETBACKCOLOR, item, row, color);
     }
     
-    public void setItemBackgroundBrush(long item, int row ,QXBrush brush){
+    public void setItemBackgroundBrush(long item, int row ,@NotNilptr QXBrush brush){
         widget_set_intlongint_value(item, TRSETFOREBR, brush.nativehandle, row, 0);
     }
     
-    public void setItemForegroundBrush(long item, int row ,QXBrush brush){
+    public void setItemForegroundBrush(long item, int row ,@NotNilptr QXBrush brush){
         widget_set_intlongint_value(item, TRSETBACKBR, brush.nativehandle, row, 0);
     }
     
@@ -88,8 +88,10 @@ class QXTreeView : QXWidget{
     public void setColumnWidth(int column, int width){
         widget_set_v2int_value(nativehandle, SETCOLUMBWIDTH, column, width);
     }
-	public String getItemText(long item , int row){
-			return (String)core_getStringlongint(nativehandle, TRGETITEMTEXT, item, row);
+	public @NotNilptr String getItemText(long item , int row){
+        String __txt = (String)core_getStringlongint(nativehandle, TRGETITEMTEXT, item, row);
+        __nilptr_safe(__txt);
+        return __txt;
 	}
     public long getSelItem(){
         return long_get(nativehandle, TREEWIDGETGETSEL);

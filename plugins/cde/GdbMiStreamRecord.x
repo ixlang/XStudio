@@ -18,4 +18,8 @@ class GdbMiStreamRecord : GdbMiRecord
 		this.type = _type;
 		this.userToken = _userToken;
 	}
+    
+    public String toString(){
+        return message;
+    }
 };

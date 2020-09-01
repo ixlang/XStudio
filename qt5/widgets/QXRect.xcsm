@@ -4,7 +4,7 @@
 class QXRect{
 	public QXRect(){
     }
-    public QXRect(QXRect rc){
+    public QXRect(@NotNilptr QXRect rc){
 		left = rc.left;
         top = rc.top;
         right = rc.right;
@@ -38,7 +38,7 @@ class QXRect{
         bottom += y;
     }
     
-    public void offset(QXPoint pt){
+    public void offset(@NotNilptr QXPoint pt){
 		left += pt.x;
         top += pt.y;
         right += pt.x;

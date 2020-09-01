@@ -25,7 +25,7 @@ class XFindDlg : QXDialog
         editFind.setText(text);
     }
 
-    public void flushHistory(Map<String,int> his, QXComboBox comb)
+    public void flushHistory(@NotNilptr Map<String,int> his, @NotNilptr QXComboBox comb)
     {
         String [] items = new String[his.size()];
         Map.Iterator<String,int> iter = his.iterator();
@@ -123,7 +123,7 @@ class XFindDlg : QXDialog
         new onClickListener() {
             void onClick(QXObject obj, bool checked)override {
                 String str = editFind.getCurrentText();
-                if (str == nilptr || str.length() == 0) {
+                if (str.length() == 0) {
                     QXMessageBox.Critical("提示", "请输入要查找的内容", QXMessageBox.Ok, QXMessageBox.Ok);
                     return ;
                 }
@@ -165,7 +165,7 @@ class XFindDlg : QXDialog
                 String str = editFind.getCurrentText();
                 String replaceStr = editRep.getCurrentText();
 
-                if (str == nilptr || str.length() == 0) {
+                if (str.length() == 0) {
                     QXMessageBox.Critical("提示", "请输入要查找的内容", QXMessageBox.Ok, QXMessageBox.Ok);
                     return ;
                 }
@@ -234,9 +234,11 @@ class XFindDlg : QXDialog
 
                 if (scope > 0) {
                     XFinder.FindResult result = findAll();
+                    
+                    
                     XFindresWnd.ShowResult(result);
 
-                    if (result.size() > 0) {
+                    if (result != nilptr && result.size() > 0) {
 
                         int rt = QXMessageBox.Yes;
 
@@ -256,7 +258,7 @@ class XFindDlg : QXDialog
 
                     String str = editFind.getCurrentText();
 
-                    if (str == nilptr || str.length() == 0) {
+                    if (str.length() == 0) {
                         QXMessageBox.Critical("提示", "请输入要查找的内容", QXMessageBox.Ok, QXMessageBox.Ok);
                         return ;
                     }
@@ -309,14 +311,14 @@ class XFindDlg : QXDialog
 
         String str = editFind.getCurrentText();
 
-        if (str == nilptr || str.length() == 0) {
+        if (str.length() == 0) {
             QXMessageBox.Critical("提示", "请输入要查找的内容", QXMessageBox.Ok, QXMessageBox.Ok);
             return nilptr;
         }
 
         String ft = filetype.getCurrentText();
         String []extions = ft.split(';');
-        if (extions != nilptr && extions.length == 0) {
+        if (extions.length == 0) {
             extions = nilptr;
         }
 

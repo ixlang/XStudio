@@ -17,21 +17,22 @@ class XTextEditor : TextEditorPlugin{
         "const continue default do double else final finally cdecl for " +
         "if import interface stdcall fastcall pascal operator " +
         "new package include using require synchronized_read synchronized_write " +
-        "return static super switch synchronized this throw " +
+        "return static super switch synchronized this throws throw " +
         "try void while @Declare @NotNilptr public private protected override bool byte long char int long short String _system_ " +
-        "Thread nilptr Exception Vector Map List Iterator Timer TimerTask true false enum finalize" ;
+        "Thread nilptr Exception Vector Map List Iterator Timer TimerTask true false enum finalize __nilptr_safe" ;
 	}
 
-	bool requestClose(TextEditorController editor) override {
+	bool requestClose(TextEditorController ) override {
 		//TODO:	
 		return true;
 	}
-    void configEditor(Project, String path, QXSci sci, bool){
+    void configEditor(Project, String , QXSci , bool)override{
         
     }
 	SyntaxHighlighting getColorConfigure(String styleName) override {
 		//TODO:	
-		if (styleName.equals("dark")){
+        
+		if (styleName != nilptr && styleName.equals("dark")){
 			return _darkConfig;
         }
         

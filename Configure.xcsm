@@ -27,7 +27,7 @@ class Configure : IConfigure
         return md5;
     }
 
-    public bool isModified(String srcpath)
+    public bool isModified(@NotNilptr String srcpath)
     {
         String md5 = getFileMd5(srcpath);
         String cached = getCachedMd5(srcpath);
@@ -52,7 +52,7 @@ class Configure : IConfigure
         }
     }*/
 
-    public static String getFileMd5(String file)
+    public @NotNilptr  static String getFileMd5(@NotNilptr String file)
     {
 
         String md5 = "unknow";
@@ -91,7 +91,7 @@ class Configure : IConfigure
             }
         }
 
-        if (md5 == nilptr || md5.length() == 0) {
+        if (md5.length() == 0) {
             md5 = "unknow";
         }
 
@@ -104,7 +104,7 @@ class Configure : IConfigure
         root = _root;
     }
 
-    public bool setOption(String key, String text)override
+    public bool setOption(@NotNilptr String key, String text)override
     {
         bModified = true;
         if (key.indexOf('.') == -1){
@@ -114,27 +114,30 @@ class Configure : IConfigure
         }else{
             String [] sec = key.split('.');
             JsonObject parent = root;
-            try{
-                for (int i = 0; i < sec.length && parent != nilptr; i++ ){
-                    String _key = sec[i].trim(true);
-                    
-                    if (i + 1 == sec.length){
-                        while (parent.has(_key)){
-                            parent.remove(_key);
-                        }
-                        parent.put(_key, text);
-                        return true;
-                    }else{
-                        parent = (JsonObject)parent.get(_key);
-                        if (parent == nilptr){
-                            JsonObject _newnode = new JsonObject();
-                            parent.put(_key, _newnode);
-                            parent = _newnode;
+            if (parent != nilptr){
+                try{
+                    for (int i = 0; i < sec.length && parent != nilptr; i++ ){
+                        String _key = sec[i].trim(true);
+                        
+                        if (i + 1 == sec.length){
+                            while (parent.has(_key)){
+                                parent.remove(_key);
+                            }
+                            parent.put(_key, text);
+                            return true;
+                        }else{
+                            JsonObject _parent = (JsonObject)parent.get(_key);
+                            if (_parent == nilptr){
+                                JsonObject _newnode = new JsonObject();
+                                parent.put(_key, _newnode);
+                                _parent = _newnode;
+                            }
+                            parent = _parent;
                         }
                     }
+                }catch(Exception e){
+                    
                 }
-            }catch(Exception e){
-                
             }
         }
         return false;
@@ -159,7 +162,7 @@ class Configure : IConfigure
         return new Configure(newName, newobj);
     }
     //----------------------------------------
-    public void setLibs(String text)override
+    public void setLibs(@NotNilptr String text)override
     {
         String [] paths = text.split(';');
         JsonArray libpath = new JsonArray();
@@ -173,7 +176,7 @@ class Configure : IConfigure
         bModified = true;
     }
 
-    public void setLinks(String text)override
+    public void setLinks(@NotNilptr String text)override
     {
         String [] paths = text.split(';');
         JsonArray libpath = new JsonArray();
@@ -195,7 +198,7 @@ class Configure : IConfigure
         }
 
         String out = "";
-        for (int i = 0; i < libpath.length(); i++) {
+        for (int i = 0, c = libpath.length(); i < c; i++) {
             String path = libpath.getString(i);
             if (path != nilptr && path.length() > 0) {
                 if (out.length() > 0) {
@@ -216,7 +219,7 @@ class Configure : IConfigure
         }
 
         String out = "";
-        for (int i = 0; i < libpath.length(); i++) {
+        for (int i = 0, c = libpath.length(); i < c; i++) {
             String path = libpath.getString(i);
             if (path != nilptr && path.length() > 0) {
                 if (out.length() > 0) {
@@ -230,7 +233,7 @@ class Configure : IConfigure
     }
 
     //--------------------------------------------------------------------
-    public void setLibsPath(String text)override
+    public void setLibsPath(@NotNilptr String text)override
     {
         String [] paths = text.split(';');
         JsonArray libpath = new JsonArray();
@@ -261,7 +264,7 @@ class Configure : IConfigure
             libs = new JsonArray();
             root.put("libs", libs);
         } else {
-            for (int i = 0; i < libs.length(); i++) {
+            for (int i = 0, c = libs.length(); i < c; i++) {
                 String path = libs.getString(i);
                 if (path != nilptr && path.length() > 0) {
                     if (path.equals(lib)) {
@@ -269,11 +272,13 @@ class Configure : IConfigure
                         break;
                     } else {
                         String filename = path.findFilename();
-                        int pos = filename.lastIndexOf('_');
-                        if (pos != -1) {
-                            String pname = filename.substring(0, pos);
-                            if (pname.equals(xpname)) {
-                                libs.remove(i);
+                        if (filename.length() > 0){
+                            int pos = filename.lastIndexOf('_');
+                            if (pos != -1) {
+                                String pname = filename.substring(0, pos);
+                                if (pname.equals(xpname)) {
+                                    libs.remove(i);
+                                }
                             }
                         }
                     }
@@ -299,7 +304,7 @@ class Configure : IConfigure
             libs = new JsonArray();
             root.put("links", libs);
         } else {
-            for (int i = 0; i < libs.length(); i++) {
+            for (int i = 0, c = libs.length(); i < c; i++) {
                 String path = libs.getString(i);
                 if (path != nilptr && path.length() > 0) {
                     if (path.equals(lib)) {
@@ -307,11 +312,14 @@ class Configure : IConfigure
                         break;
                     } else {
                         String filename = path.findFilename();
-                        int pos = filename.lastIndexOf('_');
-                        if (pos != -1) {
-                            String pname = filename.substring(0, pos);
-                            if (pname.equals(xpname)) {
-                                libs.remove(i);
+                        
+                        if (filename.length() > 0){
+                            int pos = filename.lastIndexOf('_');
+                            if (pos != -1) {
+                                String pname = filename.substring(0, pos);
+                                if (pname.equals(xpname)) {
+                                    libs.remove(i);
+                                }
                             }
                         }
                     }
@@ -343,8 +351,9 @@ class Configure : IConfigure
         }
 
         bool isHas = false;
-        for (int i = 0; i < libpath.length(); i++) {
-            if (libpath.getString(i).equals(path)) {
+        for (int i = 0, c = libpath.length(); i < c; i++) {
+            String ips = libpath.getString(i);
+            if (ips != nilptr && ips.equals(path)) {
                 isHas = true;
                 break;
             }
@@ -365,7 +374,7 @@ class Configure : IConfigure
             return false;
         }
 
-        for (int i = 0; i < depends.length(); i++){
+        for (int i = 0, c = depends.length(); i < c; i++){
     		JsonObject depend = (JsonObject)depends.get(i);
             if (depend != nilptr){
     			String pname = depend.getString("name");
@@ -389,7 +398,7 @@ class Configure : IConfigure
             return strOut;
         }
         
-        for (int i = 0; i < depends.length(); i++){
+        for (int i = 0, c = depends.length(); i < c; i++){
     		JsonObject depend = (JsonObject)depends.get(i);
             if (depend != nilptr){
     			String pname = depend.getString("name");
@@ -407,7 +416,7 @@ class Configure : IConfigure
         return strOut;
     }
     
-    public void setDependsString(String value)override{
+    public void setDependsString(@NotNilptr String value)override{
         String [] pkgs = value.split(';');
         JsonArray depends = new JsonArray();
         
@@ -476,7 +485,7 @@ class Configure : IConfigure
         }
 
         String out = "";
-        for (int i = 0; i < libpath.length(); i++) {
+        for (int i = 0, c = libpath.length(); i < c; i++) {
             String path = libpath.getString(i);
             if (path != nilptr && path.length() > 0) {
                 if (out.length() > 0) {
@@ -502,7 +511,7 @@ class Configure : IConfigure
         }
 
         String out = "";
-        for (int i = 0; i < libpath.length(); i++) {
+        for (int i = 0, c = libpath.length(); i < c; i++) {
             String path = libpath.getString(i);
             if (path != nilptr && path.length() > 0) {
                 if (out.length() > 0) {
@@ -517,7 +526,7 @@ class Configure : IConfigure
 
     
     
-    public void setIncsPath(String text)override
+    public void setIncsPath(@NotNilptr String text)override
     {
         String [] paths = text.split(';');
         JsonArray incpath = new JsonArray();
@@ -537,7 +546,7 @@ class Configure : IConfigure
         bModified = true;
     }
 
-    public String getOption(String key)override
+    public @NotNilptr String getOption(@NotNilptr String key)override
     {
         String value = nilptr;
         
@@ -546,16 +555,18 @@ class Configure : IConfigure
         }else{
             String [] sec = key.split('.');
             JsonObject parent = root;
-            try{
-                for (int i = 0; i < sec.length && parent != nilptr; i++ ){
-                    if (i + 1 == sec.length){
-                        value = parent.getString(sec[i]);
-                    }else{
-                        parent = (JsonObject)parent.get(sec[i]);
+            if (parent != nilptr){
+                try{
+                    for (int i = 0; i < sec.length && parent != nilptr; i++ ){
+                        if (i + 1 == sec.length){
+                            value = parent.getString(sec[i]);
+                        }else{
+                            parent = (JsonObject)parent.get(sec[i]);
+                        }
                     }
+                }catch(Exception e){
+                    
                 }
-            }catch(Exception e){
-                
             }
         }
         
@@ -568,10 +579,13 @@ class Configure : IConfigure
 
     public String getName()override
     {
+        if (name == nilptr){
+            return "";
+        }
         return name;
     }
 
-    public bool createConfigure(String projName,JsonObject project, String configName)
+    public bool createConfigure(@NotNilptr String projName,@NotNilptr JsonObject project,@NotNilptr String configName)
     {
         root = new JsonObject();
 
@@ -596,19 +610,19 @@ class Configure : IConfigure
     }
 
 
-    public void dodeploy(Project project){
+    public void dodeploy(@NotNilptr Project project){
         String out_path = getOption("outpath");
-        out_path = String.formatPath(XlangProjectProp.map_variable(project, this, out_path), false);
+        out_path = String.formatPath(XEnvironment.MapVariable(project, this, out_path), false);
         deploy(project, out_path);
     }
     
-    public void dodeployto(Project project, String path){
-        if (path != nilptr && path.length() > 0) {
+    public void dodeployto(@NotNilptr Project project,@NotNilptr  String path){
+        if (path.length() > 0) {
             deploy(project, path);
         }
     }
     
-    public bool deploy(Project project, String deploy_path){
+    public bool deploy(@NotNilptr Project project,@NotNilptr  String deploy_path){
     
         String _deploy_arch = getDeployArch();
         if (_deploy_arch == nilptr){
@@ -636,18 +650,18 @@ class Configure : IConfigure
             return false;
         }
 
-        if (deploy_path == nilptr || deploy_path.length() == 0){
+        if (deploy_path.length() == 0){
     		XWndOutput.Output("部署路径错误,请先设置部署路径.", 0);
             return false;
         }
         
-    	/*deploy_path = String.formatPath(XlangProjectProp.map_variable(project, this , deploy_path), false);
+    	/*deploy_path = String.formatPath(XEnvironment.MapVariable(project, this , deploy_path), false);
         if (deploy_path == nilptr || deploy_path.length() == 0){
     		XWndOutput.Output("部署路径错误,请先设置部署路径.");
             return false;
         }*/
         
-        for (int i = 0; i < depends.length(); i++){
+        for (int i = 0, c = depends.length(); i < c; i++){
     		JsonObject depend = (JsonObject)depends.get(i);
             if (depend != nilptr){
     			String pname = depend.getString("name");
@@ -727,7 +741,7 @@ class Configure : IConfigure
         return nilptr;
     }
     
-    public bool deployPackage(String deploy_path, Project project,PackageManager.PackageInfo pi, String arch, String ostype){
+    public bool deployPackage(@NotNilptr String deploy_path, @NotNilptr Project project,@NotNilptr PackageManager.PackageInfo pi,@NotNilptr  String arch,@NotNilptr  String ostype){
     	bool rt = false;
         
         String match = String.formatPath("" + arch + "/" + ostype, false);
@@ -741,38 +755,45 @@ class Configure : IConfigure
 
     			for (int i = 0; i < c; i ++){
     				ZipEntry entry = zs.getEntry(i);
-    				String name =  String.formatPath(entry.getName(), false);
-    				if (name.startWith(match)){
-    					ZipFile zf = entry.getFile();
-                        
-    					if (zf != nilptr && zf.open()){
-    						String newpath = String.formatPath(deploy_path.appendPath(name.substring(3, name.length())), false);
-    						XWndOutput.Output(newpath + "...\n", 0);
-    						XlangProjectProp.mkdirs(newpath.findVolumePath());
-
-    						FileOutputStream fos;
-    						try{
-    							fos = new FileOutputStream(newpath);
-                                
-    							int rd = 0;
-    							byte [] data = new byte[1024];
-                                
-    							while ((rd = zf.read(data, 0, 1024)) > 0){
-    								fos.write(data, 0, rd);
-    							}
-                                
-    							rt = true;
-    						}catch(Exception e){
-
-    						}finally{
-    							if (fos != nilptr){
-    								fos.close();
-    							}
-    						}
+                    if (entry != nilptr){
+                        String name =  String.formatPath(entry.getName(), false);
+                        if (name.startWith(match)){
+                            ZipFile zf = entry.getFile();
                             
-    						zf.close();
-    					}
-    				}
+                            if (zf.open()){
+                                String newpath = String.formatPath(deploy_path.appendPath(name.substring(3, name.length())), false);
+                                XWndOutput.Output(newpath + "...\n", 0);
+                                
+                                String dirs = newpath.findVolumePath();
+                                
+                                if (dirs.length() > 0){
+                                    XlangProjectProp.mkdirs(dirs);
+                                }
+
+                                FileOutputStream fos;
+                                try{
+                                    fos = new FileOutputStream(newpath);
+                                    
+                                    int rd = 0;
+                                    byte [] data = new byte[1024];
+                                    
+                                    while ((rd = zf.read(data, 0, 1024)) > 0){
+                                        fos.write(data, 0, rd);
+                                    }
+                                    
+                                    rt = true;
+                                }catch(Exception e){
+
+                                }finally{
+                                    if (fos != nilptr){
+                                        fos.close();
+                                    }
+                                }
+                                
+                                zf.close();
+                            }
+                        }
+                    }
                 }
     			zs.close();
             }
@@ -784,7 +805,7 @@ class Configure : IConfigure
         return rt;
     }
 
-    public bool importPkg(Project project, PackageManager.PackageInfo pi, ZipArchive zs, String lixname, String xpname, String version)
+    public bool importPkg(@NotNilptr Project project, @NotNilptr PackageManager.PackageInfo pi, @NotNilptr ZipArchive zs,@NotNilptr  String lixname,@NotNilptr  String xpname, @NotNilptr String version)
     {
         resetCache();
         
@@ -796,23 +817,21 @@ class Configure : IConfigure
         }
 
         String ext = lixname.findExtension();
-        
-        if (ext == nilptr){ 
-            return false;        
-        }
-        
-        if (ext.equals(".lix")){
-            if (addLib(lixname, xpname, version)) {
-                    __IntelliSense.appendLib(lixname);
                 
-            } 
-        }else{
-            if (addLink(lixname, xpname, version)) {
-                    __IntelliSense.appendLink(lixname);
-                
-            } 
+        if (__IntelliSense != nilptr){
+            if (ext.equals(".lix")){
+                if (addLib(lixname, xpname, version)) {
+                        __IntelliSense.appendLib(lixname);
+                    
+                } 
+            }else
+            if (ext.equals(".xl")){
+                if (addLink(lixname, xpname, version)) {
+                        __IntelliSense.appendLink(lixname);
+                    
+                } 
+            }
         }
-        
 
         addDepends(xpname, version);
         /*if (addLink(lixname, xpname, version)){
@@ -828,7 +847,7 @@ class Configure : IConfigure
         int c = zs.getEntriesCount();
 
         String out_path = getOption("outpath");
-        out_path = String.formatPath(XlangProjectProp.map_variable(project, this, out_path), false);
+        out_path = String.formatPath(XEnvironment.MapVariable(project, this, out_path), false);
 
         String match = String.formatPath("" + getArchId() + "/" + _system_.getPlatformId(), false);
 
@@ -836,34 +855,39 @@ class Configure : IConfigure
 
         for (int i = 0; i < c; i ++) {
             ZipEntry entry = zs.getEntry(i);
-            String name =  String.formatPath(entry.getName(), false);
-            if (name.startWith(match)) {
-                ZipFile zf = entry.getFile();
-                if (zf != nilptr && zf.open()) {
+            if (entry != nilptr){
+                String name =  String.formatPath(entry.getName(), false);
+                if (name.startWith(match)) {
+                    ZipFile zf = entry.getFile();
+                    if (zf.open()) {
 
-                    String newpath = String.formatPath(out_path.appendPath(name.substring(3, name.length())), false);
-                    XWndOutput.Output(newpath + "...", 0);
-                    XlangProjectProp.mkdirs(newpath.findVolumePath());
+                        String newpath = String.formatPath(out_path.appendPath(name.substring(3, name.length())), false);
+                        
+                    
+                        XWndOutput.Output(newpath + "...", 0);
+                        XlangProjectProp.mkdirs(newpath.findVolumePath());
 
-                    FileOutputStream fos ;
-                    try {
-                        fos = new FileOutputStream(newpath);
-                        int rd = 0;
-                        byte [] data = new byte[1024];
-                        while ((rd = zf.read(data, 0, 1024)) > 0) {
-                            fos.write(data, 0, rd);
+                        FileOutputStream fos ;
+                        try {
+                            fos = new FileOutputStream(newpath);
+                            int rd = 0;
+                            byte [] data = new byte[1024];
+                            while ((rd = zf.read(data, 0, 1024)) > 0) {
+                                fos.write(data, 0, rd);
+                            }
+                            XWndOutput.Output("成功.\n", 0);
+                            rt = true;
+                        } catch(Exception e) {
+
+                        } finally{
+                            if (fos != nilptr)
+                            {
+                                fos.close();
+                            }
                         }
-                        XWndOutput.Output("成功.\n", 0);
-                        rt = true;
-                    } catch(Exception e) {
-
-                    } finally{
-                        if (fos != nilptr)
-                        {
-                            fos.close();
-                        }
+                    
+                        zf.close();
                     }
-                    zf.close();
                 }
             }
         }

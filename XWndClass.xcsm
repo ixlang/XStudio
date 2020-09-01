@@ -160,7 +160,7 @@ class XWndClass : QXDockWidget
         }
     }
 
-    public static void prepare(Project project)
+    public static void prepare(@NotNilptr Project project)
     {
         wndClass._treeview.addItem("res/toolbar/project.png", project.getName() + "(正在生成类视图...)");
     }
@@ -191,9 +191,12 @@ class XWndClass : QXDockWidget
                 //QXMessageBox.Information("注意", "对象不在源代码中定义.", QXMessageBox.Ok, QXMessageBox.Ok);
                 return ;
             }
-            if (workspace.getCurrentProject() != nilptr) {
-                source = workspace.getCurrentProject().getFullPath(source);
+            
+            Project pjct = workspace.getCurrentProject();
+            if (pjct != nilptr) {
+                source = pjct.getFullPath(source);
             }
+            
             if (XPlatform.existsSystemFile(source) == false) {
                 if (pos.lib == false) {
                     QXMessageBox.Critical("文件不存在", "找不到文件:" + sources.getString(pos.source) + "该位置的文件已不存在.", QXMessageBox.Ok, QXMessageBox.Ok);
@@ -239,14 +242,17 @@ class XWndClass : QXDockWidget
     public void onNotification(long eventid)
     {
         if (workspace.getCurrentProject() != nilptr) {
-            loadProject(workspace.getCurrentProject());
+            Project pj = workspace.getCurrentProject();
+            if (pj != nilptr){
+                loadProject(pj);
+            }
         }
     }
     /*static void load(Project project){
     	wndClass.loadProject(project);
     }*/
 
-    public long [][] loadLibs(Project project, Configure configure)
+    public long [][] loadLibs(@NotNilptr Project project, Configure configure)
     {
         long [] hlibs;
         long [] hlinks;
@@ -261,7 +267,7 @@ class XWndClass : QXDockWidget
                 if (libs.length() > 0) {
                     libroot = _treeview.addItem("res/toolbar/sources.png", "外部库");
                 }
-                for (int i = 0; i < libs.length(); i++) {
+                for (int i = 0, c = libs.length(); i < c; i++) {
                     String var = libs.getString(i);
                     if (var != nilptr) {
                         hlibs[i] = _treeview.insertItem(libroot, "res/toolbar/library.png", var.findFilenameAndExtension());
@@ -275,7 +281,7 @@ class XWndClass : QXDockWidget
                 if (links.length() > 0 && libroot == 0) {
                     libroot = _treeview.addItem("res/toolbar/sources.png", "外部库");
                 }
-                for (int i = 0; i < links.length(); i++) {
+                for (int i = 0, c = links.length(); i < c; i++) {
                     String var = links.getString(i);
                     if (var != nilptr) {
                         hlinks[i] = _treeview.insertItem(libroot, "res/toolbar/library.png", var.findFilenameAndExtension());
@@ -320,8 +326,14 @@ class XWndClass : QXDockWidget
         }
         for (int i =0, c = objs.length(); i < c; i++) {
             JsonObject obj = (JsonObject)objs.get(i);
+            if (obj == nilptr){
+                continue;
+            }
             int type = obj.getInt("type");
-            String objname = obj.getString("name").upper();
+            String objname = obj.getString("name");
+            if (objname != nilptr){
+                objname = objname.upper();
+            }
 
             if (obj.has("buildin")) {
                 if (showBuildin == false) {
@@ -347,13 +359,19 @@ class XWndClass : QXDockWidget
                     if (param != nilptr){
                         for (int x = 0, y = param.length(); x < y; x++) {
                             JsonObject jo = (JsonObject)param.get(x);
-                            String fname = jo.getString("name").upper();
-                            jo.remove("mathced");
-                            
-                            
-                            if (Pattern.test(fname, key, 0, false)) {
-                                jo.put("mathced",1);
-                                bVisible ++;
+                            if (jo != nilptr){
+                                String fname = jo.getString("name");
+                                
+                                if (fname != nilptr){
+                                    fname = fname.upper();
+                                }
+                                jo.remove("mathced");
+                                
+                                
+                                if (Pattern.test(fname, key, 0, false)) {
+                                    jo.put("mathced",1);
+                                    bVisible ++;
+                                }
                             }
                         }
                     }
@@ -369,7 +387,7 @@ class XWndClass : QXDockWidget
         return hasVisible;
     }
 
-    public void loadProject(Project project)
+    public void loadProject(@NotNilptr Project project)
     {
         clear();
         long root = _treeview.addItem("res/toolbar/project.png", project.getName());
@@ -407,7 +425,9 @@ class XWndClass : QXDockWidget
         for (int i =0, c = objs.length(); i < c; i++) {
             long root = hroot;
             JsonObject obj = (JsonObject)objs.get(i);
-
+            if (obj == nilptr){
+                continue;
+            }
             if (searched &&  !obj.has("mathced")) {
                 continue;
             }
@@ -528,6 +548,9 @@ class XWndClass : QXDockWidget
                     }
                     for (int x = 0, y = param.length(); x < y; x++) {
                         JsonObject jo = (JsonObject)param.get(x);
+                        if (jo == nilptr){
+                            continue;
+                        }
                         if (searched &&  !jo.has("mathced")) {
                             continue;
                         }

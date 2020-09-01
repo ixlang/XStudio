@@ -10,26 +10,26 @@ class QXMatrix : QXCore{
         nativehandle = h;
     }
     
-    public QXPoint mapPoint(QXPoint p){
+    public QXPoint mapPoint(@NotNilptr QXPoint p){
 		long v = object_get_long_int(nativehandle, MATRIXMAPPOINT, p.x, p.y);
-        return new QXPoint((v >> 32) & 0xffffffff, v & 0xffffffff);
+        return new QXPoint((int)(v >> 32) & 0xffffffff, (int)v & 0xffffffff);
     }
     
-    public QXRect mapRect(QXRect r){
+    public QXRect mapRect(@NotNilptr QXRect r){
 		long lt = object_get_long_int(nativehandle, MATRIXMAPPOINT, r.left, r.top);
         long rb = object_get_long_int(nativehandle, MATRIXMAPPOINT, r.right, r.bottom);
         long lb = object_get_long_int(nativehandle, MATRIXMAPPOINT, r.left, r.bottom);
         long rt = object_get_long_int(nativehandle, MATRIXMAPPOINT, r.right, r.top);
         
-        int x1 = (lt >> 32) & 0xffffffff,
-			x2 = (rb >> 32) & 0xffffffff,
-            x3 = (lb >> 32) & 0xffffffff,
-            x4 = (rt >> 32) & 0xffffffff;
+        int x1 = (int)(lt >> 32) & 0xffffffff,
+			x2 = (int)(rb >> 32) & 0xffffffff,
+            x3 = (int)(lb >> 32) & 0xffffffff,
+            x4 = (int)(rt >> 32) & 0xffffffff;
             
-        int y1 = lt & 0xffffffff,
-			y2 = rb & 0xffffffff,
-            y3 = lb & 0xffffffff,
-            y4 = rt & 0xffffffff;
+        int y1 = (int)lt & 0xffffffff,
+			y2 = (int)rb & 0xffffffff,
+            y3 = (int)lb & 0xffffffff,
+            y4 = (int)rt & 0xffffffff;
                 
         return new QXRect(
 			Math.min(x1,Math.min(x2,Math.min(x3,x4))), Math.min(y1,Math.min(y2,Math.min(y3,y4))),
@@ -53,7 +53,7 @@ class QXMatrix : QXCore{
 		return new QXMatrix(long_double2(nativehandle, MATRIXROTATE, a, 0));
     }
     
-    public QXMatrix operator *(QXMatrix m){
+    public QXMatrix operator *(@NotNilptr QXMatrix m){
 		return new QXMatrix(object_get_long_int(nativehandle, MATRIXMUL, m.nativehandle, 0));
     }
     

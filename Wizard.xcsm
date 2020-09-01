@@ -27,7 +27,7 @@ class WizardDialog : QXDialog
         QXMenu contextMenu = new QXMenu();
         public QXAction [] actions;
 
-        public void create(QXWidget parent, String [] acts, onEventListener listener)
+        public void create(@NotNilptr QXWidget parent,@NotNilptr String [] acts, onEventListener listener)
         {
             if (contextMenu.create(parent)) {
                 actions = new QXAction[acts.length];
@@ -63,7 +63,7 @@ class WizardDialog : QXDialog
             if (obj == _contextMenu.actions[0]) {
                 long [] items = _listview.getSelectedItems();
 
-                if (items.length != 1) {
+                if (items == nilptr || items.length != 1) {
                     QXMessageBox.Critical("错误", "没有选择一个有效的模板.", QXMessageBox.Ok, QXMessageBox.Ok);
                     return ;
                 }
@@ -146,25 +146,26 @@ class WizardDialog : QXDialog
         if (content != nilptr) {
             bool canadd = false;
             selected_is_file = false;
-            for (int i = 0; i < content.length(); i++) {
+            for (int i = 0, c = content.length(); i < c; i++) {
                 JsonObject objItem = (JsonObject)content.get(i);
-                if (objItem.has("ext")) {
-                    canadd = true;
-                    selected_is_file = true;
+                if (objItem != nilptr){
+                    if (objItem.has("ext")) {
+                        canadd = true;
+                        selected_is_file = true;
+                    }
+
+                    String iconFile = objItem.getString("icon");
+                    if (objItem.has("url")) {
+                        iconFile = "./res/toolbar/exz.png";
+                    }
+                    long citem = _listview.addItem(iconFile, objItem.getString("name"));
+                    _listview.setItemTag(citem, 0,  i);
+
+                    _listview.setItemText(citem, 1, objItem.getString("platform"));
+                    _listview.setItemTag(citem, 1,  item);
+
+                    _listview.setItemText(citem, 2, objItem.getString("language"));
                 }
-
-                String iconFile = objItem.getString("icon");
-                if (objItem.has("url")) {
-                    iconFile = "./res/toolbar/exz.png";
-                }
-                long citem = _listview.addItem(iconFile, objItem.getString("name"));
-                _listview.setItemTag(citem, 0,  i);
-
-                _listview.setItemText(citem, 1, objItem.getString("platform"));
-                _listview.setItemTag(citem, 1,  item);
-
-                _listview.setItemText(citem, 2, objItem.getString("language"));
-               
             }
 
             add_check.setChecked(canadd, true);
@@ -174,24 +175,27 @@ class WizardDialog : QXDialog
 
     public onTreeViewItemEvent devslistener = new onTreeViewItemEvent()
     {
-        void onItemPressed(QXTreeView list, long item, int column)override {
+        void onItemPressed(@NotNilptr QXTreeView list, long item, int column)override {
             long selected_index = list.getItemTag(item, 0);
             long typeitem = list.getItemTag(item, 1);
 
             try {
                 JsonArray typeobj = actionMap.get(typeitem);
-                JsonObject objItem = (JsonObject)typeobj.get(selected_index);
-
-                if (objItem.has("default")) {
-                    String defName = objItem.getString("default");
-                    projName.setText(defName);
-                    projName.setEnabled(false);
-                } else {
-                    projName.setEnabled(true);
+                if (typeobj != nilptr){
+                    JsonObject objItem = (JsonObject)typeobj.get(selected_index);
+                    if (objItem != nilptr){
+                        if (objItem.has("default")) {
+                            String defName = objItem.getString("default");
+                            projName.setText(defName);
+                            projName.setEnabled(false);
+                        } else {
+                            projName.setEnabled(true);
+                        }
+                        projDescr.setText(objItem.getString("details"));
+                        String used = objItem.getString("user");
+                        _contextMenu.enable(used != nilptr);
+                    }
                 }
-                projDescr.setText(objItem.getString("details"));
-                String used = objItem.getString("user");
-                _contextMenu.enable(used != nilptr);
             } catch(Exception e) {
 
             }
@@ -199,7 +203,7 @@ class WizardDialog : QXDialog
     };
 
 
-    public String getMd5String(String url)
+    public String getMd5String(@NotNilptr String url)
     {
         long md5 = Crypto.Md5Init();
         byte [] data = url.getBytes();
@@ -240,8 +244,12 @@ class WizardDialog : QXDialog
 
     public void loadExamples()
     {
-
-        String strmd5 = getMd5String(demo_url);
+        String dmu = demo_url;
+        
+        if (dmu == nilptr){
+            return;
+        }
+        String strmd5 = getMd5String(dmu);
 
         String cacheFile = String.formatPath(XPlatform.getAppDirectory().appendPath("examples").appendPath("project.list"), false);
 
@@ -263,7 +271,7 @@ class WizardDialog : QXDialog
                         });
                     }
                 };
-                projDescr.setText("正在加载... " + demo_url);
+                projDescr.setText("正在加载... " + dmu);
                 download_thread.start();
             }
         }
@@ -292,7 +300,7 @@ class WizardDialog : QXDialog
         return false;
     }
 
-    public void getOnlineExample(String cacheFile)
+    public void getOnlineExample(@NotNilptr String cacheFile)
     {
         HttpRequest req = new HttpRequest();
 
@@ -450,6 +458,7 @@ class WizardDialog : QXDialog
     public void createContextMenu()
     {
         String []acts = {"删除模板"};
+        __nilptr_safe(_listview);
         _contextMenu.create(_listview, acts, menuListener);
     }
 
@@ -457,9 +466,10 @@ class WizardDialog : QXDialog
     {
         String project_name = projName.getText();
         String project_path = projPath.getText();
-
+        bool addition = add_check.getChecked();
+        
         long [] items = _listview.getSelectedItems();
-        if (items.length != 1) {
+        if (items == nilptr ||  items.length != 1) {
             QXMessageBox.Critical("错误", "没有选择一个新建项目的模板.", QXMessageBox.Ok, QXMessageBox.Ok);
             return ;
         }
@@ -492,58 +502,82 @@ class WizardDialog : QXDialog
         }
 
         JsonObject objItem = (JsonObject)selected_content.get(selected_index);
-        String uuid =  objItem.getString("uuid");
+        
+        if (objItem != nilptr){
+            String uuid =  objItem.getString("uuid");
 
-        String language = objItem.getString("language");
-        ProjectPropInterface _propinterface = ProjectPropManager.getForProject(language);
-        if (_propinterface == nilptr) {
-            QXMessageBox.Critical("错误", "没有找到为该类型项目注册的插件:" + language, QXMessageBox.Ok, QXMessageBox.Ok);
-            return ;
-        }
-
-        if (objItem.has("url")) {
-            downloadProject(_propinterface, project_name, objItem.getString("url"));
-            return ;
-        }
-        
-        IProjectPlugin plugin ;
-        
-        if (objItem.has("plugin")) {
-            int pid = objItem.getInt("plugin");
-            if (pid >= 0 && pid < __proj_plugins.size()){
-                plugin = __proj_plugins.get(pid);
-            }
-        }
-        
-        String type = objItem.getString("user");
-        
-        WizardLoader loader = new WizardLoader() {
-            IProject loadProject(String file) {
-                    return _mdispace.loadProject(file);
-                }
-                void openTextFile(String file) {
-                    _mdispace.openTextFile(file);
-                }
-            };
+            IProjectPlugin plugin ;
             
-        bool ret = false;
-        
-        if (plugin != nilptr){
-            ret = plugin.createProject(loader,project_name,project_path,uuid,_mdispace.getCurrentProject(),add_check.getChecked());
-        }else{
-            ret = _propinterface.create(loader,project_name, project_path, uuid, _mdispace.getCurrentProject(), add_check.getChecked(), type);
-        }
-        
-        if (ret) 
-        {
-            close();
-        } else {
-            QXMessageBox.Critical("错误", "无法建立项目", QXMessageBox.Ok, QXMessageBox.Ok);
-            return ;
+            if (objItem.has("plugin")) {
+                int pid = objItem.getInt("plugin");
+                if (pid >= 0 && pid < __proj_plugins.size()){
+                    plugin = __proj_plugins.get(pid);
+                }
+            }
+            
+            ProjectPropInterface _propinterface = nilptr;
+            
+            if (addition ){
+                Project curprj = _mdispace.getCurrentProject();
+                if (curprj != nilptr){
+                    _propinterface = curprj.getPropInterface();
+                }
+            }
+            
+            String language = objItem.getString("language");
+            
+            if (_propinterface == nilptr){
+                _propinterface = ProjectPropManager.getForProject(language);
+            }
+            
+            if (_propinterface != nilptr) {
+                if (objItem.has("url")) {
+                    String turl = objItem.getString("url");
+                    if (turl != nilptr){
+                        downloadProject(_propinterface, project_name, turl);
+                    }
+                    return ;
+                }
+            }
+            
+            String type = objItem.getString("user");
+            
+            WizardLoader loader = new WizardLoader() {
+                IProject loadProject(@NotNilptr String file) {
+                        return _mdispace.loadProject(file);
+                    }
+                    void openTextFile(@NotNilptr String file) {
+                        _mdispace.openTextFile(file);
+                    }
+                };
+                
+            bool ret = false;
+            
+            if (_propinterface != nilptr || plugin != nilptr){
+                if (_propinterface != nilptr){
+                    ret = _propinterface.create(loader,project_name, project_path, uuid, _mdispace.getCurrentProject(), addition, type);
+                }
+                
+                if (ret == false && plugin != nilptr){
+                    ret = plugin.createProject(loader,project_name,project_path,uuid,_mdispace.getCurrentProject(), addition);
+                }
+            }else
+            {
+                QXMessageBox.Critical("错误", "没有找到为该类型项目注册的插件:" + language, QXMessageBox.Ok, QXMessageBox.Ok);
+                return;
+            }
+            
+            if (ret) 
+            {
+                close();
+            } else {
+                QXMessageBox.Critical("错误", "无法建立项目", QXMessageBox.Ok, QXMessageBox.Ok);
+                return ;
+            }
         }
     }
 
-    public void downloadProject(ProjectPropInterface _propinterface, String defaultName, String url)
+    public void downloadProject(@NotNilptr  ProjectPropInterface _propinterface,@NotNilptr  String defaultName,@NotNilptr  String url)
     {
 
         String localPath = String.formatPath(XPlatform.getAppDirectory().appendPath("examples").appendPath(defaultName + ".zip"), false);
@@ -559,6 +593,9 @@ class WizardDialog : QXDialog
             if (download_thread == nilptr) {
 
                 ProgressView pv = ProgressView.showWait(this, -1);
+                if (pv == nilptr){
+                    return ;
+                }
                 pv.centerScreen();
                 pv.setTitleText("正在下载...");
                 download_thread = new Thread() {
@@ -570,19 +607,19 @@ class WizardDialog : QXDialog
 
                         pv.showResult(true, localUrl != nilptr);
                         pv.setTitleText(localUrl != nilptr ? "下载完成" : "下载失败");
-
-                        pv.setOnDismissListener(new ProgressView.OnDismissListener() {
-                            void onDismissListener(ProgressView v)override {
-                                runOnUi(new Runnable() {
-                                    void run()override {
-                                        if (QXMessageBox.Yes == QXMessageBox.Question("提示","下载已完成,是否载入此代码示例?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes)) {
-                                            loadProject(_propinterface, defaultName, localUrl);
+                        if (localUrl != nilptr){
+                            pv.setOnDismissListener(new ProgressView.OnDismissListener() {
+                                void onDismissListener(ProgressView v)override {
+                                    runOnUi(new Runnable() {
+                                        void run()override {
+                                            if (QXMessageBox.Yes == QXMessageBox.Question("提示","下载已完成,是否载入此代码示例?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes)) {
+                                                loadProject(_propinterface, defaultName, localUrl);
+                                            }
                                         }
-                                    }
-                                });
-                            }
-                        });
-
+                                    });
+                                }
+                            });
+                        }
                         pv.dismissAfter(1000);
 
                         runOnUi(new Runnable() {
@@ -598,7 +635,7 @@ class WizardDialog : QXDialog
         }
     }
 
-    public String loadOnlineProject(ProgressView pv, String localPath, String url)
+    public String loadOnlineProject(@NotNilptr ProgressView pv,@NotNilptr  String localPath, String url)
     {
 
         HttpRequest req = new HttpRequest();
@@ -641,14 +678,17 @@ class WizardDialog : QXDialog
         return nilptr;
     }
 
-    public void loadProject(ProjectPropInterface _propinterface, String defaultName, String project_path)
+    public void loadProject(@NotNilptr ProjectPropInterface _propinterface,String defaultName, @NotNilptr String project_path)
     {
+        if (defaultName == nilptr){
+            return ;
+        }
         String project_dir = projPath.getText();
         if (_propinterface.create(new WizardLoader() {
-            IProject loadProject(String file) {
+            IProject loadProject(@NotNilptr String file) {
                 return _mdispace.loadProject(file);
             }
-            void openTextFile(String file) {
+            void openTextFile(@NotNilptr String file) {
                 _mdispace.openTextFile(file);
             }
         },defaultName, project_dir, project_path, nilptr, false, "example")) {
@@ -715,22 +755,24 @@ class WizardDialog : QXDialog
         try {
             jsonWizard = new JsonObject(txt);
             JsonObject root = (JsonObject)jsonWizard.get("Navigation");
-
-            if (hasExistProject == false) {
-                long itemprj = _treeview.addItem(nilptr, "项目");
-                loadProject(itemprj, root.get("project"), "./res/toolbar/projc.png");
-                _treeview.setExpand(itemprj, true);
-                demo_url = root.getString("example_url");
-                if (demo_url != nilptr && demo_url.length() > 0) {
-                    example_root = _treeview.addItem(nilptr, "代码示例");
-                    loadexample_item = _treeview.insertItem(example_root,"./res/toolbar/refresh.png","点击刷新");
-                    _treeview.setItemColor(loadexample_item,0,0xff0000ff);
-                    loadLocalExample(true);
+            
+            if (root != nilptr ){
+                if (hasExistProject == false) {
+                    long itemprj = _treeview.addItem(nilptr, "项目");
+                    loadProject(itemprj, root.get("project"), "./res/toolbar/projc.png");
+                    _treeview.setExpand(itemprj, true);
+                    demo_url = root.getString("example_url");
+                    if (demo_url != nilptr && demo_url.length() > 0) {
+                        example_root = _treeview.addItem(nilptr, "代码示例");
+                        loadexample_item = _treeview.insertItem(example_root,"./res/toolbar/refresh.png","点击刷新");
+                        _treeview.setItemColor(loadexample_item,0,0xff0000ff);
+                        loadLocalExample(true);
+                    }
+                } else {
+                    long itemfile = _treeview.addItem(nilptr, "文件");
+                    loadProject(itemfile, root.get("file"), "./res/toolbar/files.png");
+                    _treeview.setExpand(itemfile, true);
                 }
-            } else {
-                long itemfile = _treeview.addItem(nilptr, "文件");
-                loadProject(itemfile, root.get("file"), "./res/toolbar/files.png");
-                _treeview.setExpand(itemfile, true);
             }
             loadPlugins();
         } catch(Exception e) {
@@ -749,7 +791,7 @@ class WizardDialog : QXDialog
         if (items != nilptr){
             for (int i =0 ;i < items.length; i++){
                 String lab = _treeview.getItemText(items[i], 0);
-                if (lab != nilptr && lab.equals(name)){
+                if (lab.equals(name)){
                     return items[i];
                 }
             }
@@ -767,14 +809,16 @@ class WizardDialog : QXDialog
     public void loadPlugins(){
         __proj_plugins.clear();
         List<IProjectPlugin> plugins = PluginsController.getProjectPluginList();
-        List.Iterator<IProjectPlugin> iter = plugins.iterator();
-        int id = 0;
-        while (iter.hasNext()){
-            IProjectPlugin plugin = iter.next();
-            
-            __proj_plugins.add(plugin);
-            loadPluginProject(plugin, id);
-            id++;
+        if (plugins != nilptr){
+            List.Iterator<IProjectPlugin> iter = plugins.iterator();
+            int id = 0;
+            while (iter.hasNext()){
+                IProjectPlugin plugin = iter.next();
+                
+                __proj_plugins.add(plugin);
+                loadPluginProject(plugin, id);
+                id++;
+            }
         }
     }
     
@@ -788,16 +832,17 @@ class WizardDialog : QXDialog
                 jsonWizard = new JsonObject(txt);
                 JsonObject root = (JsonObject)jsonWizard.get("Navigation");
 
-                if (hasExistProject == false) {
-                    long itemprj = addItem(0, nilptr, "项目");
-                    loadProjectPlugin(itemprj, root.get("project"), "./res/toolbar/projc.png", id);
-                    _treeview.setExpand(itemprj, true);
-                } else {
-                    long itemfile = addItem(0, nilptr, "文件");
-                    loadProjectPlugin(itemfile, root.get("file"), "./res/toolbar/files.png", id);
-                    _treeview.setExpand(itemfile, true);
+                if (root != nilptr){
+                    if (hasExistProject == false) {
+                        long itemprj = addItem(0, nilptr, "项目");
+                        loadProjectPlugin(itemprj, root.get("project"), "./res/toolbar/projc.png", id);
+                        _treeview.setExpand(itemprj, true);
+                    } else {
+                        long itemfile = addItem(0, nilptr, "文件");
+                        loadProjectPlugin(itemfile, root.get("file"), "./res/toolbar/files.png", id);
+                        _treeview.setExpand(itemfile, true);
+                    }
                 }
-
             } catch(Exception e) {
                 /*_system_.consoleWrite("exception ");*/
             }
@@ -805,28 +850,39 @@ class WizardDialog : QXDialog
     }
     
     public void markId(JsonArray minor, int id){
-        for (int i = 0 ; i < minor.length(); i++){
-            JsonNode ji = minor.get(i);
-            if (ji.isArray()){
-                return;
-            }else{
-                ((JsonObject)ji).put("plugin", id);
+        if (minor != nilptr){
+            for (int i = 0, c = minor.length() ; i < c; i++){
+                JsonNode ji = minor.get(i);
+                if (ji != nilptr){
+                    if (ji.isArray()){
+                        return;
+                    }else{
+                        ((JsonObject)ji).put("plugin", id);
+                    }
+                }
             }
         }
     }
     public void MegerArray(JsonArray major, JsonArray minor, int id){
-        for (int i = 0 ; i < minor.length(); i++){
-            JsonNode ji = minor.get(i);
-            if (ji.isArray()){
-                return;
-            }else{
-                ((JsonObject)ji).put("plugin", id);
-                major.put(ji);
+        if (major != nilptr && minor != nilptr){
+            for (int i = 0 , c = minor.length(); i < c; i++){
+                JsonNode ji = minor.get(i);
+                if (ji != nilptr){
+                    if (ji.isArray()){
+                        return;
+                    }else{
+                        ((JsonObject)ji).put("plugin", id);
+                        major.put(ji);
+                    }
+                }
             }
         }
     }
-    public void loadProjectPlugin(long root, JsonNode projectRoot, String icon, int pluginId)
+    public void loadProjectPlugin(long root,JsonNode projectRoot, String icon, int pluginId)
     {
+        if (projectRoot == nilptr){
+            return;
+        }
         JsonNode child = projectRoot.child();
         while (child != nilptr) {
             String name = child.getName();
@@ -849,18 +905,20 @@ class WizardDialog : QXDialog
         }
     }
     
-    public void loadProject(long root, JsonNode projectRoot, String icon)
+    public void loadProject(long root,JsonNode projectRoot, String icon)
     {
-        JsonNode child = projectRoot.child();
-        while (child != nilptr) {
-            String name = child.getName();
-            long item = _treeview.insertItem(root, icon, name);
-            if (child.isArray()) {
-                actionMap.put(item, (JsonArray)child);/*.clone()*/
-            } else {
-                loadProject(item, child, icon);
+        if (projectRoot != nilptr){
+            JsonNode child = projectRoot.child();
+            while (child != nilptr) {
+                String name = child.getName();
+                long item = _treeview.insertItem(root, icon, name);
+                if (child.isArray()) {
+                    actionMap.put(item, (JsonArray)child);/*.clone()*/
+                } else {
+                    loadProject(item, child, icon);
+                }
+                child = child.next();
             }
-            child = child.next();
         }
     }
 

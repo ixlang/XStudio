@@ -3,16 +3,16 @@
 
 class QXIcon : QXCore{
 
-    QXIcon(QXByteArray array){
+    QXIcon(@NotNilptr QXByteArray array) throws IllegalArgumentException{
 		nativehandle = createNObject(QType.qtIcon, array.nativehandle);
         if (nativehandle == 0){
-			throw new Exception("can not create QXIcon");
+			throw new IllegalArgumentException("can not create QXIcon");
         }
     }
-    QXIcon(String file){
+    QXIcon(String file) throws IllegalArgumentException{
 		nativehandle = createSObject(QType.qtIcon, file);
         if (nativehandle == 0){
-			throw new Exception("can not create QXIcon");
+			throw new IllegalArgumentException("can not create QXIcon");
         }
     }
 

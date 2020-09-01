@@ -269,7 +269,11 @@ class QXWidget : QXObject {
                 Runnable r;
                 synchronized(_uiloop_list) {
                     if (_uiloop_list.size() > 0) {
-                        r = _uiloop_list.pollHead();
+                        try{
+                            r = _uiloop_list.pollHead();
+                        }catch(IllegalArgumentException e){
+                            
+                        }
                     }
                 }
                 if (r != nilptr) {
@@ -304,7 +308,7 @@ class QXWidget : QXObject {
         widget_set_int_bool_value(nativehandle, QXCore.SETATTRIBUTE, flag, bOn);
     }
 
-    public bool create(QXWidget parent) {
+    public bool create(@NotNilptr QXWidget parent) {
         nativehandle = createQObject(QType.qtWidget, this, parent.nativehandle);
         if (nativehandle == 0) {
             return false;
@@ -319,28 +323,28 @@ class QXWidget : QXObject {
         }
         return true;
     }
-    public bool load(String uifile, QXWidget parent) {
+    public bool load(String uifile, @NotNilptr QXWidget parent) {
         nativehandle = locaUiFile(uifile, this, parent.nativehandle);
         if (nativehandle == 0) {
             return false;
         }
         return true;
     }
-    public bool load(QXBuffer data) {
+    public bool load(@NotNilptr QXBuffer data) {
         nativehandle = locaUiData(data.nativehandle, this, 0);
         if (nativehandle == 0) {
             return false;
         }
         return true;
     }
-    public bool load(QXBuffer data, QXWidget parent) {
+    public bool load(@NotNilptr QXBuffer data, @NotNilptr QXWidget parent) {
         nativehandle = locaUiData(data.nativehandle, this, parent.nativehandle);
         if (nativehandle == 0) {
             return false;
         }
         return true;
     }
-    public void setParent(QXWidget parent) {
+    public void setParent(@NotNilptr QXWidget parent) {
         widget_set_native_value(nativehandle, QXCore.PARENTWIDGET, parent.nativehandle);
     }
 
@@ -487,10 +491,10 @@ class QXWidget : QXObject {
     public String getStyleSheet() {
         return (String)core_getString(nativehandle, GETSTYLESHEEY);
     }
-    public void addAction(QXAction action) {
+    public void addAction(@NotNilptr QXAction action) {
         widget_set_native_value(nativehandle, ADDDEFACTION, action.nativehandle);
     }
-    public void addActions(QXAction []actions) {
+    public void addActions(@NotNilptr QXAction []actions) {
         long [] al = new long[actions.length];
         for (int i =0; i < al.length; i ++) {
             al[i] = actions[i].nativehandle;
@@ -519,12 +523,12 @@ class QXWidget : QXObject {
     }
 
     public void
-    setPalette(QXPalette palette) {
+    setPalette(@NotNilptr QXPalette palette) {
         widget_set_native_value(nativehandle, QXCore.PALETTE, palette.nativehandle);
     }
 
     public void
-    setStyle(QXStyle style) {
+    setStyle(@NotNilptr QXStyle style) {
         widget_set_native_value(nativehandle, QXCore.STYLE, style.nativehandle);
     }
 
@@ -598,39 +602,39 @@ class QXWidget : QXObject {
         widget_set_vint_value(nativehandle, SETCURSOR, cursor);
     }
 
-    public QPoint mapTo(QXWidget w, int x,int y) {
+    public @NotNilptr QPoint mapTo(@NotNilptr QXWidget w, int x,int y) {
         long v = x;
         v = (v << 32) | y;
         v = long_intlong2(nativehandle, MAPPOINT, w.nativehandle, v);
         return new QPoint(v);
     }
-    public QPoint mapToGlobal(int x,int y) {
+    public @NotNilptr  QPoint mapToGlobal(int x,int y) {
         long v = x;
         v = (v << 32) | y;
         v = long_intlong2(nativehandle, MAPPOINT, 0, v);
         return new QPoint(v);
     }
-    public QPoint mapFromGlobal(int x,int y) {
+    public @NotNilptr  QPoint mapFromGlobal(int x,int y) {
         long v = x;
         v = (v << 32) | y;
         v = long_intlong2(0, MAPPOINT, nativehandle, v);
         return new QPoint(v);
     }
-    public QXPoint getScreenPoint(int num) {
+    public @NotNilptr  QXPoint getScreenPoint(int num) {
         long xy = object_get_long_int(nativehandle, QXCore.SCREENPOSITION, num, 0);
-        return new QXPoint((xy >> 32) & 0xffffffff, xy & 0xffffffff);
+        return new QXPoint((int)(xy >> 32) & 0xffffffff, (int)xy & 0xffffffff);
     }
-    public QXPoint getCurrentScreenPoint() {
+    public @NotNilptr  QXPoint getCurrentScreenPoint() {
         long xy = object_get_long_int(nativehandle, QXCore.SCREENPOSITION, -1, 0);
-        return new QXPoint((xy >> 32) & 0xffffffff, xy & 0xffffffff);
+        return new QXPoint((int)(xy >> 32) & 0xffffffff, (int)xy & 0xffffffff);
     }
-    public QXRect getScreenSize(int num) {
+    public @NotNilptr  QXRect getScreenSize(int num) {
         long wh = object_get_long_int(nativehandle, QXCore.SCREENSIZE, num, 0);
-        return new QXRect(0, 0, (wh >> 32) & 0xffffffff, wh & 0xffffffff);
+        return new QXRect(0, 0, (int)(wh >> 32) & 0xffffffff, (int)wh & 0xffffffff);
     }
-    public QXRect getCurrentScreenSize() {
+    public @NotNilptr  QXRect getCurrentScreenSize() {
         long wh = object_get_long_int(nativehandle, QXCore.SCREENSIZE, -1, 0);
-        return new QXRect(0, 0, (wh >> 32) & 0xffffffff, wh & 0xffffffff);
+        return new QXRect(0, 0, (int)(wh >> 32) & 0xffffffff, (int)wh & 0xffffffff);
     }
     public int getCurrentScreen() {
         return widget_get_int_value(nativehandle, QXCore.CURRENTSCREEN);
@@ -672,17 +676,17 @@ class QXWidget : QXObject {
     public void setToolTips(String text) {
         widget_slot_string(nativehandle, QXCore.SETTOOLTIPS, text);
     }
-    public void setLayout(QLayout layout){
+    public void setLayout(@NotNilptr QLayout layout){
         widget_set_native_value(nativehandle, QXCore.SETLAYOUT, layout.nativehandle);
     }
     public void showToolTips(int x, int y, long duration) {
-        widget_set_intlongstring_value(nativehandle, QXCore.SHOWTOOLTIPS, ((long)x) << 32 |  y, duration, nilptr);
+        widget_set_intlongstring_value(nativehandle, QXCore.SHOWTOOLTIPS, ((long)x) << 32 |  y, (int)duration, nilptr);
     }
     public void showToolTips(int x, int y, String text, long duration) {
-        widget_set_intlongstring_value(nativehandle, QXCore.SHOWTOOLTIPS, ((long)x) << 32 |  y,  duration, text);
+        widget_set_intlongstring_value(nativehandle, QXCore.SHOWTOOLTIPS, ((long)x) << 32 |  y,  (int)duration, text);
     }
     public static void ShowToolTips(int x, int y, String text, long duration) {
-        widget_set_intlongstring_value(0, QXCore.SHOWTOOLTIPS, ((long)x) << 32 |  y,  duration, text);
+        widget_set_intlongstring_value(0, QXCore.SHOWTOOLTIPS, ((long)x) << 32 |  y,  (int) duration, text);
     }
 
     public bool isAcceptDrops() {
@@ -700,16 +704,30 @@ class QXWidget : QXObject {
     public bool isUpdateEnabled() {
         return widget_get_bool_value(nativehandle,UPDATEENABLE );
     }
-    public void render(QXPainter painter){
+    public void render(@NotNilptr QXPainter painter){
         long_long_int9(nativehandle, WIDGETRENDER1, painter.hpaint, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
-    public void render(QXPainter painter, RenderFlag flags){
+    public void render(@NotNilptr QXPainter painter, RenderFlag flags){
         long_long_int9(nativehandle, WIDGETRENDER1, painter.hpaint, 0, 0, 0, 0, 0, 0, 0, flags, 0);
     }
-    public void render(QXPainter painter, int x,int y, RenderFlag flags){
+    public void render(@NotNilptr QXPainter painter, int x,int y, RenderFlag flags){
         long_long_int9(nativehandle, WIDGETRENDER1, painter.hpaint, x, y, 0, 0, 0, 0, 0, flags, 0);
     }
-    public void render(QXPainter painter, int x,int y, int sx,int sy,int sw,int sh,RegionType sflags, RenderFlag flags){
+    public void render(@NotNilptr QXPainter painter, int x,int y, int sx,int sy,int sw,int sh,RegionType sflags, RenderFlag flags){
         long_long_int9(nativehandle, WIDGETRENDER1, painter.hpaint, x, y, sx, sy, sw, sh, sflags, flags, 0);
+    }
+    
+    public @NotNilptr String getWindowTitle(){
+        return (String)core_getString(nativehandle, WIDGETGETTITLE);
+    }
+    void finalize(){
+        if (nativehandle != 0) {
+            runOnUi(new Runnable(){
+                long handle = nativehandle;
+                void run()override{
+                    widget_slot(handle, NATIVEFINALIZE);
+                }
+            });
+        }
     }
 };

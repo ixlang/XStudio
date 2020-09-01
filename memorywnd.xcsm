@@ -120,14 +120,17 @@ class XMemoryWnd : QXDockWidget{
             painter.fillRect(0,0,w,h,bkcolor,QXBrush.Style.SolidPattern);
 			painter.setPaint(mempaint);
 
+            QXPath __cpath;
+            
             synchronized(this){
 				if (bupdated){
 					_currentpath = buildpath(w, h);
                 }
+                __cpath = _currentpath;
             }
             
-            if (_currentpath != nilptr){
-				painter.drawPath(_currentpath);
+            if (__cpath != nilptr){
+				painter.drawPath(__cpath);
             }
             
             
@@ -240,38 +243,48 @@ class XMemoryWnd : QXDockWidget{
         return String.format("%.4f Gb", (bytes / (1048576.f * 1024.f)));
     }
     
+    long getJsonLong(@NotNilptr JsonObject jroot, String name){
+        String str = jroot.getString(name);
+        if (str != nilptr){
+            return str.parseLong();
+        }
+        return 0;
+    }
+    
     public void onNotification(long id){
-		synchronized(memLock){
+        JsonObject _meminfo = nilptr;
         
+		synchronized(memLock){
+            _meminfo = meminfo;
 			_listview.clear();
             
-			if (meminfo != nilptr){
-				long lc = meminfo.getInt("lc");
-                long ls = meminfo.getInt("ls");
-                long dc = meminfo.getInt("dc");
-                long ds = meminfo.getInt("ds");
-				long ac = meminfo.getInt("ac");
-                long as = meminfo.getInt("as");
-                long bc = meminfo.getInt("bc");
-                long bs = meminfo.getInt("bs");
-                long cc = meminfo.getInt("cc");
-                long cs = meminfo.getInt("cs");
-                long sc = meminfo.getInt("sc");
-                long ss = meminfo.getInt("ss");
-                long cxc = meminfo.getInt("cxc");
-                long cxs = meminfo.getInt("cxs");
-                long oc = meminfo.getInt("oc");
-                long os = meminfo.getInt("os");
-                long au = meminfo.getInt("au");
-                long js = meminfo.getInt("js");
-                long ts = meminfo.getInt("ts");
-                long tc = meminfo.getInt("tc");
+			if (_meminfo != nilptr){
+				long lc = _meminfo.getInt("lc");
+                long ls = _meminfo.getInt("ls");
+                long dc = _meminfo.getInt("dc");
+                long ds = _meminfo.getInt("ds");
+				long ac = _meminfo.getInt("ac");
+                long as = _meminfo.getInt("as");
+                long bc = _meminfo.getInt("bc");
+                long bs = _meminfo.getInt("bs");
+                long cc = _meminfo.getInt("cc");
+                long cs = _meminfo.getInt("cs");
+                long sc = _meminfo.getInt("sc");
+                long ss = _meminfo.getInt("ss");
+                long cxc = _meminfo.getInt("cxc");
+                long cxs = _meminfo.getInt("cxs");
+                long oc = _meminfo.getInt("oc");
+                long os = _meminfo.getInt("os");
+                long au = _meminfo.getInt("au");
+                long js = _meminfo.getInt("js");
+                long ts = _meminfo.getInt("ts");
+                long tc = _meminfo.getInt("tc");
                 long heap = 0;
                 long uheap = 0;
                 
 				try{
-					heap = meminfo.getString("heap").parseLong();
-					uheap = meminfo.getString("uheap").parseLong();
+					heap =  getJsonLong(_meminfo, "heap");
+					uheap = getJsonLong(_meminfo, "uheap");
 				}catch(Exception e){
 				
 				}

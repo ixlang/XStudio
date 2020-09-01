@@ -13,7 +13,10 @@ class DownloadCenter{
     public static int getTaskProgress(String key){
         synchronized(dltasks){
             try{
-                return dltasks.get(key).progress;
+                Downloader dl = dltasks.get(key);
+                if (dl != nilptr){
+                    return dl.progress;
+                }
             }catch(Exception e){
                 
             }
@@ -21,7 +24,7 @@ class DownloadCenter{
         return -1;
     }
     
-    public static List<String> getKeys(){
+    public @NotNilptr static List<String> getKeys(){
         List<String> keys = new List<String>();
         synchronized(dltasks){
             Map.Iterator<String, Downloader> iter = dltasks.iterator();
@@ -67,15 +70,22 @@ class DownloadCenter{
         }
         
         public void run()override{
+        
+            String dlfile = localfile;
+            
+            if (dlfile == nilptr){
+                return ;
+            }
             synchronized(dltasks){
                 dltasks.put(key, this);
             }
+            
             
             long totallen = 0;
             FileOutputStream fos;
             try{
                 HttpRequest req = new HttpRequest();
-                fos = new FileOutputStream(localfile);
+                fos = new FileOutputStream(dlfile);
                 String _url = url;
                 state = DownloadStatus.DL_BEGIN;
                 progress = 0;
@@ -88,9 +98,7 @@ class DownloadCenter{
                 String proxy_user = Setting.get("proxy_user");
                 String proxy_pwd = Setting.get("proxy_pwd");
                 
-                if (proxy_type != nilptr && proxy_type.length() != 0 &&  
-                    proxy_host != nilptr && proxy_host.length() != 0 &&  
-                    proxy_port != nilptr && proxy_port.length() != 0)
+                if (proxy_type.length() != 0 && proxy_host.length() != 0 && proxy_port.length() != 0)
                 {
                     int proxytype = HttpRequest.PROXY_HTTP;
                     
@@ -114,16 +122,16 @@ class DownloadCenter{
                         proxytype = HttpRequest.PROXY_HTTP;
                         break;
                     }
-                    if (proxy_user != nilptr && proxy_user.length() == 0){
+                    if (proxy_user.length() == 0){
                         proxy_user = nilptr;
                     }
-                    if (proxy_pwd != nilptr && proxy_pwd.length() == 0){
+                    if (proxy_pwd.length() == 0){
                         proxy_pwd = nilptr;
                     }
                     req.setProxy(proxy_host,proxy_port.parseInt(),proxytype,proxy_user,proxy_pwd);
                 }
                 
-                if (req.get(_url, 0, _url.upper().startWith("HTTPS://"))){
+                if (_url != nilptr && req.get(_url, 0, _url.upper().startWith("HTTPS://"))){
                     if (req.getResponseCode() >= 200){
                         if (dltotalsize <= 0){
                             dltotalsize = req.getLength();
@@ -193,7 +201,10 @@ class DownloadCenter{
     public static void cancelDownloadTask(String key){
         try{
             synchronized(dltasks){
-                dltasks.get(key).setCancel(true);
+                Downloader dl = dltasks.get(key);
+                if (dl != nilptr){
+                    dl.setCancel(true);
+                }
             }
         }catch(Exception e){
             

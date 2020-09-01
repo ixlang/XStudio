@@ -1,5 +1,5 @@
 class QXMdiSubWindow : QXWidget{
-    public bool create(){
+    public bool create()override {
         nativehandle = createQObject(QType.qtMdiSubWnd, this, 0);
         if (nativehandle == 0){
             return false;
@@ -7,7 +7,7 @@ class QXMdiSubWindow : QXWidget{
         return true;
     }
     
-    public bool create(QXWidget parent){
+    public bool create(@NotNilptr QXWidget parent)override {
         nativehandle = createQObject(QType.qtMdiSubWnd, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
@@ -15,7 +15,7 @@ class QXMdiSubWindow : QXWidget{
         return true;
     }
     
-    public void setWidget(QXWidget w){
+    public void setWidget(@NotNilptr QXWidget w){
         widget_set_native_value(nativehandle, QXCore.SUBSETWIDGET, w.nativehandle);
     }
     

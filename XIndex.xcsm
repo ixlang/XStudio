@@ -11,7 +11,7 @@ class XIndexWindow : QXMdiSubWindow
 
     Object state;
     Recently.RecentlyObject [] objects = new Recently.RecentlyObject[10];
-    public bool create(QXWidget parent)
+    public bool create( @NotNilptr QXWidget parent)
     {
         if (super.create(parent)) {
             indexPage = new QXWidget();

@@ -3,7 +3,7 @@
 
 class QXPath : QXCore{
 
-	public QXPath(){
+	public QXPath() throws IllegalArgumentException{
 		nativehandle = createNObject(QType.qtPath, 0);
         if (nativehandle == 0){
 			throw new IllegalArgumentException("can not new QXPath");

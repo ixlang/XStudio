@@ -10,7 +10,7 @@ class QXLineEdit : QXWidget{
         super(handle);
     }
     
-    public bool create(){
+    public bool create()override {
         nativehandle = createQObject(QType.qtLineEdit, this, 0);
         if (nativehandle == 0){
             return false;
@@ -18,7 +18,7 @@ class QXLineEdit : QXWidget{
         return true;
     }
     
-    public bool create(QXWidget parent){
+    public bool create(@NotNilptr QXWidget parent)override {
         nativehandle = createQObject(QType.qtLineEdit, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
@@ -29,7 +29,9 @@ class QXLineEdit : QXWidget{
         widget_slot_string(nativehandle, LINEEDITSETTEXT, text);
     }
     
-    public String getText(){
-        return (String)core_getString(nativehandle, LINEEDITGETTEXT);
+    public @NotNilptr String getText(){
+        String __txt = (String)core_getString(nativehandle, LINEEDITGETTEXT);
+        __nilptr_safe(__txt);
+        return __txt;
     }
 };

@@ -50,7 +50,7 @@ class QXTextEdit : QXWidget{
 		super(h);
 	}
 
-    public bool create(){
+    public bool create()override {
         nativehandle = createQObject(QType.qtTextEdit, this, 0);
         if (nativehandle == 0){
             return false;
@@ -58,7 +58,7 @@ class QXTextEdit : QXWidget{
         return true;
     }
     
-    public bool create(QXWidget parent){
+    public bool create(@NotNilptr QXWidget parent)override {
         nativehandle = createQObject(QType.qtTextEdit, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
@@ -98,7 +98,7 @@ class QXTextEdit : QXWidget{
         }
     }
     
-    public void onSelectionChanged(){
+    public void onSelectionChanged()override {
         if (lis != nilptr){
             lis.onSelectionChanged(this);
         }
@@ -153,7 +153,7 @@ class QXTextEdit : QXWidget{
     public void setTextBackgroundColor(int c){
         widget_set_vint_value(nativehandle, TESETTEXTBACKGROUNDCOLOR, c);
     }
-    public void setCurrentFont(QXFont f){
+    public void setCurrentFont(@NotNilptr QXFont f){
         widget_set_native_value(nativehandle, TESETCURRENTFONT, f.nativehandle);
     }
     public void setAlignment(Alignment a){

@@ -37,7 +37,7 @@ class XWndOutput: QXDockWidget
         return outputWnd.registry_Output(icon);
     }
     
-    public int registry_Output(String icon){
+    public int registry_Output(@NotNilptr String icon){
         btnOutput[output_count].show();
         icon = icon.replace("\\","/");
         btnOutput[output_count].setStyleSheetString("qproperty-icon: url(" + icon +") off, url(" + icon +") on ;");
@@ -130,7 +130,7 @@ class XWndOutput: QXDockWidget
 
                 int interval = 50;
 
-                while(true) {
+                while(tmplist != nilptr) {
 
                     String finalstr = "";
                     List.Iterator<String> iter = tmplist.iterator();
@@ -156,8 +156,14 @@ class XWndOutput: QXDockWidget
 
                         runOnUi(new Runnable() {
                             String appstr = finalstr;
-                            void run()override {
-                                interval = appendTextAndScroll(_scicomm, appstr);
+                          void run()override {
+                                String _str = getContent();
+                                if (_str != nilptr){
+                                    interval = appendTextAndScroll(_scicomm, _str);
+                                }
+                            }
+                            String getContent(){
+                                return appstr;
                             }
 
                         });
@@ -165,7 +171,7 @@ class XWndOutput: QXDockWidget
                         finalstr = "";
                     }
 
-                    Thread.sleep(100);
+                    _system_.sleep(100);
 
                     synchronized(outputlock) {
                         if (outputList.size() == 0) {
@@ -182,7 +188,7 @@ class XWndOutput: QXDockWidget
         mergeThread.start();
     }
 
-    public int appendTextAndScroll(QXSci _sci, String appstr){
+    public int appendTextAndScroll(@NotNilptr QXSci _sci,@NotNilptr  String appstr){
         long displaytime = _system_.currentTimeMillis();
         bool bWrap = _sci.isWrap();
         int cutcountline  = 0;
@@ -235,7 +241,7 @@ class XWndOutput: QXDockWidget
 
                 int interval = 50;
 
-                while(true) {
+                while(tmplist != nilptr) {
 
                     String finalstr = "";
                     List.Iterator<String> iter = tmplist.iterator();
@@ -262,15 +268,20 @@ class XWndOutput: QXDockWidget
                         runOnUi(new Runnable() {
                             String appstr = finalstr;
                             void run()override {
-                                interval = appendTextAndScroll(_sciext, appstr);
+                                String _str = getContent();
+                                if (_str != nilptr){
+                                    interval = appendTextAndScroll(_sciext, _str);
+                                }
                             }
-
+                            String getContent(){
+                                return appstr;
+                            }
                         });
 
                         finalstr = "";
                     }
 
-                    Thread.sleep(100);
+                    _system_.sleep(100);
 
                     synchronized(outputlock) {
                         if (outputListext.size() == 0) {
@@ -287,7 +298,7 @@ class XWndOutput: QXDockWidget
         mergeThreadext.start();
     }
     
-    public void syntaxForOutput(QXSci _sci)
+    public void syntaxForOutput(@NotNilptr QXSci _sci)
     {
         if (Setting.isDarkStyle()) {
             syntaxForOutputDark(_sci);
@@ -336,7 +347,7 @@ class XWndOutput: QXDockWidget
         _sci.setWrap(Setting.isOutputWrap());
     }
 
-    public void syntaxForOutputDark(QXSci _sci)
+    public void syntaxForOutputDark(@NotNilptr QXSci _sci)
     {
         _sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);
         //_sci.setWrap(true);
@@ -388,7 +399,7 @@ class XWndOutput: QXDockWidget
     }
     
     onClickListener extclick = new onClickListener(){
-        void onClick(QXObject obj, bool checked) {
+        void onClick(@NotNilptr QXObject obj, bool checked) {
             int n = (int)obj.getTag();
             output_flags[n] = checked;
             switch_sci(false);
@@ -495,14 +506,15 @@ class XWndOutput: QXDockWidget
         btnOutput[1].setCheck(true);
     }
 
-    public void initSci(QXSci _sci){
+    public void initSci(@NotNilptr QXSci _sci){
+        __nilptr_safe(edtarea);
         if (_sci.create(edtarea)) {
             syntaxForOutput(_sci);
             _sci.setOnSciEventListener(new SciEventListener() {
-                void ON_DOUBLECLICK(QXSci sci,int position, int line, int modifiers) {
+                void ON_DOUBLECLICK(@NotNilptr QXSci sci,int position, int line, int modifiers) {
 
                     String lineText = sci.getText(line);
-                    if (lineText != nilptr && lineText.length() > 0) {
+                    if (lineText.length() > 0) {
                         Project project = XWorkspace.workspace.getCurrentProject();
                         try{
                             if (project != nilptr){
@@ -532,39 +544,40 @@ class XWndOutput: QXDockWidget
             _sci.setIndicCurrent(1);
             
             QXWidget viewport = _sci.viewPort();
-            viewport.setOnMouseEventListener(new onMouseEventListener() {
+            if (viewport != nilptr){
+                viewport.setOnMouseEventListener(new onMouseEventListener() {
 
-                void onMouseMove(QXObject obj, int Button, int x, int y, int flags, int source)override {
-                    if (sciisHand) {
-                        int pos = _sci.positionFromPoint(x, y);
-                        int start = _sci.getIndicStart(1, pos);
-                        int end = _sci.getIndicEnd(1, start);
-                        int dic = _sci.IndicForPosition(start);
-                        if (dic != 0 && start != 0 && end != 0) {
-                            _sci.setCursor(QXSci.cursorHand);
-                            showTips(_sci, pos, "按下鼠标左键在浏览器中访问链接.");
-                        }
-                    }
-                }
-
-                void onMouseButtonPress(QXObject obj, int Button, int x, int y, int flags, int source)override {
-                    if (sciisHand) {
-                        int pos = _sci.positionFromPoint(x, y);
-                        int start = _sci.getIndicStart(1, pos);
-                        int end = _sci.getIndicEnd(1, start);
-                        int dic = _sci.IndicForPosition(start);
-                        if (dic != 0 && start != 0 && end != 0) {
-                            _sci.setSelect(start, end);
-                            String current_Url = _sci.getSelectedText();
-                            current_Url = current_Url.trim(true);
-                            if (current_Url.length() > 0) {
-                                openUrl(current_Url);
+                    void onMouseMove(QXObject obj, int Button, int x, int y, int flags, int source)override {
+                        if (sciisHand) {
+                            int pos = _sci.positionFromPoint(x, y);
+                            int start = _sci.getIndicStart(1, pos);
+                            int end = _sci.getIndicEnd(1, start);
+                            int dic = _sci.IndicForPosition(start);
+                            if (dic != 0 && start != 0 && end != 0) {
+                                _sci.setCursor(QXSci.cursorHand);
+                                showTips(_sci, pos, "按下鼠标左键在浏览器中访问链接.");
                             }
                         }
                     }
-                }
-            });
 
+                    void onMouseButtonPress(QXObject obj, int Button, int x, int y, int flags, int source)override {
+                        if (sciisHand) {
+                            int pos = _sci.positionFromPoint(x, y);
+                            int start = _sci.getIndicStart(1, pos);
+                            int end = _sci.getIndicEnd(1, start);
+                            int dic = _sci.IndicForPosition(start);
+                            if (dic != 0 && start != 0 && end != 0) {
+                                _sci.setSelect(start, end);
+                                String current_Url = _sci.getSelectedText();
+                                current_Url = current_Url.trim(true);
+                                if (current_Url.length() > 0) {
+                                    openUrl(current_Url);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
             _sci.setOnKeyEventListener(new onKeyEventListener() {
 
                 bool onKeyPress(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier)override {
@@ -597,7 +610,7 @@ class XWndOutput: QXDockWidget
             });
         }
     }
-    public void showTips(QXSci _sci, int position, String content)
+    public void showTips(@NotNilptr QXSci _sci, int position, String content)
     {
         _sci.showTips(position, content);
     }
@@ -608,7 +621,7 @@ class XWndOutput: QXDockWidget
             return _sciext;
         }
     }
-    public void testUrl(QXSci _sci)
+    public void testUrl(@NotNilptr QXSci _sci)
     {
         if (_sci.isModified()) {
             String text = _sci.getText();
@@ -618,7 +631,7 @@ class XWndOutput: QXDockWidget
             if (text.length() > 0) {
                 Pattern.Result rt = url_match.match(text, 0);
 
-                for (int i =0; i < rt.length(); i++) {
+                for (int i = 0, c = rt.length(); i < c; i++) {
                     int start = rt.get(i).start();
                     int end = rt.get(i).end();
                     _sci.applyIndic(start, end - start + 1);

@@ -74,7 +74,8 @@ class ListDockWidget : QXDockWidget{
         _listview.clear();
     }
     
-    public QXTreeView getList(){
+    public @NotNilptr QXTreeView getList(){
+        __nilptr_safe(_listview);
 		return _listview;
     }
 };

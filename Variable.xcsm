@@ -2,6 +2,9 @@ class Variables
     : Map<String, String>{
     static Variables _appVariable = new Variables();
     
+    public Variables(){
+        initSystemVar();
+    }
     public void reset(){
         super.clear();
     }
@@ -25,8 +28,10 @@ class Variables
         }
         return "";
     }
-    
-    public String map_variable(String text){
+    public @NotNilptr static  String MapVariable(@NotNilptr String text){
+        return _appVariable.map_variable(text);
+    }
+    public @NotNilptr  String map_variable(@NotNilptr String text){
         for (Map.Iterator<String, String> iter = iterator(); iter.hasNext(); iter.next()){
             text = text.replace(iter.getKey(), iter.getValue());
         }

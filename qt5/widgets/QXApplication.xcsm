@@ -24,7 +24,7 @@ class QXApplication : QXObject{
 	public void setPaletteColor(String file){
 		widget_slot_string(nativehandle, PALETTECOLOR, file);
 	}
-    public void setFont(QXFont font){
+    public void setFont(@NotNilptr QXFont font){
         widget_set_native_value(nativehandle, SETAPPFONT, font.nativehandle);
     }
     
@@ -32,7 +32,7 @@ class QXApplication : QXObject{
 		widget_slot_string(nativehandle, LOADTRANSLATE, file);
     }
     
-    public Object onCreateXObject(long object, String objectClass){
+    public Object onCreateXObject(long object,@NotNilptr  String objectClass){
         //_system_.consoleWrite("QXApplication request class :" + objectClass + "\n");
         if (objectClass.equals("QMdiArea")){
             return new QXMdiArea(object);

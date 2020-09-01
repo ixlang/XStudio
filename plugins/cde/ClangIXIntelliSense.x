@@ -10,7 +10,7 @@ class ClangIXIntelliSense : IXIntelliSense{
     static class Document{
         public bool isEnabled = false;
         public String symbols;
-        
+        public JsonArray elements = new JsonArray();
         public Document(bool bie){
             isEnabled = bie;
         }
@@ -22,21 +22,22 @@ class ClangIXIntelliSense : IXIntelliSense{
     Configure cur_cfig;
     String __completion_result = nilptr;
     
-    static String clangd = nilptr;
-    
+
     String initResp = nilptr;
     char [] trigge_chars = nilptr;
     
     class LspCallback : LspClient.LspListener{
-        void onCallBack(JsonObject resp){
+        void onCallBack(@NotNilptr JsonObject resp){
             String st = resp.toString(true);
            // _system_.output("\n" + st + "\n");
         }
     };
     
     bool initializ()override{
-            
-        if (clangd == nilptr){
+        String clangd = nilptr;
+        if (Setting.get("usbuiltinlsp").equals("False")){
+            clangd = Setting.get("lsppath");
+        }else{ 
             String clang_path = CDEProjectPropInterface.appendPath(_system_.getAppDirectory(), "plugins/cde/clang");
             switch(_system_.getPlatformId()){
                 case _system_.PLATFORM_WINDOWS:
@@ -59,9 +60,41 @@ class ClangIXIntelliSense : IXIntelliSense{
             clangd = String.formatPath(clang_path, false);
         }
         
+            
         String  workDir = cur_project.getProjectDir();
-        String [] _clangd_args = {"clangd", "--limit-results=3000", "--compile-commands-dir=\""  + workDir + "\"" }; 
         
+        Vector<String> __args = new Vector<String>();
+        
+        if (clangd.indexOf(" ") != -1){
+            __args.add("\"" + clangd + "\"");
+        }else{
+            __args.add(clangd);
+        }
+        
+        try{
+            String lspargs = Setting.get("lspstartargs");
+            JsonArray lspargsa = new JsonArray(lspargs);
+            for (int i =0; i < lspargsa.length(); i++){
+                String val = cur_project.MapVariable(lspargsa.getString(i)).trim(true);
+                if (val.length() > 0){
+                    __args.add(val);
+                }
+            }
+        }catch(Exception e){
+            
+        }
+        
+        String lspcomplimit = Setting.get("lspcomplimit");
+        
+        if (lspcomplimit.length() != 0){
+            __args.add("--limit-results=" + lspcomplimit.parseInt());
+            __args.add("--compile-commands-dir=\""  + workDir + "\"");
+        }
+        String [] _clangd_args = __args.toArray(new String[0]);// {"clangd", "--limit-results=3000", "--compile-commands-dir=\""  + workDir + "\"" }; 
+        
+        /*if (_system_.getPlatformId() == _system_.PLATFORM_LINUX){
+            _clangd_args [1] = "--limit-results=0";
+        }*/
         //clangd = "D:\\Cadaqs\\Desktop\\ccls-master\\ccls.exe";
         
         XPlatform.chmodSystemFile(clangd,0777);
@@ -71,8 +104,25 @@ class ClangIXIntelliSense : IXIntelliSense{
         
         JsonArray sysdir = CDEProjectPropInterface.getCompilerSystemPath(cur_cfig);
         
+        String extends_args = " ";
+        try{
+            String lspargs = Setting.get("lspparam");
+            JsonArray lspargsa = new JsonArray(lspargs);
+            for (int i =0; i < lspargsa.length(); i++){
+                String itemarg = lspargsa.getString(i);
+                if (itemarg != nilptr && itemarg.length() > 0){
+                    String val = cur_project.MapVariable(itemarg).trim(true);
+                    if (val.length() > 0){
+                        extends_args = extends_args + " " + val;
+                    }
+                }
+            }
+        }catch(Exception e){
+            
+        }
         /*String sysmacro = CDEProjectPropInterface.getMacros(cur_cfig);
         sysmacro = sysmacro.replace(" ", " -D"); /*+ " -D__WIDL__ -D_SIZE_T_DEFINED"*/
+        
         String sys_root = " ";// " -isystem \"" + _system_.getAppDirectory().appendPath("plugins/cde/clang/win/clang/lib/clang/10.0.0/include") + "\" " ;
         if (sysdir != nilptr){
             for (int i = 0; i < sysdir.length(); i++){
@@ -86,71 +136,81 @@ class ClangIXIntelliSense : IXIntelliSense{
         
         String windows_att_flag = "";
         if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
-            windows_att_flag = " -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-ssse3 -mno-sse4.1 -mno-sse4.2 --target=i686-pc-mingw32 "/* x86_64-pc-mingw64  i686-pc-mingw32*/;
-        }
-        for (int i = 0; i < sources.length(); i++) {
-            String srcname = sources.getString(i);
-            String ext = srcname.findExtension();
-            String fname = srcname.findFilenameAndExtension();
-
-            String fullsourcePath = CDEProjectPropInterface.appendPath(workDir, srcname);
-
-            bool avaiable = false;
-            if (ext != nilptr && (ext.equalsIgnoreCase(".c") || ext.equalsIgnoreCase(".cpp") || ext.equalsIgnoreCase(".cxx") || ext.equalsIgnoreCase(".m") || 
-                ext.equalsIgnoreCase(".mm") || ext.equalsIgnoreCase(".cc") || ext.equalsIgnoreCase(".c++") || ext.equalsIgnoreCase(".cp") || ext.equalsIgnoreCase(".txx") || 
-                ext.equalsIgnoreCase(".tpp") || ext.equalsIgnoreCase(".tpl") || ext.equalsIgnoreCase(".h") || ext.equalsIgnoreCase(".hpp"))) 
-            {
-                String [] arg = ppf.generatorCompArgs(cur_project, cur_cfig, fullsourcePath);
-                
-                /*if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
-                    arg[0] = "c++";
-                }*/
-                String ccmd = "";
-                for (int x = 0; x < arg.length; x++){
-                    if (ccmd.length() > 0){
-                        ccmd = ccmd + " " + arg[x];
-                    }else{
-                        ccmd = ccmd + arg[x];
-                    }
-                }
-                avaiable = true;
-                sourceList.add(fullsourcePath);
-                if (!ext.equalsIgnoreCase(".h") && !ext.equalsIgnoreCase(".hpp")){
-                    JsonObject jobj = new JsonObject();
-                    jobj.put("directory", workDir);
-                    jobj.put("command", ccmd + windows_att_flag + sys_root);
-                    jobj.put("file", srcname);
-                    jarray.put(jobj);
-                }
-            }
-            _filelist.put(fullsourcePath, new Document(avaiable));
+            windows_att_flag = " -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-ssse3 -mno-sse4.1 -mno-sse4.2 "/* --target=i686-pc-mingw32  x86_64-pc-mingw64  i686-pc-mingw32*/;
         }
         
+        if (sources != nilptr){
+            for (int i = 0; i < sources.length(); i++) {
+                String srcname = sources.getString(i);
+                if (srcname != nilptr){
+                    String ext = srcname.findExtension();
+                    String fname = srcname.findFilenameAndExtension();
+
+                    String fullsourcePath = CDEProjectPropInterface.appendPath(workDir, srcname);
+
+                    bool avaiable = false;
+                    if ((ext.equalsIgnoreCase(".c") || ext.equalsIgnoreCase(".cpp") || ext.equalsIgnoreCase(".cxx") || ext.equalsIgnoreCase(".m") || 
+                        ext.equalsIgnoreCase(".mm") || ext.equalsIgnoreCase(".cc") || ext.equalsIgnoreCase(".c++") || ext.equalsIgnoreCase(".cp") || ext.equalsIgnoreCase(".txx") || 
+                        ext.equalsIgnoreCase(".tpp") || ext.equalsIgnoreCase(".tpl") || ext.equalsIgnoreCase(".h") || ext.equalsIgnoreCase(".hpp"))) 
+                    {
+                        if (ppf != nilptr){
+                            String [] arg = ppf.generatorCompArgs(cur_project, cur_cfig, fullsourcePath);
+                            if (arg != nilptr){
+                                /*if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
+                                    arg[0] = "c++";
+                                }*/
+                                String ccmd = "";
+                                for (int x = 0; x < arg.length; x++){
+                                    if (ccmd.length() > 0){
+                                        ccmd = ccmd + " " + arg[x];
+                                    }else{
+                                        ccmd = ccmd + arg[x];
+                                    }
+                                }
+                                avaiable = true;
+                                sourceList.add(fullsourcePath);
+                                if (!ext.equalsIgnoreCase(".h") && !ext.equalsIgnoreCase(".hpp")){
+                                    JsonObject jobj = new JsonObject();
+                                    jobj.put("directory", workDir);
+                                    jobj.put("command", ccmd + windows_att_flag + sys_root + extends_args);
+                                    jobj.put("file", srcname);
+                                    jarray.put(jobj);
+                                }
+                            }
+                        }
+                    }
+                    _filelist.put(fullsourcePath, new Document(avaiable));
+                }
+            }
+        }
         String compile_commands = CDEProjectPropInterface.appendPath(workDir, "compile_commands.json");
         
         String content = jarray.toString(true);
-        byte [] pbs = content.getBytes();
         
-        long hfile = _system_.openFile(compile_commands,"w" );
-        if (hfile != 0){
-            _system_.writeFile(hfile,pbs,0,pbs.length);
-            _system_.closeFile(hfile);
-        }
-        
-        if (clangdlsp.create()){
-            initResp = clangdlsp.initializ();
-            processInit();
-            for (int i = 0; i < sourceList.size(); i++){
-                String sc = CPPGPlugManager.getSourceContent(sourceList[i]);
-                if (sc != nilptr){
-                    clangdlsp.openfile(sourceList[i], sc);
-                    //_system_.output("didOpen:" + sourceList[i]);
-                }else{
-                    //_system_.output("didn't Open:" + sourceList[i]);
-                }
-                
+        if (content != nilptr){
+            byte [] pbs = content.getBytes();
+            
+            long hfile = _system_.openFile(compile_commands,"w" );
+            if (hfile != 0){
+                _system_.writeFile(hfile,pbs,0,pbs.length);
+                _system_.closeFile(hfile);
             }
-            return true;
+            
+            if (clangdlsp.create()){
+                initResp = clangdlsp.initializ();
+                processInit();
+                for (int i = 0; i < sourceList.size(); i++){
+                    String sc = CPPGPlugManager.getSourceContent(sourceList[i]);
+                    if (sc != nilptr){
+                        clangdlsp.openfile(sourceList[i], sc);
+                        //_system_.output("didOpen:" + sourceList[i]);
+                    }else{
+                        //_system_.output("didn't Open:" + sourceList[i]);
+                    }
+                    
+                }
+                return true;
+            }
         }
         return false;
     }
@@ -163,37 +223,35 @@ class ClangIXIntelliSense : IXIntelliSense{
     void setCommand(String cmd, String value)override{
         switch(cmd){
             case "compilationArgs":
-                JsonObject obj = new JsonObject(value);
-                
             break;
         }
     }
     
     void processInit(){
         try{
-            if (initResp != nilptr){
-                JsonObject initobj = new JsonObject(initResp);
-                if (initobj != nilptr){
-                    JsonObject result = (JsonObject)initobj.get("result");
-                    if (result != nilptr){
-                        JsonObject capabilities =  (JsonObject)result.get("capabilities");
-                        if (capabilities != nilptr){
-                            JsonObject completionProvider =  (JsonObject)capabilities.get("completionProvider");
-                            if (completionProvider != nilptr){
-                                JsonArray triggerCharacters = (JsonArray)completionProvider.get("triggerCharacters");
-                                if (triggerCharacters != nilptr){
-                                    trigge_chars = new char[triggerCharacters.length()];
-                                    for (int i =0; i < triggerCharacters.length(); i ++){
-                                        String item = triggerCharacters.getString(i);
-                                        if (item.length() > 0){
-                                            trigge_chars[i] = item.charAt(0);
-                                        }
+            String contstr = initResp;
+            if (contstr != nilptr){
+                JsonObject initobj = new JsonObject(contstr);
+                JsonObject result = (JsonObject)initobj.get("result");
+                if (result != nilptr){
+                    JsonObject capabilities =  (JsonObject)result.get("capabilities");
+                    if (capabilities != nilptr){
+                        JsonObject completionProvider =  (JsonObject)capabilities.get("completionProvider");
+                        if (completionProvider != nilptr){
+                            JsonArray triggerCharacters = (JsonArray)completionProvider.get("triggerCharacters");
+                            if (triggerCharacters != nilptr){
+                                trigge_chars = new char[triggerCharacters.length()];
+                                for (int i =0; i < triggerCharacters.length(); i ++){
+                                    String item = triggerCharacters.getString(i);
+                                    if (item != nilptr && item.length() > 0){
+                                        trigge_chars[i] = item.charAt(0);
                                     }
                                 }
                             }
                         }
                     }
                 }
+            
             }
         }catch(Exception e){
             
@@ -211,11 +269,11 @@ class ClangIXIntelliSense : IXIntelliSense{
         
     }
     
-    void addSource(String source)override{
+    void addSource(@NotNilptr String source)override{
         String ext = source.findExtension();
         bool avaiable = true;
         
-        if (ext != nilptr){
+        if (ext.length() != 0){
             ext = ext.lower();
             switch(ext){
                 case ".cpp":
@@ -248,35 +306,38 @@ class ClangIXIntelliSense : IXIntelliSense{
         }
     }
     
-    XIntelliResult [] getIntelliSenseL(String source,int line, int column)override{
+    XIntelliResult [] getIntelliSenseL(String source, String content, int line, int column)override{
         String complete_res = nilptr;
         synchronized(this){
             __completion_result = nilptr;
+            if (content != nilptr){
+                clangdlsp.filechange(source, content);
+            }
             complete_res = clangdlsp.completion(source, line, 1);
         }
         return parseResult(complete_res);
     }
     
+    
     XIntelliResult [] getIntelliSenseObject(String source,int line, int column, String name)override{
-        String complete_res = nilptr, complete_are;
+        String complete_res = nilptr, complete_are, complete_impl;
         synchronized(this){
             __completion_result = nilptr;
             complete_res = clangdlsp.getDefinition(source, line, column);
             complete_are = clangdlsp.getDeclare(source, line, column);
+            complete_impl = clangdlsp.getImplement(source, line, column);
         }
         return parseDefinitionAndDelare(complete_res, complete_are);
     }
     
     
-    void parseDefinitionItem(String result, Vector<XIntelliResult> xrs){
+    void parseDefinitionItem(String result, @NotNilptr Vector<XIntelliResult> xrs){
         if (result == nilptr){
             return ;
         }
         
         JsonObject jres = new JsonObject(result);
-        if (jres == nilptr){
-            return ;
-        }
+
         if (false == jres.has("result")){
             return ;
         }
@@ -284,23 +345,29 @@ class ClangIXIntelliSense : IXIntelliSense{
         JsonArray jarrs = (JsonArray)jres.get("result");
         
         
-        for (int i =0; i < jarrs.length(); i++){
-            JsonObject item = (JsonObject)jarrs.get(i);
-            JsonObject range = (JsonObject)item.get("range");
-            
-            JsonObject start = (JsonObject)range.get("start");
-            JsonObject end = (JsonObject)range.get("end");
-            String uri = URIConvertFilePath(item.getString("uri"));
-            
-            CDEXIntelliResult xr = new CDEXIntelliResult();
-            xr.line = start.getInt("line");
-            xr.row = start.getInt("character") + 1;
-            xr.source = uri;
-            
-            xr.name = xr.prop = "";
-            xrs.add(xr);
+        if (jarrs != nilptr){
+            for (int i = 0; i < jarrs.length(); i++){
+                JsonObject item = (JsonObject)jarrs.get(i);
+                if (item != nilptr){
+                    JsonObject range = (JsonObject)item.get("range");
+                    if (range != nilptr){
+                        JsonObject start = (JsonObject)range.get("start");
+                        JsonObject end = (JsonObject)range.get("end");
+                        __nilptr_safe(start, end);
+                        
+                        String uri = URIConvertFilePath(item.getString("uri"));
+                        
+                        CDEXIntelliResult xr = new CDEXIntelliResult();
+                        xr.line = start.getInt("line");
+                        xr.row = start.getInt("character") + 1;
+                        xr.source = uri;
+                        
+                        xr.name = xr.prop = "";
+                        xrs.add(xr);
+                    }
+                }
+            }
         }
-        
     }
     XIntelliResult [] parseDefinitionAndDelare(String result, String dlar){
         Vector<XIntelliResult> xrs = new Vector<XIntelliResult>();
@@ -358,7 +425,7 @@ class ClangIXIntelliSense : IXIntelliSense{
         public int line;
         public int row;
         
-        public CDEXIntelliResult [] processParams(String args) {
+        public CDEXIntelliResult [] processParams(@NotNilptr String args) {
             byte []data = args.getBytes();
             Vector<CDEXIntelliResult> args_list = new Vector<CDEXIntelliResult>();
             int start = 0;
@@ -412,7 +479,9 @@ class ClangIXIntelliSense : IXIntelliSense{
             String text  = item.getString("insertText");
             if (text == nilptr){
                 JsonObject textEdit = (JsonObject)item.get("textEdit");
-                text = textEdit.getString("newText");
+                if (textEdit != nilptr){
+                    text = textEdit.getString("newText");
+                }
             }
             if (text == nilptr){
                 text = item.getString("filterText");
@@ -468,8 +537,9 @@ class ClangIXIntelliSense : IXIntelliSense{
         public CDEXIntelliResult(){
             parsed = true;
         }
-        String get_name(){
+        @NotNilptr String get_name(){
             parse();
+            __nilptr_safe(name);
             return name;
         }
         
@@ -501,6 +571,73 @@ class ClangIXIntelliSense : IXIntelliSense{
             parse();
             return row;
         }
+        
+        InputDescription  inputsesc;
+        
+        class CDEInputDescription : InputDescription{
+            public CDEInputDescription(String ds, int [][] sa){
+                finalInputText = ds;
+                scpoedescr = sa;
+            }
+            String finalInputText  ;
+            int [][] scpoedescr ;
+            
+            String getInsertText(){
+                return finalInputText;
+            }
+            
+            int [][] getTipsDescription(){
+                return scpoedescr;
+            }
+        };
+        
+        InputDescription makeInputText(){
+            if (get_type() != 23){
+                return nilptr;
+            }
+            String descr ;
+            int [][] current_idincs ;
+            if (inputsesc == nilptr){
+                
+                //XIntelliSense.XIntelliResult [] params = get_params();
+                if (params != nilptr && params.length > 0) {
+                    current_idincs = new int[params.length][2];
+                    descr = get_name() + "(";
+                    
+                    for (int x = 0; x < params.length; x ++) {
+                        XIntelliSense.XIntelliResult param = params[x];
+                        
+                        if (param == nilptr){
+                            continue;
+                        }
+                        
+                        current_idincs[x][0] = descr.length();
+                        
+                        XIntelliSense.XIntelliResult pclass = param.get_class();
+                        
+                        if (pclass != nilptr){
+                            descr =  descr + " /**" +pclass.get_name() + " @" + param.get_name() + "*/ ";
+                        }else{
+                            descr = descr + " /**" +"? @" + param.get_name() + "*/ ";
+                        }
+                        
+                        current_idincs[x][1] = descr.length();
+                        
+                        if (x + 1 < params.length) {
+                            descr = descr + ",";
+                        } else {
+                            descr = descr;
+                        }
+                    }
+                    descr = descr + ")";
+                } else {
+                    descr = get_name() + "()";
+                }
+                
+                inputsesc = new CDEInputDescription(descr, current_idincs);
+            }
+            return inputsesc;
+        }
     };
     
     XIntelliResult [] parseResult(String result){
@@ -509,38 +646,39 @@ class ClangIXIntelliSense : IXIntelliSense{
         }
         
         JsonObject jres = new JsonObject(result);
-        if (jres == nilptr){
-            return nilptr;
-        }
+
         if (false == jres.has("result")){
             return nilptr;
         }
 
         JsonObject restuls = (JsonObject)jres.get("result");
         
-        if (false == restuls.has("items")){
+        if (restuls == nilptr || false == restuls.has("items")){
             return nilptr;
         }
         JsonArray jarrs = (JsonArray)restuls.get("items");
         
-        //Vector<XIntelliResult> xrs = new Vector<XIntelliResult>();
-        
-        //_system_.output("\n start:" + _system_.currentTimeMillis() + "\n");
-        
+        if (jarrs != nilptr){
+            //Vector<XIntelliResult> xrs = new Vector<XIntelliResult>();
+            
+            //_system_.output("\n start:" + _system_.currentTimeMillis() + "\n");
+            
 
-        //for (int i = 0, c = jarrs.length(); i < c; i++)
-        CDEXIntelliResult [] outs = new CDEXIntelliResult[jarrs.length()];
-        int pos = 0;
-        JsonObject item = (JsonObject)jarrs.child();
-        
-        while(item != nilptr) {
-            outs[pos++] = new CDEXIntelliResult(item);
-            item = (JsonObject)item.next();
-        }
+            //for (int i = 0, c = jarrs.length(); i < c; i++)
+            CDEXIntelliResult [] outs = new CDEXIntelliResult[jarrs.length()];
+            int pos = 0;
+            JsonObject item = (JsonObject)jarrs.child();
+            
+            while(item != nilptr) {
+                outs[pos++] = new CDEXIntelliResult(item);
+                item = (JsonObject)item.next();
+            }
         
         //_system_.output("\n end:" + _system_.currentTimeMillis() + "\n");
         
-        return outs;//xrs.toArray(new XIntelliResult[0]);
+            return outs;//xrs.toArray(new XIntelliResult[0]);
+        }
+        return nilptr;
     }
     
     
@@ -551,8 +689,8 @@ class ClangIXIntelliSense : IXIntelliSense{
         Package = 4,
         Class = 5,
         Method = 6,
-        Property = 7,
-        Field = 8,
+        Property = 7,//static
+        Field = 8,//dynamic
         Constructor = 9,
         Enum = 10,
         Interface = 11,
@@ -587,7 +725,8 @@ class ClangIXIntelliSense : IXIntelliSense{
             case SymbolKind.Method:
             case SymbolKind.Function:
             return 23;
-            
+            case SymbolKind.Property:
+            return 1800;
             break;
         }
         return 18;
@@ -604,15 +743,16 @@ class ClangIXIntelliSense : IXIntelliSense{
             el = _el;
             er = _er;
         }
-        public bool isContain(JsonObject sub, int type, int line, int row, int eline, int erow){
+        public bool isContain(@NotNilptr JsonObject sub, int type, int line, int row, int eline, int erow){
             if ((line == l && row > r ) || line > l){
                 if ((eline == el && erow < er)  || eline < el){
                     JsonArray method_prt = (JsonArray)obj.get("method");
                     JsonArray properites_prt = (JsonArray)obj.get("properites");
                     
-                    if (type == 23){
+                    if (method_prt != nilptr && type == 23){
                         method_prt.put(sub);
-                    }else{
+                    }else
+                    if (properites_prt != nilptr){
                         properites_prt.put(sub);
                     }
                     return true;
@@ -687,7 +827,7 @@ class ClangIXIntelliSense : IXIntelliSense{
         while (iter.hasNext()){
             String file = iter.getKey();
             Document doc = iter.getValue();
-            if (doc.isEnabled && doc.symbols != nilptr){// 34 template， 31 类， 23 function， 18 var;
+            if (doc != nilptr && doc.isEnabled && doc.symbols != nilptr){// 34 template， 31 类， 23 function， 18 var;
 
                 JsonObject item = new JsonObject(doc.symbols);
                 if(source_list.containsKey(file) == false){
@@ -696,7 +836,7 @@ class ClangIXIntelliSense : IXIntelliSense{
                 }
                 
                 JsonArray result = (JsonArray)item.get("result");
-                
+                doc.elements = result;
                 if (result != nilptr){
                     JsonObject obj = (JsonObject)result.child();
                     List<ObjectDesxcr> parentstack = new List<ObjectDesxcr>();
@@ -705,6 +845,10 @@ class ClangIXIntelliSense : IXIntelliSense{
                         JsonObject object = nilptr;
                         
                         String name = obj.getString("name");
+                        
+                        if (name == nilptr){
+                            name = "unnamed";
+                        }
 
                         String containerName = obj.getString("containerName");
                         
@@ -713,7 +857,11 @@ class ClangIXIntelliSense : IXIntelliSense{
                             containerName = name.substring(0,nsp); 
                         }
                         int type = kind2type(obj.getInt("kind"));
-                        
+                        bool bStatic = false;
+                        if (type == 1800){
+                            type = 18;
+                            bStatic = true;
+                        }
                         Map.Iterator<String, JsonObject> my_iter = nilptr;
                         
                         bool minor_obj = false;
@@ -722,7 +870,7 @@ class ClangIXIntelliSense : IXIntelliSense{
                             my_iter = structmap.find(name);
                             if (my_iter != nilptr){
                                 object = my_iter.getValue();
-                                if (object.has("line") == false){
+                                if (object != nilptr && object.has("line") == false){
                                     if (object.getInt("type") == 85){
                                         object.remove("type");
                                         object.put("type", 31);
@@ -765,102 +913,109 @@ class ClangIXIntelliSense : IXIntelliSense{
                                 object.put("static_method", static_method);
                             }
                             
-                            int line = 0, row = 0;
-                            int eline = 0, erow = 0;
-                            
-                            JsonObject location = (JsonObject)obj.get("location");
-                            if (location != nilptr){
-                                String uri = URIConvertFilePath(location.getString("uri"));
+                            if (object != nilptr){
+                                int line = 0, row = 0;
+                                int eline = 0, erow = 0;
                                 
-                                if(source_list.containsKey(uri)){
-                                    object.put("source", source_list.get(uri));
-                                }else{
-                                    object.put("source", sources.length());
-                                    source_list.put(uri, sources.length());
-                                    sources.put(uri);
-                                }
-                                
-                                JsonObject range = (JsonObject)location.get("range");
-                                if (range != nilptr){
-                                    JsonObject start = (JsonObject)range.get("start");
-                                    if (start != nilptr){
-                                        line = start.getInt("line");
-                                        row = start.getInt("character");
+                                JsonObject location = (JsonObject)obj.get("location");
+                                if (location != nilptr){
+                                    String uri = URIConvertFilePath(location.getString("uri"));
+                                    
+                                    if(source_list.containsKey(uri)){
+                                        object.put("source", source_list.get(uri));
+                                    }else{
+                                        object.put("source", sources.length());
+                                        source_list.put(uri, sources.length());
+                                        sources.put(uri);
                                     }
                                     
-                                    start = (JsonObject)range.get("end");
-                                    if (start != nilptr){
-                                        eline = start.getInt("line");
-                                        erow = start.getInt("character");
-                                    }
-                                }
-                            }
-                            
-                            object.put("line",line);
-                            object.put("column",row);
-                            object.put("eline",eline);
-                            object.put("ecolumn",erow);
-                            
-                            bool bAdded = false;
-                            
-                            while (parent != nilptr){
-                                if (parent.isContain(object, type, line, row, eline, erow) == false){
-                                    parent = nilptr;
-                                    if (parentstack.size() > 0){
-                                        parent = parentstack.pollLast();
-                                    }
-                                }else{
-                                    bAdded = true;
-                                    break;
-                                }
-                            }
-                            
-                            if (bAdded == false && containerName != nilptr && containerName.length() != 0){
-                                Map.Iterator<String, JsonObject> parent_iter = structmap.find(containerName);
-                                
-                                JsonObject _parent;
-                                
-                                if (parent_iter == nilptr){
-                                    _parent = makeParent(containerName, object, type);
-                                    structmap.put(containerName, _parent);
-                                    bAdded = true;
-                                }else{
-                                    _parent = parent_iter.getValue();
-                                    if (_parent != nilptr){
-                                        JsonArray method_prt = (JsonArray)_parent.get("method");
-                                        JsonArray properites_prt = (JsonArray)_parent.get("properites");
-                                        
-                                        if (type == 23){
-                                            method_prt.put(object);
-                                        }else{
-                                            properites_prt.put(object);
+                                    JsonObject range = (JsonObject)location.get("range");
+                                    if (range != nilptr){
+                                        JsonObject start = (JsonObject)range.get("start");
+                                        if (start != nilptr){
+                                            line = start.getInt("line");
+                                            row = start.getInt("character");
                                         }
+                                        
+                                        start = (JsonObject)range.get("end");
+                                        if (start != nilptr){
+                                            eline = start.getInt("line");
+                                            erow = start.getInt("character");
+                                        }
+                                    }
+                                }
+                                
+                                object.put("line",line);
+                                object.put("column",row);
+                                object.put("eline",eline);
+                                object.put("ecolumn",erow);
+                                
+                                bool bAdded = false;
+                                
+                                while (parent != nilptr){
+                                    if (parent.isContain(object, type, line, row, eline, erow) == false){
+                                        parent = nilptr;
+                                        if (parentstack.size() > 0){
+                                            parent = parentstack.pollLast();
+                                        }
+                                    }else{
                                         bAdded = true;
+                                        break;
                                     }
                                 }
-                            }
-                            
-                            if (type == 31){
-                                if (parent != nilptr){
-                                    parentstack.add(parent);
+                                
+                                if (bAdded == false && containerName != nilptr && containerName.length() != 0){
+                                    Map.Iterator<String, JsonObject> parent_iter = structmap.find(containerName);
+                                    
+                                    JsonObject _parent;
+                                    
+                                    if (parent_iter == nilptr){
+                                        _parent = makeParent(containerName, object, type, bStatic);
+                                        structmap.put(containerName, _parent);
+                                        bAdded = true;
+                                    }else{
+                                        _parent = parent_iter.getValue();
+                                        if (_parent != nilptr){
+                                            JsonArray method_prt = (JsonArray)_parent.get("method");
+                                            JsonArray properites_prt = (JsonArray)_parent.get("properites");
+                                            JsonArray static_properites_prt = (JsonArray)_parent.get("static_properites");
+                                            
+                                            if (method_prt != nilptr && type == 23){
+                                                method_prt.put(object);
+                                            }else
+                                            if (bStatic && static_properites_prt != nilptr){
+                                                static_properites_prt.put(object);
+                                            }else
+                                            if (properites_prt != nilptr){
+                                                properites_prt.put(object);
+                                            }
+                                            bAdded = true;
+                                        }
+                                    }
                                 }
-                                parent = new ObjectDesxcr(object, line, row, eline, erow);
-                            }
-                            
-                            if (bAdded == false){
+                                
                                 if (type == 31){
-                                    if (name.startWith("(") == false){
-                                        heap.put(object);
+                                    if (parent != nilptr){
+                                        parentstack.add(parent);
                                     }
-                                }else
-                                if (type == 23){
-                                    gproc.put(object);glf++;
-                                }else{
-                                    gvar.put(object);glv++;
+                                    parent = new ObjectDesxcr(object, line, row, eline, erow);
                                 }
-                            }
-                            if (type == 31){
-                                structmap.put(name, object);
+                                
+                                if (bAdded == false){
+                                    if (type == 31){
+                                        if (name.startWith("(") == false){
+                                            heap.put(object);
+                                        }
+                                    }else
+                                    if (type == 23){
+                                        gproc.put(object);glf++;
+                                    }else{
+                                        gvar.put(object);glv++;
+                                    }
+                                }
+                                if (type == 31){
+                                    structmap.put(name, object);
+                                }
                             }
                         }
                         obj = (JsonObject)obj.next();
@@ -885,7 +1040,7 @@ class ClangIXIntelliSense : IXIntelliSense{
     }
     
     
-    JsonObject makeParent(String name, JsonObject psub, int type){
+    JsonObject makeParent(String name,@NotNilptr JsonObject psub, int type, bool bStatic){
         JsonObject object = new JsonObject();
         object.put("name", name);
         object.put("type", 85);
@@ -897,6 +1052,9 @@ class ClangIXIntelliSense : IXIntelliSense{
         
         if (type == 23){
             method.put(psub);
+        }else
+        if (bStatic){
+            static_properites.put(psub);
         }else{
             properites.put(psub);
         }
@@ -916,17 +1074,22 @@ class ClangIXIntelliSense : IXIntelliSense{
     
     
     bool updateDocumentSymbols(){
-        Map.Iterator<String, Document> iter = _filelist.iterator();
-        while (iter.hasNext()){
-            String file = iter.getKey();
-            Document doc = iter.getValue();
-            if (doc.isEnabled){
-                if (nilptr == (doc.symbols = clangdlsp.getDocumentSymbols(file))){
-                    return false;
+        try{
+            Map.Iterator<String, Document> iter = _filelist.iterator();
+            while (iter.hasNext()){
+                String file = iter.getKey();
+                Document doc = iter.getValue();
+                if (doc != nilptr && doc.isEnabled){
+                    if (nilptr == (doc.symbols = clangdlsp.getDocumentSymbols(file))){
+                        return false;
+                    }
                 }
+                iter.next();
             }
-            iter.next();
+        }catch(Exception e){
+            
         }
+        
         return true;
     }
     

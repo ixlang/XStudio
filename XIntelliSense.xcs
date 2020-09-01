@@ -14,57 +14,57 @@ class XIntelliSense : IXIntelliSense{
                 XIS_ROW = 7;
                 
                                 
-	public XIntelliSense(Project proj, Configure configure){
+	public XIntelliSense(@NotNilptr Project proj,@NotNilptr  Configure configure){
     
 		if (Setting.isIntellisense()){
 			project = proj;
 			handle = createXProject(proj.getProjectDir());
 			
 			if (handle != 0){
-				int c = project.getSourceFileCount();
-				
-				if (configure != nilptr){
-					JsonObject paths = (JsonObject)configure.root.get("path");
-					
-					if (paths != nilptr){
-						JsonArray libpath = (JsonArray)paths.get("libpath");
-						if (libpath != nilptr){
-							for (int i = 0; i < libpath.length(); i++){
-								String var = libpath.getString(i);
-								if (var != nilptr){
-									addLibPath(handle, XPlatform.converToPlatformCharSet(proj.map_variable(var)));
-								}
-							}
-						}
-					}
-					
-					JsonArray libs = (JsonArray)configure.root.get("libs");
-					if (libs != nilptr){
-						for (int i = 0; i < libs.length(); i++){
-							String var = libs.getString(i);
-							if (var != nilptr){
-								addLib(handle, XPlatform.converToPlatformCharSet(proj.map_variable(var)));
-							}
-						}
-					}
-                    
-                    JsonArray links = (JsonArray)configure.root.get("links");
-					if (links != nilptr){
-						for (int i = 0; i < links.length(); i++){
-							String var = links.getString(i);
-							if (var != nilptr){
-								addLink(handle, XPlatform.converToPlatformCharSet(proj.map_variable(var)));
-							}
-						}
-					}
-				}
-				for (int i =0; i < c; i++){ 
+
+                JsonObject paths = (JsonObject)configure.root.get("path");
+                
+                if (paths != nilptr){
+                    JsonArray libpath = (JsonArray)paths.get("libpath");
+                    if (libpath != nilptr){
+                        for (int i = 0, ct = libpath.length(); i < ct; i++){
+                            String var = libpath.getString(i);
+                            if (var != nilptr){
+                                addLibPath(handle, XPlatform.converToPlatformCharSet(proj.MapVariable(var)));
+                            }
+                        }
+                    }
+                }
+                
+                JsonArray libs = (JsonArray)configure.root.get("libs");
+                if (libs != nilptr){
+                    for (int i = 0, ct = libs.length(); i < ct; i++){
+                        String var = libs.getString(i);
+                        if (var != nilptr){
+                            addLib(handle, XPlatform.converToPlatformCharSet(proj.MapVariable(var)));
+                        }
+                    }
+                }
+                
+                JsonArray links = (JsonArray)configure.root.get("links");
+                if (links != nilptr){
+                    for (int i = 0, ct = links.length(); i < ct; i++){
+                        String var = links.getString(i);
+                        if (var != nilptr){
+                            addLink(handle, XPlatform.converToPlatformCharSet(proj.MapVariable(var)));
+                        }
+                    }
+                }
+            
+				for (int i = 0, c = project.getSourceFileCount(); i < c; i++){ 
 					String source = project.getSourcePath(i);
-					String ext = source.findExtension();
-					
-					if (ext != nilptr && (ext.equalsIgnoreCase(".x") || ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm") )){
-						addFile(handle, XPlatform.converToPlatformCharSet(proj.map_variable(source)));
-					}
+                    if (source != nilptr){
+                        String ext = source.findExtension();
+                        
+                        if ((ext.equalsIgnoreCase(".x") || ext.equalsIgnoreCase(".xcs") || ext.equalsIgnoreCase(".xcsm") )){
+                            addFile(handle, XPlatform.converToPlatformCharSet(proj.MapVariable(source)));
+                        }
+                    }
 				}
 				
 			}
@@ -76,7 +76,7 @@ class XIntelliSense : IXIntelliSense{
         
     }
     
-    public void appendLibpath(String path){
+    public void appendLibpath(@NotNilptr String path){
 		synchronized(this){
 			if (handle != 0){
 				addLibPath(handle, XPlatform.converToPlatformCharSet(path));
@@ -84,7 +84,7 @@ class XIntelliSense : IXIntelliSense{
         }
     }
     
-    public void appendLib(String path){
+    public void appendLib(@NotNilptr String path){
 		synchronized(this){
 			if (handle != 0){
 				addLib(handle, XPlatform.converToPlatformCharSet(path));
@@ -92,7 +92,7 @@ class XIntelliSense : IXIntelliSense{
 		}
     }
     
-    public void appendLink(String path){
+    public void appendLink(@NotNilptr String path){
 		synchronized(this){
 			if (handle != 0){
 				addLink(handle, XPlatform.converToPlatformCharSet(path));
@@ -100,7 +100,7 @@ class XIntelliSense : IXIntelliSense{
 		}
     }
     
-    public void addSource(String source){
+    public void addSource(@NotNilptr String source){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -111,18 +111,18 @@ class XIntelliSense : IXIntelliSense{
     }
     
 
-	public XIntelliResult [] getIntelliSenseL(String source,int line, int column){
+	public XIntelliResult [] getIntelliSenseL(@NotNilptr String source, String content, int line, int column){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
-					IntelliSenseL(handle, XPlatform.converToPlatformCharSet(source), line);
+					IntelliSenseL(handle, XPlatform.converToPlatformCharSet(source), content, line);
 				}
 			}
         }
 		return getResult();
 	}
     
-    public XIntelliResult [] getIntelliSenseObject(String source,int line, int column, String name){
+    public XIntelliResult [] getIntelliSenseObject(@NotNilptr String source,int line, int column, String name){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -133,7 +133,7 @@ class XIntelliSense : IXIntelliSense{
 		return getResult();
 	}
      
-    public XIntelliResult [] getIntelliSenseObjectM(String source,int line){
+    public XIntelliResult [] getIntelliSenseObjectM(@NotNilptr String source,int line){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -144,7 +144,7 @@ class XIntelliSense : IXIntelliSense{
 		return getResult();
 	}
     
-	public XIntelliResult [] getIntelliSense(String source,String content, long pos, int line, int column){
+	public XIntelliResult [] getIntelliSense(@NotNilptr String source,String content, long pos, int line, int column){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -172,7 +172,7 @@ class XIntelliSense : IXIntelliSense{
 		}
         return nilptr;
 	}
-	public void update(String sourcePath, String content){
+	public void update(@NotNilptr String sourcePath, String content){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -181,7 +181,7 @@ class XIntelliSense : IXIntelliSense{
 			}
 		}
 	}
-    public void updateSource(String sourcePath, String newFile){
+    public void updateSource(@NotNilptr String sourcePath, @NotNilptr String newFile){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -225,7 +225,7 @@ class XIntelliSense : IXIntelliSense{
         public int line;
         public int row;
         
-        String get_name(){
+        @NotNilptr String get_name(){
             return name;
         }
         
@@ -257,8 +257,75 @@ class XIntelliSense : IXIntelliSense{
             return row;
         }
         
+        IXIntelliSense.InputDescription  inputsesc;
+        
+        InputDescription makeInputText(){
+            if (get_type() != 23){
+                return nilptr;
+            }
+            String descr ;
+            int [][] current_idincs ;
+            if (inputsesc == nilptr){
+                
+                //XIntelliSense.XIntelliResult [] params = get_params();
+                if (params != nilptr && params.length > 0) {
+                    current_idincs = new int[params.length][2];
+                    descr = get_name() + "(";
+                    
+                    for (int x = 0; x < params.length; x ++) {
+                        XIntelliSense.XIntelliResult param = params[x];
+                        
+                        if (param == nilptr){
+                            continue;
+                        }
+                        
+                        current_idincs[x][0] = descr.length();
+                        
+                        XIntelliSense.XIntelliResult pclass = param.get_class();
+                        
+                        if (pclass != nilptr){
+                            descr = descr + pclass.get_name() + " " + param.get_name() + ":";
+                        }else{
+                            descr = descr + "? " + param.get_name() + ":";
+                        }
+                        
+                        current_idincs[x][1] = descr.length();
+                        
+                        if (x + 1 < params.length) {
+                            descr = descr + ",";
+                        } else {
+                            descr = descr;
+                        }
+                    }
+                    descr = descr + ")";
+                } else {
+                    descr = get_name() + "()";
+                }
+                
+                inputsesc = new IXIntelliSense.InputDescription(){
+                    String finalInputText = descr;
+                    int [][] scpoedescr = current_idincs;
+                    
+                    String getInsertText(){
+                        return finalInputText;
+                    }
+                    
+                    int [][] getTipsDescription(){
+                        return scpoedescr;
+                    }
+                };
+            }
+            
+            return inputsesc;
+        }
     };
     
+    int parseResultInt(String res){
+        if (res == nilptr){
+            return 0;
+        }
+        return res.parseInt();
+    }
 	public XIntelliResult [] getResult(){
 		if (Setting.isIntellisense() == false){
 			return nilptr;
@@ -280,8 +347,8 @@ class XIntelliSense : IXIntelliSense{
 				result[i].type = getIntelliSenseItemInfo(handle, i, XIS_TYPE);
 				result[i].prop = getIntelliSenseItemInfo(handle, i, XIS_PROP);
 				result[i].source = getIntelliSenseItemInfo(handle, i, XIS_SRC);
-				result[i].line = getIntelliSenseItemInfo(handle, i, XIS_LINE).parseInt();
-				result[i].row = getIntelliSenseItemInfo(handle, i, XIS_ROW).parseInt();
+				result[i].line = parseResultInt(getIntelliSenseItemInfo(handle, i, XIS_LINE));
+				result[i].row = parseResultInt(getIntelliSenseItemInfo(handle, i, XIS_ROW));
 				
 				result[i]._class = new XLangIntelliResult();
 				result[i]._class.name = getIntelliSenseItemInfo(handle, i, XIS_CLAS);
@@ -295,8 +362,8 @@ class XIntelliSense : IXIntelliSense{
 						result[i].params[x].name = getIntelliSenseFunctionParamInfo(handle, i, x, XIS_NAME);
 						result[i].params[x].type = getIntelliSenseFunctionParamInfo(handle, i, x, XIS_TYPE);
 						result[i].params[x].source = getIntelliSenseFunctionParamInfo(handle, i, x,XIS_SRC);
-						result[i].params[x].line = getIntelliSenseFunctionParamInfo(handle, i, x,XIS_LINE).parseInt();
-						result[i].params[x].row = getIntelliSenseFunctionParamInfo(handle, i, x,XIS_ROW).parseInt();
+						result[i].params[x].line = parseResultInt(getIntelliSenseFunctionParamInfo(handle, i, x,XIS_LINE));
+						result[i].params[x].row = parseResultInt(getIntelliSenseFunctionParamInfo(handle, i, x,XIS_ROW));
 				
 						result[i].params[x]._class = new XLangIntelliResult();
 						result[i].params[x]._class.name = getIntelliSenseFunctionParamInfo(handle, i, x, XIS_CLAS);
@@ -332,7 +399,7 @@ class XIntelliSense : IXIntelliSense{
 		bool cdecl IntelliSense(long h, String file, String content, long position); 
         bool cdecl XISQueryObject(long _sc, String sourceFile, int line, String name);
         bool cdecl XISQueryObjectM(long _sc, String sourceFile, int line);
-        bool cdecl IntelliSenseL(long h, String file, int line); 
+        bool cdecl IntelliSenseL(long h, String file, String content, int line); 
 		int cdecl getXIntelliSenseCount(long h); 
 		String cdecl getIntelliSenseItemInfo(long h, int id, int prop);
 		int cdecl getIntelliSenseFunctionParamCount(long h, int id);

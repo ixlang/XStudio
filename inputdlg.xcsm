@@ -4,7 +4,7 @@
 class InputDialog : QXDialog {
 
 	public static class onInputListener{
-		public bool onInputOk(String text);
+		public bool onInputOk(@NotNilptr String text);
         public bool onInputCancel();
         public bool onSelectOk(int id){
             return false;
@@ -35,36 +35,37 @@ class InputDialog : QXDialog {
         edtLine = (QXLineEdit)attachByName(new QXLineEdit(), "edtLine");
         QXLabel label = (QXLabel)attachByName(new QXLabel(), "label");
         
-        edtLine.setText(listener.getDefault());
-        
-        btnOk.setOnClickListener(
-        new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
-				String text = edtLine.getText();
-                if (listener.onInputOk(text)){
-                    result = text;
-					close();
-                }           
-            }
-        });
-        
-        btnCancel.setOnClickListener(
-        new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
-                if (listener.onInputCancel()){
-					close();
+        if (label != nilptr){
+            edtLine.setText(listener.getDefault());
+            
+            btnOk.setOnClickListener(
+            new onClickListener(){
+                void onClick(QXObject obj, bool checked)override{
+                    String text = edtLine.getText();
+                    if (listener.onInputOk(text)){
+                        result = text;
+                        close();
+                    }           
                 }
-            }
-        });
-        
-        label.setText(listener.getTips());
-        
-		setWindowTitle(listener.getTitle());
-        
-        setModal(true);
-        
-        
-        edtLine.setFocus();
+            });
+            
+            btnCancel.setOnClickListener(
+            new onClickListener(){
+                void onClick(QXObject obj, bool checked)override{
+                    if (listener.onInputCancel()){
+                        close();
+                    }
+                }
+            });
+            
+            label.setText(listener.getTips());
+            
+            setWindowTitle(listener.getTitle());
+            
+            setModal(true);
+            
+            edtLine.setFocus();
+        }
     }
     
     public static void requestInput(onInputListener lis){

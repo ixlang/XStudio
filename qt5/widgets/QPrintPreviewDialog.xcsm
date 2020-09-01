@@ -6,17 +6,17 @@ class QPrintPreviewDialog : QXDialog{
     QPrintPreviewDialog(){
 
     }
-    QPrintPreviewDialog(QPrinter printer){
+    QPrintPreviewDialog(@NotNilptr QPrinter printer) throws IllegalArgumentException{
         if (false == create(nilptr, printer)){
             throw new IllegalArgumentException("canot create QPrintPreviewDialog");
         }
     }
-    QPrintPreviewDialog(QXWidget parent, QPrinter printer){
+    QPrintPreviewDialog(@NotNilptr QXWidget parent,@NotNilptr  QPrinter printer) throws IllegalArgumentException{
         if (false == create(parent, printer)){
             throw new IllegalArgumentException("canot create QPrintPreviewDialog");
         }
     }
-    QPrintPreviewDialog(QXWidget parent){
+    QPrintPreviewDialog(@NotNilptr QXWidget parent) throws IllegalArgumentException{
         if (false == create(parent, nilptr)){
             throw new IllegalArgumentException("canot create QPrintPreviewDialog");
         }
@@ -25,17 +25,17 @@ class QPrintPreviewDialog : QXDialog{
         requestPreview(new QPrinter(printer));
     }
     
-    void requestPreview(QPrinter printer);
-    int exec(){
+    void requestPreview(@NotNilptr QPrinter printer);
+    int exec()override {
         return widget_get_int_value(nativehandle, PVWDLGEXEC);
     }
     
-    void done(int result){
+    void done(int result)override {
         widget_set_vint_value(nativehandle, PVWDLGDONE, result);
     }
     
     
-    bool create(){
+    bool create()override {
         nativehandle = createQPObject(QType.qtPrintViewDialog, this, 0, 0, 0, 0, 0);
         if (nativehandle == 0){
             return false;
@@ -43,7 +43,7 @@ class QPrintPreviewDialog : QXDialog{
         return true;
     }
     
-    bool create(QXWidget parent){
+    bool create(@NotNilptr QXWidget parent)override {
         nativehandle = createQPObject(QType.qtPrintViewDialog, this, parent.nativehandle, 0, 0, 0, 0);
         if (nativehandle == 0){
             return false;

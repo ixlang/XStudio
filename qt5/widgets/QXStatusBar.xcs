@@ -9,7 +9,7 @@ class QXStatusBar : QXWidget{
         super(handle);
     }
     
-    public bool create(){
+    public bool create()override {
         nativehandle = createQObject(QType.qtStatusBar, this, 0);
         if (nativehandle == 0){
             return false;
@@ -17,26 +17,26 @@ class QXStatusBar : QXWidget{
         return true;
     }
     
-    public bool create(QXWidget parent){
+    public bool create(@NotNilptr QXWidget parent)override {
         nativehandle = createQObject(QType.qtStatusBar, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
         }
         return true;
     }    
-    public void addWidget(QXWidget widget, int stretch ){
+    public void addWidget(@NotNilptr QXWidget widget, int stretch ){
 		widget_set_intlongint_value(nativehandle, ADDWIDGET, widget.nativehandle, stretch, 0);
 	}
-    public int insertWidget(int index, QXWidget widget, int stretch){
+    public int insertWidget(int index, @NotNilptr QXWidget widget, int stretch){
 		return int_long_int_long_int_int(nativehandle, INSERTWIDGET, widget.nativehandle, stretch, index);
 	}
-    public void addPermanentWidget(QXWidget widget, int stretch){
+    public void addPermanentWidget(@NotNilptr QXWidget widget, int stretch){
 		widget_set_intlongint_value(nativehandle, ADDPERWIDGET, widget.nativehandle, stretch, 0);
 	}
-    public int insertPermanentWidget(int index, QXWidget widget, int stretch){
+    public int insertPermanentWidget(int index, @NotNilptr QXWidget widget, int stretch){
 		return int_long_int_long_int_int(nativehandle, INSERTPERWIDGET, widget.nativehandle, stretch, index);
 	}
-    public void removeWidget(QXWidget widget){
+    public void removeWidget(@NotNilptr QXWidget widget){
 		widget_set_native_value(nativehandle, REMOVEWIDGET, widget.nativehandle);
 	}
    public void setSizeGripEnabled(bool b){

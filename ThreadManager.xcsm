@@ -17,7 +17,7 @@ class ThreadManager{
     public static class StackFrame{
 		public int id;
 		public String source;
-        public int ip;
+        public long ip;
         public int line;
         public int column;
         public long moffset;
@@ -25,16 +25,18 @@ class ThreadManager{
         public String path ;
         public StackFrame(int _id, JsonObject frame){
 			id = id;
-			source = frame.getString("source");
-            String tmofst = frame.getString("moffset");
-            if (tmofst != nilptr){
-                moffset = frame.getString("moffset").parseLong();
+            if (frame != nilptr){
+                source = frame.getString("source");
+                String tmofst = frame.getString("moffset");
+                if (tmofst != nilptr){
+                    moffset = tmofst.parseLong();
+                }
+                ip = frame.getLong("ip");
+                method = frame.getString("method");
+                path = frame.getString("path");
+                line = frame.getInt("line");
+                column = frame.getInt("column");
             }
-			ip = frame.getLong("ip");
-            method = frame.getString("method");
-            path = frame.getString("path");
-			line = frame.getInt("line");
-            column = frame.getInt("column");
         }
     };
     
@@ -50,11 +52,11 @@ class ThreadManager{
         public String except_msg; 
         public String except_addr;
         
-        public ThreadObject(JsonObject thread){
+        public ThreadObject(@NotNilptr JsonObject thread){
 			parse(thread);
         }
         
-        public void parse(JsonObject thread){
+        public void parse(@NotNilptr JsonObject thread){
 			id = thread.getLong("id");
 			name = thread.getString("name");
             if (name != nilptr && name.length() == 0){
@@ -66,9 +68,8 @@ class ThreadManager{
             }
             JsonObject exception = (JsonObject)thread.get("exception");
             
-            bException = exception != nilptr;
-            
-            if (bException){
+            if (exception != nilptr){
+                bException = true;
 				parseException(exception);
             }
             
@@ -76,7 +77,7 @@ class ThreadManager{
             
         }
         
-        public void parseException(JsonObject exception){
+        public void parseException(@NotNilptr JsonObject exception){
 			except_name = exception.getString("name");
             except_msg = exception.getString("msg");
             if (except_msg == nilptr || except_msg.length() == 0){
@@ -99,7 +100,7 @@ class ThreadManager{
     
     static Map<long, ThreadObject> thread_list = new Map<long, ThreadObject>();
     
-    public static void Update(JsonObject root, bool reset){
+    public static void Update(@NotNilptr JsonObject root, bool reset){
 		synchronized(threadLock){
         
 			if (reset){
@@ -121,6 +122,9 @@ class ThreadManager{
                 bool interrupted = false;
                 for (int i = 0; i < c; i++){
                     JsonObject thread = (JsonObject)threads.get(i);
+                    if (thread == nilptr){
+                        continue;
+                    }
                     long tid = 0;
                     
                     if (remove){
@@ -156,7 +160,10 @@ class ThreadManager{
 		synchronized(threadLock){
 			Map.Iterator<long,ThreadObject> iter = thread_list.find(currentThreadId);
 			if (iter != nilptr){
-				bInterrupt = iter.getValue().bInterrupt;
+                ThreadObject to = iter.getValue();
+                if (to != nilptr){
+                    bInterrupt = to.bInterrupt;
+                }
 			}
 		}
         return bInterrupt;
@@ -167,7 +174,10 @@ class ThreadManager{
 		synchronized(threadLock){
 			Map.Iterator<long,ThreadObject> iter = thread_list.find(thread);
 			if (iter != nilptr){
-				bInterrupt = iter.getValue().bInterrupt;
+                ThreadObject to = iter.getValue();
+                if (to != nilptr){
+                    bInterrupt = to.bInterrupt;
+                }
 			}
 		}
         XWorkspace.workspace.refreshDebugControl(bInterrupt);

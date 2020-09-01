@@ -39,6 +39,8 @@ class CPPSetting : QXDialog{
         dbgarg = (QXWidget)attachByName(new QXWidget(), "dbgarg");
         ararg = (QXWidget)attachByName(new QXWidget(), "ararg");
         
+        __nilptr_safe(ccarg, ldarg, dbgarg, ararg);
+        
         _ccargs = new QXSci();
         if (_ccargs.create(ccarg) == false){
             return;
@@ -91,9 +93,16 @@ class CPPSetting : QXDialog{
             }
         });
         
+        if (_ccargs != nilptr)
         syntaxForOutput(_ccargs);
+        
+        if (_ldargs != nilptr)
         syntaxForOutput(_ldargs);
+        
+        if (_dbgargs != nilptr)
         syntaxForOutput(_dbgargs);
+        
+        if (_arargs != nilptr)
         syntaxForOutput(_arargs);
         
         cmbcfg.setOnComboBoxEventListener(
@@ -103,7 +112,7 @@ class CPPSetting : QXDialog{
                     String name = cmbcfg.getCurrentText();
                     for (int i = 0; i < cpp_configures.length(); i++){
                         JsonObject jconf = (JsonObject)cpp_configures.get(i);
-                        if (name.equals(jconf.getString("name"))){
+                        if (jconf != nilptr && name.equals(jconf.getString("name"))){
                            current_config = jconf;
                            showConfig();
                            return; 
@@ -148,13 +157,10 @@ class CPPSetting : QXDialog{
                     filepath = "";
                  }
                  filepath = String.formatPath(filepath,false);
-                 setCurrent("cc", filepath);
-                 if (filepath.length() > 0){
-                    detectIncludeSearchDir(filepath);
-                 }
-                 
+                 //setCurrent("cc", filepath);
+                 edtcc.setText(filepath);
                  autoDetect(filepath);
-                 showConfig();
+                 //showConfig();
             }
         });
         
@@ -169,8 +175,9 @@ class CPPSetting : QXDialog{
                     filepath = "";
                  }
                  filepath = String.formatPath(filepath,false);
-                 setCurrent("ld", filepath);
-                 showConfig();
+                 edtld.setText(filepath);
+                 /*setCurrent("ld", filepath);
+                 showConfig();*/
             }
         });
         
@@ -185,8 +192,9 @@ class CPPSetting : QXDialog{
                     filepath = "";
                  }
                  filepath = String.formatPath(filepath,false);
-                 setCurrent("dbg", filepath);
-                 showConfig();
+                 edtdbg.setText(filepath);
+                 /*setCurrent("dbg", filepath);
+                 showConfig();*/
             }
         });
         
@@ -202,8 +210,9 @@ class CPPSetting : QXDialog{
                     filepath = "";
                  }
                  filepath = String.formatPath(filepath,false);
-                 setCurrent("ar", filepath);
-                 showConfig();
+                 edtar.setText(filepath);
+                 /*setCurrent("ar", filepath);
+                 showConfig();*/
             }
         });
         
@@ -218,8 +227,9 @@ class CPPSetting : QXDialog{
                     filepath = "";
                  }
                  filepath = String.formatPath(filepath,false);
-                 setCurrent("make", filepath);
-                 showConfig();
+                 edtmake.setText(filepath);
+                 /*setCurrent("make", filepath);
+                 showConfig();*/
             }
         });
         
@@ -260,9 +270,9 @@ class CPPSetting : QXDialog{
         loadConfigures();
     }
     
-    bool removeConfig(String name){
+    bool removeConfig(@NotNilptr String name){
         for (int i = 0; i < cpp_configures.length(); i++){
-            if (name.equals(  ( (JsonObject)cpp_configures.get(i)).getString("name"))){
+            if (name.equals(((JsonObject)cpp_configures.get(i)).getString("name"))){
                 cpp_configures.remove(i);
                 return true; 
             }
@@ -296,57 +306,60 @@ class CPPSetting : QXDialog{
     }
     
     void autoDetect(String filepath){
+        if (filepath == nilptr){
+            return;
+        }
         String ext = "";
         if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
             ext = ".exe";
         }
         
         String dir = filepath.findVolumePath();
-        
+    
         String ld = CDEProjectPropInterface.appendPath(dir, "g++" + ext);
         if (XPlatform.existsSystemFile(ld)){
             if (QXMessageBox.Question("注意","已检测到链接器位于 " + ld + ", 是否自动填入?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes) == QXMessageBox.Yes){
-                setCurrent("ld" , ld);
+                edtld.setText(ld);
             }
         }
         
         String ar = CDEProjectPropInterface.appendPath(dir, "ar" + ext);
         if (XPlatform.existsSystemFile(ar)){
             if (QXMessageBox.Question("注意","已检测到归档器位于 " + ar + ", 是否自动填入?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes) == QXMessageBox.Yes){
-                setCurrent("ar" , ar);
+                edtar.setText(ar);
             }
         }
         
         String gdb = CDEProjectPropInterface.appendPath(dir, "gdb" + ext);
         if (XPlatform.existsSystemFile(gdb)){
             if (QXMessageBox.Question("注意","已检测到调试器位于 " + gdb + ", 是否自动填入?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes) == QXMessageBox.Yes){
-                setCurrent("dbg" , gdb);
+                edtdbg.setText(gdb);
             }
         }
         
         String make = CDEProjectPropInterface.appendPath(dir, "make" + ext);
         if (XPlatform.existsSystemFile(make)){
             if (QXMessageBox.Question("注意","已检测到MAKE位于 " + make + ", 是否自动填入?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes) == QXMessageBox.Yes){
-                setCurrent("make" , make);
+                edtmake.setText(make);
             }
         }else{
             make = CDEProjectPropInterface.appendPath(dir, "mingw32-make" + ext); 
             if (XPlatform.existsSystemFile(make)){
                 if (QXMessageBox.Question("注意","已检测到MAKE位于 " + make + ", 是否自动填入?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes) == QXMessageBox.Yes){
-                    setCurrent("make" , make);
+                    edtmake.setText(make);
                 }
             }else{
                 make = CDEProjectPropInterface.appendPath(dir, "mingw-w64-make" + ext); 
                 if (XPlatform.existsSystemFile(make)){
                     if (QXMessageBox.Question("注意","已检测到MAKE位于 " + make + ", 是否自动填入?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes) == QXMessageBox.Yes){
-                        setCurrent("make" , make);
+                        edtmake.setText(make);
                     }
                 }
             }
         }
     }
     
-    void syntaxForOutput(QXSci _sci){
+    void syntaxForOutput(@NotNilptr QXSci _sci){
 		if (Setting.isDarkStyle()){
 			syntaxForOutputDark(_sci);
             return ;
@@ -382,7 +395,7 @@ class CPPSetting : QXDialog{
         _sci.sendEditor(QXSci.SCI_SETTABWIDTH, 4); 
     }
     
-    void syntaxForOutputDark(QXSci _sci){
+    void syntaxForOutputDark(@NotNilptr QXSci _sci){
         _sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);
         _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_DEFAULT, 0xff262525);
         _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_DEFAULT, 0xffefefef);
@@ -420,7 +433,7 @@ class CPPSetting : QXDialog{
         
     }
     
-    String getDefault(String sz){
+    @NotNilptr String getDefault(String sz){
         if (sz == nilptr){
             return "";
         }
@@ -462,7 +475,11 @@ class CPPSetting : QXDialog{
     
     void saveconfig(){
         if (current_config != nilptr){
-            setCurrent("cc",edtcc.getText());
+            String ccpath = edtcc.getText();
+            
+            String oldcc = current_config.getString("cc");
+            
+            setCurrent("cc",ccpath);
             setCurrent("ld",edtld.getText());
             setCurrent("dbg",edtdbg.getText());
             setCurrent("ar",edtar.getText());
@@ -472,6 +489,12 @@ class CPPSetting : QXDialog{
             setCurrent("ldparams",_ldargs.getText());
             setCurrent("dbgparams",_dbgargs.getText());
             setCurrent("arparams",_arargs.getText());
+            
+            if ((oldcc == nilptr || oldcc.equals(ccpath) == false) && ccpath.length() > 0){
+                setWindowTitle("C/C++ 套件设置 - 正在处理...");
+                detectIncludeSearchDir(ccpath);
+                setWindowTitle("C/C++ 套件设置");
+            }
         }
     }
     void reloadList(String curlab){
@@ -524,51 +547,42 @@ class CPPSetting : QXDialog{
         return true;
     }
     
-    void detectDefaultMacro(String cc){
-        String [] args = {"cmd", "/c", "\"" + String.formatPath(cc,false) + "\"", "-posix", "-m32","-dM", "-E", "-x", "c++", "-", "<nul"};
-        
+    void detectDefaultMacro(@NotNilptr String cc){
+        Process process = nilptr;
         String execute = "";
         if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
+            String [] args = {"cmd", "/c", "\"" + String.formatPath(cc,false) + "\"", "-posix",/* "-m32",*/"-dM", "-E", "-x", "c++", "-", "<nul"};
             execute = XKernel32.getWindowsDir();
             if (execute == nilptr) {
                 return;
             }
-
             execute = String.formatPath( CDEProjectPropInterface.appendPath(execute, "system32\\cmd.exe"), false);
+            process = new Process(execute, args);
         }else{
-            args[0] = "bash";
-            args[1] = "-c";
+            String [] args = {"bash", "-c", "\"" + String.formatPath(cc,false) + "\" -posix -dM -E -x c++ - </dev/null"};
             execute = "/bin/bash";
+            process = new Process(execute, args);
         }
-        Process process = new Process(execute, args);
         
         try{
             process.setWorkDirectory(cc.findVolumePath());
             if (process.create(Process.StdOut | Process.RedirectStdErr)){
-                new Thread(){
-                    void run()override{
-                        EchoBuffer ebuf = new EchoBuffer();
-                        int rd = 0;
-                        byte [] buffer = new byte[4096];
-                        
-                        try{
-                            while ((rd = process.read(buffer, 0, 4096)) > 0){
-                                ebuf.append(buffer,0,rd);
-                            }
-                        }catch(Exception e){
-            
-                        }
-                        
-                        parseMacroList(ebuf.toString());
+                EchoBuffer ebuf = new EchoBuffer();
+                int rd = 0;
+                byte [] buffer = new byte[4096];
+                try{
+                    while ((rd = process.read(buffer, 0, 4096)) > 0){
+                        ebuf.append(buffer,0,rd);
                     }
-                }.start();
+                }catch(Exception e){
+                }
+                parseMacroList(ebuf.toString());
             }
         }catch(Exception e){
-            
         }
     }
     
-    void parseMacroList(String lists){
+    void parseMacroList(@NotNilptr String lists){
         String macroarr = "";
         
         String [] macros = lists.split('\n');
@@ -588,93 +602,125 @@ class CPPSetting : QXDialog{
             }
         }
         
-        runOnUi( new Runnable(){
-            void run() override{
-                while (current_config.has("macros")){
-                    current_config.remove("macros");
-                }
-                current_config.put("macros", macroarr);
-            }
-        });
+        while (current_config.has("macros")){
+            current_config.remove("macros");
+        }
+        current_config.put("macros", macroarr);
     }
     
-    void detectIncludeSearchDir(String cc){
-
-        String [] args = {"\"" + cc + "\"", "-xc++", "-E", "-v", "-"};
+    
+    void detectIncludeSearchDir_linux(@NotNilptr String cc){
+        String dbg_script = CDEProjectPropInterface.appendPath(CDEProjectPropInterface.appendPath(_system_.getAppDirectory(), "plugins/cde"), "test.sh");
+      
+        String ress = dbg_script + ".res";
         
-        Process process = new Process(cc, args);
+        dbg_script = String.formatPath(dbg_script,false);
         
+        String dbg_ps = dbg_script + "rs";
+        String ps = "\"" + cc + "\" -xc++ -E -v /dev/null -o /dev/null";
+        
+        FileOutputStream fos = nilptr;
         try{
-            process.setWorkDirectory(cc.findVolumePath());
+            fos = new FileOutputStream(dbg_script);
+            byte [] bc = ps.getBytes();
+            fos.write(bc);
+        }catch(Exception e){
+            return ;
+        }finally{
+            if (fos != nilptr){
+                fos.close();
+            }
+        }
+        _system_.chmod(dbg_script,0777);
+        
+        String [] args = {"bash", "-c", dbg_script};
+        
+        Process process = new Process("/bin/bash", args);
+        try{
             if (process.create(Process.StdOut | Process.RedirectStdErr)){
-                new Thread(){
-                    void run()override{
-                        EchoBuffer ebuf = new EchoBuffer();
-                        int rd = 0;
-                        byte [] buffer = new byte[4096];
-                        
-                        try{
-                            Thread.sleep(500);
-                            process.raise(_system_.SIGINT);
-                            while ((rd = process.read(buffer, 0, 4096)) > 0){
-                                ebuf.append(buffer,0,rd);
-                                if (ebuf.endWith("\nEnd of search list.\n".getBytes()) || 
-                                    ebuf.endWith("\r\nEnd of search list.\r\n".getBytes()) )
-                                {
-                                    break;
-                                }
-                            }
-                            process.exit(5);
-                        }catch(Exception e){
-            
-                        }
-                        
-                        parseSearchList(ebuf.toString());
-                        
+                EchoBuffer ebuf = new EchoBuffer();
+                int rd = 0;
+                byte [] buffer = new byte[4096];
+                
+                try{
+                    _system_.sleep(500);
+                    process.raise(_system_.SIGINT);
+                    
+                    while ((rd = process.read(buffer, 0, 4096)) > 0){
+                        ebuf.append(buffer,0,rd);
                     }
-                }.start();
+                    process.exit(5);
+                }catch(Exception e){
+    
+                }
+                parseSearchList(ebuf.toString());
             }
         }catch(Exception e){
             
         }
+        detectDefaultMacro(cc);
+    }
+    
+    void detectIncludeSearchDir(@NotNilptr String cc){
+        if (_system_.getPlatformId() == _system_.PLATFORM_LINUX){
+            detectIncludeSearchDir_linux(cc);
+            return;
+        }
         
+        String [] args = {"\"" + cc + "\"", "-xc++", "-E", "-v", "-"};
+        CDEProjectPropInterface.setEnvir(cc);
+        Process process = new Process(cc, args);
+        String ccdir = cc.findVolumePath();
+        try{
+            process.setWorkDirectory(ccdir);
+            if (process.create(Process.StdOut | Process.RedirectStdErr)){
+                EchoBuffer ebuf = new EchoBuffer();
+                int rd = 0;
+                byte [] buffer = new byte[4096];
+                
+                try{
+                    _system_.sleep(500);
+                    process.raise(_system_.SIGINT);
+                    
+                    while ((rd = process.read(buffer, 0, 4096)) > 0){
+                        ebuf.append(buffer,0,rd);
+                    }
+                    process.exit(5);
+                }catch(Exception e){
+    
+                }
+                parseSearchList(ebuf.toString());
+            }
+        }catch(Exception e){
+            
+        }
         detectDefaultMacro(cc);
     }
     
         
-    void parseSearchList(String lists){
+    void parseSearchList(@NotNilptr String lists){
         String [] items = lists.split('\n');
         Vector<String> searchs = new Vector<String>();
         int step = 0;
         
-        for (int i = 0; i < items.length; i++){
-            String item = items[i].trim(true);
-            if (step == 0){
-                if (item.endWith("<...> search starts here:")){
-                    step = 1;
-                }
-            }else
-            if (step == 1){
-                if (item.endWith("End of search list.") == false){
-                    searchs.add(item);
-                }else{
-                    break;
+        for (int i = items.length - 1; i >= 0; i--){
+            String item = items[i];
+            __nilptr_safe(item);
+            if (item.startWith(" ")){
+                FSObject fso = new FSObject(item.trim(true));
+                if (fso.exists()){
+                    searchs.insert(0, fso.getPath());
                 }
             }
         }
         
-        runOnUi( new Runnable(){
-            void run() override{
-                JsonArray jarray = new JsonArray();
-                for (int i =0; i < searchs.size(); i++){
-                    jarray.put(String.formatPath(searchs[i], false));
-                }
-                while (current_config.has("searchs")){
-                    current_config.remove("searchs");
-                }
-                current_config.put("searchs", jarray);
-            }
-        });
+        JsonArray jarray = new JsonArray();
+        for (int i =0; i < searchs.size(); i++){
+            jarray.put(String.formatPath(searchs[i], false));
+        }
+        while (current_config.has("searchs")){
+            current_config.remove("searchs");
+        }
+        current_config.put("searchs", jarray);
     }
-    
 };

@@ -1717,7 +1717,7 @@ class LLDBShell{
         }
     }
     
-    ThreadTag parseThreadInfo(String item, JsonObject jobj){
+    ThreadTag parseThreadInfo(String item,@NotNilptr JsonObject jobj){
         if (item.startWith("Thread")){
             ThreadTag tg = new ThreadTag(item);
             jobj.put("name", tg.name);

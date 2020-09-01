@@ -8,7 +8,7 @@ class XProperites : QXDialog {
     String argsPage = nilptr;
     QXPropertyBrowser _propTable = new QXPropertyBrowser();
     Vector<JsonObject> _propItems = new Vector<JsonObject>();
-    
+    static QXRect rect = nilptr;
     Map<String, QXPropertyBrowser.QtVariantProperty> currentProps = new Map<String, QXPropertyBrowser.QtVariantProperty>();
     QXComboBox listConfigures ;
     
@@ -18,7 +18,7 @@ class XProperites : QXDialog {
     }
      
     public onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
-        void onItemClicked(QXTreeView list,long item, int column)override{
+        void onItemClicked(@NotNilptr QXTreeView list,long item, int column)override{
             long i = list.getItemTag(item, 0);
             XProperites.this.saveProp();
             XProperites.this._propTable.clear();
@@ -31,7 +31,7 @@ class XProperites : QXDialog {
         return _project.getLanguage();
     }
     
-    public String readSlnPropFile(String file){
+    public String readSlnPropFile(@NotNilptr String file){
         FileInputStream fis = nilptr;
         try{
             fis = new FileInputStream(file);
@@ -179,21 +179,27 @@ class XProperites : QXDialog {
 
         setWindowTitle(_project.getName() + " - 属性");
         setWindowIcon("./res/toolbar/prop.png");
+        if (rect != nilptr){
+            move(rect.left,rect.top);
+            resize(rect.right,rect.bottom);
+        }
         setModal(true);
         show();
     }
     
     public bool onClose(){
+        rect = new QXRect(x(), y(), width(), height());
 		_project = nilptr;
         return true;
     }
     
-    public void loadFeature(JsonObject confi){
-        if (confi != nilptr ){
-            QXPropertyBrowser.QtVariantPropertyManager variantManager = new QXPropertyBrowser.QtVariantPropertyManager();
-            while(confi != nilptr){
-                String cfgName = confi.getName();
-                String type = confi.getString("type");
+    public void loadFeature(@NotNilptr JsonObject confi){
+    
+        QXPropertyBrowser.QtVariantPropertyManager variantManager = new QXPropertyBrowser.QtVariantPropertyManager(_propTable);
+        while(confi != nilptr){
+            String cfgName = confi.getName();
+            String type = confi.getString("type");
+            if (cfgName != nilptr && type != nilptr){
                 if (type.equals("string")){
                     loadString(variantManager, cfgName, confi);
                 }else
@@ -215,23 +221,25 @@ class XProperites : QXDialog {
                 if (type.equals("fileout")){
                     loadSavePath(variantManager, cfgName, confi);
                 }else
-                if (type.equals("fileint")){
+                if (type.equals("filein")){
                     loadOpenPath(variantManager, cfgName, confi);
                 }else
                 if (type.equals("folder")){
                     loadPath(variantManager, cfgName, confi);
                 }
-				confi = (JsonObject)confi.next();
             }
-            _propTable.setFactoryForManager(variantManager, new QXPropertyBrowser.QtVariantEditorFactory());
-            _propTable.setPropertiesWithoutValueMarked(true);
-            _propTable.setRootIsDecorated(false);
+            confi = (JsonObject)confi.next();
         }
+        _propTable.setFactoryForManager(variantManager, new QXPropertyBrowser.QtVariantEditorFactory(_propTable));
+        _propTable.setPropertiesWithoutValueMarked(true);
+        _propTable.setRootIsDecorated(false);
+    
     }
     
-    public void loadProperites(JsonObject root, String defaultFeature){
+    public void loadProperites(@NotNilptr JsonObject root, String defaultFeature){
 
         JsonObject defobj = nilptr;
+        
 		while(root != nilptr){
 			String featName = root.getName();
 			
@@ -255,7 +263,7 @@ class XProperites : QXDialog {
         }
     }
   
-    public void loadString(QXPropertyBrowser.QtVariantPropertyManager manager, String name, JsonObject root){
+    public void loadString(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name,@NotNilptr  JsonObject root){
         String [] kv = name.split(':');
         QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addProperty(new QXPropertyBrowser.QtVariantProperty(),QXVariant.String, kv[0]);
         _propTable.addProperty(item);
@@ -265,97 +273,40 @@ class XProperites : QXDialog {
     
     
     
-    public void loadOptions(QXPropertyBrowser.QtVariantPropertyManager manager, String name, JsonObject root){
+    public void loadOptions(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name,@NotNilptr  JsonObject root){
         String [] kv = name.split(':');
         QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
         JsonArray list = root.getArray("list");
         
+        if (list == nilptr){
+            return ;
+        }
         item.setFlags(1);
         
         String selvalue = _prop.getValue(_project, _curconfig, kv[1]);
         
-        int count = list.length();
-        String addition = nilptr;
-        
-        if (selvalue.length() == 0 || selvalue.equals("Not Set") || selvalue.equals("未设置")){
-            selvalue = "0";
-        }else{
-            bool bfound = false;
-            String ends = "(" + selvalue + ")";
-            for (int i = 0; i < list.length(); i++){
-                String szItem = list.getString(i);
-                if (szItem.endWith(ends) || szItem.equals(selvalue)){
-                    selvalue = "" + i;
-                    bfound = true;
-                    break;
-                }
-            }
-            if (!bfound){
-                count++;
-                addition = ends;
-                selvalue = "" + list.length();
-            }
-        }
-        
-        String [] options = new String[count];
-        for (int i = 0;i < list.length(); i++){
-            options[i] = list.getString(i);
-        }
-        
-        if (addition != nilptr){
-			options[count - 1] = "未知" + addition;
-        }
-        
-        item.setAttributeEnumNames(options);
-        item.setValue(selvalue);
-        _propTable.addProperty(item);
-        currentProps.put(kv[1], item);
-    }
-    
-    public void loadBoolean(QXPropertyBrowser.QtVariantPropertyManager manager, String name, JsonObject root){
-        String [] kv = name.split(':');
-        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
-  
-        item.setFlags(1);
-        
-        String selvalue = _prop.getValue(_project, _curconfig, kv[1]);
-        
-        if (selvalue.equals("True")){
-            selvalue = "1";
-        }else{
-            selvalue = "0";
-        }
-        
-        String [] options = {"否(False)", "是(True)"};
-
-        
-        item.setAttributeEnumNames(options);
-        item.setValue(selvalue);
-        _propTable.addProperty(item);
-        currentProps.put(kv[1], item);
-    }
-    
-    public void loadStringList(QXPropertyBrowser.QtVariantPropertyManager manager, String name, JsonObject root){
-        String [] kv = name.split(':');
-        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
-        JsonArray list = root.getArray("list");
-        
-        if (list != nilptr){
-            String selvalue = _prop.getValue(_project, _curconfig, kv[1]);
+        if (selvalue != nilptr){
             int count = list.length();
             String addition = nilptr;
-            if (selvalue.isDigit() == false){
+            
+            if (selvalue.length() == 0 || selvalue.equals("Not Set") || selvalue.equals("未设置")){
+                selvalue = "0";
+            }else{
                 bool bfound = false;
+                String ends = "(" + selvalue + ")";
                 for (int i = 0; i < list.length(); i++){
-                    if (list.getString(i).equals(selvalue)){
-                        selvalue = "" + i;
-                        bfound = true;
-                        break;
+                    String szItem = list.getString(i);
+                    if (szItem != nilptr){
+                        if (szItem.endWith(ends) || szItem.equals(selvalue)){
+                            selvalue = "" + i;
+                            bfound = true;
+                            break;
+                        }
                     }
                 }
                 if (!bfound){
                     count++;
-                    addition = selvalue;
+                    addition = ends;
                     selvalue = "" + list.length();
                 }
             }
@@ -366,17 +317,88 @@ class XProperites : QXDialog {
             }
             
             if (addition != nilptr){
-                options[count - 1] = addition + "(未安装)";
+                options[count - 1] = "未知" + addition;
             }
             
             item.setAttributeEnumNames(options);
             item.setValue(selvalue);
+            _propTable.addProperty(item);
+            currentProps.put(kv[1], item);
+        }
+    }
+    
+    public void loadBoolean(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name,@NotNilptr  JsonObject root){
+        String [] kv = name.split(':');
+        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
+  
+        item.setFlags(1);
+        
+        String selvalue = _prop.getValue(_project, _curconfig, kv[1]);
+        
+        if (selvalue != nilptr){
+            if (selvalue.equals("True")){
+                selvalue = "1";
+            }else{
+                selvalue = "0";
+            }
+        }   
+        
+        String [] options = {"否(False)", "是(True)"};
+
+        
+        item.setAttributeEnumNames(options);
+        item.setValue(selvalue);
+        _propTable.addProperty(item);
+        currentProps.put(kv[1], item);
+    
+    }
+    
+    public void loadStringList(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name,@NotNilptr  JsonObject root){
+        String [] kv = name.split(':');
+        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
+        JsonArray list = root.getArray("list");
+        
+        if (list != nilptr){
+            String selvalue = _prop.getValue(_project, _curconfig, kv[1]);
+            
+            if (selvalue != nilptr){
+                int count = list.length();
+                String addition = nilptr;
+                if (selvalue.isDigit() == false){
+                    bool bfound = false;
+                    for (int i = 0; i < list.length(); i++){
+                        String strText = list.getString(i);
+                        if (strText != nilptr && strText.equals(selvalue)){
+                            selvalue = "" + i;
+                            bfound = true;
+                            break;
+                        }
+                    }
+                    if (!bfound){
+                        count++;
+                        addition = selvalue;
+                        selvalue = "" + list.length();
+                    }
+                }
+                
+                String [] options = new String[count];
+                for (int i = 0;i < list.length(); i++){
+                    options[i] = list.getString(i);
+                }
+                
+                if (addition != nilptr){
+                    options[count - 1] = addition + "(未安装)";
+                }
+                
+                item.setAttributeEnumNames(options);
+                item.setValue(selvalue);
+            }
         }
         _propTable.addProperty(item);
         currentProps.put(kv[1], item);
     }
     
-    public void loadPath(QXPropertyBrowser.QtVariantPropertyManager manager, String name, JsonObject root){
+    public void loadPath(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name, @NotNilptr JsonObject root){
         String [] kv = name.split(':');
         QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
         String defaultValue = _prop.getValue(_project, _curconfig, kv[1]);
@@ -407,7 +429,7 @@ class XProperites : QXDialog {
         currentProps.put(kv[1], item);
     }
     
-    public void loadSavePath(QXPropertyBrowser.QtVariantPropertyManager manager, String name, JsonObject root){
+    public void loadSavePath(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name,@NotNilptr  JsonObject root){
         String [] kv = name.split(':');
         QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
         String defaultValue = _prop.getValue(_project, _curconfig, kv[1]);
@@ -438,7 +460,7 @@ class XProperites : QXDialog {
         currentProps.put(kv[1], item);
     }
     
-    public void loadOpenPath(QXPropertyBrowser.QtVariantPropertyManager manager, String name, JsonObject root){
+    public void loadOpenPath(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager, @NotNilptr String name, @NotNilptr JsonObject root){
         String [] kv = name.split(':');
         QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
         String defaultValue = _prop.getValue(_project, _curconfig, kv[1]);
@@ -470,9 +492,11 @@ class XProperites : QXDialog {
     }
     
     
-    public void loadTextparams(QXPropertyBrowser.QtVariantPropertyManager manager, String name, JsonObject root){
+    public void loadTextparams(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name, @NotNilptr JsonObject root){
         String [] kv = name.split(':');
+        
         QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
+        
         item.setFlags(2);
                
         String defaultValue = _prop.getValue(_project, _curconfig, kv[1]);
@@ -480,7 +504,7 @@ class XProperites : QXDialog {
         String simpleValue = "", detailValue = "";
         try{
             JsonArray jarv = new JsonArray(defaultValue);
-            for (int i = 0; i < jarv.length(); i++){
+            for (int i = 0, c = jarv.length(); i < c; i++){
                 String value = jarv.getString(i);
                 if (detailValue.length() > 0){
                     detailValue = detailValue + "\n" + value;
@@ -509,7 +533,7 @@ class XProperites : QXDialog {
                     
                         TextDetail td = nilptr;
                         td = new TextDetail(new TextDetail.closeListener() {
-                            void onClose(String text, bool updated) {
+                            void onClose(@NotNilptr String text, bool updated) {
                                 if (updated){
                                     detailValue = text.trim(true);
                                     String [] newValue = detailValue.split('\n');
@@ -540,7 +564,7 @@ class XProperites : QXDialog {
         currentProps.put(kv[1], item);
     }
     
-    public void loadTextItem(QXPropertyBrowser.QtVariantPropertyManager manager, String name, JsonObject root){
+    public void loadTextItem(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name,@NotNilptr  JsonObject root){
         String [] kv = name.split(':');
         QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
         String defaultValue = _prop.getValue(_project, _curconfig, kv[1]);
@@ -558,7 +582,7 @@ class XProperites : QXDialog {
                     
                         TextDetail td = nilptr;
                         td = new TextDetail(new TextDetail.closeListener() {
-                            void onClose(String text, bool updated) {
+                            void onClose(@NotNilptr String text, bool updated) {
                                 if (updated){
                                     String newValue = text.trim(true);
                                     _prop.setValue(_project,_curconfig, kv[1], newValue);
@@ -588,32 +612,37 @@ class XProperites : QXDialog {
         for (; iter.hasNext(); iter.next()){
         
             QXPropertyBrowser.QtVariantProperty item = iter.getValue();
-            String value = item.getValue();
-            if (item.getFlags() == 2){
-                value = (String)item.getTagObject();
-            }else
-            if (item.getFlags() == 1){
-                if (value.equals("未设置") == false && value.equals("Not Set") == false){
-                    int lp = value.indexOf('('), rp = value.lastIndexOf(')');
-                    if (lp != -1 && rp != -1){
-                        value = value.substring(lp + 1,rp);
+            String key = iter.getKey();
+            if (key != nilptr && item != nilptr){
+                String value = item.getValue();
+                if (value != nilptr){
+                    if (item.getFlags() == 2){
+                        value = (String)item.getTagObject();
+                    }else
+                    if (item.getFlags() == 1){
+                        if (value.equals("未设置") == false && value.equals("Not Set") == false){
+                            int lp = value.indexOf('('), rp = value.lastIndexOf(')');
+                            if (lp != -1 && rp != -1){
+                                value = value.substring(lp + 1,rp);
+                            }
+                        }else{
+                            value = "";
+                        }
+                    }else{
+                        while (value.endWith("(未安装)")){
+                            value = value.substring(0, value.length() - "(未安装)".length());
+                        } 
                     }
-                }else{
-                    value = "";
+                    
+                    if (false == _prop.setValue(_project, _curconfig, key, value)){
+                        QXMessageBox.Critical("错误", key + "字段更改失败.", QXMessageBox.Ok, QXMessageBox.Ok);
+                    }
                 }
-            }else{
-                while (value.endWith("(未安装)")){
-                    value = value.substring(0, value.length() - "(未安装)".length());
-                } 
-            }
-            
-            if (false == _prop.setValue(_project, _curconfig, iter.getKey(), value)){
-                QXMessageBox.Critical("错误", iter.getKey() + "字段更改失败.", QXMessageBox.Ok, QXMessageBox.Ok);
             }
         }
     }
     
-    public void updateProp(Configure _cfg){
+    public void updateProp(@NotNilptr Configure _cfg){
 		long item = _listview.getSelItem();
 		long i = _listview.getItemTag(item, 0);
 		saveProp();

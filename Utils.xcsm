@@ -35,14 +35,44 @@ class XKernel32 : Library {
     };
 };
 
+
+class XEnvironment{
+    public @NotNilptr  static String MapVariable(Project object, Configure configure,@NotNilptr  String text) {
+        String str_original;
+        int loop = 0;
+        do{
+            str_original = text;
+            if (object != nilptr){
+                ProjectPropInterface ppi = object.getPropInterface();
+                if (ppi != nilptr && configure != nilptr){
+                    text = ppi.map_variable(object, configure, text);
+                }
+                text = object.getVariables().map_variable(text);
+            }else{
+                text = Variables.MapVariable(text);
+            }
+            loop++;
+            if (loop > 20){
+                XWndOutput.Output("字符串中环境变量引用过于复杂:" + text,0);
+                break;
+            }
+        }while (str_original.equals(text) == false);
+        
+        return text;
+    }
+};
+
 class Utils{    
     
-    public static void readForProcess(IBuilder builder, Process _process){
+    
+    
+    public static void readForProcess(@NotNilptr IBuilder builder,@NotNilptr Process _process){
+        int rd = 0;
+        byte [] buffer = new byte[1024];
+        int pos = 0;
+            
 		try{
-			int rd = 0;
-			byte [] buffer = new byte[1024];
-			
-			int pos = 0;
+
 			while ((rd = _process.read(buffer, pos, buffer.length - pos)) > 0){
 				try{
 					pos += rd;
@@ -62,7 +92,19 @@ class Utils{
 			}
 		}catch(Exception e){
 		
-		}    
+		}   
+        
+        if (pos != 0){
+            if (_system_.getPlatformId() == 0){
+                try{
+                   builder.OutputText(new String(buffer, 0, pos, "CP936"), 0);
+                }catch(Exception e){
+                   builder.OutputText(new String(buffer, 0, pos), 0);
+                }
+            }else{
+                builder.OutputText(new String(buffer, 0, pos), 0);
+            }
+        }
     }
     public static String getWindowsDir(){
         return XKernel32.getWindowsDir();
@@ -105,7 +147,9 @@ class Utils{
 								if (newverstr.parseLong() > _system_.getAppVersion()){
 									XWorkspace.workspace.runOnUi(new Runnable(){
 										void run(){
-											showNewVersion(verObj.getString("version"), verObj.getString("url"), verObj.getString("detailurl"), verObj.getString("descr"), verObj.getString("size").parseLong());
+                                            String dlsize = verObj.getString("size");
+                                            long nsize = (dlsize != nilptr) ? dlsize.parseLong() : 0;
+											showNewVersion(verObj.getString("version"), verObj.getString("url"), verObj.getString("detailurl"), verObj.getString("descr"), nsize);
                                         }
                                     });
                                 }
@@ -127,29 +171,35 @@ class Utils{
 		});
     }
     
-    public static void showNewVersion(String version, String url, String detailUrl, String descr, long packsize){
+    public static void showNewVersion(String version,String url,  String detailUrl,  String descr, long packsize){
     
-		if (packsize > 0){
-			int res = QXMessageBox.Question("新版本" + version, 
-				"<Strong>可用于 XStudio 的更新版本" + version + " 已发布</Strong><br /><br />" + 
-				descr + "<br />" + 
-				 "<a href=\"" + detailUrl + "\">详情点击</a><br />" + 
-				"<a href=\"" + url + "\">手动下载更新</a><br />" + 
-				"是否立即进行自动更新?", QXMessageBox.Yes | QXMessageBox.No, QXMessageBox.Yes);
-				
-			if (res == QXMessageBox.Yes){
-				update(version, url, packsize);
-			}
+        if (version != nilptr && url != nilptr && detailUrl != nilptr && descr != nilptr){
+            if (packsize > 0){
+                int res = QXMessageBox.Question("新版本" + version, 
+                    "<Strong>可用于 XStudio 的更新版本" + version + " 已发布</Strong><br /><br />" + 
+                    descr + "<br />" + 
+                     "<a href=\"" + detailUrl + "\">详情点击</a><br />" + 
+                    "<a href=\"" + url + "\">手动下载更新</a><br />" + 
+                    "是否立即进行自动更新?", QXMessageBox.Yes | QXMessageBox.No, QXMessageBox.Yes);
+                    
+                if (res == QXMessageBox.Yes){
+                    update(version, url, packsize);
+                }
+            }
         }
 	}    
     
     
-    public static void update(String ver, String url, long size){
+    public static void update(@NotNilptr String ver,@NotNilptr  String url, long size){
 		String appdir = _system_.getAppDirectory().appendPath("update");
         
         _system_.mkdir(appdir);
         appdir = appdir.appendPath(ver + ".zip");
         ProgressView pv = ProgressView.showWait(-1);
+        
+        if (pv == nilptr){
+            return ;
+        }
         pv.centerScreen();
         pv.setTitleText("正在下载...");
         
@@ -213,7 +263,7 @@ class Utils{
         }
     }
     
-    public static void applyUpdate(String zipFile, String url, String version){
+    public static void applyUpdate(@NotNilptr String zipFile, String url, String version){
     
 		FileInputStream fis ;
     
@@ -233,7 +283,7 @@ class Utils{
 			int c = zs.getEntriesCount();
 			 for (int i = 0; i < c; i ++){
 				ZipEntry entry = zs.getEntry(i);
-				if (entry.isDirectory() == false){                                        
+				if (entry != nilptr &&  entry.isDirectory() == false){                                        
                     String apply_exe;
                     
 					if (entry.getName().startWith("xupgrade_apply")){
@@ -361,6 +411,9 @@ class Utils{
     }
     
     public static long getVersionValue(String version){
+        if (version == nilptr){
+            return 0;
+        }
 		String [] bs = version.split('.');
         
         long ov = 0;

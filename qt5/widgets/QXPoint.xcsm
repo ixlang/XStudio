@@ -15,7 +15,7 @@ class QXPoint{
         y += _y;
     }
     
-    public void offset(QXPoint p){
+    public void offset(@NotNilptr QXPoint p){
 		x += p.x;
         y += p.y;
     }

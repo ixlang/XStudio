@@ -9,7 +9,7 @@ class QXToolBar : QXWidget{
     public QXToolBar(long handle){
         super(handle);
     }
-    public bool create(){
+    public bool create()override {
         nativehandle = createQObject(QType.qtToolbar, this, 0);
         if (nativehandle == 0){
             return false;
@@ -17,7 +17,7 @@ class QXToolBar : QXWidget{
         return true;
     }
     
-    public bool create(QXWidget parent){
+    public bool create(@NotNilptr QXWidget parent)override {
         nativehandle = createQObject(QType.qtToolbar, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
@@ -25,11 +25,11 @@ class QXToolBar : QXWidget{
         return true;
     }
     
-    public void addWidget(QXWidget widget){
+    public void addWidget(@NotNilptr QXWidget widget){
         widget_set_intlongint_value(nativehandle, TOOLBARADDWIDGET, widget.nativehandle, 0, 0);
     }
     
-    public void insertWidget(QXAction action, QXWidget widget){
+    public void insertWidget(@NotNilptr QXAction action,@NotNilptr  QXWidget widget){
 		void_long2(nativehandle, TOOLBARINSWIDGET, action.nativehandle, widget.nativehandle);
     }
 };

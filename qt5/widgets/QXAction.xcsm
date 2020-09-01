@@ -9,7 +9,7 @@ class QXAction : QXObject{
         return true;
     }
     
-    public bool create(QXWidget parent){
+    public bool create(@NotNilptr QXWidget parent){
         nativehandle = createQObject(QType.qtAction, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;
@@ -21,7 +21,7 @@ class QXAction : QXObject{
         super(handle);
     }
     
-    public void setMenu(QXMenu menu){
+    public void setMenu(@NotNilptr QXMenu menu){
         widget_set_native_value(nativehandle, SETMENU, menu.nativehandle);
     }
     

@@ -62,7 +62,7 @@ class DownloadManager : QXDialog{
         });
         
         listtask.setOnTreeViewItemEvent( new onTreeViewItemEvent(){
-			void onItemClicked(QXTreeView tree,long item, int column){
+			void onItemClicked(@NotNilptr QXTreeView tree,long item, int column){
 				if (column == 1){
 					String txt = tree.getItemText(item, column);
                     if (txt.upper().startWith("HTTP")){
@@ -83,7 +83,8 @@ class DownloadManager : QXDialog{
     public void setAllDelete(){
         Map.Iterator<String, ItemTask> iter = _tasklist.iterator();
         while (iter.hasNext()){
-            iter.getValue().deleted = true;
+            ItemTask it = iter.getValue();
+            if (it != nilptr){it.deleted = true;}
             iter.next();
         }
     }
@@ -105,7 +106,10 @@ class DownloadManager : QXDialog{
                 if (taskiter == nilptr){
                     _tasklist.put(name, new ItemTask(name, dl.url, dl.progress));
                 }else{
-                    taskiter.getValue().update(dl.progress);
+                    ItemTask it = taskiter.getValue();
+                    if (it != nilptr){
+                        it.update(dl.progress);
+                    }
                 }
             }
         }
@@ -116,21 +120,27 @@ class DownloadManager : QXDialog{
     
     public void updateListView(){
         Map.Iterator<String, ItemTask> iter = _tasklist.iterator();
-        while (iter.hasNext()){
-            ItemTask it = iter.getValue();
-            iter.next();
-            if (it.deleted){
-                listtask.removeItem(it.item);
-                _tasklist.remove(it.name);
-            }else{
-                if (it.item == 0){
-                    it.item = listtask.addItem("res/toolbar/task.png",it.name);
+        try{
+            while (iter.hasNext()){
+                ItemTask it = iter.getValue();
+                iter.next();
+                if (it != nilptr){
+                    if (it.deleted){
+                        listtask.removeItem(it.item);
+                        _tasklist.remove(it.name);
+                    }else{
+                        if (it.item == 0){
+                            it.item = listtask.addItem("res/toolbar/task.png",it.name);
+                        }
+                        listtask.setItemText(it.item,1,it.url);
+                        listtask.setItemText(it.item,2,"" + it.progress + "%");
+                    }
                 }
-                listtask.setItemText(it.item,1,it.url);
-                listtask.setItemText(it.item,2,"" + it.progress + "%");
             }
+        }catch(Exception e){
             
         }
+        
     }
     
     public static void updateProgress(){

@@ -2,7 +2,7 @@
 //Date: Wed May 01:54:38 2020 
 
 class QVBoxLayout : QBoxLayout{
-    public bool create(QXWidget parent){
+    public bool create(@NotNilptr QXWidget parent){
         nativehandle = createQObject(QType.qtVLayout, this, parent.nativehandle);
         if (nativehandle == 0){
             return false;

@@ -14,7 +14,7 @@ class XPlatform{
 		return arch_names[_system_.getArchId()];
     }
     
-    public static String converPlatformCharSetTo(String filepath){
+    public @NotNilptr static String converPlatformCharSetTo(@NotNilptr String filepath){
 		String original_path = filepath;
 		if (_system_.getPlatformId() == 0){
 			// windows 下要转成CP936
@@ -26,7 +26,7 @@ class XPlatform{
 		}
         return original_path;
     }
-    public static String converToPlatformCharSet(String filepath){
+    public @NotNilptr static String converToPlatformCharSet(@NotNilptr String filepath){
 		String original_path = filepath;
 		if (_system_.getPlatformId() == 0){
 			// windows 下要转成CP936
@@ -39,36 +39,36 @@ class XPlatform{
         return original_path;
     }
     
-    public static String getAppDirectory(){
+    public @NotNilptr static String getAppDirectory(){
 		return converPlatformCharSetTo(_system_.getAppDirectory());
     }
     
-    public static long SystemFileSize(String filepath){
+    public static long SystemFileSize(@NotNilptr String filepath){
 		String original_path = converToPlatformCharSet(filepath);
         return _system_.getFileSize(original_path);
     }
     
-    public static bool chmodSystemFile(String filepath, int mode){
+    public static bool chmodSystemFile(@NotNilptr String filepath, int mode){
 		String original_path = converToPlatformCharSet(filepath);
         return _system_.chmod(original_path, mode);
     }
     
-    public static long openSystemFile(String filepath, String mode){
+    public static long openSystemFile(@NotNilptr String filepath,@NotNilptr  String mode){
 		String original_path = converToPlatformCharSet(filepath);
         return _system_.openFile(original_path, mode);
     }
     
-    public static bool existsSystemFile(String filepath){
+    public static bool existsSystemFile(@NotNilptr String filepath){
 		String original_path = converToPlatformCharSet(filepath);
         return _system_.fileExists(original_path);
     }
     
-    public static bool mkdir(String filepath){
+    public static bool mkdir(@NotNilptr String filepath){
 		String original_path = converToPlatformCharSet(filepath);
         return _system_.mkdir(original_path);
     }
     
-    public static bool deleteFile(String filepath){
+    public static bool deleteFile(@NotNilptr String filepath){
 		String original_path = converToPlatformCharSet(filepath);
         return _system_.deleteFile(original_path);
     }

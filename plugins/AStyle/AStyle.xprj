@@ -18,16 +18,16 @@
 				"ignorewl":	"",
 				"debugable":	"",
 				"debugdatabase":	"",
+				"libs":	["XPlatform.lix"],
+				"links":	["XStudio.xl"],
+				"depends":	[],
 				"wtype":	"",
 				"ostype":	"",
 				"sstype":	"",
 				"outname":	"$(ProjectName)$(Ext)",
-				"outpath":	"D:\\Programs\\windows_x64_dev\\plugins",
+				"outpath":	"D:\\Programs\\windows_x64\\plugins",
 				"command":	"-slx -c",
-				"uaclevel":	"默认",
-				"libs":	["XPlatform_1.0.0.2.lix"],
-				"links":	["XStudio.xl"],
-				"depends":	[]
+				"uaclevel":	"默认"
 			},
 			"release":	{
 				"path":	{

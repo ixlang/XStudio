@@ -7,11 +7,11 @@ class XFindresWnd : ListDockWidget{
     static int current_click_item = 0;
     XFinder.FindResult _find_result;
     Object findlock = new Object();
-	public void onListItemClicked(QXTreeView tree,long item, int column)override{
+	public void onListItemClicked(@NotNilptr QXTreeView tree,long item, int column)override{
 		locateFind(tree, item);
     }
         
-    public void locateFind(QXTreeView tree,long item){
+    public void locateFind(@NotNilptr QXTreeView tree,long item){
 		String file = tree.getItemText(item, 0);
         String posinfo = tree.getItemText(item, 1);
         
@@ -59,11 +59,12 @@ class XFindresWnd : ListDockWidget{
             tree.setCurrentIndex(current_click_item, 0);
 			if (current_click_item < _find_result.size()){
 				XFinder.FindItem item = _find_result.get(current_click_item++);
-                
-                if (item.method == 0){
-					XSourceEditor.locateForPosition(XWorkspace.workspace, item.file, item.position, item.findlen);
-                }else{
-					XSourceEditor.locateForLineRow(XWorkspace.workspace, item.file, item.line, item.row, item.findlen);
+                if (item != nilptr){
+                    if (item.method == 0){
+                        XSourceEditor.locateForPosition(XWorkspace.workspace, item.file, item.position, item.findlen);
+                    }else{
+                        XSourceEditor.locateForLineRow(XWorkspace.workspace, item.file, item.line, item.row, item.findlen);
+                    }
                 }
 			}else{
 				current_click_item = 0;
@@ -87,18 +88,20 @@ class XFindresWnd : ListDockWidget{
 			
 			tree.clear();
 					
-			for (int i = 0; i < result.size();i ++){
+			for (int i = 0, c = result.size(); i < c;i ++){
 				XFinder.FindItem val = result.get(i);
-				long item = tree.addItem(nilptr, val.file);
-                
-                if (val.method == 0){
-					tree.setItemText(item, 1, "" + val.position);
-                }else{
-					tree.setItemText(item, 1, "" + val.line + "," + val.row);
+                if (val != nilptr){
+                    long item = tree.addItem(nilptr, val.file);
+                    
+                    if (val.method == 0){
+                        tree.setItemText(item, 1, "" + val.position);
+                    }else{
+                        tree.setItemText(item, 1, "" + val.line + "," + val.row);
+                    }
+                    
+                    tree.setItemText(item, 2, "" + val.findlen);
+                    tree.setItemText(item, 3, val.findres);
                 }
-                
-				tree.setItemText(item, 2, "" + val.findlen);
-				tree.setItemText(item, 3, val.findres);
 			}
 		}
         raise();

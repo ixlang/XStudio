@@ -41,21 +41,19 @@ class ActionRecorder{
     }
     
     public void undo(){
-        if ((pointer >0) && (pointer < actions.size())){
+        if ((pointer > 0) && (pointer < actions.size())){
 			pointer--;
+            lastAction = actions.get(pointer);
+            XSourceEditor.localtion(lastAction.source, lastAction.position);
         }
-        
-		lastAction = actions.get(pointer);
-        XSourceEditor.localtion(lastAction.source, lastAction.position);
     }
     
     public void redo(){
         if ((pointer >=0) && (pointer + 1 < actions.size())){
 			pointer++;
+            lastAction = actions.get(pointer);
+            XSourceEditor.localtion(lastAction.source, lastAction.position);
         }
-        
-        lastAction = actions.get(pointer);
-        XSourceEditor.localtion(lastAction.source, lastAction.position);
     }
     
     public void clear(){
