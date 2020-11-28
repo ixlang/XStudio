@@ -19,9 +19,6 @@
 				"libs":	["XPlatform.lix", "FileStream.lix"],
 				"links":	["XStudio.xl"],
 				"depends":	[],
-				"cmd":	"$(Output)",
-				"args":	"$(Output)",
-				"workdir":	"$(ProjectDir)",
 				"ignorewarning":	"",
 				"warexcp":	"",
 				"compdest":	"",
@@ -29,13 +26,19 @@
 				"debugable":	"",
 				"debugdatabase":	"",
 				"warnilptr":	"",
-				"wtype":	"-arch:armv7a",
+				"strlistfile":	"",
+				"languagefile":	"",
+				"stringoutput":	"",
+				"wtype":	"",
 				"ostype":	"",
 				"sstype":	"",
 				"outname":	"$(ProjectName)$(Ext)",
 				"outpath":	"D:\\Programs\\windows_x64\\plugins",
 				"command":	"-slx -c",
-				"uaclevel":	"默认"
+				"uaclevel":	"默认",
+				"cmd":	"D:\\Programs\\windows_x64\\XStudio.exe",
+				"args":	"",
+				"workdir":	"D:\\Programs\\windows_x64"
 			},
 			"release":	{
 				"path":	{

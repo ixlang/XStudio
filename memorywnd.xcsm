@@ -1,9 +1,9 @@
 //xlang Source, Name:memorywnd.xcsm 
 //Date: Thu Sep 17:49:58 2018 
 
-class XMemoryWnd : QXDockWidget{
-    QXTreeView _listview;
-    QXPushButton btnGc, btnRefresh;
+class XMemoryWnd : QDockWidget{
+    QTreeWidget _listview;
+    QPushButton btnGc, btnRefresh;
 
     JsonObject meminfo;
     Object memLock = new Object();
@@ -20,16 +20,16 @@ class XMemoryWnd : QXDockWidget{
     
     Vector<long> memhistroy = new Vector<long>();
     
-    public static class MemoryWaveWidget : QXWidget{
+    public static class MemoryWaveWidget : QWidget{
 		
 		double []histroy = new double[100];
         int currentidx = 0;
         bool bupdated = false;
-        QXPainter.Paint mempaint = new QXPainter.Paint();
-        QXPainter.Paint ptpaint = new QXPainter.Paint();
-        QXPainter.Paint txtpaint = new QXPainter.Paint();
+        QPainter.Paint mempaint = new QPainter.Paint();
+        QPainter.Paint ptpaint = new QPainter.Paint();
+        QPainter.Paint txtpaint = new QPainter.Paint();
         
-        QXPath _currentpath = nilptr;
+        QPath _currentpath = nilptr;
         double hmax = 0;
        
         bool bpressed = false;
@@ -38,18 +38,18 @@ class XMemoryWnd : QXDockWidget{
 		String tipsText = "";
 		double tipy;
 		public void onAttach()override{
-			mempaint.setStyle(QXPainter.Paint.FILL_AND_STROKE);
+			mempaint.setStyle(QPainter.Paint.FILL_AND_STROKE);
             mempaint.setColor(0x7f64d9f0);
             
             ptpaint.setColor(0xffff0000);
-            ptpaint.setStyle(QXPainter.Paint.STROKE);
+            ptpaint.setStyle(QPainter.Paint.STROKE);
             
             txtpaint.setColor(0xff00ff00);
 		}
 
 
-        public QXPath buildpath(double w, double h){
-			QXPath mempath = new QXPath();
+        public QPath buildpath(double w, double h){
+			QPath mempath = new QPath();
             mempath.moveto(0,h);
             for (int i = 0; i < 100; i ++){
 				if (histroy[i] > hmax){
@@ -113,14 +113,14 @@ class XMemoryWnd : QXDockWidget{
         }
         
 		public void onPaint(int l,int t,int r,int b,long hpaint)override{
-			QXPainter painter = new QXPainter(hpaint);
+			QPainter painter = new QPainter(hpaint);
             int w = width(), h = height();
 			
             
-            painter.fillRect(0,0,w,h,bkcolor,QXBrush.Style.SolidPattern);
+            painter.fillRect(0,0,w,h,bkcolor,QBrush.Style.SolidPattern);
 			painter.setPaint(mempaint);
 
-            QXPath __cpath;
+            QPath __cpath;
             
             synchronized(this){
 				if (bupdated){
@@ -171,12 +171,12 @@ class XMemoryWnd : QXDockWidget{
 		memoryWnd.memwidget.reset();
     }
     public void onAttach(){
-        _listview = (QXTreeView)attachByName(new QXTreeView(), "memlist");
+        _listview = (QTreeWidget)attachByName(new QTreeWidget(), "memlist");
         memwidget = (MemoryWaveWidget)attachByName(new MemoryWaveWidget(), "memwidget");
-        btnGc = (QXPushButton)attachByName(new QXPushButton(), "btnGc");
-        btnRefresh = (QXPushButton)attachByName(new QXPushButton(), "btnRefresh");
+        btnGc = (QPushButton)attachByName(new QPushButton(), "btnGc");
+        btnRefresh = (QPushButton)attachByName(new QPushButton(), "btnRefresh");
         /*setOnLayoutEventListener(new onLayoutEventListener(){
-                void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+                void onResize(QObject obj, int w, int h, int oldw, int oldh)override {
                     if (_listview != nilptr){
                         _listview.resize(w, h - 60);
                         btnGc.move(0, h - 55);
@@ -189,14 +189,14 @@ class XMemoryWnd : QXDockWidget{
         
         btnGc.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
                 XWorkspace.workspace.debuggee.requestGc();
             }
         });
         
         btnRefresh.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
                 XWorkspace.workspace.debuggee.queryMemory();
             }
         });

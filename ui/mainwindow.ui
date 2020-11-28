@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1864</width>
-    <height>990</height>
+    <width>1573</width>
+    <height>1002</height>
    </rect>
   </property>
   <property name="acceptDrops">
@@ -118,7 +118,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1864</width>
+     <width>1573</width>
      <height>23</height>
     </rect>
    </property>
@@ -157,8 +157,6 @@
      </property>
      <addaction name="actionfile"/>
      <addaction name="actionclass"/>
-     <addaction name="actioninterface"/>
-     <addaction name="actionpackage"/>
     </widget>
     <widget class="QMenu" name="menukeyboard">
      <property name="title">
@@ -213,6 +211,9 @@
     <addaction name="actionlocalProblem"/>
     <addaction name="actiongoto"/>
     <addaction name="menukeyboard"/>
+    <addaction name="separator"/>
+    <addaction name="actioncodepage"/>
+    <addaction name="actioncovcharset"/>
    </widget>
    <widget class="QMenu" name="menuSln">
     <property name="title">
@@ -220,6 +221,9 @@
     </property>
     <addaction name="actioncompile_project"/>
     <addaction name="actionclean"/>
+    <addaction name="separator"/>
+    <addaction name="actionprocstop"/>
+    <addaction name="separator"/>
     <addaction name="actiongenerateNativeSrc"/>
     <addaction name="separator"/>
     <addaction name="actiondeploy"/>
@@ -259,6 +263,7 @@
     <addaction name="actiontest"/>
     <addaction name="separator"/>
     <addaction name="actionremotedbg"/>
+    <addaction name="actionattachdbg"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -1653,6 +1658,9 @@
      </item>
      <item>
       <widget class="QTreeWidget" name="memlist">
+       <property name="sortingEnabled">
+        <bool>false</bool>
+       </property>
        <column>
         <property name="text">
          <string notr="true">1</string>
@@ -1745,6 +1753,9 @@
      </property>
      <item>
       <widget class="QTreeWidget" name="objslist">
+       <property name="sortingEnabled">
+        <bool>true</bool>
+       </property>
        <column>
         <property name="text">
          <string notr="true">1</string>
@@ -1862,7 +1873,7 @@
      <normaloff>res/toolbar/newfile.png</normaloff>res/toolbar/newfile.png</iconset>
    </property>
    <property name="text">
-    <string>文件(&amp;F)</string>
+    <string>添加文件(&amp;F)</string>
    </property>
    <property name="toolTip">
     <string>添加文件</string>
@@ -1874,7 +1885,7 @@
      <normaloff>res/toolbar/class.png</normaloff>res/toolbar/class.png</iconset>
    </property>
    <property name="text">
-    <string>类(&amp;C)</string>
+    <string>添加对象(&amp;C)</string>
    </property>
   </action>
   <action name="actioninterface">
@@ -2328,6 +2339,10 @@
    </property>
   </action>
   <action name="actionremotedbg">
+   <property name="icon">
+    <iconset>
+     <normaloff>res/toolbar/dbg.png</normaloff>res/toolbar/dbg.png</iconset>
+   </property>
    <property name="text">
     <string>远程调试(&amp;R)</string>
    </property>
@@ -2528,6 +2543,33 @@
    </property>
    <property name="text">
     <string>扩展管理(&amp;E)</string>
+   </property>
+  </action>
+  <action name="actioncodepage">
+   <property name="text">
+    <string>编码设置</string>
+   </property>
+  </action>
+  <action name="actionprocstop">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>取消组建</string>
+   </property>
+  </action>
+  <action name="actionattachdbg">
+   <property name="icon">
+    <iconset>
+     <normaloff>res/toolbar/dbg.png</normaloff>res/toolbar/dbg.png</iconset>
+   </property>
+   <property name="text">
+    <string>附加到进程</string>
+   </property>
+  </action>
+  <action name="actioncovcharset">
+   <property name="text">
+    <string>编码转为...</string>
    </property>
   </action>
  </widget>

@@ -63,9 +63,6 @@ class XEnvironment{
 };
 
 class Utils{    
-    
-    
-    
     public static void readForProcess(@NotNilptr IBuilder builder,@NotNilptr Process _process){
         int rd = 0;
         byte [] buffer = new byte[1024];
@@ -166,7 +163,7 @@ class Utils{
     public static void showError(String errinfo){
 		XWorkspace.workspace.runOnUi(new Runnable(){
 			void run(){
-				QXMessageBox.Critical("错误", errinfo, QXMessageBox.Ok , QXMessageBox.Ok);
+				QMessageBox.Critical("错误", errinfo, QMessageBox.Ok , QMessageBox.Ok);
 			}
 		});
     }
@@ -175,14 +172,14 @@ class Utils{
     
         if (version != nilptr && url != nilptr && detailUrl != nilptr && descr != nilptr){
             if (packsize > 0){
-                int res = QXMessageBox.Question("新版本" + version, 
+                int res = QMessageBox.Question("新版本" + version, 
                     "<Strong>可用于 XStudio 的更新版本" + version + " 已发布</Strong><br /><br />" + 
                     descr + "<br />" + 
                      "<a href=\"" + detailUrl + "\">详情点击</a><br />" + 
                     "<a href=\"" + url + "\">手动下载更新</a><br />" + 
-                    "是否立即进行自动更新?", QXMessageBox.Yes | QXMessageBox.No, QXMessageBox.Yes);
+                    "是否立即进行自动更新?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes);
                     
-                if (res == QXMessageBox.Yes){
+                if (res == QMessageBox.Yes){
                     update(version, url, packsize);
                 }
             }

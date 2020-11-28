@@ -1,7 +1,7 @@
 //xlang Source, Name:stackWnd.xcsm 
 //Date: Tue Sep 15:46:31 2018 
 
-class XStackInfor : QXDockWidget{
+class XStackInfor : QDockWidget{
 
     public static const int XDBG_STATE_UPDATE	=	0;	//状态更新
 	public static const int XDBG_STATE_CREATE	=	1;	//线程创建
@@ -11,7 +11,7 @@ class XStackInfor : QXDockWidget{
     
     public static bool bOutputThreadStatus = true;
     
-    public QXTreeView _listview;
+    public QTreeWidget _listview;
     
     private JsonObject root;
     private Object rootLock = new Object();
@@ -38,7 +38,7 @@ class XStackInfor : QXDockWidget{
     };  
     
     public onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
-        public void onItemClicked(QXTreeView tree,long item, int column)override{
+        public void onItemClicked(QTreeWidget tree,long item, int column)override{
 			queryAuto(item, column);
         }
     };
@@ -76,10 +76,10 @@ class XStackInfor : QXDockWidget{
     }
     
     public void onAttach(){
-        _listview = (QXTreeView)attachByName(new QXTreeView(), "stacklist");
+        _listview = (QTreeWidget)attachByName(new QTreeWidget(), "stacklist");
        
         /*setOnLayoutEventListener(new onLayoutEventListener(){
-                void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+                void onResize(QObject obj, int w, int h, int oldw, int oldh)override {
                     if (_listview != nilptr){
                         _listview.resize(w, h - 20);
                     }
@@ -299,7 +299,7 @@ class XStackInfor : QXDockWidget{
                 
                 raise();
                 
-                QXMessageBox.Warning("异常中断", msgInfo, QXMessageBox.Ok, QXMessageBox.Ok);
+                QMessageBox.Warning("异常中断", msgInfo, QMessageBox.Ok, QMessageBox.Ok);
             }
         }
     }

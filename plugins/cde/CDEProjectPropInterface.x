@@ -1544,7 +1544,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
             if (e.getErrorCode() == 0x000002E4) {
                 XWorkspace.workspace.runOnUi(new Runnable() {
                     void run()override {
-                        if (QXMessageBox.Question("注意", "被调试程序需要提升权限, 是否重新以提升的权限运行?", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Ok) == QXMessageBox.Ok) {
+                        if (QMessageBox.Question("注意", "被调试程序需要提升权限, 是否重新以提升的权限运行?", QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Ok) == QMessageBox.Ok) {
                             XWorkspace.runAsAdministrator();
                         }
                     }
@@ -2104,7 +2104,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return CPPGPlugManager.CPPLangPlugin.getInstance();
     }
     
-    ICompileInfo parseOutputLine(@NotNilptr QXSci sci, int position, int line,@NotNilptr  String lineText){
+    ICompileInfo parseOutputLine(@NotNilptr QScintilla sci, int position, int line,@NotNilptr  String lineText){
         String [] prefix = {": 错误", ": 附注", ": 警告"};
         String [] prefix_en = {": note", ": warning", ": error", ": fatal error"};
         

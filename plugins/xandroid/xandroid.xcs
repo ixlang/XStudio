@@ -1,6 +1,8 @@
 //xlang 
 
-
+using{
+    Qt;
+};
 
 void _entry(int moduleId, int xvmVer){
     PluginManager.registryPlugins(new XAndroid());

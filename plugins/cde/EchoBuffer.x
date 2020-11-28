@@ -2,8 +2,8 @@
 //Date: Wed Mar 18:11:38 2020 
 
 class EchoBuffer{
-    int length = 0;
-    byte [] data = new byte[0];
+    protected int length = 0;
+    protected byte [] data = new byte[0];
     
     public void append(byte[] buffer, int pos, int len){
         if (length + len > data.length){

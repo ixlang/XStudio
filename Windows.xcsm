@@ -1,26 +1,26 @@
 
-class Windows : QXDialog
+class Windows : QDialog
 {
     public XWorkspace  _workspace;
-    QXTreeView _listview;
-    Map<long, XSourceEditor> windows_list = new Map<long, XSourceEditor>();
+    QTreeWidget _listview;
+    Map<long, DocumentView> windows_list = new Map<long, DocumentView>();
 
-    QXPushButton btnOk;
-    QXPushButton btnActive;
-    QXPushButton btnClose;
-    static QXRect rect = nilptr;
+    QPushButton btnOk;
+    QPushButton btnActive;
+    QPushButton btnClose;
+    static QRect rect = nilptr;
 
     onTreeViewItemEvent listlistener = new onTreeViewItemEvent()
     {
-        void onItemClicked(@NotNilptr QXTreeView tree,long item, int column)override {
+        void onItemClicked(@NotNilptr QTreeWidget tree,long item, int column)override {
             long [] items = tree.getSelectedItems();
             if (items != nilptr){
                 btnActive.setEnabled(items.length == 1);
             }
         }
-        void onItemDoubleClicked(QXTreeView,long item, int column) {
+        void onItemDoubleClicked(QTreeWidget,long item, int column) {
             try {
-                XSourceEditor editor = windows_list.get(item);
+                DocumentView editor = windows_list.get(item);
                 if (editor != nilptr) {
                     _workspace.setActiveSubWindow(editor);
                     Windows.this.close();
@@ -35,26 +35,26 @@ class Windows : QXDialog
     void onAttach()
     {
 
-        setWindowFlags(CustomizeWindowHint | WindowMinMaxButtonsHint | WindowCloseButtonHint);
+        setWindowFlags(Constant.CustomizeWindowHint | Constant.WindowMinMaxButtonsHint | Constant.WindowCloseButtonHint);
 
-        _listview = (QXTreeView)attachByName(new QXTreeView(), "listWindow");
+        _listview = (QTreeWidget)attachByName(new QTreeWidget(), "listWindow");
 
-        btnOk = (QXPushButton)attachByName(new QXPushButton(), "btnOk");
+        btnOk = (QPushButton)attachByName(new QPushButton(), "btnOk");
         btnOk.setOnClickListener(
         new onClickListener() {
-            void onClick(QXObject obj, bool checked)override {
+            void onClick(QObject obj, bool checked)override {
                 Windows.this.close();
             }
         });
 
-        btnActive = (QXPushButton)attachByName(new QXPushButton(), "btnActive");
+        btnActive = (QPushButton)attachByName(new QPushButton(), "btnActive");
         btnActive.setOnClickListener(
         new onClickListener() {
-            void onClick(QXObject obj, bool checked)override {
+            void onClick(QObject obj, bool checked)override {
                 long [] items = _listview.getSelectedItems();
                 if (items != nilptr && items.length == 1) {
                     try {
-                        XSourceEditor editor = windows_list.get(items[0]);
+                        DocumentView editor = windows_list.get(items[0]);
                         if (editor != nilptr) {
                             _workspace.setActiveSubWindow(editor);
                             Windows.this.close();
@@ -66,15 +66,15 @@ class Windows : QXDialog
             }
         });
 
-        btnClose = (QXPushButton)attachByName(new QXPushButton(), "btnClose");
+        btnClose = (QPushButton)attachByName(new QPushButton(), "btnClose");
         btnClose.setOnClickListener(
         new onClickListener() {
-            void onClick(QXObject obj, bool checked)override {
+            void onClick(QObject obj, bool checked)override {
                 long [] items = _listview.getSelectedItems();
                 if (items != nilptr){
                     for (int i =0; i < items.length; i++) {
                         try {
-                            XSourceEditor editor = windows_list.get(items[i]);
+                            DocumentView editor = windows_list.get(items[i]);
                             if (editor != nilptr) {
                                 editor.close();
                             }
@@ -96,7 +96,7 @@ class Windows : QXDialog
         loadWindow();
 
         /*setOnLayoutEventListener(new onLayoutEventListener(){
-        	void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+        	void onResize(QObject obj, int w, int h, int oldw, int oldh)override {
         		_listview.resize(w - 200, h-  50);
         		btnOk.move(w - 150, h - 80);
 
@@ -115,7 +115,7 @@ class Windows : QXDialog
         show();
     }
     public bool onClose(){
-        rect = new QXRect(x(), y(), width(), height());
+        rect = new QRect(x(), y(), width(), height());
         return true;
     }
     void loadWindow()
@@ -123,23 +123,23 @@ class Windows : QXDialog
         /* _system_.consoleWrite("loadWindow");*/
         windows_list.clear();
         _listview.clear();
-        Map.Iterator<String, XSourceEditor> iter = XSourceEditor.editorMgr.iterator();
+        Map.Iterator<String, DocumentView> iter = DocumentView.editorMgr.iterator();
 
         while (iter.hasNext()) {
             //String key = iter.getKey();
-            XSourceEditor val = iter.getValue();
+            DocumentView val = iter.getValue();
 
             iter.next();
 
             if (val != nilptr){
-                long item = _listview.addItem("./res/toolbar/source.png", val.szTitle);
+                long item = _listview.addItem("./res/toolbar/source.png", val.getTitle());
 
                 windows_list.put(item, val);
 
-                if (val.filePath.startWith("#")) {
+                if (val.getFilePath().startWith("#")) {
                     _listview.setItemText(item, 1, "<未保存>");
                 } else {
-                    _listview.setItemText(item, 1, val.filePath);
+                    _listview.setItemText(item, 1, val.getFilePath());
                 }
             }
         }

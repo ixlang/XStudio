@@ -87,7 +87,7 @@ class BreakPointWnd : ListDockWidget{
     }
     
     public void refreshBreakPoints(){
-		QXTreeView list = getList();
+		QTreeWidget list = getList();
         
         list.clear();
         
@@ -100,7 +100,7 @@ class BreakPointWnd : ListDockWidget{
         }
     }
     
-    public void addToList(@NotNilptr QXTreeView list , String file,@NotNilptr  Map<int,BreakPointRequest> mbp){
+    public void addToList(@NotNilptr QTreeWidget list , String file,@NotNilptr  Map<int,BreakPointRequest> mbp){
     	Map.Iterator<int,BreakPointRequest> iter =  mbp.iterator();
         while (iter.hasNext()){
 			BreakPointRequest brp =  iter.getValue();
@@ -111,25 +111,25 @@ class BreakPointWnd : ListDockWidget{
                 list.setItemText(item, 2, brp.file );
                 
                 if (brp.realine != brp.reqline){
-                    list.setItemText(item, 3, "" + brp.reqline + " -> " + brp.realine);
+                    list.setItemText(item, 3, "" + (brp.reqline + 1) + " -> " + (brp.realine + 1));
                 }else{
-                    list.setItemText(item, 3, "" + brp.reqline);
+                    list.setItemText(item, 3, "" + (brp.reqline + 1));
                 }
             }
             iter.next();
         }
     }
     
-	public void onListItemClicked(@NotNilptr QXTreeView tree,long item, int column)override{
+	public void onListItemClicked(@NotNilptr QTreeWidget tree,long item, int column)override{
 		String sfile = tree.getItemText(item, 2);
 		String sline = tree.getItemText(item, 3);
         
-        XSourceEditor.openForFileInfo(XWorkspace.workspace, sfile, sline.parseInt(), 0, nilptr);
+        XSourceEditor.openForFileInfo(XWorkspace.workspace, sfile, sline.parseInt(), 1, nilptr);
     }
         
         
     public void deleteBreakPoint(@NotNilptr long [] items){
-		QXTreeView list = getList();
+		QTreeWidget list = getList();
         
 		for (int i = 0;i < items.length; i++){
 			String sfile = list.getItemText(items[i], 2);
@@ -188,7 +188,7 @@ class BreakPointWnd : ListDockWidget{
     
     
     public void setBreakPointEnable(@NotNilptr BreakPointRequest bpr, bool enabled){
-		QXTreeView list = getList();
+		QTreeWidget list = getList();
         
         int count = list.getTopLevelCount();
 		for (int i = 0;i < count; i++){
@@ -202,7 +202,7 @@ class BreakPointWnd : ListDockWidget{
     }
     
     public void invalidAllBreakpoint(){
-		QXTreeView list = getList();
+		QTreeWidget list = getList();
         
         int count = list.getTopLevelCount();
 		for (int i = 0;i < count; i++){
@@ -212,7 +212,7 @@ class BreakPointWnd : ListDockWidget{
     }
     
     public void parseBreakPoint(@NotNilptr BreakPointRequest bpr){
-		//QXTreeView list = getList();
+		//QTreeWidget list = getList();
 		runOnUi( new Runnable(){
 			void run(){
 				setBreakPointEnable(bpr, bpr.error == 0);
@@ -250,38 +250,13 @@ class BreakPointWnd : ListDockWidget{
     }
     
 
-    public static class ContextMenu{
-		public QXMenu contextMenu = new QXMenu();
-		public QXAction [] actions;
-		
-		public void create(@NotNilptr QXWidget parent,@NotNilptr  String [] acts,@NotNilptr  onEventListener listener){
-			if (contextMenu.create(parent)){
-				actions = new QXAction[acts.length];
-				for (int i = 0; i < acts.length; i ++){
-					QXAction action = new QXAction();
-					if (action.create(contextMenu)){
-						
-						if (acts[i].equals("-")){
-							action.setSeparator(true);
-						}else{
-							action.setEnable(true);	
-							action.setText(acts[i]);
-							action.setOnEventListener(listener);
-						}
-					}
-					actions[i] = action;
-				}
-				parent.setContextMenuPolicy(ActionsContextMenu);
-				parent.addActions(actions);
-			}
-		}
-	};
+ 
     
     public void createContextMenu(){
-		QXTreeView list = getList();
+		QTreeWidget list = getList();
         
 		onEventListener menuListener = new onEventListener(){
-		   void onTrigger(QXObject obj) override{
+		   void onTrigger(QObject obj) override{
 				if (obj == _contextMenu.actions[0]){
 				
 					long []items = list.getSelectedItems();
@@ -293,7 +268,7 @@ class BreakPointWnd : ListDockWidget{
 		};
         
 		String []acts = {"删除"};
-		_contextMenu.create(list, acts, menuListener);
+		_contextMenu.create(list, acts, menuListener, nilptr);
 	}
     
     public static void setBreakPoint(String file, int reqline, int realine, bool set, int error){

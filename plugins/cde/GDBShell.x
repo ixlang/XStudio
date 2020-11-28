@@ -892,11 +892,18 @@ class GDBShell{
     }
     long parseValue(@NotNilptr String text, @NotNilptr JsonObject object, char eq, bool bTop){
         
+        
         int equ = text.indexOf(eq);
         String name = "", value = "";
         if (equ != -1){
-            name = text.substring(0, equ).trim(true);
-            value = text.substring(equ + 1, text.length()).trim(true);
+            if (text.trim(true).startWith("{")){
+                name = "__unnamed";
+                value = text.trim(true);
+                text = name + " = " + value;
+            }else{
+                name = text.substring(0, equ).trim(true);
+                value = text.substring(equ + 1, text.length()).trim(true);
+            }
         }else{
             name = value = text.trim(true);
         }

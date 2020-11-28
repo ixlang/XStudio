@@ -215,6 +215,23 @@ class ClangIXIntelliSense : IXIntelliSense{
         return false;
     }
     
+    public JsonArray getAllSearchDir(){
+        JsonArray sysdir = CDEProjectPropInterface.getCompilerSystemPath(cur_cfig);
+        if (sysdir == nilptr){
+            sysdir = new JsonArray();
+        }
+        
+        JsonArray libpath = CDEProjectPropInterface.getArrayOption(cur_cfig, "path.incpath");
+        
+        if (libpath != nilptr){
+            for (int i =0; i < libpath.length(); i++){
+                sysdir.put(libpath.getString(i));
+            }
+        }
+        
+        return sysdir;
+    }
+    
     public ClangIXIntelliSense(Project project, Configure cfig){
         cur_project = project;
         cur_cfig = cfig;
@@ -403,14 +420,138 @@ class ClangIXIntelliSense : IXIntelliSense{
         return parseResult(complete_res);
     }
     
-    XIntelliResult [] getIntelliSense(String source,String content, long pos, int line, int column)override{
-        String complete_res = nilptr;
-        synchronized(this){
-            __completion_result = nilptr;
-            clangdlsp.filechange(source, content);
-            complete_res = clangdlsp.completion(source, line, column);
+    int isAtInclude(String content, long pos, String  []szprefix){
+        if (pos > 0 && pos < content.length()){
+            int p = content.lastIndexOf("#", pos);
+            if (p != -1){
+                String line = content.substring(p, pos);
+                line = line.replace(" ","").replace("\t","").replace("\r","").replace("\n","");
+                
+                int endsub = 0;
+                if (line.endWith("\"") || line.endWith(">")){
+                    endsub ++;
+                }
+                if (line.length() > 9){
+                    String prefix = line.substring(9,line.length() - endsub);
+                    if (prefix.length() > 0){
+                        szprefix[0] = prefix;
+                    }
+                }
+                if (line.startWith("#include\"")){
+                    return 1;
+                }else
+                if (line.startWith("#include<")){
+                    return 2;
+                }
+                
+                
+            }
+            
+            if (content.charAt(pos) == '/'){
+                return -1;
+            }
         }
-        return parseResult(complete_res);
+        return 0;
+    }
+    
+    CDEPathIntelliResult _continuePath = nilptr;
+    
+    class CDEPathIntelliResult  
+        : public CDEXIntelliResult{
+        
+        String parent, path;
+        bool isDir;
+        
+        public CDEPathIntelliResult(String _parent, String _path, bool _isDir){
+        
+            parent = _parent;
+            path = _path;
+            isDir = _isDir;
+            prop = "";
+            
+            if (isDir){
+               name = path + "/";
+            }else{
+               name =  path;
+            }
+            
+        }
+        
+        void accept()override{
+            if (isDir){
+                TextEditorController tc =  CPPGPlugManager.workspace.currentTextEditor();
+                if (tc != nilptr){
+                    CPPGPlugManager._mainWindow.runOnUi(new Runnable(){
+                        void run(){
+                            _continuePath = CDEPathIntelliResult.this;
+                            tc.triggeInteliSence();
+                        }
+                    });
+                }
+            }
+        }
+        
+        public XIntelliResult [] getIntelliSense(){
+            _continuePath = nilptr;
+            Vector<CDEXIntelliResult> cis = new Vector<CDEXIntelliResult>();
+            String _directory = parent.appendPath(path);
+            listSearchObject(cis, _directory, nilptr);
+            return cis.toArray(new CDEXIntelliResult[0]);
+        }
+    };
+    
+    // 需要注意 linux文件路径 windows文件路径 相对路径 和 绝对路径
+    void listSearchObject(Vector<CDEXIntelliResult> cis, String dir, String prefix){
+        if (prefix != nilptr){
+            dir = dir.appendPath(prefix);
+        }
+        FSObject fso = new FSObject(dir);
+        long hf = fso.openDir();
+        if (hf != 0){
+            FSObject sub = new FSObject();
+            while (fso.findObject(hf,sub)){
+                cis.add(new CDEPathIntelliResult(dir, sub.getName(), sub.isDir()));
+            }
+            fso.closeDir(hf);
+        }
+    }
+    
+    XIntelliResult [] getIntelliSense(String source,String content, long pos, int line, int column)override{
+        if (_continuePath != nilptr){
+            return _continuePath.getIntelliSense();
+        }
+        String  []prefix = new String[1];
+        
+        int st = isAtInclude(content, pos, prefix);
+        if (st != 0){
+            if (st == -1){
+                return nilptr;
+            }
+            JsonArray ja = nilptr; 
+            if (st == 2){
+                ja = getAllSearchDir();
+            }else{
+                ja = new JsonArray();
+                ja.put(source.findVolumePath());
+                ja.put(cur_project.getProjectDir());
+            }
+            if (ja != nilptr && ja.length() > 0){
+                Vector<CDEXIntelliResult> cis = new Vector<CDEXIntelliResult>();
+                for (int i =0; i < ja.length(); i++){
+                    listSearchObject(cis, ja.getString(i), prefix[0]);
+                }
+                return cis.toArray(new CDEXIntelliResult[0]);
+            }
+            return nilptr;
+        }else{ 
+            String complete_res = nilptr;
+            synchronized(this){
+                __completion_result = nilptr;
+                clangdlsp.filechange(source, content);
+                complete_res = clangdlsp.completion(source, line, column);
+            }
+            return parseResult(complete_res);
+        }
     }
     
     public class CDEXIntelliResult : XIntelliResult{
@@ -424,7 +565,12 @@ class ClangIXIntelliSense : IXIntelliSense{
         public String source;
         public int line;
         public int row;
-        
+        public int get_visibility(){
+            return 0x40;
+        }
+        public void accept(){
+            
+        }
         public CDEXIntelliResult [] processParams(@NotNilptr String args) {
             byte []data = args.getBytes();
             Vector<CDEXIntelliResult> args_list = new Vector<CDEXIntelliResult>();
@@ -1107,6 +1253,9 @@ class ClangIXIntelliSense : IXIntelliSense{
                             return true;
                         }
                     }
+                }
+                if (c == '"' || c == '<' || c== '/'){
+                    return true;
                 }
                 return false;
             }

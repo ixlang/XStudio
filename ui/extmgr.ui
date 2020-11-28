@@ -40,7 +40,14 @@
       </widget>
      </item>
      <item>
-      <widget class="QWidget" name="widget" native="true"/>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>访问 &lt;a href=&quot;https://xlang.link/extends.html&quot;&gt;https://xlang.link/extends.html&lt;/a&gt; 获取更多XStudio扩展</string>
+       </property>
+       <property name="openExternalLinks">
+        <bool>true</bool>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QPushButton" name="btnclose">

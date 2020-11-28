@@ -4,6 +4,62 @@
 class CPPProjectPlugin : IProjectPlugin{
     JsonObject wizard;
     
+    String curslnfile = nilptr;
+    ClassViewInfo curclsinfo = nilptr;
+    ActionIdent [] __ais = nilptr;
+        
+    ActionIdent [] getSolutionContextActions()override{
+        return nilptr;
+    }
+
+    ActionIdent [] getClassViewContextActions()override{
+        ActionIdent aip = new ActionIdent("添加成员", "cde_add_member", CPPGPlugManager.CPPLangPlugin.getInstance(), new onEventListener(){
+            public void onTrigger(@NotNilptr QObject obj)override
+            {
+                NewMember.showNewMember(curslnfile, curclsinfo);
+            }
+        });
+        
+        ActionIdent aim = new ActionIdent("添加方法", "cde_add_member", CPPGPlugManager.CPPLangPlugin.getInstance(), new onEventListener(){
+            public void onTrigger(@NotNilptr QObject obj)override
+            {
+                NewMethod.showNewMethod(curslnfile, curclsinfo);
+            }
+        });
+        aip.setEnabled(false);
+        aim.setEnabled(false);
+        ActionIdent [] ais = {aip, aim};
+        __ais = ais;
+        return ais;
+    }
+
+    void updateSolutionActionState(String files)override{
+
+    }
+    
+    void updateClassViewActionState(String file, ClassViewInfo info)override{
+        bool enabled = false;
+        
+        if (file != nilptr){
+            JsonObject classinfo = info.getObject();
+            int type = classinfo.getInt("type");
+            if (type == 31){
+                
+                String headFile = file.replaceExtension(".h");
+                String cppFile = file.replaceExtension(".cpp");
+                
+                if (XPlatform.existsSystemFile(headFile) && XPlatform.existsSystemFile(cppFile)){
+                    curclsinfo = info;
+                    curslnfile = file;
+                    enabled = true;
+                }
+            }
+        }
+        
+        __ais[0].setEnabled(enabled);
+        __ais[1].setEnabled(enabled);
+    }
+    
 	bool onpreRun(IProject project, bool debug) override {
 		//TODO:	1
         return true;
@@ -60,11 +116,11 @@ class CPPProjectPlugin : IProjectPlugin{
             String cpp_content = ("//XAMH class " + projectName + " 实现,由 XStudio [https://xlang.link] 创建 \n//文件名: " + projectName + ".cpp" + " \n" + "//创建时间: " + date + " \n/**@caution 注意:不要删除或改动由XAMH开头的注释，它由XStudio自动生成并进行项目辅助管理**/\n\n") + 
             "#include \""  + projectName + ".h\"\n\n//XAMH Static object initialization End\n" +
             "\n//默认构造\n" + 
-            projectName + "::" + projectName + "(){" + "\n\n}\n\n" + 
+            projectName + "::" + projectName + "(){" + "\n\n//XAMH class initialization\n}\n\n" + 
             "\n//析构\n" + 
             projectName + "::~" + projectName + "(){" + "\n\n}\n\n//XAMH Implenment End\n"; 
             
-            String header_content = ("//XAMH class " + projectName + " 定义,由 XStudio [https://xlang.link] 创建 \n//文件名: " + projectName + ".h" + " \n" + "//创建时间: " + date + " \n/**@caution 注意:不要删除或改动由XAMH开头的注释，它由XStudio自动生成并进行项目辅助管理**/\n\n") + 
+            String header_content = ("//XAMH class " + projectName + " 定义,由 XStudio [https://xlang.link] 创建 \n//文件名: " + projectName + ".h" + " \n" + "//创建时间: " + date + " \n/**@caution 注意:不要删除或改动由XAMH开头的注释，它由XStudio自动生成并进行项目辅助管理**/\n#pragma once\n\n") + 
        
             "class " + projectName + "{ \npublic:\n\t" + projectName + "();\n\t~" + projectName + "();\n\nprivate:\n\n\n\n\n\n//XAMH Properities End\n\npublic:\n\n\n\n\n\n//XAMH Method End\n};\n\n//XAMH Definition End";
             
@@ -82,7 +138,7 @@ class CPPProjectPlugin : IProjectPlugin{
         if (uuid.equals(cpp_clsuuid)){
             String outhppFile = CDEProjectPropInterface.appendPath(projectDir, projectName + ".h");
           
-            String header_content = ("//XAMH interface接口 " + projectName + " 定义,由 XStudio [https://xlang.link] 创建 \n//文件名: " + projectName + ".h" + " \n" + "//创建时间: " + date + " \n/**@caution 注意:不要删除或改动由XAMH开头的注释，它由XStudio自动生成并进行项目辅助管理**/\n\n") + 
+            String header_content = ("//XAMH interface接口 " + projectName + " 定义,由 XStudio [https://xlang.link] 创建 \n//文件名: " + projectName + ".h" + " \n" + "//创建时间: " + date + " \n/**@caution 注意:不要删除或改动由XAMH开头的注释，它由XStudio自动生成并进行项目辅助管理**/\n#pragma once\n\n") + 
        
             "interface " + projectName + "{\npublic:\n\n//XAMH Method End\n\n};\n\n//XAMH Definition End";
             
@@ -102,7 +158,7 @@ class CPPProjectPlugin : IProjectPlugin{
 		//TODO:	
 
         if (Pattern.test(projectName, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true) == false) {
-            QXMessageBox.Critical("错误", "项目名称不合法", QXMessageBox.Ok, QXMessageBox.Ok);
+            QMessageBox.Critical("错误", "项目名称不合法", QMessageBox.Ok, QMessageBox.Ok);
             return false;
         }
         
@@ -111,11 +167,11 @@ class CPPProjectPlugin : IProjectPlugin{
         }
         String priject_dir = CDEProjectPropInterface.appendPath(projectDir, projectName);
         if (XPlatform.existsSystemFile(priject_dir)) {
-            QXMessageBox.Critical("错误", "该位置已存在同名项目, 请重新选择路径或者改变项目名", QXMessageBox.Ok, QXMessageBox.Ok);
+            QMessageBox.Critical("错误", "该位置已存在同名项目, 请重新选择路径或者改变项目名", QMessageBox.Ok, QMessageBox.Ok);
             return false;
         } else {
             if (mkdirs(priject_dir) == false) {
-                QXMessageBox.Critical("错误", "无法在此位置建立新目录, 请重新选择路径", QXMessageBox.Ok, QXMessageBox.Ok);
+                QMessageBox.Critical("错误", "无法在此位置建立新目录, 请重新选择路径", QMessageBox.Ok, QMessageBox.Ok);
                 return false;
             }
         }
@@ -238,14 +294,17 @@ class CPPProjectPlugin : IProjectPlugin{
 
 	String getTargetPath(@NotNilptr IProject project) override {
         if (project != nilptr){
-            Configure configure = project.getCurrentConfig();
-            if (configure != nilptr){
-                String cmd = configure.getOption("command");
-                if (cmd.equals("-driver")){
-                    return project.getProjectDir().appendPath(project.getName() + ".ko");
+            String language = project.getLanguage();
+            if (language != nilptr && language.equalsIgnoreCase("c/c++")){
+                Configure configure = project.getCurrentConfig();
+                if (configure != nilptr){
+                    String cmd = configure.getOption("command");
+                    if (cmd.equals("-driver")){
+                        return project.getProjectDir().appendPath(project.getName() + ".ko");
+                    }
+                    String out_path = CDEProjectPropInterface.appendPath(configure.getOption("outpath"), configure.getOption("outname"));
+                    return String.formatPath(XEnvironment.MapVariable((Project)project, configure, out_path), false);
                 }
-                String out_path = CDEProjectPropInterface.appendPath(configure.getOption("outpath"), configure.getOption("outname"));
-                return String.formatPath(XEnvironment.MapVariable((Project)project, configure, out_path), false);
             }
         }
         return nilptr;

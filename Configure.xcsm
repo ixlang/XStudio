@@ -264,26 +264,32 @@ class Configure : IConfigure
             libs = new JsonArray();
             root.put("libs", libs);
         } else {
-            for (int i = 0, c = libs.length(); i < c; i++) {
-                String path = libs.getString(i);
-                if (path != nilptr && path.length() > 0) {
-                    if (path.equals(lib)) {
-                        isHas = true;
-                        break;
-                    } else {
-                        String filename = path.findFilename();
-                        if (filename.length() > 0){
-                            int pos = filename.lastIndexOf('_');
-                            if (pos != -1) {
-                                String pname = filename.substring(0, pos);
-                                if (pname.equals(xpname)) {
-                                    libs.remove(i);
+            bool rescan = false;
+            do{
+                rescan = false;
+                for (int i = 0, c = libs.length(); i < c; i++) {
+                    String path = libs.getString(i);
+                    if (path != nilptr && path.length() > 0) {
+                        if (path.equals(lib)) {
+                            isHas = true;
+                            break;
+                        } else {
+                            String filename = path.findFilename();
+                            if (filename.length() > 0){
+                                int pos = filename.lastIndexOf('_');
+                                if (pos != -1) {
+                                    String pname = filename.substring(0, pos);
+                                    if (pname.equals(xpname)) {
+                                        libs.remove(i);
+                                        rescan = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
+            }while (rescan);
         }
 
         if (isHas == false) {
@@ -304,27 +310,33 @@ class Configure : IConfigure
             libs = new JsonArray();
             root.put("links", libs);
         } else {
-            for (int i = 0, c = libs.length(); i < c; i++) {
-                String path = libs.getString(i);
-                if (path != nilptr && path.length() > 0) {
-                    if (path.equals(lib)) {
-                        isHas = true;
-                        break;
-                    } else {
-                        String filename = path.findFilename();
-                        
-                        if (filename.length() > 0){
-                            int pos = filename.lastIndexOf('_');
-                            if (pos != -1) {
-                                String pname = filename.substring(0, pos);
-                                if (pname.equals(xpname)) {
-                                    libs.remove(i);
+            bool rescan = false;
+            do{
+                rescan = false;
+                for (int i = 0, c = libs.length(); i < c; i++) {
+                    String path = libs.getString(i);
+                    if (path != nilptr && path.length() > 0) {
+                        if (path.equals(lib)) {
+                            isHas = true;
+                            break;
+                        } else {
+                            String filename = path.findFilename();
+                            
+                            if (filename.length() > 0){
+                                int pos = filename.lastIndexOf('_');
+                                if (pos != -1) {
+                                    String pname = filename.substring(0, pos);
+                                    if (pname.equals(xpname)) {
+                                        libs.remove(i);
+                                        rescan = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
+            }while (rescan);
         }
 
         if (isHas == false) {
@@ -374,17 +386,24 @@ class Configure : IConfigure
             return false;
         }
 
-        for (int i = 0, c = depends.length(); i < c; i++){
-    		JsonObject depend = (JsonObject)depends.get(i);
-            if (depend != nilptr){
-    			String pname = depend.getString("name");
-                if (pname != nilptr && pname.equals(xpname)){
-    				depends.remove(i);
-                    return true;
+        bool found = false, ret = false;
+        do{
+            found = false;
+            for (int i = 0, c = depends.length(); i < c; i++){
+                JsonObject depend = (JsonObject)depends.get(i);
+                if (depend != nilptr){
+                    String pname = depend.getString("name");
+                    if (pname != nilptr && pname.equals(xpname)){
+                        depends.remove(i);
+                        found = true;
+                        ret = true;
+                        break;
+                    }
                 }
             }
-        }
-        return false;
+        }while (found);
+        
+        return ret;
     }
 
 
@@ -440,12 +459,8 @@ class Configure : IConfigure
     }
     
     public bool addDepends(String xpname, String version)override{
+        removeDepend(xpname);
         JsonArray depends = (JsonArray)root.get("depends");
-        if (depends == nilptr){
-    		depends = new JsonArray();
-            root.put("depends", depends);
-        }
-
         JsonObject depend = new JsonObject();
         depend.put("name", xpname);
         depend.put("version", version);

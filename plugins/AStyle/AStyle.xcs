@@ -8,13 +8,55 @@ class XLANGPlugManager
 
     static IXStudioController xcontroller;
     static WorkspaceController workspace;
+    
+    ActionIdent [] getSolutionContextActions(){
+        return nilptr;
+    }
+
+    ActionIdent [] getClassViewContextActions(){
+        return nilptr;
+    }
+
+    void updateSolutionActionState(String files){
+
+    }
+    void updateClassViewActionState(String file, ClassViewInfo info){
+        
+    }
     public static class XLangPlugin : IXPlugin
     {
+        String curslnfile = nilptr;
+        ActionIdent [] __ais = {
+            new ActionIdent("格式化", "a_style_id", this, new Qt.onEventListener(){
+                public void onTrigger(@NotNilptr Qt.QObject obj)override
+                {
+                    if (curslnfile != nilptr){
+                        beautyAsync(curslnfile);
+                    }
+                }
+            })
+        };
+        
         String getName()
         {
             return "astyle";
         }
+        
+        ActionIdent [] getSolutionContextActions(){
+            return __ais;
+        }
 
+        ActionIdent [] getClassViewContextActions(){
+            return nilptr;
+        }
+
+        void updateSolutionActionState(String files){
+            __ais[0].setEnabled(files != nilptr);
+            curslnfile = files;
+        }
+        void updateClassViewActionState(String file, ClassViewInfo info){
+            
+        }
         void onTextEditorCreated(TextEditorController editor)
         {
 
@@ -43,7 +85,7 @@ class XLANGPlugManager
             return "plugins/AStyle/astyle.png";
         }
         long getVersion(){
-            return 1001;
+            return 1002;
         }
         String getDescrition(){
             return "使用AStyle进行代码格式化的扩展组件.";
@@ -97,6 +139,36 @@ class XLANGPlugManager
             }
         }
         
+        
+        void beautyAsync(String filepath){
+            if (beautyThread == nilptr) {
+                DocumentView editor = DocumentView.findFileWindow(filepath);
+                if (editor != nilptr){
+                    editor.saveFile();
+                    editor.pauseWatch();
+                }
+                beautyThread = new Thread() {
+                    void run()override {
+
+                        beautySources(filepath);
+
+                        beautyThread = nilptr;
+                        
+                        if (editor != nilptr){
+                            workspace.RunOnUi(new UIRunnable() {
+                                void run ()override {
+                                    editor.reload();
+                                    editor.continueWatch();
+                                }
+                            });
+                        }
+                    }
+                };
+                beautyThread.start();
+            } else {
+                output("上一个任务进行中");
+            }
+        }
         
         JsonObject createBoolOption(){
             JsonObject item_bk = new JsonObject();

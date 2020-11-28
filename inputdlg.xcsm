@@ -1,7 +1,7 @@
 //xlang Source, Name:gotoline.xcsm 
 //Date: Sun Sep 19:06:03 2018 
 
-class InputDialog : QXDialog {
+class InputDialog : QDialog {
 
 	public static class onInputListener{
 		public bool onInputOk(@NotNilptr String text);
@@ -19,28 +19,28 @@ class InputDialog : QXDialog {
 		listener = intputlis;
     }
 
-    QXPushButton btnOk, btnCancel;
-    QXLineEdit edtLine;
+    QPushButton btnOk, btnCancel;
+    QLineEdit edtLine;
     
     String result = nilptr;
     public void onAttach()override{ 
     
-        setWindowFlags(CustomizeWindowHint | WindowCloseButtonHint);
+        setWindowFlags(Constant.CustomizeWindowHint | Constant.WindowCloseButtonHint);
         
         setFixedSize(width(), height());
         
-        btnOk = (QXPushButton)attachByName(new QXPushButton(), "btnOk");
-        btnCancel = (QXPushButton)attachByName(new QXPushButton(), "btnCancel");
+        btnOk = (QPushButton)attachByName(new QPushButton(), "btnOk");
+        btnCancel = (QPushButton)attachByName(new QPushButton(), "btnCancel");
         
-        edtLine = (QXLineEdit)attachByName(new QXLineEdit(), "edtLine");
-        QXLabel label = (QXLabel)attachByName(new QXLabel(), "label");
+        edtLine = (QLineEdit)attachByName(new QLineEdit(), "edtLine");
+        QLabel label = (QLabel)attachByName(new QLabel(), "label");
         
         if (label != nilptr){
             edtLine.setText(listener.getDefault());
             
             btnOk.setOnClickListener(
             new onClickListener(){
-                void onClick(QXObject obj, bool checked)override{
+                void onClick(QObject obj, bool checked)override{
                     String text = edtLine.getText();
                     if (listener.onInputOk(text)){
                         result = text;
@@ -51,7 +51,7 @@ class InputDialog : QXDialog {
             
             btnCancel.setOnClickListener(
             new onClickListener(){
-                void onClick(QXObject obj, bool checked)override{
+                void onClick(QObject obj, bool checked)override{
                     if (listener.onInputCancel()){
                         close();
                     }
@@ -69,8 +69,8 @@ class InputDialog : QXDialog {
     }
     
     public static void requestInput(onInputListener lis){
-		QXDialog newDlg = new QXDialog();
-        if (newDlg.load("ui/goto.ui") == false){
+		QDialog newDlg = new QDialog();
+        if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/goto.ui"))) == false){
             return ;
         }
         InputDialog wizard = new InputDialog(lis);	
@@ -80,8 +80,8 @@ class InputDialog : QXDialog {
     }
     
     public static String requestInputDlg(onInputListener lis){
-		QXDialog newDlg = new QXDialog();
-        if (newDlg.load("ui/goto.ui") == false){
+		QDialog newDlg = new QDialog();
+        if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/goto.ui"))) == false){
             return nilptr;
         }
         InputDialog wizard = new InputDialog(lis);	

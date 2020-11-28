@@ -1,12 +1,12 @@
 //xlang Source, Name:TextDetail.xcsm 
 //Date: Sun Sep 01:45:35 2018 
 
-class TextDetail : QXDialog {
+class TextDetail : QDialog {
 
 	String title = "详细信息";
 	String text;
-    QXSci _sci;
-    static QXRect rect = nilptr;
+    QScintilla _sci;
+    static QRect rect = nilptr;
     public interface closeListener{
 		void onCreate();
 		void onClose(String text, bool updated);
@@ -27,77 +27,77 @@ class TextDetail : QXDialog {
 			syntaxForOutputDark();
             return ;
 		}
-        _sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);
+        _sci.sendEditor(QScintilla.SCI_SETCODEPAGE, QScintilla.SC_CP_UTF8);
         _sci.setWrap(true);
-        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_DEFAULT, 0xffffffff);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_DEFAULT, 0xff222827);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, 75, 0xff222827);
-        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
-        //_sci.sendEditor(QXSci.STYLE_LINENUMBER, 1, 0);
-        _sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,Setting.getEditorFont()); 
-        _sci.sendEditor(QXSci.SCI_STYLESETSIZEFRACTIONAL, QXSci.STYLE_DEFAULT,Setting.getEditorFontSize()); 
-        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0); 
-        _sci.sendEditor(QXSci.SCI_SETEOLMODE, 1, 0); 
+        _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.STYLE_DEFAULT, 0xffffffff);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_DEFAULT, 0xff222827);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, 75, 0xff222827);
+        _sci.sendEditor(QScintilla.SCI_STYLECLEARALL, 0, 0);
+        //_sci.sendEditor(QScintilla.STYLE_LINENUMBER, 1, 0);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFONT, QScintilla.STYLE_DEFAULT,Setting.getEditorFont()); 
+        _sci.sendEditor(QScintilla.SCI_STYLESETSIZEFRACTIONAL, QScintilla.STYLE_DEFAULT,Setting.getEditorFontSize()); 
+        _sci.sendEditor(QScintilla.SCI_STYLECLEARALL, 0, 0); 
+        _sci.sendEditor(QScintilla.SCI_SETEOLMODE, 1, 0); 
         
-        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, 0, QXSci.SC_MARGIN_NUMBER); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 0, 40); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 1, 10); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 2, 0); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 3, 0); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 4, 0); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINTYPEN, 0, QScintilla.SC_MARGIN_NUMBER); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 0, 40); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 1, 10); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 2, 0); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 3, 0); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 4, 0); 
 
-        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_LINENUMBER, 0xffefefef);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_LINENUMBER, 0xffaf912b);
-        _sci.sendEditor(QXSci.SCI_SETMARGINLEFT, 0, 0);
+        _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.STYLE_LINENUMBER, 0xffefefef);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_LINENUMBER, 0xffaf912b);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINLEFT, 0, 0);
         
-        _sci.sendEditor(QXSci.SCI_SETCARETFORE,0xff000000,0);
+        _sci.sendEditor(QScintilla.SCI_SETCARETFORE,0xff000000,0);
         
-        _sci.sendEditor(QXSci.SCI_SETCARETLINEVISIBLE, 1); 
-        _sci.sendEditor(QXSci.SCI_SETCARETLINEBACK, 0xffefefef); 
+        _sci.sendEditor(QScintilla.SCI_SETCARETLINEVISIBLE, 1); 
+        _sci.sendEditor(QScintilla.SCI_SETCARETLINEBACK, 0xffefefef); 
 
-        _sci.sendEditor(QXSci.SCI_SETTABWIDTH, 4); 
+        _sci.sendEditor(QScintilla.SCI_SETTABWIDTH, 4); 
     }
     
     public void syntaxForOutputDark(){
-        _sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);
-        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_DEFAULT, 0xff262525);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_DEFAULT, 0xffefefef);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, 75, 0xffefefef);
-        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
-        //_sci.sendEditor(QXSci.STYLE_LINENUMBER, 1, 0);
-        _sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,Setting.getEditorFont()); 
-        _sci.sendEditor(QXSci.SCI_STYLESETSIZEFRACTIONAL, QXSci.STYLE_DEFAULT,Setting.getEditorFontSize()); 
-        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0); 
-        //_sci.sendEditor(QXSci.SCI_SETREADONLY, 1);
+        _sci.sendEditor(QScintilla.SCI_SETCODEPAGE, QScintilla.SC_CP_UTF8);
+        _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.STYLE_DEFAULT, 0xff262525);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_DEFAULT, 0xffefefef);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, 75, 0xffefefef);
+        _sci.sendEditor(QScintilla.SCI_STYLECLEARALL, 0, 0);
+        //_sci.sendEditor(QScintilla.STYLE_LINENUMBER, 1, 0);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFONT, QScintilla.STYLE_DEFAULT,Setting.getEditorFont()); 
+        _sci.sendEditor(QScintilla.SCI_STYLESETSIZEFRACTIONAL, QScintilla.STYLE_DEFAULT,Setting.getEditorFontSize()); 
+        _sci.sendEditor(QScintilla.SCI_STYLECLEARALL, 0, 0); 
+        //_sci.sendEditor(QScintilla.SCI_SETREADONLY, 1);
         //C++语法解析 
-        //_sci.sendEditor(QXSci.SCI_SETLEXER, QXSci.SCLEX_CPP, 0); 
-        //_sci.sendEditor(QXSci.SCI_SETKEYWORDS, 0, szKeywords1);//设置关键字 
-        //_sci.sendEditor(QXSci.SCI_SETKEYWORDS, 1, szKeywords2);//设置关键字 
+        //_sci.sendEditor(QScintilla.SCI_SETLEXER, QScintilla.SCLEX_CPP, 0); 
+        //_sci.sendEditor(QScintilla.SCI_SETKEYWORDS, 0, szKeywords1);//设置关键字 
+        //_sci.sendEditor(QScintilla.SCI_SETKEYWORDS, 1, szKeywords2);//设置关键字 
         // 下面设置各种语法元素风格 
-        _sci.sendEditor(QXSci.SCI_SETEOLMODE, 1, 0); 
+        _sci.sendEditor(QScintilla.SCI_SETEOLMODE, 1, 0); 
         
-        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, 0, QXSci.SC_MARGIN_NUMBER); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 0, 40); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 1, 10); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 2, 0); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 3, 0); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 4, 0); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINTYPEN, 0, QScintilla.SC_MARGIN_NUMBER); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 0, 40); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 1, 10); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 2, 0); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 3, 0); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 4, 0); 
         
-        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_LINENUMBER, 0xff262525);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_LINENUMBER, 0xff666666);
-        _sci.sendEditor(QXSci.SCI_SETMARGINLEFT, 0, 0);
+        _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.STYLE_LINENUMBER, 0xff262525);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_LINENUMBER, 0xff666666);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINLEFT, 0, 0);
         
-        _sci.sendEditor(QXSci.SCI_SETCARETFORE,0xffffffff,0);
+        _sci.sendEditor(QScintilla.SCI_SETCARETFORE,0xffffffff,0);
         
-        _sci.sendEditor(QXSci.SCI_SETCARETLINEVISIBLE, 1); 
-        _sci.sendEditor(QXSci.SCI_SETCARETLINEBACK, 0xff202020); 
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENT, 0xff666666);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTLINE, 0xff666666);
+        _sci.sendEditor(QScintilla.SCI_SETCARETLINEVISIBLE, 1); 
+        _sci.sendEditor(QScintilla.SCI_SETCARETLINEBACK, 0xff202020); 
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_COMMENT, 0xff666666);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_COMMENTLINE, 0xff666666);
         
     }
     
     public bool onClose(){
-        rect = new QXRect(x(), y(), width(), height());
+        rect = new QRect(x(), y(), width(), height());
 		if (cl_lis != nilptr){
 			String update_txt = _sci.getText();
 			cl_lis.onClose(update_txt, text.equals(update_txt) == false);
@@ -105,19 +105,19 @@ class TextDetail : QXDialog {
         return true;
     }
     
-   public bool create(String caption,@NotNilptr String str, QXWidget parent, bool modal){
+   public bool create(String caption,@NotNilptr String str, QWidget parent, bool modal){
 		title = caption;
 		text = str;
         if (parent == nilptr){
             parent = XWorkspace.workspace;
         }
 		if (super.create(XWorkspace.workspace)){
-			_sci = new QXSci();
+			_sci = new QScintilla();
 			if (_sci.create(this)){
 				syntaxForOutput();
-                _sci.sendEditor(QXSci.SCI_SETEOLMODE, QXSci.SC_EOL_LF, 0);
+                _sci.sendEditor(QScintilla.SCI_SETEOLMODE, QScintilla.SC_EOL_LF, 0);
 				setOnLayoutEventListener(new onLayoutEventListener(){
-						void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+						void onResize(QObject obj, int w, int h, int oldw, int oldh)override {
 							if (_sci != nilptr){
 								_sci.resize(w, h );
 							}
@@ -125,7 +125,7 @@ class TextDetail : QXDialog {
 				});
 			
 				//setWindowFlags(CustomizeWindowHint | WindowMinMaxButtonsHint | WindowCloseButtonHint);
-                setWindowFlags(CustomizeWindowHint | WindowCloseButtonHint  | Dialog  | WindowTitleHint);
+                setWindowFlags(Constant.CustomizeWindowHint | Constant.WindowCloseButtonHint  | Constant.Dialog  | Constant.WindowTitleHint);
 				setWindowTitle(title);
 				_sci.setText(str);
                 
@@ -152,11 +152,11 @@ class TextDetail : QXDialog {
                 show();
                 
                 setOnActivateListener(new onActivateListener(){
-					void onWindowActivate(@NotNilptr QXObject obj){
-						((QXWidget)obj).setOpacity(1.0);
+					void onWindowActivate(@NotNilptr QObject obj){
+						((QWidget)obj).setOpacity(1.0);
 					}
-					void onWindowDeactivate(QXObject obj){
-						((QXWidget)obj).setOpacity(0.6);
+					void onWindowDeactivate(QObject obj){
+						((QWidget)obj).setOpacity(0.6);
 					}
 				});
 				return true;
@@ -166,32 +166,6 @@ class TextDetail : QXDialog {
     }
     
     
-    public static class ContextMenu{
-		public QXMenu contextMenu = new QXMenu();
-		public QXAction [] actions;
-		
-		public void create(@NotNilptr QXWidget parent,@NotNilptr  String [] acts, onEventListener listener){
-			if (contextMenu.create(parent)){
-				actions = new QXAction[acts.length];
-				for (int i = 0; i < acts.length; i ++){
-					QXAction action = new QXAction();
-					if (action.create(contextMenu)){
-						
-						if (acts[i].equals("-")){
-							action.setSeparator(true);
-						}else{
-							action.setEnable(true);	
-							action.setText(acts[i]);
-							action.setOnEventListener(listener);
-						}
-					}
-					actions[i] = action;
-				}
-				parent.setContextMenuPolicy(ActionsContextMenu);
-				parent.addActions(actions);
-			}
-		}
-	};
     
     
     ContextMenu _contextMenu = new ContextMenu();
@@ -211,13 +185,13 @@ class TextDetail : QXDialog {
                return path.toRelativePath(ref,false,true);
                
            }
-		   void onTrigger(QXObject obj) override{
+		   void onTrigger(QObject obj) override{
 				if (obj == _contextMenu.actions[0]){
-                    String path = QXFileDialog.getFolderPath("浏览文件夹","",_default_folder, TextDetail.this);
+                    String path = QFileDialog.getFolderPath("浏览文件夹","",_default_folder, TextDetail.this);
                     if (path != nilptr && path.length() > 0){
                         bool breal = false;
                         String pjdir = XWorkspace.workspace.currentProjectDir();
-                        if (pjdir != nilptr && QXMessageBox.Question("提示","是否转换为当前项目的相对路径?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes) == QXMessageBox.Yes){
+                        if (pjdir != nilptr && QMessageBox.Question("提示","是否转换为当前项目的相对路径?",QMessageBox.Yes | QMessageBox.No,QMessageBox.Yes) == QMessageBox.Yes){
                             breal = true;
                         }
                         _default_folder = path;
@@ -225,11 +199,11 @@ class TextDetail : QXDialog {
                     }
                 }else
                 if (obj == _contextMenu.actions[2]){
-                    String [] path = QXFileDialog.getOpenFileNames("浏览文件", _default_openpath, "*",TextDetail.this);
+                    String [] path = QFileDialog.getOpenFileNames("浏览文件", _default_openpath, "*",TextDetail.this);
                     if (path != nilptr){
                         bool breal = false;
                         String pjdir = XWorkspace.workspace.currentProjectDir();
-                        if (pjdir != nilptr && QXMessageBox.Question("提示","是否转换为当前项目的相对路径?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes) == QXMessageBox.Yes){
+                        if (pjdir != nilptr && QMessageBox.Question("提示","是否转换为当前项目的相对路径?",QMessageBox.Yes | QMessageBox.No,QMessageBox.Yes) == QMessageBox.Yes){
                             breal = true;
                         }
                         
@@ -242,11 +216,11 @@ class TextDetail : QXDialog {
                     }
                 }else
                 if (obj == _contextMenu.actions[3]){
-                    String path = QXFileDialog.getSaveFileName("选择保存位置",_default_savepath,"*",TextDetail.this);
+                    String path = QFileDialog.getSaveFileName("选择保存位置",_default_savepath,"*",TextDetail.this);
                     if (path != nilptr && path.length() > 0){
                         bool breal = false;
                         String pjdir = XWorkspace.workspace.currentProjectDir();
-                        if (pjdir != nilptr && QXMessageBox.Question("提示","是否转换为当前项目的相对路径?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes) == QXMessageBox.Yes){
+                        if (pjdir != nilptr && QMessageBox.Question("提示","是否转换为当前项目的相对路径?",QMessageBox.Yes | QMessageBox.No,QMessageBox.Yes) == QMessageBox.Yes){
                             breal = true;
                         }
                         
@@ -269,6 +243,6 @@ class TextDetail : QXDialog {
 		
 		
 		String []acts = {"浏览文件夹", "-", "浏览文件", "选择保存位置",  "-", "复制", "粘贴", "-", "关闭"};
-		_contextMenu.create(_sci, acts, menuListener);
+		_contextMenu.create(_sci, acts, menuListener, nilptr);
 	}
 };

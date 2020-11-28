@@ -1,5 +1,7 @@
 //xlang 
-
+using{
+    Qt;
+};
 class XLANGPlugManager{
 
 	public static IXStudioController xcontroller;
@@ -10,10 +12,27 @@ class XLANGPlugManager{
 		String getName() override {
 			return "xlang";
 		}
-		
+        
+        ActionIdent [] getSolutionContextActions(){
+            return nilptr;
+        }
+        
+        ActionIdent [] getClassViewContextActions(){
+            return nilptr;
+        }
+        
+        void updateSolutionActionState(String files){
+            
+        }
+        
+        void updateClassViewActionState(String file, ClassViewInfo info){
+            
+        }
+        
 		void onTextEditorCreated(TextEditorController )override{
 		
 		}
+        
 		IProjectPlugin getProjectPlugin()override{
             return nilptr;
         }
@@ -45,7 +64,7 @@ class XLANGPlugManager{
         }
         
         long getVersion()override{
-            return 1000;
+            return 1001;
         } 
         String getDescrition()override{
             return "xlang 基础开发扩展.";

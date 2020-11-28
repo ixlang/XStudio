@@ -154,7 +154,7 @@ class Project : IProject
                 }
             } catch(Exception e) {
                 if (btips) {
-                    QXMessageBox.Critical("错误", "找不到此配置", QXMessageBox.Ok, QXMessageBox.Ok);
+                    QMessageBox.Critical("错误", "找不到此配置", QMessageBox.Ok, QMessageBox.Ok);
                 }
             }
         }
@@ -457,7 +457,7 @@ class Project : IProject
             pluginsConf = proj.getString("plugins");
             if (false == loadConfigure((JsonObject)proj.get("configures"))) {
                 if (bconsole == false) {
-                    QXMessageBox.Critical("错误", "找不到有效的项目配置.", QXMessageBox.Ok, QXMessageBox.Ok);
+                    QMessageBox.Critical("错误", "找不到有效的项目配置.", QMessageBox.Ok, QMessageBox.Ok);
                 } else {
                     _system_.consoleWrite(XPlatform.converToPlatformCharSet("找不到有效的配置") + "\n");
                 }
@@ -486,7 +486,7 @@ class Project : IProject
                 return true;
             } else {
                 if (bconsole == false) {
-                    QXMessageBox.Critical("错误", "不支持的项目类型.\n请注意: 没有为该类型项目提供配置文件.", QXMessageBox.Ok, QXMessageBox.Ok);
+                    QMessageBox.Critical("错误", "不支持的项目类型.\n请注意: 没有为该类型项目提供配置文件.", QMessageBox.Ok, QMessageBox.Ok);
                 } else {
                     _system_.consoleWrite(XPlatform.converToPlatformCharSet("不支持的项目类型.\n请注意: 没有为该类型项目提供配置文件:" + getLanguage()) + "\n");
                 }
@@ -512,7 +512,7 @@ class Project : IProject
             }
         } catch(Exception e) {
             if (bconsole == false) {
-                QXMessageBox.Critical("错误", "加载项目时出现错误.", QXMessageBox.Ok, QXMessageBox.Ok);
+                QMessageBox.Critical("错误", "加载项目时出现错误.", QMessageBox.Ok, QMessageBox.Ok);
             } else {
                 _system_.consoleWrite(XPlatform.converToPlatformCharSet("加载项目时出现错误:" + file) + "\n");
             }
@@ -560,7 +560,7 @@ class Project : IProject
         String rfp = filePath.toRelativePath(getProjectDir(), false, false);
         /*_system_.consoleWrite(String.format(" %s toRelativePath %s = %s\n", filePath, getProjectDir(), rfp));*/
         if (rfp.length() == 0) {
-            QXMessageBox.Critical("注意", "无法将该文件转换为相对路径储存, 项目移植或者位置发生改动时将不能被正常编译!", QXMessageBox.Ok, QXMessageBox.Ok);
+            QMessageBox.Critical("注意", "无法将该文件转换为相对路径储存, 项目移植或者位置发生改动时将不能被正常编译!", QMessageBox.Ok, QMessageBox.Ok);
             rfp = filePath;
         }
         if (intelliSense != nilptr) {
@@ -585,7 +585,7 @@ class Project : IProject
         String rfp = filePath.toRelativePath(getProjectDir(), false, false);
         /*_system_.consoleWrite(String.format(" %s toRelativePath %s = %s\n", filePath, getProjectDir(), rfp));*/
         if (rfp.length() == 0) {
-            QXMessageBox.Critical("注意", "无法将该文件转换为相对路径储存, 项目移植或者位置发生改动时将不能被正常编译!", QXMessageBox.Ok, QXMessageBox.Ok);
+            QMessageBox.Critical("注意", "无法将该文件转换为相对路径储存, 项目移植或者位置发生改动时将不能被正常编译!", QMessageBox.Ok, QMessageBox.Ok);
             rfp = filePath;
         }
         if (root != nilptr) {

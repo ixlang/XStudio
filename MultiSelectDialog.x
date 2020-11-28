@@ -1,7 +1,7 @@
 //xlang Source, Name:MultiSelectDialog.x 
 //Date: Sat Apr 04:24:36 2020 
 
-class MultiSelectDialog : QXDialog{    
+class MultiSelectDialog : QDialog{    
     InputDialog.onInputListener listener;
 	public MultiSelectDialog(InputDialog.onInputListener intputlis, String [] items){
 		listener = intputlis;
@@ -9,8 +9,8 @@ class MultiSelectDialog : QXDialog{
     }
     
     String [] displayItems;
-    QXPushButton btnOk, btnCancel;
-    QXTreeView treeWidget;
+    QPushButton btnOk, btnCancel;
+    QTreeWidget treeWidget;
 
     public void onOk(){
         long item = treeWidget.getSelItem();
@@ -24,29 +24,29 @@ class MultiSelectDialog : QXDialog{
     }
     public void onAttach()override{ 
     
-        setWindowFlags(CustomizeWindowHint | WindowMinMaxButtonsHint | WindowCloseButtonHint);
+        setWindowFlags(Constant.CustomizeWindowHint | Constant.WindowMinMaxButtonsHint | Constant.WindowCloseButtonHint);
         
-        btnOk = (QXPushButton)attachByName(new QXPushButton(), "btnOk");
-        btnCancel = (QXPushButton)attachByName(new QXPushButton(), "btnCancel");
-        treeWidget = (QXTreeView)attachByName(new QXTreeView(), "treeWidget");
+        btnOk = (QPushButton)attachByName(new QPushButton(), "btnOk");
+        btnCancel = (QPushButton)attachByName(new QPushButton(), "btnCancel");
+        treeWidget = (QTreeWidget)attachByName(new QTreeWidget(), "treeWidget");
                 
         
         
         treeWidget.setOnTreeViewItemEvent(new onTreeViewItemEvent(){
-            void onItemDoubleClicked(QXTreeView,long item, int column) {
+            void onItemDoubleClicked(QTreeWidget,long item, int column) {
                 onOk();
             }
         });
         btnOk.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
                 onOk();
             }
         });
         
         btnCancel.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
                 if (listener.onInputCancel()){
 					done(0);
                 }
@@ -73,8 +73,8 @@ class MultiSelectDialog : QXDialog{
     }
     
     public static int requestSelect(InputDialog.onInputListener lis, String [] items){
-		QXDialog newDlg = new QXDialog();
-        if (newDlg.load("ui/mulsel.ui") == false){
+		QDialog newDlg = new QDialog();
+        if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/mulsel.ui"))) == false){
             return 0;
         }
         MultiSelectDialog wizard = new MultiSelectDialog(lis, items);	

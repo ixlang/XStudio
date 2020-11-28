@@ -1,8 +1,8 @@
 
-class XWndInfor : QXDockWidget
+class XWndInfor : QDockWidget
 {
-    QXTreeView _listview;
-    QXPushButton btnError, btnWarning, btnTips;
+    QTreeWidget _listview;
+    QPushButton btnError, btnWarning, btnTips;
     public XWorkspace _mdi_area;
 
     public static XWndInfor infoWnd;
@@ -11,7 +11,7 @@ class XWndInfor : QXDockWidget
 
     onTreeViewItemEvent listlistener = new onTreeViewItemEvent()
     {
-        void onItemClicked(@NotNilptr QXTreeView tree,long item, int column)override {
+        void onItemClicked(@NotNilptr QTreeWidget tree,long item, int column)override {
             synchronized(infoLock) {
                 triggeInfo(tree, item);
             }
@@ -22,7 +22,7 @@ class XWndInfor : QXDockWidget
     Vector<ICompileInfo> infoList = new Vector<ICompileInfo>();
     Object infoLock = new Object();
 
-    void triggeInfo(@NotNilptr QXTreeView tree,long item)
+    void triggeInfo(@NotNilptr QTreeWidget tree,long item)
     {
         String file = tree.getItemText(item, 1);
         String line = tree.getItemText(item, 2);
@@ -43,18 +43,18 @@ class XWndInfor : QXDockWidget
     onClickListener buttonListener =
         new onClickListener()
     {
-        void onClick(QXObject obj, bool checked)override {
+        void onClick(QObject obj, bool checked)override {
             loadInfo(nilptr);
         }
     };
 
     public void onAttach()
     {
-        _listview = (QXTreeView)attachByName(new QXTreeView(), "infoList");
+        _listview = (QTreeWidget)attachByName(new QTreeWidget(), "infoList");
 
-        btnError = (QXPushButton)attachByName(new QXPushButton(), "btnError");
-        btnWarning = (QXPushButton)attachByName(new QXPushButton(), "btnWarning");
-        btnTips = (QXPushButton)attachByName(new QXPushButton(), "btnTips");
+        btnError = (QPushButton)attachByName(new QPushButton(), "btnError");
+        btnWarning = (QPushButton)attachByName(new QPushButton(), "btnWarning");
+        btnTips = (QPushButton)attachByName(new QPushButton(), "btnTips");
 
         btnError.setOnClickListener(buttonListener);
         btnWarning.setOnClickListener(buttonListener);
@@ -62,7 +62,7 @@ class XWndInfor : QXDockWidget
         /*
         改成layout之后就不需要resize了
         setOnLayoutEventListener(new onLayoutEventListener(){
-        void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+        void onResize(QObject obj, int w, int h, int oldw, int oldh)override {
             if (_listview != nilptr){
                 _listview.resize(w, h - 60);
                 btnError.move(0, h - 55);

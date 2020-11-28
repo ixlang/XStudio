@@ -1,34 +1,53 @@
 
-class XWndClass : QXDockWidget
+class XWndClass : QDockWidget
 {
 
-    QXTreeView _treeview;
+    QTreeWidget _treeview;
     public XWorkspace workspace;
     JsonArray sources;
-    QXLineEdit editSearch;
-
+    QLineEdit editSearch;
+    ContextMenu _contextMenu = new ContextMenu();
+    
     public static class ItemLoader
     {
         public long loaditem;
         public JsonArray object;
-        public ItemLoader(long i, JsonArray o)
+        public bool isStatic;
+        public ItemLoader(long i, JsonArray o, bool bs)
         {
             loaditem = i;
             object = o;
+            isStatic = bs;
         }
     };
 
-    public static class Position
+    public static class Position : ClassViewInfo 
     {
-        public Position(int s,int l,int r, bool b)
+        public Position(int s,int l,int r, bool b, JsonObject _node)
         {
             source = s;
             line = l;
             row = r;
             lib = b;
+            node = _node;
         }
+        
         public int source = -1, line, row;
         public bool lib = false;
+        public JsonObject node;
+        
+        public int getLine(){
+            return line;
+        }
+        int getColumn(){
+            return row;
+        }
+        JsonObject getObject(){
+            return node;
+        }
+        bool isExternal(){
+            return lib;
+        }
     };
 
     Map<long, ItemLoader> expand_data = new Map<long, ItemLoader>();
@@ -40,38 +59,51 @@ class XWndClass : QXDockWidget
 
     public void onAttach()
     {
-        editSearch =  (QXLineEdit)attachByName(new QXLineEdit(), "classSearch");
-        _treeview = (QXTreeView)attachByName(new QXTreeView(), "tree_class");
+        editSearch =  (QLineEdit)attachByName(new QLineEdit(), "classSearch");
+        _treeview = (QTreeWidget)attachByName(new QTreeWidget(), "tree_class");
         wndClass = this;
         /*
         改成layout之后就不需要resize了
         setOnLayoutEventListener(new onLayoutEventListener(){
-                void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+                void onResize(QObject obj, int w, int h, int oldw, int oldh)override {
                     if (_treeview != nilptr){
                         _treeview.resize(w, h - 25);
                     }
                 }
         });*/
         _treeview.setOnTreeViewItemEvent(new onTreeViewItemEvent() {
-            void onItemExpanded(QXTreeView,long item)override {
+            void onItemExpanded(QTreeWidget,long item)override {
                 XWndClass.this.expandLoad(item);
             }
-            void onItemDoubleClicked(QXTreeView,long item, int column) {
+            void onItemDoubleClicked(QTreeWidget,long item, int column) {
                 String text = _treeview.getItemText(item,0);
                 if (text.equals("外部库")) {
                     workspace.showProperites("项目设置");
                 }
             }
-            void onItemClicked(QXTreeView,long item, int column)override {
+            void onItemClicked(QTreeWidget,long item, int column)override {
                 XWndClass.this.clickItem(item);
+            }
+            
+            void onItemPressed(QTreeWidget, long item, int column)override {
+                Position pos = nilptr;
+                String source = nilptr;
+                try {
+                    pos = position_info.get(item);
+                    source = sources.getString(pos.source);
+                } catch(Exception e) {
+
+                }
+                
+                PluginsController.updateClassViewActionState(workspace.getCurrentProject(), source, pos);
             }
         });
 
         editSearch.setOnKeyEventListener(new onKeyEventListener() {
-            bool onKeyPress(QXObject obj,int key,bool repeat,int count,String text,int scanCode,int virtualKey,int modifier)override {
-                if (key == Key_Escape) {
+            bool onKeyPress(QObject obj,int key,bool repeat,int count,String text,int scanCode,int virtualKey,int modifier)override {
+                if (key == Constant.Key_Escape) {
                     editSearch.setText("");
-                } else if (key == Key_Return) {
+                } else if (key == Constant.Key_Return) {
                     synchronized(searchLock) {
                         searchLock.notify();
                     }
@@ -81,7 +113,7 @@ class XWndClass : QXDockWidget
         });
 
         editSearch.setOnEditEventListener(new onEditEventListener() {
-            void onTextChanged(QXObject, String text)override {
+            void onTextChanged(QObject, String text)override {
                 if (ignoreSearch || workspace.getCurrentProject() == nilptr) {
                     return;
                 }
@@ -94,8 +126,29 @@ class XWndClass : QXDockWidget
                 }
             }
         });
+        
     }
 
+    public void createContextMenu()
+    {
+        ActionIdent [] ais = PluginsController.getClassViewContextActions();
+        __nilptr_safe(_treeview);
+        String [] acts = { "复制到剪贴板" };
+        
+        _contextMenu.create(_treeview, acts, new onEventListener (){
+            public void onTrigger(QObject obj) {
+                long item = _treeview.getSelItem();
+                if (item != 0){
+                    String str = _treeview.getItemText(item,0);
+                    if (str != nilptr){
+                        setClipboardText(str);
+                    }
+                }
+            }
+        }, ais);
+        _contextMenu.setEnable(0, true);
+    }
+    
     Thread searchThread = nilptr;
     bool ignoreSearch = false;
     Object searchLock = new Object();
@@ -183,12 +236,12 @@ class XWndClass : QXDockWidget
         if (pos != nilptr) {
             //_system_.consoleWrite("" + pos.source + ": " + pos.line + "." + pos.row + "\n");
             if (pos.source == -1) {
-                //QXMessageBox.Information("注意", "对象不在源代码中定义.", QXMessageBox.Ok, QXMessageBox.Ok);
+                //QMessageBox.Information("注意", "对象不在源代码中定义.", QMessageBox.Ok, QMessageBox.Ok);
                 return ;
             }
             String source = sources.getString(pos.source);
             if (source == nilptr || source.length() == 0) {
-                //QXMessageBox.Information("注意", "对象不在源代码中定义.", QXMessageBox.Ok, QXMessageBox.Ok);
+                //QMessageBox.Information("注意", "对象不在源代码中定义.", QMessageBox.Ok, QMessageBox.Ok);
                 return ;
             }
             
@@ -199,7 +252,7 @@ class XWndClass : QXDockWidget
             
             if (XPlatform.existsSystemFile(source) == false) {
                 if (pos.lib == false) {
-                    QXMessageBox.Critical("文件不存在", "找不到文件:" + sources.getString(pos.source) + "该位置的文件已不存在.", QXMessageBox.Ok, QXMessageBox.Ok);
+                    QMessageBox.Critical("文件不存在", "找不到文件:" + sources.getString(pos.source) + "该位置的文件已不存在.", QMessageBox.Ok, QMessageBox.Ok);
                 }
             } else {
                 workspace.openTextFileInfo(source,  pos.line + 1, pos.row + 1);
@@ -224,7 +277,7 @@ class XWndClass : QXDockWidget
                 _treeview.setItemText(loader.loaditem, 0, "无");
             }
             expand_data.remove(item);
-            loadObject(item, nilptr, loader.object, 0);
+            loadObject(item, nilptr, loader.object, 0, loader.isStatic);
         }
     }
 
@@ -265,7 +318,7 @@ class XWndClass : QXDockWidget
                 hlibs = new long[libs.length()];
 
                 if (libs.length() > 0) {
-                    libroot = _treeview.addItem("res/toolbar/sources.png", "外部库");
+                    libroot = _treeview.addItem("res/toolbar/extern.png", "外部库");
                 }
                 for (int i = 0, c = libs.length(); i < c; i++) {
                     String var = libs.getString(i);
@@ -279,7 +332,7 @@ class XWndClass : QXDockWidget
             if (links != nilptr) {
                 hlinks = new long[links.length()];
                 if (links.length() > 0 && libroot == 0) {
-                    libroot = _treeview.addItem("res/toolbar/sources.png", "外部库");
+                    libroot = _treeview.addItem("res/toolbar/extern.png", "外部库");
                 }
                 for (int i = 0, c = links.length(); i < c; i++) {
                     String var = links.getString(i);
@@ -366,8 +419,6 @@ class XWndClass : QXDockWidget
                                     fname = fname.upper();
                                 }
                                 jo.remove("mathced");
-                                
-                                
                                 if (Pattern.test(fname, key, 0, false)) {
                                     jo.put("mathced",1);
                                     bVisible ++;
@@ -403,9 +454,9 @@ class XWndClass : QXDockWidget
             JsonArray template_class = (JsonArray)project.xintelliSenseMap.get("template_class");
             JsonArray template_instance = (JsonArray)project.xintelliSenseMap.get("template_instance");
             JsonArray heap = (JsonArray)project.xintelliSenseMap.get("heap");
-            loadObject(root, libs, template_class, hbuildin);
-            loadObject(root, libs, template_instance, hbuildin);
-            loadObject(root, libs, heap, hbuildin);
+            loadObject(root, libs, template_class, hbuildin, false);
+            loadObject(root, libs, template_instance, hbuildin, false);
+            loadObject(root, libs, heap, hbuildin, false);
             _treeview.setExpand(root, true);
         }
     }
@@ -413,7 +464,7 @@ class XWndClass : QXDockWidget
     {
         return _treeview.insertItem(item, nilptr, "加载中...");
     }
-    public void loadObject(long hroot, long [][]libs, JsonArray objs, long hbuildin)
+    public void loadObject(long hroot, long [][]libs, JsonArray objs, long hbuildin, bool isStatic)
     {
         if (objs == nilptr) {
             return ;
@@ -442,7 +493,8 @@ class XWndClass : QXDockWidget
                 }
             }
             int type = obj.getInt("type");
-
+            int visibility = obj.getInt("visibility");
+            
             bool blib = obj.has("lib");
             if (blib && libs != nilptr && libs[0] != nilptr) {
                 int libid = obj.getInt("lib");
@@ -463,9 +515,14 @@ class XWndClass : QXDockWidget
                 }
             }
 
+            String prototype = obj.getString("prototype");
+            
             long item = 0;
             if (type == 34) {
                 item = _treeview.insertItem(root, "res/toolbar/template.png", obj.getString("name"));
+                if (prototype != nilptr){
+                    _treeview.insertItem(item, "res/toolbar/prototype.png", prototype);
+                }
             } else if (type == 31) {
                 bool bpackage = false;
                 bool binterface = false;
@@ -483,6 +540,10 @@ class XWndClass : QXDockWidget
                 } else {
                     item = _treeview.insertItem(root, "res/toolbar/class.png", obj.getString("name"));
                 }
+                
+                if (prototype != nilptr){
+                    _treeview.insertItem(item, "res/toolbar/prototype.png", prototype);
+                }
                 if (obj.has("base")) {
                     long temp = _treeview.insertItem(item, "res/toolbar/class.png", "基类");
                     _treeview.insertItem(temp, "res/toolbar/class.png", obj.getString("base"));
@@ -490,37 +551,37 @@ class XWndClass : QXDockWidget
 
                 if (bpackage){
                     long static_prop = _treeview.insertItem(item, "res/toolbar/static.png", "成员");
-                    expand_data.put(static_prop,new ItemLoader(insertLoad(static_prop),   (JsonArray)obj.get("static_properites")));
+                    expand_data.put(static_prop,new ItemLoader(insertLoad(static_prop),   (JsonArray)obj.get("static_properites"), false));
                 }else
                 if (binterface){
                     long method = _treeview.insertItem(item, "res/toolbar/function.png", "抽象方法");
                     long static_method = _treeview.insertItem(item, "res/toolbar/staticfunction.png", "静态接口方法");
-                    expand_data.put(method, new ItemLoader(insertLoad(method),  (JsonArray)obj.get("method")));
-                    expand_data.put(static_method,new ItemLoader( insertLoad(static_method),  (JsonArray)obj.get("static_method")));
+                    expand_data.put(method, new ItemLoader(insertLoad(method),  (JsonArray)obj.get("method"), false));
+                    expand_data.put(static_method,new ItemLoader( insertLoad(static_method),  (JsonArray)obj.get("static_method"), true));
                 }else{ 
 
                     JsonArray properites = (JsonArray)obj.get("properites");
                     if (properites != nilptr && properites.length() > 0){
                         long prop = _treeview.insertItem(item, "res/toolbar/member.png", "成员");
-                        expand_data.put(prop,new ItemLoader(insertLoad(prop), properites));
+                        expand_data.put(prop,new ItemLoader(insertLoad(prop), properites, false));
                     }
                     
                     JsonArray static_properites = (JsonArray)obj.get("static_properites");
                     if (static_properites != nilptr && static_properites.length() > 0){
                         long static_prop = _treeview.insertItem(item, "res/toolbar/static.png", "静态成员");
-                        expand_data.put(static_prop,new ItemLoader(insertLoad(static_prop),   static_properites));
+                        expand_data.put(static_prop,new ItemLoader(insertLoad(static_prop),   static_properites, true));
                     }
                     
                     JsonArray methods = (JsonArray)obj.get("method");
                     if (methods != nilptr && methods.length() > 0){
                         long method = _treeview.insertItem(item, "res/toolbar/function.png", "方法");
-                        expand_data.put(method, new ItemLoader(insertLoad(method),  methods));
+                        expand_data.put(method, new ItemLoader(insertLoad(method),  methods, false));
                     }
                     
                     JsonArray static_methods = (JsonArray)obj.get("static_method");
                     if (static_methods != nilptr && static_methods.length() > 0){
                         long static_method = _treeview.insertItem(item, "res/toolbar/staticfunction.png", "静态方法");
-                        expand_data.put(static_method,new ItemLoader( insertLoad(static_method),  static_methods));
+                        expand_data.put(static_method,new ItemLoader( insertLoad(static_method),  static_methods, true));
                     }
                 }
                 /*loadObject(prop, (JsonArray)obj.get("properites"));
@@ -531,7 +592,21 @@ class XWndClass : QXDockWidget
                 if (obj.has("interface")) {
                     item = _treeview.insertItem(root, "res/toolbar/interfacefun.png", obj.getString("name"));
                 } else {
-                    item = _treeview.insertItem(root, "res/toolbar/function.png", obj.getString("name"));
+                    if (isStatic){
+                        if (visibility >= 0x40){
+                            item = _treeview.insertItem(root, "res/toolbar/methodstatic.png", obj.getString("name"));
+                        }else{
+                            item = _treeview.insertItem(root, "res/toolbar/methodstaticprivate.png", obj.getString("name"));
+                        }
+                    }else
+                    if (visibility >= 0x40){
+                        item = _treeview.insertItem(root, "res/toolbar/method.png", obj.getString("name"));
+                    }else{
+                        item = _treeview.insertItem(root, "res/toolbar/methodprivate.png", obj.getString("name"));
+                    }
+                    if (prototype != nilptr){
+                        _treeview.insertItem(item, "res/toolbar/prototype.png", prototype);
+                    }
                 }
 
                 if (obj.has("typeobj")) {
@@ -571,7 +646,8 @@ class XWndClass : QXDockWidget
                 if (obj.has("source")) {
                     sourceid = obj.getInt("source");
                 }
-                position_info.put(item, new Position(sourceid, obj.getInt("line"), obj.getInt("column"), blib));
+                
+                position_info.put(item, new Position(sourceid, obj.getInt("line"), obj.getInt("column"), blib, obj));
             }
         }
     }

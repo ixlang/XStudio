@@ -52,7 +52,7 @@ class CPPTextEditor: TextEditorPlugin{
 		return chl;
 	}
     
-    void configEditor(Project project, @NotNilptr String path,@NotNilptr  QXSci _sci, bool bdark){
+    void configEditor(Project project, @NotNilptr String path,@NotNilptr  QScintilla _sci, bool bdark){
     
         if (project == nilptr){
             return;
@@ -68,7 +68,7 @@ class CPPTextEditor: TextEditorPlugin{
                 ext.equalsIgnoreCase(".tpp") || ext.equalsIgnoreCase(".tpl"))) 
         {
         
-            _sci.sendEditor(QXSci.SCI_SETLEXERLANGUAGE, "cpp");
+            _sci.sendEditor(QScintilla.SCI_SETLEXERLANGUAGE, "cpp");
             _sci.setProperty("lexer.cpp.track.preprocessor", "1");
             _sci.setProperty("lexer.cpp.update.preprocessor", "1");
             _sci.setProperty("styling.within.preprocessor", "1");
@@ -94,7 +94,7 @@ class CPPTextEditor: TextEditorPlugin{
                 int color = bdark ? 0xff666666 : 0xffaaaaaa;
                 
                 for (int i = 0; i < 20; i++){
-                   _sci.sendEditor(QXSci.SCI_STYLESETFORE, i + 0x40,color);
+                   _sci.sendEditor(QScintilla.SCI_STYLESETFORE, i + 0x40,color);
                 }
             }
             

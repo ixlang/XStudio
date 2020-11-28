@@ -6,12 +6,12 @@ class CPPGPlugManager{
     static CPPProjectPlugin _projectplugin = new CPPProjectPlugin();
     static IXStudioController xcontroller;
     public static WorkspaceController workspace;
-    static QXMainWindow _mainWindow;
+    public static QMainWindow _mainWindow;
     static TextEditorController disasm_wnd = nilptr;
     static XSourceEditor asm_editor = nilptr;
-    static QXSci __gdb_command = nilptr;
+    static QScintilla __gdb_command = nilptr;
     public static bool bATTDisasmMode = Setting.get("cde_gdb_disasm").equals("True");
-    static QXDockWidget __cde_dock = nilptr;
+    static QDockWidget __cde_dock = nilptr;
     static bool __cde_dock_visible = false;
     
     public static String disassemble_pipe = "#/XStudio/DisassemblePipe" + (int)(Math.random() * 100000);
@@ -32,11 +32,11 @@ class CPPGPlugManager{
         }
     };
     
-    int compateLine(@NotNilptr QXSci _sci, int line, long addr){
+    int compateLine(@NotNilptr QScintilla _sci, int line, long addr){
         String linetxt = _sci.getText(line);
         return linetxt.trim(true).parseHex() - addr;
     }
-    public int binarySearch(@NotNilptr QXSci _sci, int cnt, long addr){//以int数组为例，aim为需要查找的数
+    public int binarySearch(@NotNilptr QScintilla _sci, int cnt, long addr){//以int数组为例，aim为需要查找的数
         int start = 0;
         int end = cnt - 1;
         int mid = (start + end) / 2;//a
@@ -203,7 +203,20 @@ class CPPGPlugManager{
 		String getName(){
 			return "cde";
 		}
-		
+        ActionIdent [] getSolutionContextActions(){
+            return nilptr;
+        }
+
+        ActionIdent [] getClassViewContextActions(){
+            return nilptr;
+        }
+
+        void updateSolutionActionState(String files){
+
+        }
+        void updateClassViewActionState(String file, ClassViewInfo info){
+            
+        }
         public static String readFileContent(@NotNilptr String file){
             FileInputStream fis = nilptr;
             
@@ -243,94 +256,94 @@ class CPPGPlugManager{
         @param controller XStudio的控制句柄
         @param enabled 是否启用
         */
-        public void syntaxForOutput(@NotNilptr QXSci _sci)
+        public void syntaxForOutput(@NotNilptr QScintilla _sci)
         {
             if (Setting.isDarkStyle()) {
                 syntaxForOutputDark(_sci);
                 return ;
             }
-            _sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);
+            _sci.sendEditor(QScintilla.SCI_SETCODEPAGE, QScintilla.SC_CP_UTF8);
             //_sci.setWrap(true);
-            _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_DEFAULT, 0xffffffff);
-            _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_DEFAULT, 0xff222827);
-            _sci.sendEditor(QXSci.SCI_STYLESETFORE, 75, 0xff222827);
-            _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
-            _sci.sendEditor(QXSci.SCI_CLEARDOCUMENTSTYLE, 0, 0);
+            _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.STYLE_DEFAULT, 0xffffffff);
+            _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_DEFAULT, 0xff222827);
+            _sci.sendEditor(QScintilla.SCI_STYLESETFORE, 75, 0xff222827);
+            _sci.sendEditor(QScintilla.SCI_STYLECLEARALL, 0, 0);
+            _sci.sendEditor(QScintilla.SCI_CLEARDOCUMENTSTYLE, 0, 0);
 
-            //_sci.sendEditor(QXSci.STYLE_LINENUMBER, 1, 0);
+            //_sci.sendEditor(QScintilla.STYLE_LINENUMBER, 1, 0);
             bool bmac = (_system_.getPlatformId() == 2);
             if (bmac == false) {
-                _sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,"Consolas");
-                _sci.sendEditor(QXSci.SCI_STYLESETSIZE, QXSci.STYLE_DEFAULT,9);
+                _sci.sendEditor(QScintilla.SCI_STYLESETFONT, QScintilla.STYLE_DEFAULT,"Consolas");
+                _sci.sendEditor(QScintilla.SCI_STYLESETSIZE, QScintilla.STYLE_DEFAULT,9);
             } else {
-                _sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,"Monaco");
-                _sci.sendEditor(QXSci.SCI_STYLESETSIZE, QXSci.STYLE_DEFAULT,11);
+                _sci.sendEditor(QScintilla.SCI_STYLESETFONT, QScintilla.STYLE_DEFAULT,"Monaco");
+                _sci.sendEditor(QScintilla.SCI_STYLESETSIZE, QScintilla.STYLE_DEFAULT,11);
             }
 
-            _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
-            _sci.sendEditor(QXSci.SCI_SETEOLMODE, 1, 0);
-            _sci.sendEditor(QXSci.SCI_SETSELBACK,1,0xfff1ebe5);
-            _sci.sendEditor(QXSci.SCI_SETSELFORE,0,0);
+            _sci.sendEditor(QScintilla.SCI_STYLECLEARALL, 0, 0);
+            _sci.sendEditor(QScintilla.SCI_SETEOLMODE, 1, 0);
+            _sci.sendEditor(QScintilla.SCI_SETSELBACK,1,0xfff1ebe5);
+            _sci.sendEditor(QScintilla.SCI_SETSELFORE,0,0);
 
-            _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, 0, QXSci.SC_MARGIN_NUMBER);
-            _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 0, 35);
-            _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 1, 5);
-            _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 2, 0);
-            _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 3, 0);
-            _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 4, 0);
+            _sci.sendEditor(QScintilla.SCI_SETMARGINTYPEN, 0, QScintilla.SC_MARGIN_NUMBER);
+            _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 0, 35);
+            _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 1, 5);
+            _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 2, 0);
+            _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 3, 0);
+            _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 4, 0);
 
-            _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_LINENUMBER, 0xffefefef);
-            _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_LINENUMBER, 0xffaf912b);
-            _sci.sendEditor(QXSci.SCI_SETMARGINLEFT, 0, 0);
+            _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.STYLE_LINENUMBER, 0xffefefef);
+            _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_LINENUMBER, 0xffaf912b);
+            _sci.sendEditor(QScintilla.SCI_SETMARGINLEFT, 0, 0);
 
-            _sci.sendEditor(QXSci.SCI_SETCARETFORE,0xff000000,0);
+            _sci.sendEditor(QScintilla.SCI_SETCARETFORE,0xff000000,0);
 
-            _sci.sendEditor(QXSci.SCI_SETCARETLINEVISIBLE, 1);
-            _sci.sendEditor(QXSci.SCI_SETCARETLINEBACK, 0xffefefef);
+            _sci.sendEditor(QScintilla.SCI_SETCARETLINEVISIBLE, 1);
+            _sci.sendEditor(QScintilla.SCI_SETCARETLINEBACK, 0xffefefef);
 
-            _sci.sendEditor(QXSci.SCI_SETTABWIDTH, 4);
+            _sci.sendEditor(QScintilla.SCI_SETTABWIDTH, 4);
             _sci.setWrap(Setting.isOutputWrap());
         }
 
-        public void syntaxForOutputDark(@NotNilptr QXSci _sci)
+        public void syntaxForOutputDark(@NotNilptr QScintilla _sci)
         {
-            _sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);
+            _sci.sendEditor(QScintilla.SCI_SETCODEPAGE, QScintilla.SC_CP_UTF8);
             //_sci.setWrap(true);
-            _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_DEFAULT, 0xff262525);
-            _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_DEFAULT, 0xffefefef);
-            _sci.sendEditor(QXSci.SCI_STYLESETFORE, 75, 0xffefefef);
-            _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
-            _sci.sendEditor(QXSci.SCI_CLEARDOCUMENTSTYLE, 0, 0);
+            _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.STYLE_DEFAULT, 0xff262525);
+            _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_DEFAULT, 0xffefefef);
+            _sci.sendEditor(QScintilla.SCI_STYLESETFORE, 75, 0xffefefef);
+            _sci.sendEditor(QScintilla.SCI_STYLECLEARALL, 0, 0);
+            _sci.sendEditor(QScintilla.SCI_CLEARDOCUMENTSTYLE, 0, 0);
 
-            //_sci.sendEditor(QXSci.STYLE_LINENUMBER, 1, 0);
+            //_sci.sendEditor(QScintilla.STYLE_LINENUMBER, 1, 0);
             bool bmac = (_system_.getPlatformId() == 2);
             if (bmac == false) {
-                _sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,"Consolas");
-                _sci.sendEditor(QXSci.SCI_STYLESETSIZE, QXSci.STYLE_DEFAULT,9);
+                _sci.sendEditor(QScintilla.SCI_STYLESETFONT, QScintilla.STYLE_DEFAULT,"Consolas");
+                _sci.sendEditor(QScintilla.SCI_STYLESETSIZE, QScintilla.STYLE_DEFAULT,9);
             } else {
-                _sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,"Monaco");
-                _sci.sendEditor(QXSci.SCI_STYLESETSIZE, QXSci.STYLE_DEFAULT,11);
+                _sci.sendEditor(QScintilla.SCI_STYLESETFONT, QScintilla.STYLE_DEFAULT,"Monaco");
+                _sci.sendEditor(QScintilla.SCI_STYLESETSIZE, QScintilla.STYLE_DEFAULT,11);
             }
-            _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
-            _sci.sendEditor(QXSci.SCI_SETEOLMODE, 1, 0);
-            _sci.sendEditor(QXSci.SCI_SETSELBACK,1,0xff3e4849);
-            _sci.sendEditor(QXSci.SCI_SETSELFORE,0,0);
+            _sci.sendEditor(QScintilla.SCI_STYLECLEARALL, 0, 0);
+            _sci.sendEditor(QScintilla.SCI_SETEOLMODE, 1, 0);
+            _sci.sendEditor(QScintilla.SCI_SETSELBACK,1,0xff3e4849);
+            _sci.sendEditor(QScintilla.SCI_SETSELFORE,0,0);
 
-            _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, 0, QXSci.SC_MARGIN_NUMBER);
-            _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 0, 35);
-            _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 1, 5);
-            _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 2, 0);
-            _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 3, 0);
-            _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 4, 0);
+            _sci.sendEditor(QScintilla.SCI_SETMARGINTYPEN, 0, QScintilla.SC_MARGIN_NUMBER);
+            _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 0, 35);
+            _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 1, 5);
+            _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 2, 0);
+            _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 3, 0);
+            _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 4, 0);
 
-            _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_LINENUMBER, 0xff262525);
-            _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_LINENUMBER, 0xff666666);
-            _sci.sendEditor(QXSci.SCI_SETMARGINLEFT, 0, 0);
+            _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.STYLE_LINENUMBER, 0xff262525);
+            _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_LINENUMBER, 0xff666666);
+            _sci.sendEditor(QScintilla.SCI_SETMARGINLEFT, 0, 0);
 
-            _sci.sendEditor(QXSci.SCI_SETCARETFORE,0xffffffff,0);
+            _sci.sendEditor(QScintilla.SCI_SETCARETFORE,0xffffffff,0);
 
-            _sci.sendEditor(QXSci.SCI_SETCARETLINEVISIBLE, 1);
-            _sci.sendEditor(QXSci.SCI_SETCARETLINEBACK, 0xff202020);
+            _sci.sendEditor(QScintilla.SCI_SETCARETLINEVISIBLE, 1);
+            _sci.sendEditor(QScintilla.SCI_SETCARETLINEBACK, 0xff202020);
             _sci.setWrap(Setting.isOutputWrap());
         }
         
@@ -346,9 +359,9 @@ class CPPGPlugManager{
         }
             
         void createMyDock(){
-            QXDockWidget qdock = new QXDockWidget();
+            QDockWidget qdock = new QDockWidget();
             qdock.create(_mainWindow);
-            qdock.setFeatures(QXDockWidget.DockWidgetClosable|QXDockWidget.DockWidgetFloatable);
+            qdock.setFeatures(QDockWidget.DockWidgetClosable|QDockWidget.DockWidgetFloatable);
             qdock.setWindowTitle("GDB 命令窗口");
             qdock.setName("gdb_cmd_port");
             __cde_dock = qdock;
@@ -356,10 +369,10 @@ class CPPGPlugManager{
             QVBoxLayout qhl = new QVBoxLayout();
             qhl.create(qdock);
             
-            QXWidget w1 = new QXWidget();
+            QWidget w1 = new QWidget();
             w1.create();
             
-            QXSci buf = new QXSci();
+            QScintilla buf = new QScintilla();
             buf.create(w1);
             qhl.addWidget(buf);
             __gdb_command = buf;
@@ -368,18 +381,18 @@ class CPPGPlugManager{
             QHBoxLayout inputlayout = new QHBoxLayout();
             inputlayout.create(w1);
             
-            QXWidget w2 = new QXWidget();
+            QWidget w2 = new QWidget();
             w2.create();
             
-            QXLabel _cli = new QXLabel();
+            QLabel _cli = new QLabel();
             _cli.create(w2);
             inputlayout.addWidget(_cli);
             _cli.setText("(gdb)>");
-            QXLineEdit cmd = new QXLineEdit();
+            QLineEdit cmd = new QLineEdit();
             cmd.create(w2);
             inputlayout.addWidget(cmd);
             
-            cmd.setOnKeyEventListener(new QXLineEdit.onKeyEventListener() {
+            cmd.setOnKeyEventListener(new Qt.onKeyEventListener() {
                 Vector<String> cmd_histroy = new Vector<String>();
                 
                 int histroy_pointer = 0;
@@ -413,23 +426,23 @@ class CPPGPlugManager{
                     }
                 }
                 
-                bool onKeyPress(QXObject obj,int key,bool repeat,int count,String text,int scanCode,int virtualKey,int modifier)override {
-                    if (key == QXObject.Key_Escape) {
+                bool onKeyPress(QObject obj,int key,bool repeat,int count,String text,int scanCode,int virtualKey,int modifier)override {
+                    if (key == Constant.Key_Escape) {
                         cmd.setText("");
                     }else
-                    if (key == QXObject.Key_Up) {
+                    if (key == Constant.Key_Up) {
                         String _cmds = getCommand(true);
                         if (_cmds != nilptr){
                             cmd.setText(_cmds);
                         }
                     }else
-                    if (key == QXObject.Key_Down) {
+                    if (key == Constant.Key_Down) {
                         String _cmds = getCommand(false);
                         if (_cmds != nilptr){
                             cmd.setText(_cmds);
                         }
                     }else
-                    if (key == QXObject.Key_Enter || key == QXObject.Key_Return) {
+                    if (key == Constant.Key_Enter || key == Constant.Key_Return) {
                         String __cmd = cmd.getText().trim(true);
                         if (__cmd.length() > 0){
                             buf.appendText("(gdb)>" + __cmd + "\n");
@@ -445,13 +458,13 @@ class CPPGPlugManager{
                 
             });
         
-            QXPushButton sent = new QXPushButton();
+            QPushButton sent = new QPushButton();
             sent.create(w2);
             sent.setText("执行");
             inputlayout.addWidget(sent);
             
-            sent.setOnClickListener(new QXPushButton.onClickListener(){
-                void onClick(QXObject obj, bool checked) {
+            sent.setOnClickListener(new Qt.onClickListener(){
+                void onClick(QObject obj, bool checked) {
                     String __cmd = cmd.getText();
                     buf.appendText("(gdb)>" + __cmd + "\n");
                     if (sendCommand(__cmd) == false){
@@ -461,14 +474,14 @@ class CPPGPlugManager{
                 }
             });
  
-            QXPushButton clr = new QXPushButton();
+            QPushButton clr = new QPushButton();
             clr.create(w2);
             clr.setText("清空");
             inputlayout.addWidget(clr);
             w2.setLayout(inputlayout);
             
-            clr.setOnClickListener(new QXPushButton.onClickListener(){
-                void onClick(QXObject obj, bool checked) {
+            clr.setOnClickListener(new Qt.onClickListener(){
+                void onClick(QObject obj, bool checked) {
                     buf.setText("");
                 }
             });
@@ -477,9 +490,9 @@ class CPPGPlugManager{
             w1.setLayout(qhl);
             qdock.setWidget(w1);
             /*qdock.setFlating(true);
-            qdock.setAllowedAreas(QXDockWidget.LeftDockWidgetArea |QXDockWidget.RightDockWidgetArea);*/
-            qdock.setFeatures(QXDockWidget.AllDockWidgetFeatures);
-            _mainWindow.addDockWidget(QXDockWidget.BottomDockWidgetArea, qdock, QXWidget.Orientation.Horizontal);
+            qdock.setAllowedAreas(QDockWidget.LeftDockWidgetArea |QDockWidget.RightDockWidgetArea);*/
+            qdock.setFeatures(QDockWidget.AllDockWidgetFeatures);
+            _mainWindow.addDockWidget(QDockWidget.BottomDockWidgetArea, qdock, Orientation.Horizontal);
         }
         
 		bool initializPlusin(IXStudioController controller, bool enabled){
@@ -563,7 +576,7 @@ class CPPGPlugManager{
         }
         
         long getVersion(){
-            return 1001;
+            return 1003;
         } 
         @NotNilptr String getDescrition(){
             return "c/c++ 项目开发扩展.";

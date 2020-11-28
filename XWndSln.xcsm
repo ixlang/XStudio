@@ -1,11 +1,11 @@
 
-class XWndSln : QXDockWidget
+class XWndSln : QDockWidget
 {
-    QXTreeView _treesln;
+    QTreeWidget _treesln;
     public XWorkspace workspace;
     public static XWndSln _slnView;
     ContextMenu _contextMenu = new ContextMenu();
-    QXLineEdit editSearch;
+    QLineEdit editSearch;
     ProjectSource current_ps;
     Project currentProject;
     Map<long, ProjectSource> sourceItem = new Map<long, ProjectSource>();
@@ -38,83 +38,52 @@ class XWndSln : QXDockWidget
         }
     };
 
-    public static class ContextMenu
-    {
-        QXMenu contextMenu = new QXMenu();
-        public QXAction [] actions;
+    public void enableFileOp(bool b){
+        int [] indexs = {2, 3, 4, 11};
+        _contextMenu.enableAction(indexs, b);
+    }
 
-        public void create(@NotNilptr QXWidget parent,@NotNilptr  String [] acts,@NotNilptr  onEventListener listener)
-        {
-            if (contextMenu.create(parent)) {
-                actions = new QXAction[acts.length];
-                for (int i = 0; i < acts.length; i ++) {
-                    QXAction action = new QXAction();
-                    if (action.create(contextMenu)) {
+    public void enableDesigner(bool b){
+        int [] indexs = {12};
+        _contextMenu.enableAction(indexs, b);
+    }
 
-                        if (acts[i].equals("-")) {
-                            action.setSeparator(true);
-                        } else {
-                            action.setEnable(false);
-                            action.setText(acts[i]);
-                            action.setOnEventListener(listener);
-                        }
-                    }
-                    actions[i] = action;
-                }
-                parent.setContextMenuPolicy(ActionsContextMenu);
-                parent.addActions(actions);
-            }
-        }
-        public void enableFileOp(bool b)
-        {
-            actions[2].setEnable(b);
-            actions[3].setEnable(b);
-            actions[4].setEnable(b);
-            actions[10].setEnable(b);
-
-        }
-
-        public void enableDesigner(bool b)
-        {
-            actions[11].setEnable(b);
-        }
-
-        public void enableProjOp(bool b)
-        {
-            actions[0].setEnable(b);
-            actions[6].setEnable(b);
-            actions[8].setEnable(b);
-            actions[9].setEnable(b);
-        }
-    };
-
+    public void enableProjOp(bool b){
+        int [] indexs = {0, 6, 7, 9, 10};
+        _contextMenu.enableAction(indexs, b);
+    }
+    
     public onEventListener menuListener = new onEventListener()
     {
-        void onTrigger(QXObject obj) override {
+        void onTrigger(QObject obj) override {
 
             if (obj == XWndSln.this._contextMenu.actions[0]) {
                 workspace.build(nilptr);
                 return ;
             }
-            if (obj == XWndSln.this._contextMenu.actions[9]) {
+            if (obj == XWndSln.this._contextMenu.actions[10]) {
                 workspace.showProperites(nilptr);
                 return ;
             }
             if (obj == XWndSln.this._contextMenu.actions[6]) {
+                workspace.createProject();
+                return ;
+            }
+            if (obj == XWndSln.this._contextMenu.actions[7]) {
                 workspace.addObject(0);
                 return ;
             }
 
-            if (obj == XWndSln.this._contextMenu.actions[10]) {
+            if (obj == XWndSln.this._contextMenu.actions[11]) {
                 if (current_ps != nilptr) {
                     String file = current_ps.getSourcePath();
                     if (file != nilptr){
-                        QXCore.openLocal(String.formatPath(file.findVolumePath(), false));
+                        QCore.openLocal(String.formatPath(file.findVolumePath(), false));
                     }
                 }
                 return ;
             }
-            if (obj == XWndSln.this._contextMenu.actions[11]) {
+            if (obj == XWndSln.this._contextMenu.actions[12]) {
                 if (current_ps != nilptr) {
                     String file = current_ps.getSourcePath();
                     if (file != nilptr){
@@ -126,14 +95,14 @@ class XWndSln : QXDockWidget
                 }
                 return ;
             }
-            if (obj == XWndSln.this._contextMenu.actions[8]) {
+            if (obj == XWndSln.this._contextMenu.actions[9]) {
                 workspace.debugRun();
                 return ;
             }
             if (obj == XWndSln.this._contextMenu.actions[2]) {
 
                 if (current_ps != nilptr) {
-                    if (QXMessageBox.Yes == QXMessageBox.Question("注意", "确定仅将项 " + current_ps.getSourcePath() + " 从项目中移除而<strong style=\"color:#0000ff\">不删除硬盘上的文件</strong>吗?.", QXMessageBox.Yes | QXMessageBox.No, QXMessageBox.No)) {
+                    if (QMessageBox.Yes == QMessageBox.Question("注意", "确定仅将项 " + current_ps.getSourcePath() + " 从项目中移除而<strong style=\"color:#0000ff\">不删除硬盘上的文件</strong>吗?.", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)) {
                         if (false == workspace.closeFor(current_ps.getSourcePath())) {
                             workspace.closeFor(current_ps.getSourcePath());
                         }
@@ -146,7 +115,7 @@ class XWndSln : QXDockWidget
             if (obj == XWndSln.this._contextMenu.actions[3]) {
 
                 if (current_ps != nilptr) {
-                    if (QXMessageBox.Yes == QXMessageBox.Question("注意", "确定将项 " + current_ps.getSourcePath() + " 从项目中移除并<strong style=\"color:#ff0000\">删除硬盘上的文件</strong>吗?<br /><br /><b>注意:此操作不可撤销!</b>", QXMessageBox.Yes | QXMessageBox.No, QXMessageBox.No)) {
+                    if (QMessageBox.Yes == QMessageBox.Question("注意", "确定将项 " + current_ps.getSourcePath() + " 从项目中移除并<strong style=\"color:#ff0000\">删除硬盘上的文件</strong>吗?<br /><br /><b>注意:此操作不可撤销!</b>", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)) {
                         if (false == workspace.closeFor(current_ps.getSourcePath())) {
                             workspace.closeFor(current_ps.getSourcePath());
                         }
@@ -156,7 +125,7 @@ class XWndSln : QXDockWidget
                             fileDeleted = XPlatform.deleteFile(file);
                         }
                         if (fileDeleted == false) {
-                            QXMessageBox.Question("注意", "无法从硬盘上删除文件: " + current_ps.getSourcePath() + " 文件已不存在或者正被占用.", QXMessageBox.Yes,QXMessageBox.Yes);
+                            QMessageBox.Question("注意", "无法从硬盘上删除文件: " + current_ps.getSourcePath() + " 文件已不存在或者正被占用.", QMessageBox.Yes,QMessageBox.Yes);
                         }
                         current_ps.remove();
                         reload();
@@ -175,14 +144,14 @@ class XWndSln : QXDockWidget
 
     public onTreeViewItemEvent listlistener = new onTreeViewItemEvent()
     {
-        void onItemClicked(QXTreeView tree,long item, int column)override {
+        void onItemClicked(QTreeWidget tree,long item, int column)override {
             try {
                 ProjectSource ps = sourceItem.get(item);
                 if (ps != nilptr) {
                     String source = ps.getSourcePath();
                     if (source != nilptr){
                         if (XPlatform.existsSystemFile(source) == false) {
-                            QXMessageBox.Critical("文件不存在", "找不到文件:" + ps.getSourcePath() + "该位置的文件已不存在.", QXMessageBox.Ok, QXMessageBox.Ok);
+                            QMessageBox.Critical("文件不存在", "找不到文件:" + ps.getSourcePath() + "该位置的文件已不存在.", QMessageBox.Ok, QMessageBox.Ok);
                         } else {
                             workspace.openTextFile(source);
                         }
@@ -192,7 +161,7 @@ class XWndSln : QXDockWidget
 
             }
         }
-        void onItemPressed(QXTreeView, long item, int column)override {
+        void onItemPressed(QTreeWidget, long item, int column)override {
             try {
                 ProjectSource ps = sourceItem.get(item);
 
@@ -201,23 +170,27 @@ class XWndSln : QXDockWidget
                 current_ps = nilptr;
             }
 
-            XWndSln.this._contextMenu.enableFileOp(current_ps != nilptr);
-            XWndSln.this._contextMenu.enableProjOp(workspace.isCurrentProjectEmpty() == false);
+            
+            
+            enableFileOp(current_ps != nilptr);
+            enableProjOp(workspace.isCurrentProjectEmpty() == false);
 
             bool designer_enable = false;
 
             if (current_ps != nilptr) {
                 String file = current_ps.getSourcePath();
-                
+                PluginsController.updateSolutionActionState(file);
                 if (file != nilptr){
                     String ext = file.findExtension();
                     if (ext.upper().equals(".UI")) {
                         designer_enable = true;
                     }
                 }
+            }else{
+                PluginsController.updateSolutionActionState(nilptr);
             }
 
-            XWndSln.this._contextMenu.enableDesigner(designer_enable);
+            enableDesigner(designer_enable);
         }
     };
 
@@ -257,7 +230,7 @@ class XWndSln : QXDockWidget
         try {
             designer.create(Process.Visible);
         } catch(Exception e) {
-            QXMessageBox.Critical("Error", e.getMessage(), QXMessageBox.Ok, QXMessageBox.Ok);
+            QMessageBox.Critical("Error", e.getMessage(), QMessageBox.Ok, QMessageBox.Ok);
         }
     }
 
@@ -267,13 +240,13 @@ class XWndSln : QXDockWidget
             String oldname = ps.getSourcePath();
             bool onInputOk(@NotNilptr String text)override {
                 if (text.length() == 0) {
-                    QXMessageBox.Critical("错误", "输入了不正确的文件名", QXMessageBox.Ok, QXMessageBox.Ok);
+                    QMessageBox.Critical("错误", "输入了不正确的文件名", QMessageBox.Ok, QMessageBox.Ok);
                     return false;
                 }
                 String newname = oldname.findVolumePath().appendPath(text);
                 newname = ps.rename(String.formatPath(newname, false));
                 if (newname == nilptr) {
-                    QXMessageBox.Critical("错误", "重命名失败,文件可能正被其他程序使用.", QXMessageBox.Ok, QXMessageBox.Ok);
+                    QMessageBox.Critical("错误", "重命名失败,文件可能正被其他程序使用.", QMessageBox.Ok, QMessageBox.Ok);
                     return true;
                 }
                 //_treesln.setItemText(ps.item, 0, newname);
@@ -296,12 +269,12 @@ class XWndSln : QXDockWidget
     }
     public void onAttach()
     {
-        editSearch =  (QXLineEdit)attachByName(new QXLineEdit(), "editSearch");
-        _treesln = (QXTreeView)attachByName(new QXTreeView(), "tree_sln");
+        editSearch =  (QLineEdit)attachByName(new QLineEdit(), "editSearch");
+        _treesln = (QTreeWidget)attachByName(new QTreeWidget(), "tree_sln");
         /*
         改成layout之后就不需要resize了
         setOnLayoutEventListener(new onLayoutEventListener(){
-                void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+                void onResize(QObject obj, int w, int h, int oldw, int oldh)override {
                     if (_treesln != nilptr){
                         editSearch.move(3, 1);
                         editSearch.resize(w - 6, 20);
@@ -315,8 +288,8 @@ class XWndSln : QXDockWidget
         _slnView = this;
 
         editSearch.setOnKeyEventListener(new onKeyEventListener() {
-            bool onKeyPress(QXObject obj,int key,bool repeat,int count,String text,int scanCode,int virtualKey,int modifier)override {
-                if (key == Key_Escape) {
+            bool onKeyPress(QObject obj,int key,bool repeat,int count,String text,int scanCode,int virtualKey,int modifier)override {
+                if (key == Constant.Key_Escape) {
                     editSearch.setText("");
                 }
                 return true;
@@ -324,36 +297,41 @@ class XWndSln : QXDockWidget
         });
 
         editSearch.setOnEditEventListener(new onEditEventListener() {
-
-            void onTextChanged(QXObject,@NotNilptr  String text)override {
-                String key = text.upper();
-                Map.Iterator<long, ProjectSource> iter = sourceItem.iterator();
-                while (iter.hasNext()) {
-                    ProjectSource ps = iter.getValue();
-                    if (ps != nilptr && ps.item != 0) {
-                        try {
-                            if (Pattern.test(ps.sourceName.upper(), key, 0, false)) {
-                                _treesln.setItemVisible(ps.item, true);
-                            } else {
-                                _treesln.setItemVisible(ps.item, false);
-                            }
-                        } catch(Exception e) {
-                            //表达式错误
-                        }
-                    }
-                    iter.next();
-                }
+            void onTextChanged(QObject,@NotNilptr  String text)override {
+                updateFilter(text);
             }
         });
 
-        createContextMenu();
+    }
+    
+    public void updateFilter(String text){
+        String key = text.upper();
+        Map.Iterator<long, ProjectSource> iter = sourceItem.iterator();
+        while (iter.hasNext()) {
+            ProjectSource ps = iter.getValue();
+            if (ps != nilptr && ps.item != 0) {
+                try {
+                    if (Pattern.test(ps.sourceName.upper(), key, 0, false)) {
+                        _treesln.setItemVisible(ps.item, true);
+                    } else {
+                        _treesln.setItemVisible(ps.item, false);
+                    }
+                } catch(Exception e) {
+                    //表达式错误
+                }
+            }
+            iter.next();
+        }
     }
 
     public void createContextMenu()
     {
-        String []acts = {"构建项目\tF7", "-", "移除文件(&R)", "删除文件(&D)","重命名(&R)","-", "添加项","-","运行\tF5", "项目属性(&P)", "打开所在目录(&F)", "UI设计器中打开(&U)"};
+        ActionIdent [] ais = PluginsController.getSolutionContextActions();
+        
+        String []acts = {"构建项目\tF7", "-", "移除文件(&R)", "删除文件(&D)","重命名(&R)","-", "添加新项", "添加已有项","-","运行\tF5", "项目属性(&P)", "打开所在目录(&F)", "UI设计器中打开(&U)"};
         __nilptr_safe(_treesln);
-        _contextMenu.create(_treesln, acts, menuListener);
+        _contextMenu.create(_treesln, acts, menuListener, ais);
+        
     }
 
     public long addItem(long item, String icon, String name)
@@ -442,6 +420,7 @@ class XWndSln : QXDockWidget
         clear();
         if (_pro != nilptr) {
             loadProject(_pro);
+            updateFilter(editSearch.getText());
         }
     }
     public void updateAppendSource(@NotNilptr Project project, int size)

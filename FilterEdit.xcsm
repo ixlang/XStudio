@@ -1,6 +1,6 @@
 //xlang Source, Name:FilterEdit.xcsm 
 //Date: Fri Sep 12:25:16 2018 
-class FilterEdit : QXDialog {
+class FilterEdit : QDialog {
 
 	public FilterEdit(){
     
@@ -9,34 +9,34 @@ class FilterEdit : QXDialog {
 		modifyFilter = filter;
     }
     
-    QXPushButton btnAdd;
-    QXPushButton benCancel;
-    QXLineEdit filterName, editThread, editTag, editMsg;
-    QXCheckBox chkThread, chkTag, chkMsg;
+    QPushButton btnAdd;
+    QPushButton benCancel;
+    QLineEdit filterName, editThread, editTag, editMsg;
+    QCheckBox chkThread, chkTag, chkMsg;
     XLogcatWnd.Filter modifyFilter;
     
-    QXCheckBox []chkLevel = new QXCheckBox[8];
+    QCheckBox []chkLevel = new QCheckBox[8];
     
     String [] chkLvlNames = {"chkEmerg", "chkAlert", "chkCrit", "chkErr", "chkWarning", "chkNotice", "chkInfo", "chkDebug"};
     
     public void onAttach(){ 
     
-        setWindowFlags(CustomizeWindowHint | WindowCloseButtonHint );
+        setWindowFlags(Constant.CustomizeWindowHint | Constant.WindowCloseButtonHint );
         
         setFixedSize(width(), height());
         
-        btnAdd = (QXPushButton)attachByName(new QXPushButton(), "btnAdd");
-        benCancel = (QXPushButton)attachByName(new QXPushButton(), "benCancel");
-        filterName = (QXLineEdit)attachByName(new QXLineEdit(), "filterName");
-        editThread = (QXLineEdit)attachByName(new QXLineEdit(), "editThread");
-        editTag = (QXLineEdit)attachByName(new QXLineEdit(), "editTag");
-        editMsg = (QXLineEdit)attachByName(new QXLineEdit(), "editMsg");
-        chkThread = (QXCheckBox)attachByName(new QXCheckBox(), "chkThread");
-        chkTag = (QXCheckBox)attachByName(new QXCheckBox(), "chkTag");
-        chkMsg = (QXCheckBox)attachByName(new QXCheckBox(), "chkMsg");
+        btnAdd = (QPushButton)attachByName(new QPushButton(), "btnAdd");
+        benCancel = (QPushButton)attachByName(new QPushButton(), "benCancel");
+        filterName = (QLineEdit)attachByName(new QLineEdit(), "filterName");
+        editThread = (QLineEdit)attachByName(new QLineEdit(), "editThread");
+        editTag = (QLineEdit)attachByName(new QLineEdit(), "editTag");
+        editMsg = (QLineEdit)attachByName(new QLineEdit(), "editMsg");
+        chkThread = (QCheckBox)attachByName(new QCheckBox(), "chkThread");
+        chkTag = (QCheckBox)attachByName(new QCheckBox(), "chkTag");
+        chkMsg = (QCheckBox)attachByName(new QCheckBox(), "chkMsg");
         
         for (int i = 0; i < chkLvlNames.length; i++){
-			chkLevel[i] = (QXCheckBox)attachByName(new QXCheckBox(), chkLvlNames[i]);
+			chkLevel[i] = (QCheckBox)attachByName(new QCheckBox(), chkLvlNames[i]);
             
             if (modifyFilter != nilptr){
 				int flags = 1 << i;
@@ -55,19 +55,19 @@ class FilterEdit : QXDialog {
         
         chkThread.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
 				editThread.setEnabled(checked);
             }
         });
         chkTag.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
 				editTag.setEnabled(checked);
             }
         });
         chkMsg.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
 				editMsg.setEnabled(checked);
             }
         });
@@ -93,14 +93,14 @@ class FilterEdit : QXDialog {
         }
         btnAdd.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
                 complete();
             }
         });
         
         benCancel.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
 				close();
             }
         });
@@ -123,7 +123,7 @@ class FilterEdit : QXDialog {
 			type |= XLogcatWnd.Filter.FILTER_THREAD;
             key[0] = editThread.getText();
             if (key[0].length() == 0){
-				QXMessageBox.Critical("提示", "无效的过滤器表达式", QXMessageBox.Ok, QXMessageBox.Ok);
+				QMessageBox.Critical("提示", "无效的过滤器表达式", QMessageBox.Ok, QMessageBox.Ok);
 				return ;
             }
         }
@@ -131,7 +131,7 @@ class FilterEdit : QXDialog {
 			type |= XLogcatWnd.Filter.FILTER_TAG;
             key[1] = editTag.getText();
             if (key[0].length() == 0){
-				QXMessageBox.Critical("提示", "无效的过滤器表达式", QXMessageBox.Ok, QXMessageBox.Ok);
+				QMessageBox.Critical("提示", "无效的过滤器表达式", QMessageBox.Ok, QMessageBox.Ok);
 				return ;
             }
         }
@@ -139,13 +139,13 @@ class FilterEdit : QXDialog {
 			type |= XLogcatWnd.Filter.FILTER_MSG;
             key[2] = editMsg.getText();
             if (key[2].length() == 0){
-				QXMessageBox.Critical("提示", "无效的过滤器表达式", QXMessageBox.Ok, QXMessageBox.Ok);
+				QMessageBox.Critical("提示", "无效的过滤器表达式", QMessageBox.Ok, QMessageBox.Ok);
 				return ;
             }
         }
         
         if (type == 0){
-			QXMessageBox.Critical("提示", "无效过滤器, 至少需要设置一个过滤条件", QXMessageBox.Ok, QXMessageBox.Ok);
+			QMessageBox.Critical("提示", "无效过滤器, 至少需要设置一个过滤条件", QMessageBox.Ok, QMessageBox.Ok);
             return ;
         }
         
@@ -166,12 +166,12 @@ class FilterEdit : QXDialog {
         if (modifyFilter == nilptr){
 			String filname = filterName.getText();
             if (filter.name.length() == 0){
-				QXMessageBox.Critical("提示", "无效的过滤器名称", QXMessageBox.Ok, QXMessageBox.Ok);
+				QMessageBox.Critical("提示", "无效的过滤器名称", QMessageBox.Ok, QMessageBox.Ok);
 				return ;
             }
             filter.name = filname;
 			if (XLogcatWnd.addFilter(filter) == false){
-				QXMessageBox.Critical("提示", "过滤器已经存在", QXMessageBox.Ok, QXMessageBox.Ok);
+				QMessageBox.Critical("提示", "过滤器已经存在", QMessageBox.Ok, QMessageBox.Ok);
 				return ;
 			}
         }

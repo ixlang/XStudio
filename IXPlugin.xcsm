@@ -239,7 +239,7 @@ interface WorkspaceController
     bool stopRun();
     IProject getCurrentProject();
     BuildListener.BuildState buildCurrentProject(BuildListener lis);
-    QXMainWindow getMainWindow();
+    QMainWindow getMainWindow();
     bool installXep(String path);
     
     void showStatusMessage(String text);
@@ -266,6 +266,7 @@ interface SourceContent{
     String getPath();
     bool isEditing();
     String getCharset();
+    bool updateContent(String content);
 };
 
 interface TextEditorController
@@ -290,9 +291,41 @@ interface TextEditorController
     long getCurrentLine();
     void stopFileWatch();
     void continueFileWatch();
+    void triggeInteliSence();
 };
 
-
+class ActionIdent{
+    public String name;
+    public String id;
+    public IXPlugin plugin;
+    public bool enabled;
+    public QAction _action;
+    public int aid;
+    public onEventListener _el;
+    public ActionIdent(String _n, String _i, IXPlugin p, onEventListener el){
+        name = _n;
+        id = _i;
+        plugin = p;
+        enabled = true;
+        _el = el;
+    }
+    
+    public void setEnabled(bool be){
+        if (enabled != be){
+            enabled = be;
+            QAction qa = _action;
+            if (qa != nilptr){
+                qa.setEnable(be);
+            }
+        }
+    }
+    
+    public void setAction(QAction qa){
+        _action = qa;
+    }
+    
+};
+    
 interface TextEditorPlugin
 {
     /** 获取关键字， 2个String*/
@@ -302,7 +335,7 @@ interface TextEditorPlugin
 
     bool requestClose(TextEditorController editor);
     String getIconFile();
-    void configEditor(Project project,  String path, QXSci sci, bool darkStyle);
+    void configEditor(Project project,  String path, QScintilla sci, bool darkStyle);
 };
 
 interface WizardLoader{
@@ -318,7 +351,17 @@ interface IProjectPlugin{
     bool onpreRun(IProject project, bool debug);
     void onpostRun(IProject project, bool debug);
     String getTargetPath(IProject project);
-    
+    ActionIdent [] getSolutionContextActions();
+    ActionIdent [] getClassViewContextActions();
+    void updateSolutionActionState(String files);
+    void updateClassViewActionState(String files, ClassViewInfo info);
+};
+
+interface ClassViewInfo{
+    int getLine();
+    int getColumn();
+    JsonObject getObject();
+    bool isExternal();
 };
 
 interface IXPlugin 
@@ -340,6 +383,10 @@ interface IXPlugin
     String getSetting();
     void settingFlushed();
     void showDocks(bool restore);
+    ActionIdent [] getSolutionContextActions();
+    ActionIdent [] getClassViewContextActions();
+    void updateSolutionActionState(String files);
+    void updateClassViewActionState(String files, ClassViewInfo info);
 };
 
 interface UIRunnable
@@ -513,7 +560,7 @@ class PluginsController
         }
         return nilptr;
     }
-    
+        
     public static List<IProjectPlugin> getProjectPluginList(){
         List<IProjectPlugin> list = new List<IProjectPlugin>();
         Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
@@ -531,6 +578,90 @@ class PluginsController
             iter.next();
         }
         return list;
+    }
+    
+    public static ActionIdent [] getSolutionContextActions(){
+        Vector<ActionIdent > ais = new Vector<ActionIdent >();
+        
+        Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
+        while (iter.hasNext()) {
+            XPluginShell splug = iter.getValue();
+            if (splug != nilptr && (splug.disable == false)){
+                ActionIdent [] as = splug._plugin.getSolutionContextActions();
+                if (as != nilptr){
+                    ais.addAll(as);
+                }
+                IProjectPlugin pplugin = splug._plugin.getProjectPlugin();
+                if (pplugin != nilptr){
+                    as = pplugin.getSolutionContextActions();
+                    if (as != nilptr){
+                        ais.addAll(as);
+                    }
+                }
+            }
+            iter.next();
+        }
+        return ais.toArray(new ActionIdent[0]);
+    }
+    
+    public static void updateSolutionActionState(String file){
+        Vector<ActionIdent > ais = new Vector<ActionIdent >();
+        
+        Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
+        while (iter.hasNext()) {
+            XPluginShell splug = iter.getValue();
+            if (splug != nilptr && (splug.disable == false)){
+                splug._plugin.updateSolutionActionState(file);
+            }
+            iter.next();
+        }
+    }
+    
+    public static void updateClassViewActionState(Project project, String file, ClassViewInfo info){
+        Vector<ActionIdent > ais = new Vector<ActionIdent >();
+        
+        Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
+        while (iter.hasNext()) {
+            XPluginShell splug = iter.getValue();
+            if (splug != nilptr && (splug.disable == false)){
+                splug._plugin.updateClassViewActionState(file, info);
+            }
+            iter.next();
+        }
+        
+        if (project != nilptr){
+            IXPlugin ixplugin = project.getProjectPlugin();
+            if (ixplugin != nilptr){
+                IProjectPlugin ipp = ixplugin.getProjectPlugin();
+                if (ipp != nilptr){
+                    ipp.updateClassViewActionState(file, info);
+                }
+            }
+        }
+    }
+
+    public static ActionIdent [] getClassViewContextActions(){
+        Vector<ActionIdent > ais = new Vector<ActionIdent >();
+        
+        Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
+        while (iter.hasNext()) {
+            XPluginShell splug = iter.getValue();
+            if (splug != nilptr && (splug.disable == false)){
+                ActionIdent [] as = splug._plugin.getClassViewContextActions();
+                if (as != nilptr){
+                    ais.addAll(as);
+                }
+                IProjectPlugin pplugin = splug._plugin.getProjectPlugin();
+                if (pplugin != nilptr){
+                    as = pplugin.getClassViewContextActions();
+                    if (as != nilptr){
+                        ais.addAll(as);
+                    }
+                }
+            }
+            iter.next();
+        }
+        return ais.toArray(new ActionIdent[0]);
     }
     
     public static String getProjectTargetPath(IProject project){
@@ -572,7 +703,7 @@ class PluginsController
         try{
             XPluginShell xps = plugins_list.get(plugins);
             if (xps != nilptr){
-                xps._plugin.uninstall(QxApp._theApp._xstudio_controller);
+                xps._plugin.uninstall(XStudioApp._theApp._xstudio_controller);
             }
             return true;
         }catch(Exception e){

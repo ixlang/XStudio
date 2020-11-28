@@ -1,10 +1,10 @@
 //xlang Source, Name:DownloadManager.xcsm 
 //Date: Thu Dec 00:33:00 2019 
 
-class DownloadManager : QXDialog{
-    QXTreeView listtask;
-    QXPushButton btncancel, btnclose;
-    QXLabel lblstat;
+class DownloadManager : QDialog{
+    QTreeWidget listtask;
+    QPushButton btncancel, btnclose;
+    QLabel lblstat;
     public static DownloadManager _dlmgrwin;
  
     
@@ -30,10 +30,10 @@ class DownloadManager : QXDialog{
     Map<String, ItemTask> _tasklist = new Map<String, ItemTask>();
     
     public void onAttach() override {
-        listtask = (QXTreeView)attachByName(new QXTreeView(), "listtask");
-        btncancel = (QXPushButton)attachByName(new QXPushButton(), "btncancel");
-        btnclose = (QXPushButton)attachByName(new QXPushButton(), "btnclose");
-        lblstat = (QXLabel)attachByName(new QXLabel(), "lblstat");
+        listtask = (QTreeWidget)attachByName(new QTreeWidget(), "listtask");
+        btncancel = (QPushButton)attachByName(new QPushButton(), "btncancel");
+        btnclose = (QPushButton)attachByName(new QPushButton(), "btnclose");
+        lblstat = (QLabel)attachByName(new QLabel(), "lblstat");
         
         String [] columns = {"任务", "地址", "进度"};
         
@@ -44,8 +44,8 @@ class DownloadManager : QXDialog{
         listtask.setColumnWidth(2, 50);
         
         btncancel.setOnClickListener(
-        new QXDialog.onClickListener() {
-            void onClick(QXObject obj, bool checked)override {
+        new onClickListener() {
+            void onClick(QObject obj, bool checked)override {
                 long item = listtask.getSelItem();
                 if (item != 0){
                     String text = listtask.getItemText(item,0);
@@ -55,18 +55,18 @@ class DownloadManager : QXDialog{
         });
         
         btnclose.setOnClickListener(
-        new QXDialog.onClickListener() {
-            void onClick(QXObject obj, bool checked)override {
+        new onClickListener() {
+            void onClick(QObject obj, bool checked)override {
                 close();
             }
         });
         
         listtask.setOnTreeViewItemEvent( new onTreeViewItemEvent(){
-			void onItemClicked(@NotNilptr QXTreeView tree,long item, int column){
+			void onItemClicked(@NotNilptr QTreeWidget tree,long item, int column){
 				if (column == 1){
 					String txt = tree.getItemText(item, column);
                     if (txt.upper().startWith("HTTP")){
-						if (QXMessageBox.Question("提示","是否在浏览器中打开: <b>" + txt + "</b> ?",QXMessageBox.Ok | QXMessageBox.No,QXMessageBox.Ok) == QXMessageBox.Ok){
+						if (QMessageBox.Question("提示","是否在浏览器中打开: <b>" + txt + "</b> ?",QMessageBox.Ok | QMessageBox.No,QMessageBox.Ok) == QMessageBox.Ok){
 							openUrl(txt);
                         }
                     }

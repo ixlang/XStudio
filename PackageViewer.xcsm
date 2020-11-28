@@ -1,12 +1,12 @@
 //xlang Source, Name:PackageViewer.xcsm 
 //Date: Fri Dec 22:58:50 2018 
 
-class PackageViewer : QXDialog{
-	QXTreeView pcklist;
-    QXPushButton btnInstall, btnDelete, btnAdd, btnExport, loadpack, editsrc;
-    QXLineEdit keyedit;
-    QXLabel labstatus;
-    QXProgressBar progressBar;
+class PackageViewer : QDialog{
+	QTreeWidget pcklist;
+    QPushButton btnInstall, btnDelete, btnAdd, btnExport, loadpack, editsrc;
+    QLineEdit keyedit;
+    QLabel labstatus;
+    QProgressBar progressBar;
     String pkgSource = "http://112.124.120.113:8080/dcbinterface/api/getpackages";
     PackageManager.PackageInfo [] net_cache_pis;
     PackageManager pm = new PackageManager();
@@ -69,7 +69,7 @@ class PackageViewer : QXDialog{
         if (root == nilptr){
             runOnUi(new Runnable(){
                 void run() override{
-                    QXMessageBox.Critical("错误","从网络加载时发生错误!",QXMessageBox.Ok,QXMessageBox.Ok);
+                    QMessageBox.Critical("错误","从网络加载时发生错误!",QMessageBox.Ok,QMessageBox.Ok);
                     labstatus.setText("加载 " + pkgSource + " 失败!");
                 }
             });
@@ -88,18 +88,21 @@ class PackageViewer : QXDialog{
                              dlpkgs.add(pinfo);
                          }
                     }
-                    
                     runOnUi( new Runnable(){
                         void run() override{
                             onloadSuccess(dlpkgs.toArray(new PackageManager.PackageInfo[0]));
-                            labstatus.setText("加载 " + pkgSource + " 成功!");
                         }
                     });
                 }
+                runOnUi( new Runnable(){
+                    void run() override{
+                        labstatus.setText("加载 " + pkgSource + " 成功!");
+                    }
+                });
             }else{
                 runOnUi(new Runnable(){
                     void run() override{
-                        QXMessageBox.Critical("错误","包数据错误!",QXMessageBox.Ok,QXMessageBox.Ok);
+                        QMessageBox.Critical("错误","包数据错误!",QMessageBox.Ok,QMessageBox.Ok);
                         labstatus.setText("加载 " + pkgSource + " 失败!");
                     }
                 });
@@ -116,37 +119,37 @@ class PackageViewer : QXDialog{
     
 	public void onAttach() override {
 		//setFixedSize(width(), height());
-		pcklist = (QXTreeView)attachByName(new QXTreeView(), "pcklist");
+		pcklist = (QTreeWidget)attachByName(new QTreeWidget(), "pcklist");
         pcklist.setWhatsThis("显示当前开发环境中已安装的包");
         
-        btnInstall = (QXPushButton)attachByName(new QXPushButton(), "btnInstall");
+        btnInstall = (QPushButton)attachByName(new QPushButton(), "btnInstall");
         btnInstall.setWhatsThis("从文件安装一个包到开发环境中");
         
-        btnDelete = (QXPushButton)attachByName(new QXPushButton(), "btnDelete");
+        btnDelete = (QPushButton)attachByName(new QPushButton(), "btnDelete");
         btnDelete.setWhatsThis("删除选择的包");
         
-        btnAdd = (QXPushButton)attachByName(new QXPushButton(), "btnAdd");
+        btnAdd = (QPushButton)attachByName(new QPushButton(), "btnAdd");
         btnAdd.setWhatsThis("将选择的包添加到当前的项目中");
         
-		btnExport = (QXPushButton)attachByName(new QXPushButton(), "btnExport");
+		btnExport = (QPushButton)attachByName(new QPushButton(), "btnExport");
         btnExport.setWhatsThis("将选择的包导出到文件");
         
-        keyedit = (QXLineEdit)attachByName(new QXLineEdit(), "keyedit");
+        keyedit = (QLineEdit)attachByName(new QLineEdit(), "keyedit");
         keyedit.setWhatsThis("输入包名或者描述关键字,支持模糊搜索");
         
-        labstatus = (QXLabel)attachByName(new QXLabel(), "labstatus");
+        labstatus = (QLabel)attachByName(new QLabel(), "labstatus");
         labstatus.setWhatsThis("显示当前状态");
         
-        progressBar = (QXProgressBar)attachByName(new QXProgressBar(), "progressBar");
+        progressBar = (QProgressBar)attachByName(new QProgressBar(), "progressBar");
         progressBar.setWhatsThis("显示当前总进度");
         
-        btnExport = (QXPushButton)attachByName(new QXPushButton(), "btnExport");
+        btnExport = (QPushButton)attachByName(new QPushButton(), "btnExport");
         btnExport.setWhatsThis("将选择的包导出到文件");
         
-        loadpack = (QXPushButton)attachByName(new QXPushButton(), "loadpack");
+        loadpack = (QPushButton)attachByName(new QPushButton(), "loadpack");
         loadpack.setWhatsThis("加载包");
         
-        editsrc = (QXPushButton)attachByName(new QXPushButton(), "editsrc");
+        editsrc = (QPushButton)attachByName(new QPushButton(), "editsrc");
         editsrc.setWhatsThis("更改软件源");
         
 		String [] columns = {"名称", "版本", "描述", "状态", "发布者"};
@@ -159,11 +162,11 @@ class PackageViewer : QXDialog{
         pcklist.setColumnWidth(4,150);
         
         pcklist.setOnTreeViewItemEvent( new onTreeViewItemEvent(){
-			void onItemClicked(@NotNilptr QXTreeView tree,long item, int column){
+			void onItemClicked(@NotNilptr QTreeWidget tree,long item, int column){
 				if (column == 4){
 					String txt = tree.getItemText(item, column);
                     if (txt.upper().startWith("HTTP")){
-						if (QXMessageBox.Question("提示","是否转到发布者网站: <b>" + txt + "</b> ?",QXMessageBox.Ok | QXMessageBox.No,QXMessageBox.Ok) == QXMessageBox.Ok){
+						if (QMessageBox.Question("提示","是否转到发布者网站: <b>" + txt + "</b> ?",QMessageBox.Ok | QMessageBox.No,QMessageBox.Ok) == QMessageBox.Ok){
 							openUrl(txt);
                         }
                     }
@@ -171,7 +174,7 @@ class PackageViewer : QXDialog{
 			}
         });
 		if (pm.load() == false){
-			QXMessageBox.Critical("错误", "加载包时出现故障", QXMessageBox.Ok, QXMessageBox.Ok);
+			QMessageBox.Critical("错误", "加载包时出现故障", QMessageBox.Ok, QMessageBox.Ok);
         }else{
 			loadList();
         }
@@ -183,20 +186,20 @@ class PackageViewer : QXDialog{
         }
         
         loadpack.setOnClickListener(new onClickListener(){
-			void onClick(QXObject obj, bool checked)override{
+			void onClick(QObject obj, bool checked)override{
 				loadNetinfo();
             }
         });
         
         editsrc.setOnClickListener(new onClickListener(){
-			void onClick(QXObject obj, bool checked)override{
+			void onClick(QObject obj, bool checked)override{
                 editSrcaddress();
             }
         });
         
         btnInstall.setOnClickListener(new onClickListener(){
-			void onClick(QXObject obj, bool checked)override{
-				String file = QXFileDialog.getOpenFileName("添加包", nilptr,  "X 包 (*.xp)", PackageViewer.this);
+			void onClick(QObject obj, bool checked)override{
+				String file = QFileDialog.getOpenFileName("添加包", nilptr,  "X 包 (*.xp)", PackageViewer.this);
 				if (file != nilptr && file.length() > 0){
 					install(file);
 				}	
@@ -204,20 +207,20 @@ class PackageViewer : QXDialog{
         });
         
         btnAdd.setOnClickListener(new onClickListener(){
-			void onClick(QXObject obj, bool checked)override{
+			void onClick(QObject obj, bool checked)override{
 				importToProject();
             }
         });
         
         btnDelete.setOnClickListener( new onClickListener(){
-			void onClick(QXObject obj,bool checked)override{
+			void onClick(QObject obj,bool checked)override{
 				deletePackage();
             }
         
         });
         
         btnExport.setOnClickListener( new onClickListener(){
-			void onClick(QXObject obj,bool checked)override{
+			void onClick(QObject obj,bool checked)override{
 				exportPackage();
             }
         
@@ -229,8 +232,8 @@ class PackageViewer : QXDialog{
         
             
         keyedit.setOnKeyEventListener(new onKeyEventListener() {
-                bool onKeyPress(QXObject obj,int key,bool repeat,int count,String text,int scanCode,int virtualKey,int modifier)override {
-                    if (key == Key_Escape) {
+                bool onKeyPress(QObject obj,int key,bool repeat,int count,String text,int scanCode,int virtualKey,int modifier)override {
+                    if (key == Constant.Key_Escape) {
                         keyedit.setText("");
                     }
                     return true;
@@ -239,7 +242,7 @@ class PackageViewer : QXDialog{
 
         keyedit.setOnEditEventListener(new onEditEventListener() {
 
-            void onTextChanged(QXObject, @NotNilptr String text)override {
+            void onTextChanged(QObject, @NotNilptr String text)override {
                 String key = text.upper();
                 long [] items = pcklist.getTopItems();
                 int c = pcklist.getTopLevelCount();
@@ -286,7 +289,7 @@ class PackageViewer : QXDialog{
         InputDialog.requestInput(new InputDialog.onInputListener() {
             bool onInputOk(@NotNilptr String text)override {
                 if (text.length() == 0) {
-                    QXMessageBox.Critical("错误", "输入了不正确的地址", QXMessageBox.Ok, QXMessageBox.Ok);
+                    QMessageBox.Critical("错误", "输入了不正确的地址", QMessageBox.Ok, QMessageBox.Ok);
                     return false;
                 }
                 pkgSource = text;
@@ -320,7 +323,7 @@ class PackageViewer : QXDialog{
                     if (pinfo != nilptr && pinfo.detectCache()){
                         install(pinfo.cacheFile);
                     }else{
-                        QXMessageBox.Critical("注意","未获取完成,无法进行安装",QXMessageBox.Ok,QXMessageBox.Ok);
+                        QMessageBox.Critical("注意","未获取完成,无法进行安装",QMessageBox.Ok,QMessageBox.Ok);
                     }
                 }
             }
@@ -414,7 +417,7 @@ class PackageViewer : QXDialog{
 				int id = pcklist.getItemTag(items[i], 0);
 				PackageManager.PackageInfo pi = pm.get(id);
                 if (pi != nilptr){
-					String floder = QXFileDialog.getFolderPath("选择导出目录","" ,"", this);
+					String floder = QFileDialog.getFolderPath("选择导出目录","" ,"", this);
                     if (floder != nilptr && floder.length() > 0){
 						floder = String.formatPath(floder.appendPath(pi.name + pi.version + ".xp"), false);
 						PackageManager.copyFile(floder, pi.filepath);
@@ -423,50 +426,18 @@ class PackageViewer : QXDialog{
             }
         }
     }
-    
-    public static class ContextMenu{
-		public QXMenu contextMenu = new QXMenu();
-		public QXAction [] actions;
-		
-		public void create(@NotNilptr QXWidget parent,@NotNilptr String [] acts, onEventListener listener){
-			if (contextMenu.create(parent)){
-				actions = new QXAction[acts.length];
-				for (int i = 0; i < acts.length; i ++){
-					QXAction action = new QXAction();
-					if (action.create(contextMenu)){
-						
-						if (acts[i].equals("-")){
-							action.setSeparator(true);
-						}else{
-							action.setEnable(false);	
-							action.setText(acts[i]);
-							action.setOnEventListener(listener);
-						}
-					}
-					actions[i] = action;
-				}
-				parent.setContextMenuPolicy(ActionsContextMenu);
-				parent.addActions(actions);
-			}
-		}
-        
-        public void setEnable(int n, bool be){
-            if (n >= 0 && n < actions.length){
-                actions[n].setEnable(be);
-            }
-        }
-	};
+
     
     public ContextMenu _contextMenu = new ContextMenu();
 
 
 	
     public void createContextMenu(){
-		QXTreeView list = pcklist;
+		QTreeWidget list = pcklist;
         
         
 		onEventListener menuListener = new onEventListener(){
-		   public void onTrigger(QXObject obj) override{
+		   public void onTrigger(QObject obj) override{
 				if (obj == _contextMenu.actions[0]){
                     if (btnInstall._clicklistener != nilptr){
                         btnInstall._clicklistener.onClick(btnInstall,false);
@@ -496,7 +467,7 @@ class PackageViewer : QXDialog{
 		
 		if (list != nilptr){
             String []acts = {"从文件安装...","-", "刷新","-", "添加到当前项目", "-", "获取包", "安装", "导出", "-", "删除"};
-            _contextMenu.create(list, acts, menuListener);
+            _contextMenu.create(list, acts, menuListener, nilptr);
             for (int i =0; i < acts.length; i++){
                 _contextMenu.setEnable(i, true);
             }
@@ -519,8 +490,8 @@ class PackageViewer : QXDialog{
             }
             
             if (count > 0){
-				int r = QXMessageBox.Question("注意",tips,QXMessageBox.Ok | QXMessageBox.Cancel	,QXMessageBox.Ok  );
-                if (r == QXMessageBox.Ok ){
+				int r = QMessageBox.Question("注意",tips,QMessageBox.Ok | QMessageBox.Cancel	,QMessageBox.Ok  );
+                if (r == QMessageBox.Ok ){
 					for (int i = 0; i < items.length; i++){
 						int id = pcklist.getItemTag(items[items.length - (i + 1)], 0);
 						PackageManager.PackageInfo pi = pm.get(id);
@@ -538,7 +509,7 @@ class PackageViewer : QXDialog{
 	public void install(@NotNilptr String file){
 		PackageManager.PackageInfo pi = pm.previewPackage(file);
         if (pi == nilptr){
-			QXMessageBox.Critical("错误", file + " 不是一个有效的X包.", QXMessageBox.Ok, QXMessageBox.Ok);
+			QMessageBox.Critical("错误", file + " 不是一个有效的X包.", QMessageBox.Ok, QMessageBox.Ok);
 			return;
         }
         
@@ -548,11 +519,11 @@ class PackageViewer : QXDialog{
         
         
         if (pl.size() == 0){
-			if (QXMessageBox.Information("提示", "将安装包 " + pi.name + " " + pi.version + "?" + "<br /><br />简介:<br /><b>" + pi.descr + "</b><br /><br />发布者:<a href=\"" + pi.author + "\">" + pi.author + "<em>", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Ok) == QXMessageBox.Ok){
+			if (QMessageBox.Information("提示", "将安装包 " + pi.name + " " + pi.version + "?" + "<br /><br />简介:<br /><b>" + pi.descr + "</b><br /><br />发布者:<a href=\"" + pi.author + "\">" + pi.author + "<em>", QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Ok) == QMessageBox.Ok){
 				if (pm.installPackage(pi)){
 					reloadList();
 				}else{
-					QXMessageBox.Critical("提示", "安装包 " + pi.name + " " + pi.version + "失败!", QXMessageBox.Ok, QXMessageBox.Ok);
+					QMessageBox.Critical("提示", "安装包 " + pi.name + " " + pi.version + "失败!", QMessageBox.Ok, QMessageBox.Ok);
 				}
 			}
         }else{
@@ -573,7 +544,7 @@ class PackageViewer : QXDialog{
             }
             
             if (bExists){
-				if (QXMessageBox.Question("包已存在","此包已存在,是否重新安装?",QXMessageBox.Yes | QXMessageBox.Cancel,QXMessageBox.Cancel) == QXMessageBox.Cancel){
+				if (QMessageBox.Question("包已存在","此包已存在,是否重新安装?",QMessageBox.Yes | QMessageBox.Cancel,QMessageBox.Cancel) == QMessageBox.Cancel){
 					return ;
                 }
                 
@@ -584,16 +555,16 @@ class PackageViewer : QXDialog{
                     pe = pm.findPackage(pi.name, pi.version);
                 }
                 
-				if (QXMessageBox.Information("提示", "将安装包 " + pi.name + " " + pi.version + "?" + "<br /><br />简介:<br /><b>" + pi.descr + "</b><br /><br />发布者:<a href=\"" + pi.author + "\">" + pi.author + "<em>", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Ok) == QXMessageBox.Ok){
+				if (QMessageBox.Information("提示", "将安装包 " + pi.name + " " + pi.version + "?" + "<br /><br />简介:<br /><b>" + pi.descr + "</b><br /><br />发布者:<a href=\"" + pi.author + "\">" + pi.author + "<em>", QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Ok) == QMessageBox.Ok){
 					if (pm.installPackage(pi)){
 						reloadList();
 					}else{
-						QXMessageBox.Critical("提示", "安装包 " + pi.name + " " + pi.version + "失败!", QXMessageBox.Ok, QXMessageBox.Ok);
+						QMessageBox.Critical("提示", "安装包 " + pi.name + " " + pi.version + "失败!", QMessageBox.Ok, QMessageBox.Ok);
 					}
 				}
             }else
             if (bUpgrade){
-				if (QXMessageBox.Question("升级包","是否删除旧版包?",QXMessageBox.Yes | QXMessageBox.Cancel,QXMessageBox.Yes) == QXMessageBox.Yes){
+				if (QMessageBox.Question("升级包","是否删除旧版包?",QMessageBox.Yes | QMessageBox.Cancel,QMessageBox.Yes) == QMessageBox.Yes){
 					PackageManager.PackageInfo pe = pm.findPackage(pi.name, nilptr);
 					
 					while (pe != nilptr){
@@ -605,23 +576,23 @@ class PackageViewer : QXDialog{
 					}
                 }
                 
-				if (QXMessageBox.Information("提示", "将安装包 " + pi.name + " " + pi.version + "?" + "<br /><br />简介:<br /><b>" + pi.descr + "</b><br /><br />发布者:<a href=\"" + pi.author + "\">" + pi.author + "<em>", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Ok) == QXMessageBox.Ok){
+				if (QMessageBox.Information("提示", "将安装包 " + pi.name + " " + pi.version + "?" + "<br /><br />简介:<br /><b>" + pi.descr + "</b><br /><br />发布者:<a href=\"" + pi.author + "\">" + pi.author + "<em>", QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Ok) == QMessageBox.Ok){
 					if (pm.installPackage(pi)){
 						reloadList();
 					}else{
-						QXMessageBox.Critical("提示", "安装包 " + pi.name + " " + pi.version + "失败!", QXMessageBox.Ok, QXMessageBox.Ok);
+						QMessageBox.Critical("提示", "安装包 " + pi.name + " " + pi.version + "失败!", QMessageBox.Ok, QMessageBox.Ok);
 					}
 				}
             }else{
-				if (QXMessageBox.Question("注意","将安装一个更低版的包,系统中已存在比此包更高版本的包,已经是否继续安装?",QXMessageBox.Yes | QXMessageBox.Cancel,QXMessageBox.Yes) == QXMessageBox.Cancel){
+				if (QMessageBox.Question("注意","将安装一个更低版的包,系统中已存在比此包更高版本的包,已经是否继续安装?",QMessageBox.Yes | QMessageBox.Cancel,QMessageBox.Yes) == QMessageBox.Cancel){
 					return;
                 }
                 
-				if (QXMessageBox.Information("提示", "将安装包 " + pi.name + " " + pi.version + "?" + "<br /><br />简介:<br /><b>" + pi.descr + "</b><br /><br />发布者:<a href=\"" + pi.author + "\">" + pi.author + "<em>", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Ok) == QXMessageBox.Ok){
+				if (QMessageBox.Information("提示", "将安装包 " + pi.name + " " + pi.version + "?" + "<br /><br />简介:<br /><b>" + pi.descr + "</b><br /><br />发布者:<a href=\"" + pi.author + "\">" + pi.author + "<em>", QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Ok) == QMessageBox.Ok){
 					if (pm.installPackage(pi)){
 						reloadList();
 					}else{
-						QXMessageBox.Critical("提示", "安装包 " + pi.name + " " + pi.version + "失败!", QXMessageBox.Ok, QXMessageBox.Ok);
+						QMessageBox.Critical("提示", "安装包 " + pi.name + " " + pi.version + "失败!", QMessageBox.Ok, QMessageBox.Ok);
 					}
 				}
             }
@@ -631,7 +602,7 @@ class PackageViewer : QXDialog{
     
     public void importToProject(){
         if (XWorkspace.workspace.isCurrentProjectEmpty()){
-            QXMessageBox.Critical("错误","当前工作区没有载入一个有效的项目",QXMessageBox.Ok,QXMessageBox.Ok);
+            QMessageBox.Critical("错误","当前工作区没有载入一个有效的项目",QMessageBox.Ok,QMessageBox.Ok);
             return ;
         }
         
@@ -704,7 +675,7 @@ class PackageViewer : QXDialog{
                     icon = "res/package64.png";
                 }
                 long item = pcklist.addItem(icon, pi.name);
-                pcklist.modifyItemFlags(item, QXTreeView.ItemIsUserCheckable, 0);
+                pcklist.modifyItemFlags(item, QTreeWidget.ItemIsUserCheckable, 0);
                 pcklist.setItemText(item, 1, pi.version);
                 pcklist.setItemText(item, 2, pi.descr);
                 pcklist.setItemText(item, 3, "已安装");
@@ -730,7 +701,7 @@ class PackageViewer : QXDialog{
                 }
                 long item = pcklist.addItem(icon, pi.name);
                 pcklist.setItemTag(item,3,i + 1);
-                pcklist.modifyItemFlags(item, QXTreeView.ItemIsUserCheckable, 0);
+                pcklist.modifyItemFlags(item, QTreeWidget.ItemIsUserCheckable, 0);
                 pcklist.setItemText(item, 1, pi.version);
                 pcklist.setItemText(item, 2, pi.descr);
                 
@@ -755,9 +726,9 @@ class PackageViewer : QXDialog{
     
 	public static bool Show(){
     
-        QXDialog newDlg = new QXDialog();
+        QDialog newDlg = new QDialog();
         
-        if (newDlg.load("ui/packagemgr.ui") == false){
+        if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/packagemgr.ui"))) == false){
             return false;
         }
         
@@ -771,9 +742,9 @@ class PackageViewer : QXDialog{
     
 	public static bool Install(@NotNilptr String file){
     
-        QXDialog newDlg = new QXDialog();
+        QDialog newDlg = new QDialog();
         
-        if (newDlg.load("ui/packagemgr.ui") == false){
+        if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/packagemgr.ui"))) == false){
             return false;
         }
         

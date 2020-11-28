@@ -5,4 +5,5 @@ class Resources{
     public static String thumb_png = String.formatPath(XPlatform.getAppDirectory().appendPath("plugins").appendPath("xandroid").appendPath("thumb.png"), false);
     public static String api_png = String.formatPath(XPlatform.getAppDirectory().appendPath("plugins").appendPath("xandroid").appendPath("sdk.png"), false);
     public static String sdk_setting = String.formatPath(XPlatform.getAppDirectory().appendPath("plugins").appendPath("xandroid").appendPath("sdk_setting.png"), false);
+    public static String setting = String.formatPath(XPlatform.getAppDirectory().appendPath("plugins").appendPath("xandroid").appendPath("setting.png"), false);
 };

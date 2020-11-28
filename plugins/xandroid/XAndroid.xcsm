@@ -14,7 +14,7 @@ class XAndroid : IXPlugin{
     String JAVANAME = (_system_.getPlatformId()== 0 ?  "java.exe" : "java");
     static IXStudioController xcontroller;
     public static WorkspaceController workspace;
-    static QXMainWindow _mainWindow;
+    static QMainWindow _mainWindow;
     public static String defaultDevice;
     static JsonObject wizard ;
     public static int output_id = -1;
@@ -87,6 +87,20 @@ class XAndroid : IXPlugin{
         return false;
     }
     
+    ActionIdent [] getSolutionContextActions(){
+        return nilptr;
+    }
+
+    ActionIdent [] getClassViewContextActions(){
+        return nilptr;
+    }
+
+    void updateSolutionActionState(String files){
+
+    }
+        void updateClassViewActionState(String file, ClassViewInfo info){
+            
+        }
     class ProjectPlugin : IProjectPlugin{
         String getWizard(bool projectExist){
             return wizard.toString(false);
@@ -138,6 +152,21 @@ class XAndroid : IXPlugin{
         }
         void onpostRun(IProject project, bool debug){
           
+        }
+
+        ActionIdent [] getSolutionContextActions(){
+            return nilptr;
+        }
+
+        ActionIdent [] getClassViewContextActions(){
+            return nilptr;
+        }
+
+        void updateSolutionActionState(String files){
+
+        }
+        void updateClassViewActionState(String file, ClassViewInfo info){
+            
         }
     };
     
@@ -192,7 +221,7 @@ class XAndroid : IXPlugin{
             fos.write(root.toString(false).getBytes());
             fos.close();
         }catch(Exception e){ 
-            QXMessageBox.Critical("注意","无法保存配置文件",QXMessageBox.Ok,QXMessageBox.Ok);
+            QMessageBox.Critical("注意","无法保存配置文件",QMessageBox.Ok,QMessageBox.Ok);
         }finally{
             if (fos != nilptr){
                 fos.close();
@@ -364,6 +393,52 @@ class XAndroid : IXPlugin{
     void uninstall(IXStudioController){
         
     }
+
+    onEventListener menulis = new onEventListener(){
+        public void onTrigger(@NotNilptr QObject obj)override
+        {
+            onMenuTrigged(obj.getName());
+        }
+    };
+    
+    void createMenu(){
+        QMenu toolMenu = (QMenu)_mainWindow.findByName("menuWindow");
+        QMenu androidmenu = new QMenu();
+        androidmenu.create(_mainWindow.getMenuBar());
+        androidmenu.menuAction().setText("Android(&A)");
+        _mainWindow.getMenuBar().insertMenu(toolMenu.menuAction(), androidmenu);
+        
+        QAction sdksetting = androidmenu.addAction(Resources.setting, "Android SDK设置");
+        sdksetting.setName("xandroid_setting");
+        
+        QAction devices = androidmenu.addAction(Resources.thumb_png, "Android 设备");
+        devices.setName("_xandroid_devide");
+        
+        androidmenu.addSeparator();
+        QAction sdkmgr = androidmenu.addAction(Resources.sdk_setting, "Android SDK Manager");
+        sdkmgr.setName("xandroid_manager");
+        
+        androidmenu.addSeparator();
+        QAction addxnl = androidmenu.addAction("res/toolbar/class.png", "增加 XNL 支持");
+        addxnl.setName("xandroid_addxnl");
+        
+        sdksetting.setOnEventListener(menulis);
+        devices.setOnEventListener(menulis);
+        sdkmgr.setOnEventListener(menulis);
+        addxnl.setOnEventListener(menulis);
+        
+        
+        QToolBar qtb = new QToolBar();
+        qtb.create(_mainWindow);
+        _mainWindow.addToolBar(qtb);
+        qtb.setWindowTitle("Android");
+        qtb.setIconSize(16, 16);
+        qtb.addAction(sdksetting);
+        qtb.addAction(devices);
+        qtb.addAction(sdkmgr);
+        qtb.addAction(addxnl);
+        //androidmenu.addAction("Android SDK设置");
+    }
     bool initializPlusin(IXStudioController controller, bool enabled)override{
         xcontroller = controller;
         workspace = xcontroller.getWorkspace();
@@ -371,13 +446,16 @@ class XAndroid : IXPlugin{
         if (enabled == false){
             return true;
         }
-        workspace.addMenu(4, "", "-", nilptr, nilptr, this);
+        /*workspace.addMenu(4, "", "-", nilptr, nilptr, this);
         workspace.addMenu(4, "xandroid_setting", "Android SDK设置", Resources.sdk_setting,nilptr, this);
         workspace.addMenu(4, "_xandroid_devide", "Android 设备", Resources.thumb_png, nilptr, this);
         workspace.addMenu(4, "", "-", nilptr, nilptr, this);
         workspace.addMenu(4, "xandroid_manager", "Android SDK Manager", Resources.sdk_setting,nilptr, this);
         workspace.addMenu(4, "", "-", nilptr, nilptr, this);
-        workspace.addMenu(4, "xandroid_addxnl", "增加 XNL 支持", "res/toolbar/class.png" ,nilptr, this);
+        workspace.addMenu(4, "xandroid_addxnl", "增加 XNL 支持", "res/toolbar/class.png" ,nilptr, this);*/
+
+        createMenu();
+
         output_id = workspace.registryOutput(Resources.sdk_setting);
         wizard = new JsonObject();
         JsonObject Navigation = new JsonObject();
@@ -393,14 +471,14 @@ class XAndroid : IXPlugin{
         mobile.put("details", "适用于安卓设备的应用");
         Xlang.put(mobile);
         
-        mobile = new JsonObject();
+        /*mobile = new JsonObject();
         mobile.put("name", "Cocos2dx Android游戏开发");
         mobile.put("uuid", cocosandroid);
         mobile.put("language", "xlang");
         mobile.put("icon", "plugins/xandroid/cocos2dx.png");
         mobile.put("platform", "Android(armeabi-va7, x86)");
         mobile.put("details", "适用于安卓设备的游戏应用");
-        Xlang.put(mobile);
+        Xlang.put(mobile);*/
         
         project.put("Xlang 移动应用" , Xlang);
         Navigation.put("project" , project);
@@ -461,7 +539,7 @@ class XAndroid : IXPlugin{
     static void addXnlSupport(){
         IProject project = workspace.getCurrentProject();
         if (project == nilptr){
-            QXMessageBox.Critical("注意", "工作区并未载入一个有效项目.", QXMessageBox.Ok, QXMessageBox.Ok);
+            QMessageBox.Critical("注意", "工作区并未载入一个有效项目.", QMessageBox.Ok, QMessageBox.Ok);
             return;
         }
         
@@ -472,7 +550,7 @@ class XAndroid : IXPlugin{
             if (XPlatform.existsSystemFile(androidPath)){
                 String jniPath = String.formatPath(androidPath.appendPath("jni"), false);
                 if (XPlatform.existsSystemFile(jniPath)){
-                    QXMessageBox.Critical("注意", "此项目已支持XNL,请勿重复添加支持.", QXMessageBox.Ok, QXMessageBox.Ok);
+                    QMessageBox.Critical("注意", "此项目已支持XNL,请勿重复添加支持.", QMessageBox.Ok, QMessageBox.Ok);
                     return;
                 }else{
                     String xnl_path = String.formatPath(XPlatform.getAppDirectory().appendPath("xnl").appendPath("xnl.h"), false);
@@ -505,7 +583,7 @@ class XAndroid : IXPlugin{
                     }
                 }
             }else{
-                QXMessageBox.Critical("注意", "此项目不支持Android平台.", QXMessageBox.Ok, QXMessageBox.Ok);
+                QMessageBox.Critical("注意", "此项目不支持Android平台.", QMessageBox.Ok, QMessageBox.Ok);
                 return;
             }
         }
@@ -516,7 +594,7 @@ class XAndroid : IXPlugin{
         if (android_sdk_root == nilptr || android_sdk_root.length() == 0){    
             workspace.RunOnUi(new UIRunnable(){
                void run() override{
-                    QXMessageBox.Critical("注意", "未设置 Android SDK 路径.", QXMessageBox.Ok, QXMessageBox.Ok);
+                    QMessageBox.Critical("注意", "未设置 Android SDK 路径.", QMessageBox.Ok, QMessageBox.Ok);
                     openSettingDialog();
                }
             });
@@ -530,23 +608,23 @@ class XAndroid : IXPlugin{
     }
     
     static void showForNewProject(WizardLoader loader, String projectName, String projectDir, String uuid, IProject ownProject, bool addToProject){
-        QXDialog newDlg = new QXDialog();
+        QDialog newDlg = new QDialog();
         newDlg.create();
         byte [] buffer = __xPackageResource("reqireargs.ui");
-        QXBuffer qb = new QXBuffer();
+        QBuffer qb = new QBuffer();
         qb.setBuffer(buffer, 0, buffer.length);
         if (newDlg.load(qb)){
             AppCreator.create(newDlg, loader, projectName, projectDir, uuid, ownProject, addToProject);
         }else{
-            QXMessageBox.Critical("错误", "无法创建项目", QXMessageBox.Ok, QXMessageBox.Ok);
+            QMessageBox.Critical("错误", "无法创建项目", QMessageBox.Ok, QMessageBox.Ok);
         }
     }
     
     public static void openSettingDialog(){
-        QXDialog newDlg = new QXDialog();
+        QDialog newDlg = new QDialog();
         newDlg.create();
         byte [] buffer = __xPackageResource("sdk_setting.ui");
-        QXBuffer qb = new QXBuffer();
+        QBuffer qb = new QBuffer();
         qb.setBuffer(buffer, 0, buffer.length);
         if (newDlg.load(qb)){
             AndroidSdkDialog.create(newDlg);
@@ -554,10 +632,10 @@ class XAndroid : IXPlugin{
     }
     
     public static void openDeviceDialog(){
-        QXDialog newDlg = new QXDialog();
+        QDialog newDlg = new QDialog();
         newDlg.create();
         byte [] buffer = __xPackageResource("devlst.ui");
-        QXBuffer qb = new QXBuffer();
+        QBuffer qb = new QBuffer();
         qb.setBuffer(buffer, 0, buffer.length);
         if (newDlg.load(qb)){
             DeviceListDialog.create(newDlg);
@@ -1293,7 +1371,7 @@ class XAndroid : IXPlugin{
         if (errstr != nilptr){
             workspace.RunOnUi(new UIRunnable(){
                void run() override{
-                    QXMessageBox.Critical("注意", errstr + ", 点击打开设置.", QXMessageBox.Ok, QXMessageBox.Ok);
+                    QMessageBox.Critical("注意", errstr + ", 点击打开设置.", QMessageBox.Ok, QMessageBox.Ok);
                     openSettingDialog();
                }
             });
@@ -1400,7 +1478,7 @@ class XAndroid : IXPlugin{
             if (XPlatform.existsSystemFile(sdklib) == false){
                 workspace.RunOnUi(new UIRunnable(){
                    void run() override{
-                        QXMessageBox.Critical("注意", "不支持此版本 Android Sdk 请更换版本.", QXMessageBox.Ok, QXMessageBox.Ok);
+                        QMessageBox.Critical("注意", "不支持此版本 Android Sdk 请更换版本.", QMessageBox.Ok, QMessageBox.Ok);
                         openSettingDialog();
                    }
                 });

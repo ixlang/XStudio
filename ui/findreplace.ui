@@ -64,7 +64,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>查找</string>
+    <string>查找(&amp;F)</string>
    </property>
   </widget>
   <widget class="QPushButton" name="benFindall">
@@ -77,7 +77,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>查找全部</string>
+    <string>查找全部(&amp;A)</string>
    </property>
   </widget>
   <widget class="QPushButton" name="btnFindAgain">
@@ -103,7 +103,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>替换</string>
+    <string>替换(&amp;R)</string>
    </property>
   </widget>
   <widget class="QPushButton" name="btnReplaceAll">
@@ -116,7 +116,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>替换全部</string>
+    <string>替换全部(&amp;H)</string>
    </property>
   </widget>
   <widget class="QPushButton" name="btnClose">
@@ -129,7 +129,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>关闭</string>
+    <string>关闭(&amp;C)</string>
    </property>
   </widget>
   <widget class="QComboBox" name="combFind">

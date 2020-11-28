@@ -1,13 +1,13 @@
 //xlang Source, Name:AndroidSdkDialog.xcsm 
 //Date: Mon Dec 15:58:10 2019 
 
-class AndroidSdkDialog : QXDialog{
-    //QXDialog _coredialog;
-    QXPushButton b0, b1, b2, btnok, btncan, btndljdk, btndladk, btndlndk;
-    QXLineEdit java ,sdk, ndk;
-    QXTreeView apilist, toolslist;
-    QXLabel labstat;
-    QXProgressBar pgbdl;
+class AndroidSdkDialog : QDialog{
+    //QDialog _coredialog;
+    QPushButton b0, b1, b2, btnok, btncan, btndljdk, btndladk, btndlndk;
+    QLineEdit java ,sdk, ndk;
+    QTreeWidget apilist, toolslist;
+    QLabel labstat;
+    QProgressBar pgbdl;
     String buildtools;
     String apilevel;
     
@@ -16,11 +16,11 @@ class AndroidSdkDialog : QXDialog{
     String NDKBUILDNAME = (_system_.getPlatformId()== 0 ?  "ndk-build.cmd" : "ndk-build");
     static Map<String, int> dllist = new Map<String, int>();
     static AndroidSdkDialog _sdkdialog;
-    public AndroidSdkDialog(QXDialog d){
+    public AndroidSdkDialog(QDialog d){
         attach(d);
     }
     
-    public static void create(QXDialog d){
+    public static void create(QDialog d){
         AndroidSdkDialog ad = new AndroidSdkDialog(d);
         _sdkdialog = ad;
         ad.show();
@@ -49,38 +49,38 @@ class AndroidSdkDialog : QXDialog{
     void onAttach()override{
         setWindowIcon(Resources.sdk_setting);
         
-        pgbdl = (QXProgressBar)attachByName(new QXProgressBar(), "pgbdl");
-        labstat = (QXLabel)attachByName(new QXLabel(), "labstat");
+        pgbdl = (QProgressBar)attachByName(new QProgressBar(), "pgbdl");
+        labstat = (QLabel)attachByName(new QLabel(), "labstat");
         
-        btndljdk = (QXPushButton)attachByName(new QXPushButton(), "btndljdk");
-        btndladk = (QXPushButton)attachByName(new QXPushButton(), "btndladk");
-        btndlndk = (QXPushButton)attachByName(new QXPushButton(), "btndlndk");
+        btndljdk = (QPushButton)attachByName(new QPushButton(), "btndljdk");
+        btndladk = (QPushButton)attachByName(new QPushButton(), "btndladk");
+        btndlndk = (QPushButton)attachByName(new QPushButton(), "btndlndk");
         
-        btnok = (QXPushButton)attachByName(new QXPushButton(), "btnok");
-        btncan = (QXPushButton)attachByName(new QXPushButton(), "btncan");
-        apilist = (QXTreeView)attachByName(new QXTreeView(), "apilist");
-        toolslist = (QXTreeView)attachByName(new QXTreeView(), "toolslist");
+        btnok = (QPushButton)attachByName(new QPushButton(), "btnok");
+        btncan = (QPushButton)attachByName(new QPushButton(), "btncan");
+        apilist = (QTreeWidget)attachByName(new QTreeWidget(), "apilist");
+        toolslist = (QTreeWidget)attachByName(new QTreeWidget(), "toolslist");
         
-        b0 = (QXPushButton)attachByName(new QXPushButton(), "b0");
-        b1 = (QXPushButton)attachByName(new QXPushButton(), "b1");
-        b2 = (QXPushButton)attachByName(new QXPushButton(), "b2");
+        b0 = (QPushButton)attachByName(new QPushButton(), "b0");
+        b1 = (QPushButton)attachByName(new QPushButton(), "b1");
+        b2 = (QPushButton)attachByName(new QPushButton(), "b2");
         
-        java = (QXLineEdit)attachByName(new QXLineEdit(), "edtjava");
-        sdk = (QXLineEdit)attachByName(new QXLineEdit(), "edtsdk");
-        ndk = (QXLineEdit)attachByName(new QXLineEdit(), "edtndk");
+        java = (QLineEdit)attachByName(new QLineEdit(), "edtjava");
+        sdk = (QLineEdit)attachByName(new QLineEdit(), "edtsdk");
+        ndk = (QLineEdit)attachByName(new QLineEdit(), "edtndk");
         
         pgbdl.setValue(0);
         
         btndljdk.setOnClickListener(
-        new QXDialog.onClickListener() {
-            void onClick(QXObject obj, bool checked)override {
-                QXCore.openUrl("https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html?utm_source=androiddevtools&utm_medium=website");
+        new onClickListener() {
+            void onClick(QObject obj, bool checked)override {
+                QCore.openUrl("https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html?utm_source=androiddevtools&utm_medium=website");
             }
         });
         
         btndladk.setOnClickListener(
-        new QXDialog.onClickListener() {
-            void onClick(QXObject obj, bool checked)override {
+        new onClickListener() {
+            void onClick(QObject obj, bool checked)override {
                 int osid = _system_.getPlatformId();
                 if (osid >= 0 && osid <= 2){
                     String url = adk_url[osid];
@@ -88,7 +88,7 @@ class AndroidSdkDialog : QXDialog{
                     
                     bool bdl = XAndroid.workspace.hasDownloadTask("Android SDK");
                     if (bdl){
-                        QXMessageBox.Critical("注意", "下载队列已经在执行中", QXMessageBox.Ok, QXMessageBox.Ok);
+                        QMessageBox.Critical("注意", "下载队列已经在执行中", QMessageBox.Ok, QMessageBox.Ok);
                         return;
                     }
                     XPlatform.mkdir(String.formatPath(XPlatform.getAppDirectory().appendPath("download"), false));
@@ -124,8 +124,8 @@ class AndroidSdkDialog : QXDialog{
         
         
         btndlndk.setOnClickListener(
-        new QXDialog.onClickListener() {
-            void onClick(QXObject obj, bool checked)override {
+        new onClickListener() {
+            void onClick(QObject obj, bool checked)override {
                 int osid = _system_.getPlatformId();
                 if (osid >= 0 && osid <= 2){
                     String url = ndk32_url[osid];
@@ -136,7 +136,7 @@ class AndroidSdkDialog : QXDialog{
                     
                     bool bdl = XAndroid.workspace.hasDownloadTask("Android NDK");
                     if (bdl){
-                        QXMessageBox.Critical("注意", "下载队列已经在执行中", QXMessageBox.Ok, QXMessageBox.Ok);
+                        QMessageBox.Critical("注意", "下载队列已经在执行中", QMessageBox.Ok, QMessageBox.Ok);
                         return;
                     }
                     XPlatform.mkdir(String.formatPath(XPlatform.getAppDirectory().appendPath("download"), false));
@@ -184,12 +184,12 @@ class AndroidSdkDialog : QXDialog{
         
         toolslist.setColumns(bcolumns);
         
-        apilist.setOnTreeViewItemEvent(new QXWidget.onTreeViewItemEvent(){
-			void onItemExpanded(QXTreeView,long iitem)override{
+        apilist.setOnTreeViewItemEvent(new onTreeViewItemEvent(){
+			void onItemExpanded(QTreeWidget,long iitem)override{
 		
 			}
             
-            void onItemChanged(QXTreeView _treeview, long item,int column)override{
+            void onItemChanged(QTreeWidget _treeview, long item,int column)override{
                 bool checked = _treeview.isItemCheck(item, 0);
                 if (checked){
                     apilevel = _treeview.getItemText(item, 3);
@@ -204,12 +204,12 @@ class AndroidSdkDialog : QXDialog{
         });
         
         
-        toolslist.setOnTreeViewItemEvent(new QXWidget.onTreeViewItemEvent(){
-			void onItemExpanded(QXTreeView,long iitem)override{
+        toolslist.setOnTreeViewItemEvent(new onTreeViewItemEvent(){
+			void onItemExpanded(QTreeWidget,long iitem)override{
 		
 			}
             
-            void onItemChanged(QXTreeView _treeview, long item,int column)override{
+            void onItemChanged(QTreeWidget _treeview, long item,int column)override{
                 bool checked = _treeview.isItemCheck(item, 0);
                 if (checked){
                     buildtools = _treeview.getItemText(item, 0);
@@ -224,9 +224,9 @@ class AndroidSdkDialog : QXDialog{
         });
         
         b0.setOnClickListener(
-        new QXDialog.onClickListener() {
-            void onClick(QXObject obj, bool checked)override {
-                String sdk_path = QXFileDialog.getFolderPath("选择 JDK 目录", java.getText(), nilptr, AndroidSdkDialog.this);
+        new onClickListener() {
+            void onClick(QObject obj, bool checked)override {
+                String sdk_path = QFileDialog.getFolderPath("选择 JDK 目录", java.getText(), nilptr, AndroidSdkDialog.this);
                 if (sdk_path == nilptr  || sdk_path.length() == 0){ 
                     return;
                 }
@@ -234,16 +234,16 @@ class AndroidSdkDialog : QXDialog{
                 String test_path = sdk_path.appendPath("bin").appendPath(JAVACNAME);
                 
                 if (XPlatform.existsSystemFile(test_path) == false){
-                    QXMessageBox.Critical("注意",sdk_path + " 不是有效的Java sdk目录",QXMessageBox.Ok,QXMessageBox.Ok);
+                    QMessageBox.Critical("注意",sdk_path + " 不是有效的Java sdk目录",QMessageBox.Ok,QMessageBox.Ok);
                 }
                 java.setText(sdk_path);
             }
         });
         
         b1.setOnClickListener(
-        new QXDialog.onClickListener() {
-            void onClick(QXObject obj, bool checked)override {
-                String sdk_path = QXFileDialog.getFolderPath("选择Android Sdk目录", sdk.getText(), nilptr, AndroidSdkDialog.this);
+        new onClickListener() {
+            void onClick(QObject obj, bool checked)override {
+                String sdk_path = QFileDialog.getFolderPath("选择Android Sdk目录", sdk.getText(), nilptr, AndroidSdkDialog.this);
                 if (sdk_path == nilptr  || sdk_path.length() == 0){ 
                     return;
                 }
@@ -252,9 +252,9 @@ class AndroidSdkDialog : QXDialog{
         });
         
         b2.setOnClickListener(
-        new QXDialog.onClickListener() {
-            void onClick(QXObject obj, bool checked)override {
-                String sdk_path = QXFileDialog.getFolderPath("选择Android NDK目录", ndk.getText(), nilptr, AndroidSdkDialog.this);
+        new onClickListener() {
+            void onClick(QObject obj, bool checked)override {
+                String sdk_path = QFileDialog.getFolderPath("选择Android NDK目录", ndk.getText(), nilptr, AndroidSdkDialog.this);
                 if (sdk_path == nilptr || sdk_path.length() == 0){ 
                     return;
                 }
@@ -264,8 +264,8 @@ class AndroidSdkDialog : QXDialog{
         });
         
         btnok.setOnClickListener(
-        new QXDialog.onClickListener() {
-            void onClick(QXObject obj, bool checked)override {
+        new onClickListener() {
+            void onClick(QObject obj, bool checked)override {
                 XAndroid.setAndroidSdkFolder(java.getText(), sdk.getText(), ndk.getText(), apilevel, buildtools);
                 close();
             }
@@ -273,8 +273,8 @@ class AndroidSdkDialog : QXDialog{
         
         
         btncan.setOnClickListener(
-        new QXDialog.onClickListener() {
-            void onClick(QXObject obj, bool checked)override {
+        new onClickListener() {
+            void onClick(QObject obj, bool checked)override {
                 close();
             }
         });
@@ -382,8 +382,8 @@ class AndroidSdkDialog : QXDialog{
                             _sdkdialog.setNdkDir(path);
                         }
                     }else{
-                        QXMessageBox.Information("注意", "已完成下载但不支持自动解压安装, 点OK打开文件夹", QXMessageBox.Ok,QXMessageBox.Ok );
-                        QXCore.openLocal(String.formatPath(XPlatform.getAppDirectory().appendPath("download"), false));
+                        QMessageBox.Information("注意", "已完成下载但不支持自动解压安装, 点OK打开文件夹", QMessageBox.Ok,QMessageBox.Ok );
+                        QCore.openLocal(String.formatPath(XPlatform.getAppDirectory().appendPath("download"), false));
                     }
                 }
             }
@@ -405,7 +405,7 @@ class AndroidSdkDialog : QXDialog{
         String test_path = sdk_path.appendPath("tools").appendPath(ANDROIDNAME);
         
         if (XPlatform.existsSystemFile(test_path) == false){
-            QXMessageBox.Critical("注意",sdk_path + " 不是有效的Android sdk目录",QXMessageBox.Ok,QXMessageBox.Ok);
+            QMessageBox.Critical("注意",sdk_path + " 不是有效的Android sdk目录",QMessageBox.Ok,QMessageBox.Ok);
         }else{
             loadAndroidSdk(sdk_path);
         }
@@ -416,7 +416,7 @@ class AndroidSdkDialog : QXDialog{
         String test_path = sdk_path.appendPath(NDKBUILDNAME);
         
         if (XPlatform.existsSystemFile(test_path) == false){
-            QXMessageBox.Critical("注意",sdk_path + " 不是有效的Android NDK目录",QXMessageBox.Ok,QXMessageBox.Ok);
+            QMessageBox.Critical("注意",sdk_path + " 不是有效的Android NDK目录",QMessageBox.Ok,QMessageBox.Ok);
         }
         ndk.setText(sdk_path);
     }
@@ -517,7 +517,7 @@ class AndroidSdkDialog : QXDialog{
     
     void checkSdkUpdate(){
         if (apilist.getTopLevelCount() ==0 || toolslist.getTopLevelCount() == 0){
-            if (QXMessageBox.Information("注意", "找不到可用的 Build Tools 和 Platform SDK, 是否打开 SDK Manager 进行更新? ", QXMessageBox.Yes | QXMessageBox.No, QXMessageBox.Yes) == QXMessageBox.Yes){
+            if (QMessageBox.Information("注意", "找不到可用的 Build Tools 和 Platform SDK, 是否打开 SDK Manager 进行更新? ", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes) == QMessageBox.Yes){
                 XAndroid.openSdkManager();
             }
         }

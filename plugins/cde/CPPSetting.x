@@ -1,68 +1,70 @@
 //xlang Source, Name:CPPSetting.x 
 //Date: Thu Feb 17:40:17 2020 
 
-class CPPSetting : QXDialog{
+class CPPSetting : QDialog{
 
-    QXPushButton btnnew,  btndel, btncc, btnld, btndbg, btnclose, btnar, btnmake;
-    QXLineEdit edtcc, edtld, edtdbg, edtar, edtmake;
-    QXComboBox cmbcfg;
+    QPushButton btnnew,  btndel, btncc, btnld, btndbg, btnclose, btnar, btnmake;
+    QLineEdit edtcc, edtld, edtdbg, edtar, edtmake;
+    QComboBox cmbcfg;
     
-    QXSci _ccargs, _ldargs, _dbgargs, _arargs;
-    QXWidget ccarg, ldarg, dbgarg, ararg;
+    QScintilla _ccargs, _ldargs, _dbgargs, _arargs;
+    QWidget ccarg, ldarg, dbgarg, ararg;
     JsonArray cpp_configures;
     JsonObject current_config;
     
     bool bClear = false;
     
     void onAttach()override{
-        btnnew = (QXPushButton)attachByName(new QXPushButton(), "btnnew");
-        btndel = (QXPushButton)attachByName(new QXPushButton(), "btndel");
-        btncc = (QXPushButton)attachByName(new QXPushButton(), "btncc");
-        btnld = (QXPushButton)attachByName(new QXPushButton(), "btnld");
-        btndbg = (QXPushButton)attachByName(new QXPushButton(), "btndbg");
-        btnar = (QXPushButton)attachByName(new QXPushButton(), "btnar");
-        btnmake = (QXPushButton)attachByName(new QXPushButton(), "btnmake");
+    
+        setWindowIcon("res/toolbar/build.png");
+        btnnew = (QPushButton)attachByName(new QPushButton(), "btnnew");
+        btndel = (QPushButton)attachByName(new QPushButton(), "btndel");
+        btncc = (QPushButton)attachByName(new QPushButton(), "btncc");
+        btnld = (QPushButton)attachByName(new QPushButton(), "btnld");
+        btndbg = (QPushButton)attachByName(new QPushButton(), "btndbg");
+        btnar = (QPushButton)attachByName(new QPushButton(), "btnar");
+        btnmake = (QPushButton)attachByName(new QPushButton(), "btnmake");
         
         
-        btnclose = (QXPushButton)attachByName(new QXPushButton(), "btnclose");
+        btnclose = (QPushButton)attachByName(new QPushButton(), "btnclose");
         
-        edtcc = (QXLineEdit)attachByName(new QXLineEdit(), "edtcc");
-        edtld = (QXLineEdit)attachByName(new QXLineEdit(), "edtld");
-        edtdbg = (QXLineEdit)attachByName(new QXLineEdit(), "edtdbg");
-        edtar = (QXLineEdit)attachByName(new QXLineEdit(), "edtar");
-        edtmake = (QXLineEdit)attachByName(new QXLineEdit(), "edtmake");
+        edtcc = (QLineEdit)attachByName(new QLineEdit(), "edtcc");
+        edtld = (QLineEdit)attachByName(new QLineEdit(), "edtld");
+        edtdbg = (QLineEdit)attachByName(new QLineEdit(), "edtdbg");
+        edtar = (QLineEdit)attachByName(new QLineEdit(), "edtar");
+        edtmake = (QLineEdit)attachByName(new QLineEdit(), "edtmake");
         
-        cmbcfg = (QXComboBox)attachByName(new QXComboBox(), "cmbcfg");
+        cmbcfg = (QComboBox)attachByName(new QComboBox(), "cmbcfg");
         
-        ccarg = (QXWidget)attachByName(new QXWidget(), "ccarg");
-        ldarg = (QXWidget)attachByName(new QXWidget(), "ldarg");
-        dbgarg = (QXWidget)attachByName(new QXWidget(), "dbgarg");
-        ararg = (QXWidget)attachByName(new QXWidget(), "ararg");
+        ccarg = (QWidget)attachByName(new QWidget(), "ccarg");
+        ldarg = (QWidget)attachByName(new QWidget(), "ldarg");
+        dbgarg = (QWidget)attachByName(new QWidget(), "dbgarg");
+        ararg = (QWidget)attachByName(new QWidget(), "ararg");
         
         __nilptr_safe(ccarg, ldarg, dbgarg, ararg);
         
-        _ccargs = new QXSci();
+        _ccargs = new QScintilla();
         if (_ccargs.create(ccarg) == false){
             return;
         }
         
-        _ldargs = new QXSci();
+        _ldargs = new QScintilla();
         if (_ldargs.create(ldarg) == false){
             return;
         }
         
-        _dbgargs = new QXSci();
+        _dbgargs = new QScintilla();
         if (_dbgargs.create(dbgarg) == false){
             return;
         }
         
-        _arargs = new QXSci();
+        _arargs = new QScintilla();
         if (_arargs.create(ararg) == false){
             return;
         }
         
         dbgarg.setOnLayoutEventListener(new onLayoutEventListener(){
-            void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+            void onResize(QObject obj, int w, int h, int oldw, int oldh)override {
                 if (_dbgargs != nilptr){
                     _dbgargs.resize(w, h);
                 }
@@ -70,7 +72,7 @@ class CPPSetting : QXDialog{
         });
         
         ccarg.setOnLayoutEventListener(new onLayoutEventListener(){
-            void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+            void onResize(QObject obj, int w, int h, int oldw, int oldh)override {
                 if (_ccargs != nilptr){
                     _ccargs.resize(w, h);
                 }
@@ -78,7 +80,7 @@ class CPPSetting : QXDialog{
         });
         
         ldarg.setOnLayoutEventListener(new onLayoutEventListener(){
-            void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+            void onResize(QObject obj, int w, int h, int oldw, int oldh)override {
                 if (_ldargs != nilptr){
                     _ldargs.resize(w, h);
                 }
@@ -86,7 +88,7 @@ class CPPSetting : QXDialog{
         });
         
         ararg.setOnLayoutEventListener(new onLayoutEventListener(){
-            void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+            void onResize(QObject obj, int w, int h, int oldw, int oldh)override {
                 if (_ldargs != nilptr){
                     _arargs.resize(w, h);
                 }
@@ -107,7 +109,7 @@ class CPPSetting : QXDialog{
         
         cmbcfg.setOnComboBoxEventListener(
             new onComboBoxEventListener() {
-                void onItemSelected(QXObject obj, int id) {
+                void onItemSelected(QObject obj, int id) {
                     saveconfig();
                     String name = cmbcfg.getCurrentText();
                     for (int i = 0; i < cpp_configures.length(); i++){
@@ -123,7 +125,7 @@ class CPPSetting : QXDialog{
         );
         
         btnnew.setOnClickListener(new onClickListener(){
-            void onClick(QXObject obj, bool checked) {
+            void onClick(QObject obj, bool checked) {
                  
                  InputDialog.requestInput(new InputDialog.onInputListener() {
                     bool onInputOk(String text)override {
@@ -147,12 +149,12 @@ class CPPSetting : QXDialog{
         });
         
         btncc.setOnClickListener(new onClickListener(){
-            void onClick(QXObject obj, bool checked) {
+            void onClick(QObject obj, bool checked) {
                  if (current_config == nilptr){
-                     QXMessageBox.Critical("注意","请先选择或者新建一个配置",QXMessageBox.Ok,QXMessageBox.Ok);
+                     QMessageBox.Critical("注意","请先选择或者新建一个配置",QMessageBox.Ok,QMessageBox.Ok);
                      return;
                  }
-                 String filepath = QXFileDialog.getOpenFileName("选择编译器","","",CPPSetting.this);
+                 String filepath = QFileDialog.getOpenFileName("选择编译器","","",CPPSetting.this);
                  if (filepath == nilptr ){
                     filepath = "";
                  }
@@ -165,12 +167,12 @@ class CPPSetting : QXDialog{
         });
         
         btnld.setOnClickListener(new onClickListener(){
-            void onClick(QXObject obj, bool checked) {
+            void onClick(QObject obj, bool checked) {
                 if (current_config == nilptr){
-                     QXMessageBox.Critical("注意","请先选择或者新建一个配置",QXMessageBox.Ok,QXMessageBox.Ok);
+                     QMessageBox.Critical("注意","请先选择或者新建一个配置",QMessageBox.Ok,QMessageBox.Ok);
                      return;
                  }
-                 String filepath = QXFileDialog.getOpenFileName("选择链接器","","",CPPSetting.this);
+                 String filepath = QFileDialog.getOpenFileName("选择链接器","","",CPPSetting.this);
                  if (filepath == nilptr ){
                     filepath = "";
                  }
@@ -182,12 +184,12 @@ class CPPSetting : QXDialog{
         });
         
         btndbg.setOnClickListener(new onClickListener(){
-            void onClick(QXObject obj, bool checked) {
+            void onClick(QObject obj, bool checked) {
                 if (current_config == nilptr){
-                     QXMessageBox.Critical("注意","请先选择或者新建一个配置",QXMessageBox.Ok,QXMessageBox.Ok);
+                     QMessageBox.Critical("注意","请先选择或者新建一个配置",QMessageBox.Ok,QMessageBox.Ok);
                      return;
                  }
-                 String filepath = QXFileDialog.getOpenFileName("选择调试器","","",CPPSetting.this);
+                 String filepath = QFileDialog.getOpenFileName("选择调试器","","",CPPSetting.this);
                  if (filepath == nilptr ){
                     filepath = "";
                  }
@@ -200,12 +202,12 @@ class CPPSetting : QXDialog{
         
         
         btnar.setOnClickListener(new onClickListener(){
-            void onClick(QXObject obj, bool checked) {
+            void onClick(QObject obj, bool checked) {
                 if (current_config == nilptr){
-                     QXMessageBox.Critical("注意","请先选择或者新建一个配置",QXMessageBox.Ok,QXMessageBox.Ok);
+                     QMessageBox.Critical("注意","请先选择或者新建一个配置",QMessageBox.Ok,QMessageBox.Ok);
                      return;
                  }
-                 String filepath = QXFileDialog.getOpenFileName("选择归档器","","",CPPSetting.this);
+                 String filepath = QFileDialog.getOpenFileName("选择归档器","","",CPPSetting.this);
                  if (filepath == nilptr ){
                     filepath = "";
                  }
@@ -217,12 +219,12 @@ class CPPSetting : QXDialog{
         });
         
         btnmake.setOnClickListener(new onClickListener(){
-            void onClick(QXObject obj, bool checked) {
+            void onClick(QObject obj, bool checked) {
                 if (current_config == nilptr){
-                     QXMessageBox.Critical("注意","请先选择或者新建一个配置",QXMessageBox.Ok,QXMessageBox.Ok);
+                     QMessageBox.Critical("注意","请先选择或者新建一个配置",QMessageBox.Ok,QMessageBox.Ok);
                      return;
                  }
-                 String filepath = QXFileDialog.getOpenFileName("选择Make程序","","",CPPSetting.this);
+                 String filepath = QFileDialog.getOpenFileName("选择Make程序","","",CPPSetting.this);
                  if (filepath == nilptr ){
                     filepath = "";
                  }
@@ -234,7 +236,7 @@ class CPPSetting : QXDialog{
         });
         
         btnclose.setOnClickListener(new onClickListener(){
-            void onClick(QXObject obj, bool checked) {
+            void onClick(QObject obj, bool checked) {
                 if (cpp_configures != nilptr){
                     saveconfig();
                     FileOutputStream fos = nilptr;
@@ -257,10 +259,10 @@ class CPPSetting : QXDialog{
         });
         
         btndel.setOnClickListener(new onClickListener(){
-            void onClick(QXObject obj, bool checked) {
+            void onClick(QObject obj, bool checked) {
                 String name = cmbcfg.getCurrentText();
                 if (removeConfig(name)){
-                    loadConfigures();
+                    reloadList(nilptr);
                 }
             }
         });
@@ -282,13 +284,13 @@ class CPPSetting : QXDialog{
     
     bool createConfigure(String name){
          if (name == nilptr || name.length() == 0){
-             QXMessageBox.Critical("注意","名称无效",QXMessageBox.Ok,QXMessageBox.Ok);
+             QMessageBox.Critical("注意","名称无效",QMessageBox.Ok,QMessageBox.Ok);
              return false;
          }
          
          for (int i = 0; i < cpp_configures.length(); i++){
             if (name.equals(  ( (JsonObject)cpp_configures.get(i)).getString("name"))){
-               QXMessageBox.Critical("注意","名称已存在",QXMessageBox.Ok,QXMessageBox.Ok);
+               QMessageBox.Critical("注意","名称已存在",QMessageBox.Ok,QMessageBox.Ok);
                 return false; 
             }
          }
@@ -318,40 +320,40 @@ class CPPSetting : QXDialog{
     
         String ld = CDEProjectPropInterface.appendPath(dir, "g++" + ext);
         if (XPlatform.existsSystemFile(ld)){
-            if (QXMessageBox.Question("注意","已检测到链接器位于 " + ld + ", 是否自动填入?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes) == QXMessageBox.Yes){
+            if (QMessageBox.Question("注意","已检测到链接器位于 " + ld + ", 是否自动填入?",QMessageBox.Yes | QMessageBox.No,QMessageBox.Yes) == QMessageBox.Yes){
                 edtld.setText(ld);
             }
         }
         
         String ar = CDEProjectPropInterface.appendPath(dir, "ar" + ext);
         if (XPlatform.existsSystemFile(ar)){
-            if (QXMessageBox.Question("注意","已检测到归档器位于 " + ar + ", 是否自动填入?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes) == QXMessageBox.Yes){
+            if (QMessageBox.Question("注意","已检测到归档器位于 " + ar + ", 是否自动填入?",QMessageBox.Yes | QMessageBox.No,QMessageBox.Yes) == QMessageBox.Yes){
                 edtar.setText(ar);
             }
         }
         
         String gdb = CDEProjectPropInterface.appendPath(dir, "gdb" + ext);
         if (XPlatform.existsSystemFile(gdb)){
-            if (QXMessageBox.Question("注意","已检测到调试器位于 " + gdb + ", 是否自动填入?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes) == QXMessageBox.Yes){
+            if (QMessageBox.Question("注意","已检测到调试器位于 " + gdb + ", 是否自动填入?",QMessageBox.Yes | QMessageBox.No,QMessageBox.Yes) == QMessageBox.Yes){
                 edtdbg.setText(gdb);
             }
         }
         
         String make = CDEProjectPropInterface.appendPath(dir, "make" + ext);
         if (XPlatform.existsSystemFile(make)){
-            if (QXMessageBox.Question("注意","已检测到MAKE位于 " + make + ", 是否自动填入?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes) == QXMessageBox.Yes){
+            if (QMessageBox.Question("注意","已检测到MAKE位于 " + make + ", 是否自动填入?",QMessageBox.Yes | QMessageBox.No,QMessageBox.Yes) == QMessageBox.Yes){
                 edtmake.setText(make);
             }
         }else{
             make = CDEProjectPropInterface.appendPath(dir, "mingw32-make" + ext); 
             if (XPlatform.existsSystemFile(make)){
-                if (QXMessageBox.Question("注意","已检测到MAKE位于 " + make + ", 是否自动填入?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes) == QXMessageBox.Yes){
+                if (QMessageBox.Question("注意","已检测到MAKE位于 " + make + ", 是否自动填入?",QMessageBox.Yes | QMessageBox.No,QMessageBox.Yes) == QMessageBox.Yes){
                     edtmake.setText(make);
                 }
             }else{
                 make = CDEProjectPropInterface.appendPath(dir, "mingw-w64-make" + ext); 
                 if (XPlatform.existsSystemFile(make)){
-                    if (QXMessageBox.Question("注意","已检测到MAKE位于 " + make + ", 是否自动填入?",QXMessageBox.Yes | QXMessageBox.No,QXMessageBox.Yes) == QXMessageBox.Yes){
+                    if (QMessageBox.Question("注意","已检测到MAKE位于 " + make + ", 是否自动填入?",QMessageBox.Yes | QMessageBox.No,QMessageBox.Yes) == QMessageBox.Yes){
                         edtmake.setText(make);
                     }
                 }
@@ -359,77 +361,77 @@ class CPPSetting : QXDialog{
         }
     }
     
-    void syntaxForOutput(@NotNilptr QXSci _sci){
+    void syntaxForOutput(@NotNilptr QScintilla _sci){
 		if (Setting.isDarkStyle()){
 			syntaxForOutputDark(_sci);
             return ;
 		}
-        _sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);
+        _sci.sendEditor(QScintilla.SCI_SETCODEPAGE, QScintilla.SC_CP_UTF8);
         _sci.setWrap(true);
-        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_DEFAULT, 0xffffffff);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_DEFAULT, 0xff222827);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, 75, 0xff222827);
-        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
-        //_sci.sendEditor(QXSci.STYLE_LINENUMBER, 1, 0);
-        _sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,Setting.getEditorFont()); 
-        _sci.sendEditor(QXSci.SCI_STYLESETSIZEFRACTIONAL, QXSci.STYLE_DEFAULT,Setting.getEditorFontSize()); 
-        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0); 
-        _sci.sendEditor(QXSci.SCI_SETEOLMODE, 1, 0); 
+        _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.STYLE_DEFAULT, 0xffffffff);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_DEFAULT, 0xff222827);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, 75, 0xff222827);
+        _sci.sendEditor(QScintilla.SCI_STYLECLEARALL, 0, 0);
+        //_sci.sendEditor(QScintilla.STYLE_LINENUMBER, 1, 0);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFONT, QScintilla.STYLE_DEFAULT,Setting.getEditorFont()); 
+        _sci.sendEditor(QScintilla.SCI_STYLESETSIZEFRACTIONAL, QScintilla.STYLE_DEFAULT,Setting.getEditorFontSize()); 
+        _sci.sendEditor(QScintilla.SCI_STYLECLEARALL, 0, 0); 
+        _sci.sendEditor(QScintilla.SCI_SETEOLMODE, 1, 0); 
         
-        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, 0, QXSci.SC_MARGIN_NUMBER); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 0, 40); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 1, 10); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 2, 0); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 3, 0); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 4, 0); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINTYPEN, 0, QScintilla.SC_MARGIN_NUMBER); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 0, 40); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 1, 10); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 2, 0); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 3, 0); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 4, 0); 
 
-        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_LINENUMBER, 0xffefefef);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_LINENUMBER, 0xffaf912b);
-        _sci.sendEditor(QXSci.SCI_SETMARGINLEFT, 0, 0);
+        _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.STYLE_LINENUMBER, 0xffefefef);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_LINENUMBER, 0xffaf912b);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINLEFT, 0, 0);
         
-        _sci.sendEditor(QXSci.SCI_SETCARETFORE,0xff000000,0);
+        _sci.sendEditor(QScintilla.SCI_SETCARETFORE,0xff000000,0);
         
-        _sci.sendEditor(QXSci.SCI_SETCARETLINEVISIBLE, 1); 
-        _sci.sendEditor(QXSci.SCI_SETCARETLINEBACK, 0xffefefef); 
+        _sci.sendEditor(QScintilla.SCI_SETCARETLINEVISIBLE, 1); 
+        _sci.sendEditor(QScintilla.SCI_SETCARETLINEBACK, 0xffefefef); 
 
-        _sci.sendEditor(QXSci.SCI_SETTABWIDTH, 4); 
+        _sci.sendEditor(QScintilla.SCI_SETTABWIDTH, 4); 
     }
     
-    void syntaxForOutputDark(@NotNilptr QXSci _sci){
-        _sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);
-        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_DEFAULT, 0xff262525);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_DEFAULT, 0xffefefef);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, 75, 0xffefefef);
-        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
-        //_sci.sendEditor(QXSci.STYLE_LINENUMBER, 1, 0);
-        _sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,Setting.getEditorFont()); 
-        _sci.sendEditor(QXSci.SCI_STYLESETSIZEFRACTIONAL, QXSci.STYLE_DEFAULT,Setting.getEditorFontSize()); 
-        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0); 
-        //_sci.sendEditor(QXSci.SCI_SETREADONLY, 1);
+    void syntaxForOutputDark(@NotNilptr QScintilla _sci){
+        _sci.sendEditor(QScintilla.SCI_SETCODEPAGE, QScintilla.SC_CP_UTF8);
+        _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.STYLE_DEFAULT, 0xff262525);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_DEFAULT, 0xffefefef);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, 75, 0xffefefef);
+        _sci.sendEditor(QScintilla.SCI_STYLECLEARALL, 0, 0);
+        //_sci.sendEditor(QScintilla.STYLE_LINENUMBER, 1, 0);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFONT, QScintilla.STYLE_DEFAULT,Setting.getEditorFont()); 
+        _sci.sendEditor(QScintilla.SCI_STYLESETSIZEFRACTIONAL, QScintilla.STYLE_DEFAULT,Setting.getEditorFontSize()); 
+        _sci.sendEditor(QScintilla.SCI_STYLECLEARALL, 0, 0); 
+        //_sci.sendEditor(QScintilla.SCI_SETREADONLY, 1);
         //C++语法解析 
-        //_sci.sendEditor(QXSci.SCI_SETLEXER, QXSci.SCLEX_CPP, 0); 
-        //_sci.sendEditor(QXSci.SCI_SETKEYWORDS, 0, szKeywords1);//设置关键字 
-        //_sci.sendEditor(QXSci.SCI_SETKEYWORDS, 1, szKeywords2);//设置关键字 
+        //_sci.sendEditor(QScintilla.SCI_SETLEXER, QScintilla.SCLEX_CPP, 0); 
+        //_sci.sendEditor(QScintilla.SCI_SETKEYWORDS, 0, szKeywords1);//设置关键字 
+        //_sci.sendEditor(QScintilla.SCI_SETKEYWORDS, 1, szKeywords2);//设置关键字 
         // 下面设置各种语法元素风格 
-        _sci.sendEditor(QXSci.SCI_SETEOLMODE, 1, 0); 
+        _sci.sendEditor(QScintilla.SCI_SETEOLMODE, 1, 0); 
         
-        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, 0, QXSci.SC_MARGIN_NUMBER); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 0, 40); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 1, 10); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 2, 0); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 3, 0); 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 4, 0); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINTYPEN, 0, QScintilla.SC_MARGIN_NUMBER); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 0, 40); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 1, 10); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 2, 0); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 3, 0); 
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 4, 0); 
         
-        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_LINENUMBER, 0xff262525);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_LINENUMBER, 0xff666666);
-        _sci.sendEditor(QXSci.SCI_SETMARGINLEFT, 0, 0);
+        _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.STYLE_LINENUMBER, 0xff262525);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_LINENUMBER, 0xff666666);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINLEFT, 0, 0);
         
-        _sci.sendEditor(QXSci.SCI_SETCARETFORE,0xffffffff,0);
+        _sci.sendEditor(QScintilla.SCI_SETCARETFORE,0xffffffff,0);
         
-        _sci.sendEditor(QXSci.SCI_SETCARETLINEVISIBLE, 1); 
-        _sci.sendEditor(QXSci.SCI_SETCARETLINEBACK, 0xff202020); 
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENT, 0xff666666);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTLINE, 0xff666666);
+        _sci.sendEditor(QScintilla.SCI_SETCARETLINEVISIBLE, 1); 
+        _sci.sendEditor(QScintilla.SCI_SETCARETLINEBACK, 0xff202020); 
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_COMMENT, 0xff666666);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_COMMENTLINE, 0xff666666);
         
     }
     
@@ -531,10 +533,10 @@ class CPPSetting : QXDialog{
     }
     
     public static void showCPPSetting(){
-        QXDialog newDlg = new QXDialog();
+        QDialog newDlg = new QDialog();
         newDlg.create();
         byte [] buffer = __xPackageResource("cppsetting.ui");
-        QXBuffer qb = new QXBuffer();
+        QBuffer qb = new QBuffer();
         qb.setBuffer(buffer, 0, buffer.length);
         if (newDlg.load(qb)){
             CPPSetting cppsetting = new CPPSetting();

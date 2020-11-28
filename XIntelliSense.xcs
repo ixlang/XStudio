@@ -11,7 +11,8 @@ class XIntelliSense : IXIntelliSense{
                 XIS_BACL = 4,
                 XIS_SRC = 5,
                 XIS_LINE = 6,
-                XIS_ROW = 7;
+                XIS_ROW = 7,
+                XIS_VISIBILITY = 8;
                 
                                 
 	public XIntelliSense(@NotNilptr Project proj,@NotNilptr  Configure configure){
@@ -218,6 +219,7 @@ class XIntelliSense : IXIntelliSense{
     public class XLangIntelliResult : XIntelliResult{
         public String name;
         public String type;
+        public String visibility;
         public String prop;
         public XLangIntelliResult _class;
         public XLangIntelliResult[] params;
@@ -231,6 +233,10 @@ class XIntelliSense : IXIntelliSense{
         
         int get_type(){
             return type.parseInt();
+        }
+        
+        int get_visibility(){
+            return visibility.parseInt();
         }
         
         bool hasProp(char c){
@@ -257,6 +263,9 @@ class XIntelliSense : IXIntelliSense{
             return row;
         }
         
+        void accept(){
+            
+        }
         IXIntelliSense.InputDescription  inputsesc;
         
         InputDescription makeInputText(){
@@ -345,6 +354,7 @@ class XIntelliSense : IXIntelliSense{
 				result[i] = new XLangIntelliResult();
 				result[i].name = getIntelliSenseItemInfo(handle, i, XIS_NAME);
 				result[i].type = getIntelliSenseItemInfo(handle, i, XIS_TYPE);
+                result[i].visibility = getIntelliSenseItemInfo(handle, i, XIS_VISIBILITY);
 				result[i].prop = getIntelliSenseItemInfo(handle, i, XIS_PROP);
 				result[i].source = getIntelliSenseItemInfo(handle, i, XIS_SRC);
 				result[i].line = parseResultInt(getIntelliSenseItemInfo(handle, i, XIS_LINE));

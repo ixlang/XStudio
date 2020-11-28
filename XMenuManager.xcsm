@@ -1,10 +1,10 @@
 
 class XMenuManager
 {
-    public QxApp app ;
-    public QXMainWindow mainwindow;
+    public XStudioApp app ;
+    public QMainWindow mainwindow;
     public static XMenuManager _menuMgr;
-    QXMenu [] mainMenus = new QXMenu[7];
+    QMenu [] mainMenus = new QMenu[7];
     
     public XMenuManager()
     {
@@ -198,7 +198,7 @@ class XMenuManager
     public static void enabledMenus(@NotNilptr String []names, bool b)
     {
         for (int i =0; i < names.length; i++) {
-            QXAction action = ((QXAction)_menuMgr.mainwindow.findByName(names[i]));
+            QAction action = ((QAction)_menuMgr.mainwindow.findByName(names[i]));
             if (action != nilptr) {
                 action.setEnable(b);
             }
@@ -207,15 +207,15 @@ class XMenuManager
 
     public static void enabledMenu(String name, bool b)
     {
-        QXAction action = ((QXAction)_menuMgr.mainwindow.findByName(name));
+        QAction action = ((QAction)_menuMgr.mainwindow.findByName(name));
         if (action != nilptr) {
             action.setEnable(b);
         }
     }
 
-    class TriggerEvent : QXObject.onEventListener
+    class TriggerEvent : onEventListener
     {
-        public void onTrigger(@NotNilptr QXObject obj)override
+        public void onTrigger(@NotNilptr QObject obj)override
         {
             String name = obj.getName();
             
@@ -375,12 +375,12 @@ class XMenuManager
 
                 case ("actionsamples"): {
                     String url = _system_.getAppPath().findVolumePath().appendPath("examples");
-                    QXCore.openLocal(String.formatPath(url, false));
+                    QCore.openLocal(String.formatPath(url, false));
                 }
                 break;
                 case ("actionhelp"): {
                     String url = _system_.getAppPath().findVolumePath().appendPath("./document/html/index.html");
-                    QXCore.openLocal(String.formatPath(url, false));
+                    QCore.openLocal(String.formatPath(url, false));
                 }
                 break;
                 case ("actionsetting"): {
@@ -591,11 +591,11 @@ class XMenuManager
     TriggerEvent  _triggerEvent = new TriggerEvent();
     ExternMenuEvent _externListener = new ExternMenuEvent();
 
-    class ExternMenuEvent : QXObject.onEventListener
+    class ExternMenuEvent : onEventListener
     {
         Map<String, IXPlugin> menu_plugin = new Map<String, IXPlugin>();
 
-        public void onTrigger(@NotNilptr QXObject obj)override
+        public void onTrigger(@NotNilptr QObject obj)override
         {
             String name = obj.getName();
             if (name != nilptr) {
@@ -610,7 +610,7 @@ class XMenuManager
             }
         }
 
-        public void addMenu(@NotNilptr QXAction action, String name, IXPlugin plugin)
+        public void addMenu(@NotNilptr QAction action, String name, IXPlugin plugin)
         {
             menu_plugin.put(name, plugin);
             action.setOnEventListener(_externListener);
@@ -634,9 +634,9 @@ class XMenuManager
             return false;
         }
 
-        QXMenu menu = mainMenus[mainid];
+        QMenu menu = mainMenus[mainid];
         if (menu != nilptr){
-            QXAction action;
+            QAction action;
 
             if (icon != nilptr) {
                 action = menu.addAction(icon, text);
@@ -665,17 +665,17 @@ class XMenuManager
     public void setupListener(String actname){
         //mainwindow.findByName(actname).setOnEventListener(_triggerEvent);
         
-        QXObject act = mainwindow.findByName(actname);
+        QObject act = mainwindow.findByName(actname);
         if (act != nilptr){
             act.setOnEventListener(_triggerEvent);
         }else{
             _system_.output("actname is nilptr");
-            QXMessageBox.Critical("找不到控件","actname",QXMessageBox.Ok,QXMessageBox.Ok);
+            QMessageBox.Critical("找不到控件","actname",QMessageBox.Ok,QMessageBox.Ok);
         }
         
     }
     
-    public void init(@NotNilptr QxApp _app)
+    public void init(@NotNilptr XStudioApp _app)
     {
         app = _app;
         mainwindow = _app.mainWindow;
@@ -699,7 +699,7 @@ class XMenuManager
         String [] mainMenuNames = {"menuFile", "menuEdit", "menuSln", "menuDebug", "menuTools", "menuWindow", "menuHelp"};
 
         for (int i = 0; i < mainMenuNames.length; i++) {
-            mainMenus[i] = (QXMenu)mainwindow.findByName(mainMenuNames[i]);
+            mainMenus[i] = (QMenu)mainwindow.findByName(mainMenuNames[i]);
             mainMenus[i].setOnEventListener(_triggerEvent);
         }
     }
@@ -720,7 +720,7 @@ class XMenuManager
         try {
             designer.create(Process.Visible);
         } catch(Exception e) {
-            QXMessageBox.Critical("error", e.getMessage(), QXMessageBox.Ok, QXMessageBox.Ok);
+            QMessageBox.Critical("error", e.getMessage(), QMessageBox.Ok, QMessageBox.Ok);
         }
     }
 };

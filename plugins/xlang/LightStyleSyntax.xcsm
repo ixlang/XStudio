@@ -125,7 +125,7 @@ class LightStyleSyntax : SyntaxHighlighting{
     
     /** 关键字颜色*/
     int getWordForeColor()override{
-		return 0xff970201;
+		return 0xffbf5f3f;
     }
     
     /** 关键字背景颜色*/

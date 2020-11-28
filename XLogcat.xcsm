@@ -3,17 +3,17 @@
 
 // log 由于使用了QTreeWidget 所以能处理的数据非常有限 10万行就卡的不行
 
-class XLogcatWnd : QXDockWidget{
-    QXTreeView filterlist;
-    QXTreeView logcatlist;
-    QXPushButton btnFilter, btnClear;
+class XLogcatWnd : QDockWidget{
+    QTreeWidget filterlist;
+    QTreeWidget logcatlist;
+    QPushButton btnFilter, btnClear;
     XWorkspace _mdi_area;
     ContextMenu _contextMenu = new ContextMenu();
     static XLogcatWnd logcatWnd;
     static const int LOGCAT_INFO_NOTIFY = 2;
     static int logcat_maxitems = 10000;
     
-    QXCheckBox chkAutoScroll;
+    QCheckBox chkAutoScroll;
     Filter currentFilter;
     long allRoot;
     public String [] logLevel = {
@@ -28,16 +28,16 @@ class XLogcatWnd : QXDockWidget{
     };
     
     public onTreeViewItemEvent filterlistener = new onTreeViewItemEvent(){
-        public void onItemClicked(@NotNilptr QXTreeView tree,long item, int column)override{
+        public void onItemClicked(@NotNilptr QTreeWidget tree,long item, int column)override{
 			onFilterItemClicked(tree, item, column);
         }
-        public void onItemDoubleClicked(@NotNilptr QXTreeView tree,long item, int column){
+        public void onItemDoubleClicked(@NotNilptr QTreeWidget tree,long item, int column){
 			onFilterItemDBClicked(tree, item, column);
         }
     };
     
     public onTreeViewItemEvent logcatlistener = new onTreeViewItemEvent(){
-        void onItemDoubleClicked(@NotNilptr QXTreeView tree,long item, int column){
+        void onItemDoubleClicked(@NotNilptr QTreeWidget tree,long item, int column){
 			TextDetail td = new TextDetail();
 			String text = tree.getItemText(item, column);
 			td.create("logcat", text.replace(" ↩ ", "\n")
@@ -131,11 +131,11 @@ class XLogcatWnd : QXDockWidget{
     
     Map<String, Filter> filter_list = new Map<String, Filter>();
     
-	public void onFilterItemClicked(@NotNilptr QXTreeView tree,long item, int column){
+	public void onFilterItemClicked(@NotNilptr QTreeWidget tree,long item, int column){
 		setCurrentFilter(tree.getItemText(item, 0));
     }
     
-    public void onFilterItemDBClicked(@NotNilptr QXTreeView tree,long item, int column){
+    public void onFilterItemDBClicked(@NotNilptr QTreeWidget tree,long item, int column){
 		updateFilter(tree.getItemText(item, 0));
 	}
     
@@ -148,8 +148,8 @@ class XLogcatWnd : QXDockWidget{
 				try{
 					Filter filter = filter_list.get(name);
 					
-					QXDialog newDlg = new QXDialog();
-					if (newDlg.load("ui/logfilter.ui") == false){
+					QDialog newDlg = new QDialog();
+					if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/logfilter.ui"))) == false){
 						return ;
 					}
 					FilterEdit filterEditor = new FilterEdit(filter);
@@ -162,8 +162,8 @@ class XLogcatWnd : QXDockWidget{
     }
     
     public bool addFilter(){
-        QXDialog newDlg = new QXDialog();
-        if (newDlg.load("ui/logfilter.ui") == false){
+        QDialog newDlg = new QDialog();
+        if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/logfilter.ui"))) == false){
             return false;
         }
         FilterEdit filterEditor = new FilterEdit();
@@ -251,12 +251,12 @@ class XLogcatWnd : QXDockWidget{
 		if (maxitem > 0){
 			logcat_maxitems = maxitem;
         }else{
-			QXMessageBox.Critical("注意","Logcat最大记录数为0~10000.",QXMessageBox.Ok,QXMessageBox.Ok);
+			QMessageBox.Critical("注意","Logcat最大记录数为0~10000.",QMessageBox.Ok,QMessageBox.Ok);
         }
         
         if (logcat_maxitems > 10000){
 			logcat_maxitems = 10000;
-            QXMessageBox.Critical("注意","Logcat最大记录数为0~10000.",QXMessageBox.Ok,QXMessageBox.Ok);
+            QMessageBox.Critical("注意","Logcat最大记录数为0~10000.",QMessageBox.Ok,QMessageBox.Ok);
         }
     }
     
@@ -280,14 +280,14 @@ class XLogcatWnd : QXDockWidget{
     }
     
    public  void onAttach(){
-		chkAutoScroll = (QXCheckBox)attachByName(new QXCheckBox(), "chkAutoScroll");
-		btnClear = (QXPushButton)attachByName(new QXPushButton(), "btnClear");
-		btnFilter = (QXPushButton)attachByName(new QXPushButton(), "btnFilter");
-        filterlist = (QXTreeView)attachByName(new QXTreeView(), "filterlist");
-        logcatlist = (QXTreeView)attachByName(new QXTreeView(), "logList");
+		chkAutoScroll = (QCheckBox)attachByName(new QCheckBox(), "chkAutoScroll");
+		btnClear = (QPushButton)attachByName(new QPushButton(), "btnClear");
+		btnFilter = (QPushButton)attachByName(new QPushButton(), "btnFilter");
+        filterlist = (QTreeWidget)attachByName(new QTreeWidget(), "filterlist");
+        logcatlist = (QTreeWidget)attachByName(new QTreeWidget(), "logList");
        
         /*setOnLayoutEventListener(new onLayoutEventListener(){
-                void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+                void onResize(QObject obj, int w, int h, int oldw, int oldh)override {
                     if (filterlist != nilptr){
                         filterlist.resize(160, h - 80);
                     }
@@ -330,14 +330,14 @@ class XLogcatWnd : QXDockWidget{
         
         btnFilter.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
                 addFilter();
             }
         });
         
         btnClear.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
                 clearList();
             }
         });
@@ -422,37 +422,10 @@ class XLogcatWnd : QXDockWidget{
     }
     
     
-    public static class ContextMenu{
-		public QXMenu contextMenu = new QXMenu();
-		public QXAction [] actions;
-		
-		public void create(@NotNilptr QXWidget parent,@NotNilptr String [] acts, onEventListener listener){
-			if (contextMenu.create(parent)){
-				actions = new QXAction[acts.length];
-				for (int i = 0; i < acts.length; i ++){
-					QXAction action = new QXAction();
-					if (action.create(contextMenu)){
-						
-						if (acts[i].equals("-")){
-							action.setSeparator(true);
-						}else{
-							action.setEnable(false);	
-							action.setText(acts[i]);
-							action.setOnEventListener(listener);
-						}
-					}
-					actions[i] = action;
-				}
-				parent.setContextMenuPolicy(ActionsContextMenu);
-				parent.addActions(actions);
-			}
-		}
-	};
-    
     public void createContextMenu(){
     
 		onEventListener menuListener = new onEventListener(){
-		   void onTrigger(QXObject obj) override{
+		   void onTrigger(QObject obj) override{
 				if (obj == _contextMenu.actions[0]){
 					addFilter();
                 }else
@@ -478,7 +451,7 @@ class XLogcatWnd : QXDockWidget{
 
 		String []acts = {"新建过滤器","删除过滤器"};
         __nilptr_safe(filterlist);
-		_contextMenu.create(filterlist, acts, menuListener);
+		_contextMenu.create(filterlist, acts, menuListener, nilptr);
         _contextMenu.actions[0].setEnable(true);
         _contextMenu.actions[1].setEnable(true);
 	}

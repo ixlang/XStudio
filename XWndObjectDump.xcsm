@@ -1,25 +1,25 @@
 //xlang Source, Name:XWndObjectDump.xcsm 
 //Date: Sun Sep 14:59:59 2018 
 
-class XWndObjectDump : QXDockWidget{
+class XWndObjectDump : QDockWidget{
 
 	long []root_items = new long[10];
     
-    QXTreeView _listview;
+    QTreeWidget _listview;
     
-    QXPushButton btnUpdate;
+    QPushButton btnUpdate;
     
     static XWndObjectDump XWndoDump;
     
 	public void onAttach() override {
 
-        _listview = (QXTreeView)attachByName(new QXTreeView(), "objslist");
+        _listview = (QTreeWidget)attachByName(new QTreeWidget(), "objslist");
         
-        btnUpdate = (QXPushButton)attachByName(new QXPushButton(), "btnUpdate");
+        btnUpdate = (QPushButton)attachByName(new QPushButton(), "btnUpdate");
         
         
         /*setOnLayoutEventListener(new onLayoutEventListener(){
-                void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+                void onResize(QObject obj, int w, int h, int oldw, int oldh)override {
                     if (_listview != nilptr){
                         _listview.resize(w, h - 60);
                         btnUpdate.move(0, h - 55);
@@ -29,7 +29,7 @@ class XWndObjectDump : QXDockWidget{
         
         btnUpdate.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
 				XWorkspace.workspace.debuggee.dumpObjects();
             }
         });

@@ -1,13 +1,13 @@
 //xlang Source, Name:DebuggeeSelector.x 
 //Date: Wed Apr 18:13:12 2020 
 
-class DebuggeeSelector : QXDialog{
-    QXCheckBox chkRemote, chkLocal;
-    QXTreeView treeWidget;
-    QXLineEdit edtfilter, edtHost, edtport, edtProg;
-    QXPushButton btnBrowser, btnOk, btnCancel, btnRefresh;
-    QXWidget grplocal, grpremote;
-    QXComboBox cmbKit;
+class DebuggeeSelector : QDialog{
+    QCheckBox chkRemote, chkLocal;
+    QTreeWidget treeWidget;
+    QLineEdit edtfilter, edtHost, edtport, edtProg;
+    QPushButton btnBrowser, btnOk, btnCancel, btnRefresh;
+    QWidget grplocal, grpremote;
+    QComboBox cmbKit;
     
     static class ProcessItem{
         public long item;
@@ -43,34 +43,34 @@ class DebuggeeSelector : QXDialog{
     
 	void onAttach() override {
 		//TODO:	
-        chkRemote =  (QXCheckBox)attachByName(new QXCheckBox(), "chkRemote");
-        chkLocal =  (QXCheckBox)attachByName(new QXCheckBox(), "chkLocal");
-        treeWidget = (QXTreeView)attachByName(new QXTreeView(), "treeWidget");
-        edtfilter = (QXLineEdit)attachByName(new QXLineEdit(), "edtfilter");
-        edtHost = (QXLineEdit)attachByName(new QXLineEdit(), "edtHost");
-        edtport = (QXLineEdit)attachByName(new QXLineEdit(), "edtport");
-        edtProg = (QXLineEdit)attachByName(new QXLineEdit(), "edtProg");
-        btnBrowser = (QXPushButton)attachByName(new QXPushButton(), "btnBrowser");
-        btnOk = (QXPushButton)attachByName(new QXPushButton(), "btnOk");
-        btnCancel = (QXPushButton)attachByName(new QXPushButton(), "btnCancel");
-        btnRefresh = (QXPushButton)attachByName(new QXPushButton(), "btnRefresh");
-        cmbKit = (QXComboBox)attachByName(new QXComboBox(), "cmbKit");
+        chkRemote =  (QCheckBox)attachByName(new QCheckBox(), "chkRemote");
+        chkLocal =  (QCheckBox)attachByName(new QCheckBox(), "chkLocal");
+        treeWidget = (QTreeWidget)attachByName(new QTreeWidget(), "treeWidget");
+        edtfilter = (QLineEdit)attachByName(new QLineEdit(), "edtfilter");
+        edtHost = (QLineEdit)attachByName(new QLineEdit(), "edtHost");
+        edtport = (QLineEdit)attachByName(new QLineEdit(), "edtport");
+        edtProg = (QLineEdit)attachByName(new QLineEdit(), "edtProg");
+        btnBrowser = (QPushButton)attachByName(new QPushButton(), "btnBrowser");
+        btnOk = (QPushButton)attachByName(new QPushButton(), "btnOk");
+        btnCancel = (QPushButton)attachByName(new QPushButton(), "btnCancel");
+        btnRefresh = (QPushButton)attachByName(new QPushButton(), "btnRefresh");
+        cmbKit = (QComboBox)attachByName(new QComboBox(), "cmbKit");
         
-        grplocal = (QXWidget)attachByName(new QXWidget(), "grplocal");
-        grpremote = (QXWidget)attachByName(new QXWidget(), "grpremote");
+        grplocal = (QWidget)attachByName(new QWidget(), "grplocal");
+        grpremote = (QWidget)attachByName(new QWidget(), "grpremote");
         
         setWindowIcon("./res/toolbar/dbg.png");
         
         btnCancel.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
 				close();
             }
         });
         
         btnRefresh.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
 				refreshProcess();
                 
                 filterProcess(edtfilter.getText());
@@ -79,7 +79,7 @@ class DebuggeeSelector : QXDialog{
         
         chkRemote.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
 				grpremote.setEnabled(checked);
                 grplocal.setEnabled(!checked);
                 chkLocal.setCheck(false);
@@ -88,7 +88,7 @@ class DebuggeeSelector : QXDialog{
         
         chkLocal.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
 				grplocal.setEnabled(checked);
                 grpremote.setEnabled(!checked);
                 chkRemote.setCheck(false);
@@ -102,8 +102,8 @@ class DebuggeeSelector : QXDialog{
         
         btnBrowser.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
-				String progpath = QXFileDialog.getOpenFileName("选择被调试程序文件",edtProg.getText(),"*.* *",DebuggeeSelector.this);
+            void onClick(QObject obj, bool checked)override{
+				String progpath = QFileDialog.getOpenFileName("选择被调试程序文件",edtProg.getText(),"*.* *",DebuggeeSelector.this);
                 if (progpath != nilptr){
                     edtProg.setText(progpath);
                 }
@@ -112,13 +112,13 @@ class DebuggeeSelector : QXDialog{
         
         btnOk.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
 				onStartDebug();
             }
         });
         
         edtfilter.setOnEditEventListener(new onEditEventListener() {
-            void onTextChanged(QXObject,@NotNilptr String text)override {
+            void onTextChanged(QObject,@NotNilptr String text)override {
                 filterProcess(text);
             }
         });
@@ -171,7 +171,7 @@ class DebuggeeSelector : QXDialog{
         bool bSuccess = false;
         String kitstr = cmbKit.getCurrentText();
         if (kitstr.length() == 0){
-            QXMessageBox.Critical("注意","没有选择用于调试的C/C++套件",QXMessageBox.Ok,QXMessageBox.Ok);
+            QMessageBox.Critical("注意","没有选择用于调试的C/C++套件",QMessageBox.Ok,QMessageBox.Ok);
             return ;
         }
         if (chkLocal.getCheck()){
@@ -191,7 +191,7 @@ class DebuggeeSelector : QXDialog{
             }
             
             if (bSuccess == false){
-                QXMessageBox.Critical("注意","没有选择一个有效的进程",QXMessageBox.Ok,QXMessageBox.Ok);
+                QMessageBox.Critical("注意","没有选择一个有效的进程",QMessageBox.Ok,QMessageBox.Ok);
             }
             
         }else
@@ -201,15 +201,15 @@ class DebuggeeSelector : QXDialog{
             String prog = edtProg.getText();
             
             if (host.trim(true).length() == 0){
-                QXMessageBox.Critical("注意","远程地址填写不正确",QXMessageBox.Ok,QXMessageBox.Ok);
+                QMessageBox.Critical("注意","远程地址填写不正确",QMessageBox.Ok,QMessageBox.Ok);
                 return ;
             }
             if (port <= 0 || port >= 65535){
-                QXMessageBox.Critical("注意","远程端口填写不正确",QXMessageBox.Ok,QXMessageBox.Ok);
+                QMessageBox.Critical("注意","远程端口填写不正确",QMessageBox.Ok,QMessageBox.Ok);
                 return ;
             }
             if (prog.trim(true).length() == 0 || (XPlatform.existsSystemFile(prog) == false)){
-                QXMessageBox.Critical("注意","程序文件填写不正确或者文件不存在",QXMessageBox.Ok,QXMessageBox.Ok);
+                QMessageBox.Critical("注意","程序文件填写不正确或者文件不存在",QMessageBox.Ok,QMessageBox.Ok);
                 return ;
             }
             
@@ -250,10 +250,10 @@ class DebuggeeSelector : QXDialog{
         }
     }
     public static void showDebuggeeSelector(){
-        QXDialog newDlg = new QXDialog();
+        QDialog newDlg = new QDialog();
         newDlg.create();
         byte [] buffer = __xPackageResource("dbg.ui");
-        QXBuffer qb = new QXBuffer();
+        QBuffer qb = new QBuffer();
         qb.setBuffer(buffer, 0, buffer.length);
         if (newDlg.load(qb)){
             DebuggeeSelector dbgvier = new DebuggeeSelector();

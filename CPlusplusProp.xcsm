@@ -157,7 +157,7 @@ class CPlusplusProp : ProjectPropInterface{
 			String destProj = String.formatPath(projectDir.appendPath(filename), false);
 			
             if (XPlatform.existsSystemFile(destProj)){
-				if (QXMessageBox.Question("注意", destProj + " 该文件已经存在, <a style=\"color:#ffff0000\">继续建立新文件将改写原有文件?</a>", QXMessageBox.Ok | QXMessageBox.No, QXMessageBox.Ok) == QXMessageBox.No){
+				if (QMessageBox.Question("注意", destProj + " 该文件已经存在, <a style=\"color:#ffff0000\">继续建立新文件将改写原有文件?</a>", QMessageBox.Ok | QMessageBox.No, QMessageBox.Ok) == QMessageBox.No){
 					return false;
                 }
             }
@@ -199,7 +199,7 @@ class CPlusplusProp : ProjectPropInterface{
         }
 	}
 
-    public ICompileInfo parseOutputLine(@NotNilptr QXSci sci,int position, int line, String text)override{
+    public ICompileInfo parseOutputLine(@NotNilptr QScintilla sci,int position, int line, String text)override{
         if (_bridge != nilptr){
             return _bridge.parseOutputLine(sci,position, line, text);
         }

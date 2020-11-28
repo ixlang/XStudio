@@ -2,7 +2,7 @@
 	"XStudio":	{
 		"version":	"1.2",
 		"language":	"xlang",
-		"sources":	["qxapp.xcs", "XSourceEditor.xcsm", "XWorkspace.xcsm", "XWndSln.xcsm", "XWndClass.xcsm", "XWndOutput.xcsm", "XWndInfo.xcsm", "XMenuManager.xcsm", "Configure.xcsm", "Project.xcsm", "Wizard.xcsm", "Builder.xcsm", "Windows.xcsm", "XFindDlg.xcsm", "Variable.xcsm", "ProjectPropManager.xcsm", "XProperites.xcsm", "IBuilder.xcsm", "props/XlangProjectProp.xcsm", "ProjectPropInterface.xcsm", "file/FileInputStream.xcs", "file/FileOutputStream.xcs", "qt5/widgets/QXEvent.xcsm", "qt5/widgets/QXObject.xcsm", "qt5/widgets/QXCore.xcsm", "qt5/widgets/QXWidget.xcsm", "qt5/widgets/ColorRole.xcsm", "qt5/widgets/QXPalette.xcsm", "qt5/widgets/QXNative.xcsm", "qt5/widgets/QXStyle.xcsm", "qt5/widgets/QXDockWidget.xcsm", "qt5/widgets/QXApplication.xcsm", "qt5/widgets/QXMainWindow.xcsm", "qt5/widgets/QXTypes.xcsm", "qt5/widgets/QXSci.xcsm", "qt5/widgets/QXFont.xcsm", "qt5/widgets/QXMenuBar.xcsm", "qt5/widgets/QXAction.xcsm", "qt5/widgets/QXMenu.xcsm", "qt5/widgets/QXMdiArea.xcsm", "qt5/widgets/QXMdiSubWindow.xcsm", "qt5/widgets/QXTreeView.xcsm", "qt5/widgets/QXListView.xcsm", "qt5/widgets/QXPushButton.xcsm", "qt5/widgets/QXFileDialog.xcsm", "qt5/widgets/QXLineEdit.xcsm", "qt5/widgets/QXDialog.xcsm", "qt5/widgets/QXComboBox.xcsm", "qt5/widgets/QXPropertyBrowser.xcsm", "qt5/widgets/QXVariant.xcsm", "qt5/widgets/QXMessageBox.xcsm", "qt5/widgets/QXLabel.xcsm", "qt5/widgets/QXCheckBox.xcsm", "qt5/widgets/QXStatusBar.xcs", "StatusBarMgr.xcs", "qt5/widgets/QXProgressBar.xcs", "XIntelliSense.xcs", "XDebuggee.xcsm", ".\\stackWnd.xcsm", ".\\ListWidget.xcsm", ".\\AutoWnd.xcsm", ".\\WatchWnd.xcsm", ".\\BreakPointWnd.xcsm", ".\\memorywnd.xcsm", "./qt5/widgets\\QXBuffer.xcsm", "./qt5/widgets\\QXByteArray.xcsm", "./qt5/widgets\\QXIcon.xcsm", ".\\Resource.xcsm", ".\\XFindresWnd.xcsm", ".\\XFinder.xcsm", ".\\XDebugPort.xcsm", ".\\XLogcat.xcsm", ".\\FilterEdit.xcsm", ".\\TextDetail.xcsm", ".\\inputdlg.xcsm", ".\\Setting.xcsm", ".\\XIndex.xcsm", ".\\Recently.xcsm", ".\\AddObject.xcsm", ".\\ThreadManager.xcsm", ".\\XWndObjectDump.xcsm", "qt5/widgets/QXPainter.xcsm", "qt5/widgets/QXPoint.xcsm", "qt5/widgets/QXRect.xcsm", "qt5/widgets/QXImage.xcsm", "qt5/widgets/QXMatrix.xcsm", ".\\uicomponent\\ProgressView.xcsm", ".\\uicomponent\\Switche.xcsm", ".\\qt5\\widgets\\QXToolBar.xcsm", ".\\ConfigMgr.xcsm", ".\\FirstPrepare.xcsm", ".\\qt5\\widgets\\QXFileSystemWatcher.xcsm", ".\\ActionRecorder.xcsm", ".\\CPlusplusProp.xcsm", ".\\Utils.xcsm", ".\\ExportTool.xcsm", ".\\PackageManager.xcsm", ".\\PackageViewer.xcsm", ".\\xstudio.version", ".\\XPlatform.xcsm", ".\\OverrideDlg.xcsm", ".\\qt5\\widgets\\QXTableWidget.xcsm", ".\\qt5\\widgets\\QXBrush.xcsm", ".\\qt5\\widgets\\QXPath.xcsm", ".\\IXPlugin.xcsm", ".\\MemoryLookupWnd.xcsm", ".\\HexEditor.xcsm", ".\\qt5\\widgets\\QPrintDialog.xcsm", ".\\qt5\\widgets\\QAbstractPrintDialog.xcsm", ".\\qt5\\widgets\\QPrinter.xcsm", ".\\qt5\\widgets\\QPagedPaintDevice.xcsm", ".\\qt5\\widgets\\QPaintDevice.xcsm", ".\\qt5\\widgets\\QPrintPreviewDialog.xcsm", ".\\qt5\\widgets\\ReportEngine.xcsm", ".\\qt5\\widgets\\QXDateTimeEdit.xcsm", ".\\qt5\\widgets\\QXDateEdit.xcsm", ".\\qt5\\widgets\\QXTimeEdit.xcsm", ".\\qt5\\widgets\\QXTextEdit.xcsm", ".\\TreeStateSaver.xcsm", ".\\ExtensionManager.xcsm", ".\\DownloadCenter.xcsm", ".\\DownloadManager.xcsm", ".\\IXIntelliSense.x", ".\\MultiSelectDialog.x", ".\\qt5\\widgets\\QHBoxLayout.x", ".\\qt5\\widgets\\QVBoxLayout.x", ".\\qt5\\widgets\\QBoxLayout.x", ".\\qt5\\widgets\\QLayout.x"],
+		"sources":	[".\\XStudioApplication.xcs", "XSourceEditor.xcsm", "XWorkspace.xcsm", "XWndSln.xcsm", "XWndClass.xcsm", "XWndOutput.xcsm", "XWndInfo.xcsm", "XMenuManager.xcsm", "Configure.xcsm", "Project.xcsm", "Wizard.xcsm", "Builder.xcsm", "Windows.xcsm", "XFindDlg.xcsm", "Variable.xcsm", "ProjectPropManager.xcsm", "XProperites.xcsm", "IBuilder.xcsm", "props/XlangProjectProp.xcsm", "ProjectPropInterface.xcsm", "file/FileInputStream.xcs", "file/FileOutputStream.xcs", "StatusBarMgr.xcs", "XIntelliSense.xcs", "XDebuggee.xcsm", ".\\stackWnd.xcsm", ".\\ListWidget.xcsm", ".\\AutoWnd.xcsm", ".\\WatchWnd.xcsm", ".\\BreakPointWnd.xcsm", ".\\memorywnd.xcsm", ".\\XFindresWnd.xcsm", ".\\XFinder.xcsm", ".\\XDebugPort.xcsm", ".\\XLogcat.xcsm", ".\\FilterEdit.xcsm", ".\\TextDetail.xcsm", ".\\inputdlg.xcsm", ".\\Setting.xcsm", ".\\XIndex.xcsm", ".\\Recently.xcsm", ".\\AddObject.xcsm", ".\\ThreadManager.xcsm", ".\\XWndObjectDump.xcsm", ".\\ConfigMgr.xcsm", ".\\FirstPrepare.xcsm", ".\\ActionRecorder.xcsm", ".\\CPlusplusProp.xcsm", ".\\Utils.xcsm", ".\\ExportTool.xcsm", ".\\PackageManager.xcsm", ".\\PackageViewer.xcsm", ".\\xstudio.version", ".\\XPlatform.xcsm", ".\\OverrideDlg.xcsm", ".\\IXPlugin.xcsm", ".\\MemoryLookupWnd.xcsm", ".\\HexEditor.xcsm", ".\\TreeStateSaver.xcsm", ".\\ExtensionManager.xcsm", ".\\DownloadCenter.xcsm", ".\\DownloadManager.xcsm", ".\\IXIntelliSense.x", ".\\MultiSelectDialog.x", ".\\DocumentView.x", ".\\XUIEditor.x", ".\\XVersionEditor.x", ".\\ContextMenu.x", ".\\Backuper.x", ".\\XStringMapView.x", ".\\UIManager.x", ".\\ui\\addobj.ui", ".\\ui\\configure.ui", ".\\ui\\dlmgr.ui", ".\\ui\\exportxp.ui", ".\\ui\\extmgr.ui", ".\\ui\\findreplace.ui", ".\\ui\\first.ui", ".\\ui\\goto.ui", ".\\ui\\index.ui", ".\\ui\\logfilter.ui", ".\\ui\\mainwindow.ui", ".\\ui\\mulsel.ui", ".\\ui\\newproj.ui", ".\\ui\\override.ui", ".\\ui\\packagemgr.ui", ".\\ui\\properites.ui", ".\\ui\\setting.ui", ".\\ui\\stringmap.ui", ".\\ui\\welcome.ui", ".\\ui\\windows.ui"],
 		"configures":	{
 			"debug":	{
 				"path":	{
@@ -10,9 +10,6 @@
 					"libpath":	["libs"]
 				},
 				"acmd":	"",
-				"libs":	[],
-				"links":	[],
-				"depends":	[],
 				"prebuild":	"",
 				"preclean":	"",
 				"makebuild":	"",
@@ -22,6 +19,9 @@
 				"cmd":	"$(Output)",
 				"args":	"$(Output)",
 				"workdir":	"D:\\Programs\\windows_x64",
+				"libs":	["QXLibrary.lix"],
+				"links":	[],
+				"depends":	[],
 				"ignorewarning":	"",
 				"warexcp":	"-we",
 				"compdest":	"-z",
@@ -29,6 +29,9 @@
 				"debugable":	"-dbg",
 				"debugdatabase":	"",
 				"warnilptr":	"-wn",
+				"strlistfile":	"",
+				"languagefile":	"",
+				"stringoutput":	"",
 				"wtype":	"",
 				"ostype":	"",
 				"sstype":	"",

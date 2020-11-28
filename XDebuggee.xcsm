@@ -111,7 +111,12 @@ class XDebuggee{
 				int readed = 0;
                 
                 while (readed < 22){
-					readed += _stream.read(recvdata, readed, 22 - readed) ;
+                    int _rd = _stream.read(recvdata, readed, 22 - readed) ;
+                    if (_rd > 0){
+                        readed += _rd;
+                    }else{
+                        break;
+                    }
                 }
 
 				if (readed == 22){
@@ -354,69 +359,69 @@ class XDebuggee{
     }
     
     static int parseButtons(String button){
-        int nbutton = QXMessageBox.Ok;
+        int nbutton = QMessageBox.Ok;
         
         if (button != nilptr){
             String [] btns = button.split("|");
             for (int i = 0; i < btns.length; i++){
                 switch(btns[i]){
                     case "Ok":
-                    nbutton |= QXMessageBox.Ok;
+                    nbutton |= QMessageBox.Ok;
                     break;
                     case "Save":
-                    nbutton |= QXMessageBox.Save;
+                    nbutton |= QMessageBox.Save;
                     break;
                     case "SaveAll":
-                    nbutton |= QXMessageBox.SaveAll;
+                    nbutton |= QMessageBox.SaveAll;
                     break;
                     case "Open":
-                    nbutton |= QXMessageBox.Open;
+                    nbutton |= QMessageBox.Open;
                     break;
                     case "Yes":
-                    nbutton |= QXMessageBox.Yes;
+                    nbutton |= QMessageBox.Yes;
                     break;
                     case "YesToAll":
-                    nbutton |= QXMessageBox.YesToAll;
+                    nbutton |= QMessageBox.YesToAll;
                     break;
                     case "No":
-                    nbutton |= QXMessageBox.No;
+                    nbutton |= QMessageBox.No;
                     break;
                     case "NoToAll":
-                    nbutton |= QXMessageBox.NoToAll;
+                    nbutton |= QMessageBox.NoToAll;
                     break;
                     case "Abort":
-                    nbutton |= QXMessageBox.Abort;
+                    nbutton |= QMessageBox.Abort;
                     break;
                     case "Retry":
-                    nbutton |= QXMessageBox.Retry;
+                    nbutton |= QMessageBox.Retry;
                     break;
                     case "Ignore":
-                    nbutton |= QXMessageBox.Ignore;
+                    nbutton |= QMessageBox.Ignore;
                     break;
                     case "Close":
-                    nbutton |= QXMessageBox.Close;
+                    nbutton |= QMessageBox.Close;
                     break;
                     case "Cancel":
-                    nbutton |= QXMessageBox.Cancel;
+                    nbutton |= QMessageBox.Cancel;
                     break;
                     case "Discard":
-                    nbutton |= QXMessageBox.Discard;
+                    nbutton |= QMessageBox.Discard;
                     break;
                     case "Help":
-                    nbutton |= QXMessageBox.Help;
+                    nbutton |= QMessageBox.Help;
                     break;
                     case "Apply":
-                    nbutton |= QXMessageBox.Apply;
+                    nbutton |= QMessageBox.Apply;
                     break;
                     case "Reset":
-                    nbutton |= QXMessageBox.Reset;
+                    nbutton |= QMessageBox.Reset;
                     break;
                     case "RestoreDefaults":
-                    nbutton |= QXMessageBox.RestoreDefaults;
+                    nbutton |= QMessageBox.RestoreDefaults;
                     break;
                     default:
                     case "NoButton":
-                    nbutton |= QXMessageBox.NoButton;
+                    nbutton |= QMessageBox.NoButton;
                     break;
                 }
             }
@@ -428,62 +433,62 @@ class XDebuggee{
     String getButton(int bt){
         String sbutton = "";
         switch(bt){
-            case QXMessageBox.Ok:
+            case QMessageBox.Ok:
             sbutton = "Ok";
             break;
-            case QXMessageBox.Save:
+            case QMessageBox.Save:
             sbutton = "Save";
             break;
-            case QXMessageBox.SaveAll:
+            case QMessageBox.SaveAll:
             sbutton = "SaveAll";
             break;
-            case QXMessageBox.Open:
+            case QMessageBox.Open:
             sbutton = "Open";
             break;
-            case QXMessageBox.Yes:
+            case QMessageBox.Yes:
             sbutton = "Yes";
             break;
-            case QXMessageBox.YesToAll:
+            case QMessageBox.YesToAll:
             sbutton = "YesToAll";
             break;
-            case QXMessageBox.No:
+            case QMessageBox.No:
             sbutton = "No";
             break;
-            case QXMessageBox.NoToAll:
+            case QMessageBox.NoToAll:
             sbutton = "NoToAll";
             break;
-            case QXMessageBox.Abort:
+            case QMessageBox.Abort:
             sbutton = "Abort";
             break;
-            case QXMessageBox.Retry:
+            case QMessageBox.Retry:
             sbutton = "Retry";
             break;
-            case QXMessageBox.Ignore:
+            case QMessageBox.Ignore:
             sbutton = "Ignore";
             break;
-            case QXMessageBox.Close:
+            case QMessageBox.Close:
             sbutton = "Close";
             break;
-            case QXMessageBox.Cancel:
+            case QMessageBox.Cancel:
             sbutton = "Cancel";
             break;
-            case QXMessageBox.Discard:
+            case QMessageBox.Discard:
             sbutton = "Discard";
             break;
-            case QXMessageBox.Help:
+            case QMessageBox.Help:
             sbutton = "Help";
             break;
-            case QXMessageBox.Apply:
+            case QMessageBox.Apply:
             sbutton = "Apply";
             break;
-            case QXMessageBox.Reset:
+            case QMessageBox.Reset:
             sbutton = "Reset";
             break;
-            case QXMessageBox.RestoreDefaults:
+            case QMessageBox.RestoreDefaults:
             sbutton = "RestoreDefaults";
             break;
             default:
-            case QXMessageBox.NoButton:
+            case QMessageBox.NoButton:
             sbutton = "NoButton";
             break;
         }
@@ -526,19 +531,19 @@ class XDebuggee{
         
         switch(type){
             case "Critical":
-                result = getButton(QXMessageBox.Critical(title,message,nbutton,QXMessageBox.NoButton));
+                result = getButton(QMessageBox.Critical(title,message,nbutton,QMessageBox.NoButton));
             break;
             
             case "Question":
-                result = getButton(QXMessageBox.Question(title,message,nbutton,QXMessageBox.NoButton));
+                result = getButton(QMessageBox.Question(title,message,nbutton,QMessageBox.NoButton));
             break;
             
             case "Information":
-                result = getButton(QXMessageBox.Information(title,message,nbutton,QXMessageBox.NoButton));
+                result = getButton(QMessageBox.Information(title,message,nbutton,QMessageBox.NoButton));
             break;
             
             case "Warning":
-                result = getButton(QXMessageBox.Warning(title,message,nbutton,QXMessageBox.NoButton));
+                result = getButton(QMessageBox.Warning(title,message,nbutton,QMessageBox.NoButton));
             break;
             
             case "Input":

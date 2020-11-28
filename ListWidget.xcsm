@@ -1,40 +1,40 @@
 //xlang Source, Name:ListWidget.xcsm 
 //Date: Tue Sep 17:03:43 2018 
 
-class ListDockWidget : QXDockWidget{
-    private QXTreeView _listview;
+class ListDockWidget : QDockWidget{
+    private QTreeWidget _listview;
     
     protected XWorkspace _mdi_area;
      
     public static const int STACK_INFO_NOTIFY = 2;
     
     public onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
-        public void onItemClicked(QXTreeView tree,long item, int column)override{
+        public void onItemClicked(QTreeWidget tree,long item, int column)override{
 			onListItemClicked(tree, item, column);
         }
-        public void onItemChanged(QXTreeView tree,long item, int column)override{
+        public void onItemChanged(QTreeWidget tree,long item, int column)override{
 			onListItemChanged(tree, item, column);
         }
-		public void onItemExpanded(QXTreeView tree,long item)override{
+		public void onItemExpanded(QTreeWidget tree,long item)override{
 			onListItemExpanded(tree, item);
 		}
-        public void onItemPressed(QXTreeView tree, long item, int column)override{
+        public void onItemPressed(QTreeWidget tree, long item, int column)override{
 			onListItemPressed(tree, item, column);
         }
-        public void onItemDoubleClicked(QXTreeView tree,long item, int column)override{
+        public void onItemDoubleClicked(QTreeWidget tree,long item, int column)override{
 			onListItemDoubleClicked(tree, item, column);
         }
     };
-	public void onListItemDoubleClicked(QXTreeView,long item, int column){
+	public void onListItemDoubleClicked(QTreeWidget,long item, int column){
 	}
-	public void onListItemClicked(QXTreeView tree,long item, int column);
-    public void onListItemPressed(QXTreeView tree,long item, int column){
+	public void onListItemClicked(QTreeWidget tree,long item, int column);
+    public void onListItemPressed(QTreeWidget tree,long item, int column){
     
     }
-    public void onListItemExpanded(QXTreeView,long item){
+    public void onListItemExpanded(QTreeWidget,long item){
 
 	}
-    public void onListItemChanged(QXTreeView tree,long item, int column){
+    public void onListItemChanged(QTreeWidget tree,long item, int column){
     
     }
     public String getListName();
@@ -42,10 +42,10 @@ class ListDockWidget : QXDockWidget{
     public int [] getColumnWidths();
 
     public void onAttach(){
-        _listview = (QXTreeView)attachByName(new QXTreeView(), getListName());
+        _listview = (QTreeWidget)attachByName(new QTreeWidget(), getListName());
        
         /*setOnLayoutEventListener(new onLayoutEventListener(){
-                void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+                void onResize(QObject obj, int w, int h, int oldw, int oldh)override {
                     if (_listview != nilptr){
                         _listview.resize(w, h - 20);
                     }
@@ -74,7 +74,7 @@ class ListDockWidget : QXDockWidget{
         _listview.clear();
     }
     
-    public @NotNilptr QXTreeView getList(){
+    public @NotNilptr QTreeWidget getList(){
         __nilptr_safe(_listview);
 		return _listview;
     }

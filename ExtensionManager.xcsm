@@ -1,10 +1,10 @@
 //xlang Source, Name:ExtensionManager.xcsm 
 //Date: Mon Dec 22:38:01 2019 
 
-class ExtensionManager : QXDialog{
+class ExtensionManager : QDialog{
     public XWorkspace _workspace;
-    QXTreeView extlist;
-    QXPushButton btnenable, btnuninst, btnclose;
+    QTreeWidget extlist;
+    QPushButton btnenable, btnuninst, btnclose;
     
     static JsonObject extobj = new JsonObject();
     
@@ -70,16 +70,16 @@ class ExtensionManager : QXDialog{
     
 	public void onAttach() override {
 		//TODO:	
-        setWindowFlags(CustomizeWindowHint | WindowMinMaxButtonsHint | WindowCloseButtonHint);
+        setWindowFlags(Constant.CustomizeWindowHint | Constant.WindowMinMaxButtonsHint | Constant.WindowCloseButtonHint);
         setWindowIcon("./res/toolbar/dynamic.png");
         
-        extlist = (QXTreeView)attachByName(new QXTreeView(), "extlist");
-        btnenable = (QXPushButton)attachByName(new QXPushButton(), "btnenable");
-        btnuninst = (QXPushButton)attachByName(new QXPushButton(), "btnuninst");
-        btnclose = (QXPushButton)attachByName(new QXPushButton(), "btnclose");
+        extlist = (QTreeWidget)attachByName(new QTreeWidget(), "extlist");
+        btnenable = (QPushButton)attachByName(new QPushButton(), "btnenable");
+        btnuninst = (QPushButton)attachByName(new QPushButton(), "btnuninst");
+        btnclose = (QPushButton)attachByName(new QPushButton(), "btnclose");
         
         btnenable.setOnClickListener(new onClickListener(){
-            void onClick(QXObject obj, bool checked) {
+            void onClick(QObject obj, bool checked) {
                 long [] items = extlist.getSelectedItems();
                 if (items != nilptr && items.length != 0){
                     for (int i = 0; i < items.length ; i ++){
@@ -94,7 +94,7 @@ class ExtensionManager : QXDialog{
         });
         
         btnuninst.setOnClickListener(new onClickListener(){
-            void onClick(QXObject obj, bool checked) {
+            void onClick(QObject obj, bool checked) {
                 long [] items = extlist.getSelectedItems();
                 if (items != nilptr && items.length != 0){
                     for (int i = 0; i < items.length ; i ++){
@@ -107,7 +107,7 @@ class ExtensionManager : QXDialog{
         });
         
         btnclose.setOnClickListener(new onClickListener(){
-            void onClick(QXObject obj, bool checked) {
+            void onClick(QObject obj, bool checked) {
                 close();
             }
         });
@@ -122,11 +122,11 @@ class ExtensionManager : QXDialog{
         extlist.setColumnWidth(3, 250);
         
         extlist.setOnTreeViewItemEvent( new onTreeViewItemEvent(){
-			void onItemClicked(@NotNilptr QXTreeView tree,long item, int column){
+			void onItemClicked(@NotNilptr QTreeWidget tree,long item, int column){
 				if (column == 4){
 					String txt = tree.getItemText(item, column);
                     if (txt.upper().startWith("HTTP")){
-						if (QXMessageBox.Question("提示","是否转到发布者网站: <b>" + txt + "</b> ?",QXMessageBox.Ok | QXMessageBox.No,QXMessageBox.Ok) == QXMessageBox.Ok){
+						if (QMessageBox.Question("提示","是否转到发布者网站: <b>" + txt + "</b> ?",QMessageBox.Ok | QMessageBox.No,QMessageBox.Ok) == QMessageBox.Ok){
 							openUrl(txt);
                         }
                     }

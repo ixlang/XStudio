@@ -1,29 +1,29 @@
 //xlang Source, Name:FirstPrepare.xcsm 
 //Date: Tue Nov 16:55:36 2018 
 
-class FirstPrepare : QXDialog{
-	QxApp app;
+class FirstPrepare : QDialog{
+	XStudioApp app;
     
-	FirstPrepare(QxApp _app){
+	FirstPrepare(XStudioApp _app){
 		app = _app;
     }
     
-    QXPushButton btnClose;
-    QXWidget imagefrt, imagebck;
+    QPushButton btnClose;
+    QWidget imagefrt, imagebck;
     Switche dark = new Switche();
     
     public void onAttach(){
     
-        setWindowFlags(CustomizeWindowHint | WindowCloseButtonHint);
+        setWindowFlags(Constant.CustomizeWindowHint | Constant.WindowCloseButtonHint);
         
-        imagefrt = (QXWidget)attachByName(new QXWidget(), "imagefrt");
-        imagebck = (QXWidget)attachByName(new QXWidget(), "imagebck");
+        imagefrt = (QWidget)attachByName(new QWidget(), "imagefrt");
+        imagebck = (QWidget)attachByName(new QWidget(), "imagebck");
                 
-        btnClose = (QXPushButton)attachByName(new QXPushButton(), "btnClose");
+        btnClose = (QPushButton)attachByName(new QPushButton(), "btnClose");
         
         btnClose.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
                 FirstPrepare.this.close();
                 
                 if (dark.getChecked()){
@@ -32,7 +32,7 @@ class FirstPrepare : QXDialog{
 					Setting.setSetting("style", "浅色");
                 }
                 
-                QXMessageBox.Information("提示", "如需再次更改外观请至菜单 <a style=\"color:#ffff0000\">[工具] ->[选项]</a> 进行操作.", QXMessageBox.Ok, QXMessageBox.Ok);
+                QMessageBox.Information("提示", "如需再次更改外观请至菜单 <a style=\"color:#ffff0000\">[工具] ->[选项]</a> 进行操作.", QMessageBox.Ok, QMessageBox.Ok);
                 
                 Setting.save();
                 ProgressView pv = ProgressView.showWait(-1);
@@ -125,10 +125,10 @@ class FirstPrepare : QXDialog{
         }, 10, -1);
     }
 
-	public static bool showFirstRun(QxApp app){
+	public static bool showFirstRun(XStudioApp app){
    
-		QXDialog newDlg = new QXDialog();
-		if (newDlg.load("ui/first.ui") == false){
+		QDialog newDlg = new QDialog();
+		if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/first.ui"))) == false){
 			return false;
 		}
         

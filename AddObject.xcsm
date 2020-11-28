@@ -4,13 +4,13 @@
 //xlang Source, Name:gotoline.xcsm 
 //Date: Sun Sep 19:06:03 2018 
 
-class AddObjectDlg : QXDialog {
+class AddObjectDlg : QDialog {
 
 	int addType = 0;
-    QXPushButton btnOk, btnCancel;
-    QXLineEdit edtName, edtFile;
-	QXCheckBox chkCls, chkInterface, chkPackage;
-    QXTreeView _treeview;
+    QPushButton btnOk, btnCancel;
+    QLineEdit edtName, edtFile;
+	QCheckBox chkCls, chkInterface, chkPackage;
+    QTreeWidget _treeview;
     Project currentProject;
     
     long root_item;
@@ -29,7 +29,7 @@ class AddObjectDlg : QXDialog {
     Map<long, ItemLoader> expand_data = new Map<long, ItemLoader>();
     
     onClickListener checkListener = new onClickListener(){
-        void onClick(QXObject obj, bool checked)override{
+        void onClick(QObject obj, bool checked)override{
         
 				prefix = "";
         
@@ -63,19 +63,19 @@ class AddObjectDlg : QXDialog {
         
     public void onAttach()override{ 
     
-        setWindowFlags(CustomizeWindowHint | WindowCloseButtonHint);
+        setWindowFlags(Constant.CustomizeWindowHint | Constant.WindowCloseButtonHint);
         
         //setFixedSize(width(), height());
         
-        btnOk = (QXPushButton)attachByName(new QXPushButton(), "btnOk");
-        btnCancel = (QXPushButton)attachByName(new QXPushButton(), "btnCancel");
+        btnOk = (QPushButton)attachByName(new QPushButton(), "btnOk");
+        btnCancel = (QPushButton)attachByName(new QPushButton(), "btnCancel");
         
-        edtName = (QXLineEdit)attachByName(new QXLineEdit(), "edtName");
-        edtFile = (QXLineEdit)attachByName(new QXLineEdit(), "edtFile");
+        edtName = (QLineEdit)attachByName(new QLineEdit(), "edtName");
+        edtFile = (QLineEdit)attachByName(new QLineEdit(), "edtFile");
         
-        chkCls = (QXCheckBox)attachByName(new QXCheckBox(), "chkCls");
-        chkInterface = (QXCheckBox)attachByName(new QXCheckBox(), "chkInterface");
-        chkPackage = (QXCheckBox)attachByName(new QXCheckBox(), "chkPackage");
+        chkCls = (QCheckBox)attachByName(new QCheckBox(), "chkCls");
+        chkInterface = (QCheckBox)attachByName(new QCheckBox(), "chkInterface");
+        chkPackage = (QCheckBox)attachByName(new QCheckBox(), "chkPackage");
         
         switch(addType){
 			case 1:
@@ -95,34 +95,34 @@ class AddObjectDlg : QXDialog {
         chkInterface.setOnClickListener(checkListener);
         chkPackage.setOnClickListener(checkListener);
         //checkListener
-        _treeview = (QXTreeView)attachByName(new QXTreeView(), "baseTree");
+        _treeview = (QTreeWidget)attachByName(new QTreeWidget(), "baseTree");
         
         if (currentProject == nilptr){
 			close();
-			QXMessageBox.Critical("注意", "当前没有载入项目", QXMessageBox.Ok, QXMessageBox.Ok);
+			QMessageBox.Critical("注意", "当前没有载入项目", QMessageBox.Ok, QMessageBox.Ok);
             return ;
         }
         btnOk.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
 				if (prefix.length() == 0){
-					QXMessageBox.Critical("注意", "没有选择创建的类型", QXMessageBox.Ok, QXMessageBox.Ok);
+					QMessageBox.Critical("注意", "没有选择创建的类型", QMessageBox.Ok, QMessageBox.Ok);
                     return ;
                 }
 				String name = edtName.getText();
                 if (name.length() == 0){
-					QXMessageBox.Critical("注意", "输入了不正确的类名", QXMessageBox.Ok, QXMessageBox.Ok);
+					QMessageBox.Critical("注意", "输入了不正确的类名", QMessageBox.Ok, QMessageBox.Ok);
                     return ;
                 }
                 if (Pattern.test(name, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true) == false){
-					QXMessageBox.Critical("注意", "输入了不正确的类名", QXMessageBox.Ok, QXMessageBox.Ok);
+					QMessageBox.Critical("注意", "输入了不正确的类名", QMessageBox.Ok, QMessageBox.Ok);
                     return ;
 				}
                 
 				String sourceFile = currentProject.generateFullPath(edtFile.getText());
                 
                 if (XPlatform.existsSystemFile(sourceFile)){
- 					QXMessageBox.Critical("注意", "文件已存在", QXMessageBox.Ok, QXMessageBox.Ok);
+ 					QMessageBox.Critical("注意", "文件已存在", QMessageBox.Ok, QMessageBox.Ok);
                     return ;
                 }
                 
@@ -161,7 +161,7 @@ class AddObjectDlg : QXDialog {
                         fos.close();
                     }
                     XPlatform.deleteFile(sourceFile);
-                 	QXMessageBox.Critical("注意", "无法建立文件:" + sourceFile, QXMessageBox.Ok, QXMessageBox.Ok);
+                 	QMessageBox.Critical("注意", "无法建立文件:" + sourceFile, QMessageBox.Ok, QMessageBox.Ok);
                     return ;
                 }
                 
@@ -171,7 +171,7 @@ class AddObjectDlg : QXDialog {
         
         btnCancel.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
 				close();
             }
         });
@@ -194,17 +194,17 @@ class AddObjectDlg : QXDialog {
         loadObject(root_item, heap);
         
         edtName.setOnEditEventListener(new onEditEventListener(){
-            void onTextChanged(QXObject, @NotNilptr String text)override{
+            void onTextChanged(QObject, @NotNilptr String text)override{
 				edtFile.setText(text + ".x");
             }
         });
         
 		_treeview.setOnTreeViewItemEvent(new onTreeViewItemEvent(){
-			void onItemExpanded(QXTreeView,long iitem)override{
+			void onItemExpanded(QTreeWidget,long iitem)override{
 				expandLoad(iitem);
 			}
             
-            void onItemChanged(QXTreeView, long item,int column)override{
+            void onItemChanged(QTreeWidget, long item,int column)override{
 				long parentitem = _treeview.getParentItem(item);
                 bool checked = _treeview.isItemCheck(item, 0);
                 if (checked){
@@ -231,7 +231,7 @@ class AddObjectDlg : QXDialog {
         
         
          /*setOnLayoutEventListener(new onLayoutEventListener(){
-			void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+			void onResize(QObject obj, int w, int h, int oldw, int oldh)override {
 				_treeview.resize(w - 40, h-  210);
                 
                 edtName.resize(w - 90, 20);
@@ -352,7 +352,7 @@ class AddObjectDlg : QXDialog {
                 }
                 
                 if (item != 0){
-                    _treeview.modifyItemFlags(item, QXTreeView.ItemIsUserCheckable, 0);
+                    _treeview.modifyItemFlags(item, QTreeWidget.ItemIsUserCheckable, 0);
                     _treeview.setItemCheck(item, 0, false);
                 }
             }
@@ -360,8 +360,8 @@ class AddObjectDlg : QXDialog {
 	}
     
     public static void requestAddObject(Project project, int type){
-		QXDialog newDlg = new QXDialog();
-        if (newDlg.load("ui/addobj.ui") == false){
+		QDialog newDlg = new QDialog();
+        if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/addobj.ui"))) == false){
             return ;
         }
         AddObjectDlg wizard = new AddObjectDlg();	
@@ -410,7 +410,7 @@ class AddObjectDlg : QXDialog {
                     return headStr;
                 }else{
 					if (prefix.equals("interface") && (tag & TYPE_INTERFACE) == 0){
-						QXMessageBox.Critical("注意", "接口只能继承接口", QXMessageBox.Ok, QXMessageBox.Ok);
+						QMessageBox.Critical("注意", "接口只能继承接口", QMessageBox.Ok, QMessageBox.Ok);
                         throw new Exception("接口只能继承接口");
                         return nilptr;
                     }

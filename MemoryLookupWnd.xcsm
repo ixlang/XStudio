@@ -1,9 +1,9 @@
 //xlang Source, Name:MemoryLookupWnd.xcsm 
 //Date: Tue Jul 16:39:20 2019 
 
-class MemoryLookupWnd : QXDockWidget{
-	QXLineEdit edtaddress;
-    QXPushButton btnLockup, dumpButton; 
+class MemoryLookupWnd : QDockWidget{
+	QLineEdit edtaddress;
+    QPushButton btnLockup, dumpButton; 
 	HexEditor memcontent;
     static MemoryLookupWnd memlookupWnd;
     
@@ -165,17 +165,17 @@ class MemoryLookupWnd : QXDockWidget{
                 static String filePath = "";
                 bool onInputOk(@NotNilptr String text)override {
                     if (text.length() == 0 || text.isDigit() == false) {
-                        QXMessageBox.Critical("错误", "输入了不正确的长度", QXMessageBox.Ok, QXMessageBox.Ok);
+                        QMessageBox.Critical("错误", "输入了不正确的长度", QMessageBox.Ok, QMessageBox.Ok);
                         return false;
                     }
                     int length = text.parseInt();
                     
                     if (length < 0){
-                        QXMessageBox.Critical("错误", "输入了不正确的长度", QXMessageBox.Ok, QXMessageBox.Ok);
+                        QMessageBox.Critical("错误", "输入了不正确的长度", QMessageBox.Ok, QMessageBox.Ok);
                         return false;
                     }
                     
-                    String file = QXFileDialog.getSaveFileName("保存文件", filePath,  "All Files(*.* *)", MemoryLookupWnd.this);
+                    String file = QFileDialog.getSaveFileName("保存文件", filePath,  "All Files(*.* *)", MemoryLookupWnd.this);
                     if (file != nilptr && file.length() > 0) {
                         filePath = file;
                         dumpCore(file, addrtext, length);
@@ -209,26 +209,26 @@ class MemoryLookupWnd : QXDockWidget{
     
 	public void onAttach(){
 		memlookupWnd = this;
-		edtaddress = (QXLineEdit)attachByName(new QXLineEdit(), "edtaddress");
-        btnLockup = (QXPushButton)attachByName(new QXPushButton(), "btnLockup");
-        dumpButton = (QXPushButton)attachByName(new QXPushButton(), "dumpButton");
+		edtaddress = (QLineEdit)attachByName(new QLineEdit(), "edtaddress");
+        btnLockup = (QPushButton)attachByName(new QPushButton(), "btnLockup");
+        dumpButton = (QPushButton)attachByName(new QPushButton(), "dumpButton");
         memcontent = (HexEditor)attachByName(new HexEditor(), "memcontent");
         
         btnLockup.setOnClickListener(new onClickListener(){
-			void onClick(QXObject obj, bool checked)override{
+			void onClick(QObject obj, bool checked)override{
 				dump();
 			}
         });
         
         dumpButton.setOnClickListener(new onClickListener(){
-			void onClick(QXObject obj, bool checked)override{
+			void onClick(QObject obj, bool checked)override{
 				dumpFile();
 			}
         });
         
         edtaddress.setOnKeyEventListener(new onKeyEventListener(){
-			bool onKeyPress(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier)override{
-				if (key == Key_Enter || key == Key_Return){
+			bool onKeyPress(QObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier)override{
+				if (key == Constant.Key_Enter || key == Constant.Key_Return){
 					dump();
                     return false;
                 }

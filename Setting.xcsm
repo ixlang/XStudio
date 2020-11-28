@@ -1,12 +1,12 @@
 //xlang Source, Name:Setting.xcsm 
 //Date: Wed Sep 16:29:18 2018 
 
-class Setting : QXDialog {
+class Setting : QDialog {
 	static JsonObject _template_root;
-    static QXRect rect = nilptr;
+    static QRect rect = nilptr;
     
     public bool onClose(){
-        rect = new QXRect(x(), y(), width(), height());
+        rect = new QRect(x(), y(), width(), height());
         return true;
     }
 	public static class Preference{
@@ -105,7 +105,7 @@ class Setting : QXDialog {
                                     shortkey = "";
                                 }
                                 if (XMenuManager._menuMgr != nilptr && XMenuManager._menuMgr.mainwindow != nilptr){
-                                    QXAction action = (QXAction)XMenuManager._menuMgr.mainwindow.findByName(keyname);
+                                    QAction action = (QAction)XMenuManager._menuMgr.mainwindow.findByName(keyname);
                                     if (action != nilptr){
                                         action.setShortcut(shortkey);
                                     }
@@ -127,7 +127,7 @@ class Setting : QXDialog {
                     XStackInfor.setThreadOuputStatus(outputThreadStat());
                     XLogcatWnd.setMaxItems(getLogcatMaxitems());
                     if (bConflict){
-                        QXMessageBox.Critical("注意","加速键存在冲突, 可能不会生效.",QXMessageBox.Ok,QXMessageBox.Ok);
+                        QMessageBox.Critical("注意","加速键存在冲突, 可能不会生效.",QMessageBox.Ok,QMessageBox.Ok);
                     }
                 }
             }
@@ -163,12 +163,12 @@ class Setting : QXDialog {
     static bool bTemplateLoaded = loadTemplate();
     static Preference preference = new Preference();
     
-    QXPushButton btnClose;
+    QPushButton btnClose;
     
-    QXTreeView _listview;
+    QTreeWidget _listview;
     
-    QXPropertyBrowser _propTable = new QXPropertyBrowser();
-    QXSci             _sci = new QXSci();
+    QPropertyBrowser _propTable = new QPropertyBrowser();
+    QScintilla             _sci = new QScintilla();
     
     class ItemRecord{
         public JsonObject obj;
@@ -198,13 +198,13 @@ class Setting : QXDialog {
     
     Vector<ItemRecord> _propItems = new Vector<ItemRecord>();
     
-    Map<String, QXPropertyBrowser.QtVariantProperty> currentProps = new Map<String, QXPropertyBrowser.QtVariantProperty>();
+    Map<String, QPropertyBrowser.QtVariantProperty> currentProps = new Map<String, QPropertyBrowser.QtVariantProperty>();
 
 	int current_sel_setting = 0;
     bool showSci = false;
     
     onTreeViewItemEvent listlistener = new onTreeViewItemEvent(){
-        public void onItemClicked(@NotNilptr QXTreeView list,long item, int column)override{
+        public void onItemClicked(@NotNilptr QTreeWidget list,long item, int column)override{
             current_sel_setting = list.getItemTag(item, 0);
             String seltext = _listview.getItemText(item,0);
             showSci = seltext.equals("文本编辑器配色");
@@ -293,7 +293,7 @@ class Setting : QXDialog {
     bool oldbuildinsetting = false;
     public void onAttach(){
         //setWindowFlags(CustomizeWindowHint | WindowMinMaxButtonsHint | WindowCloseButtonHint  | Tool);
-        _listview = (QXTreeView)attachByName(new QXTreeView(), "listProp");
+        _listview = (QTreeWidget)attachByName(new QTreeWidget(), "listProp");
         
         _propTable.create(this);
         _propTable.move(170, 40);
@@ -339,24 +339,24 @@ class Setting : QXDialog {
                                 "\n\n	return 0;"	+
                                 "\n}\n");
         
-        _sci.sendEditor(QXSci.SCI_MARKERADD, 1, 8);
-        _sci.sendEditor(QXSci.SCI_MARKERADD, 2, 9);
-        _sci.sendEditor(QXSci.SCI_MARKERADD, 3, 12);
-        _sci.sendEditor(QXSci.SCI_MARKERADD, 4, 13);
+        _sci.sendEditor(QScintilla.SCI_MARKERADD, 1, 8);
+        _sci.sendEditor(QScintilla.SCI_MARKERADD, 2, 9);
+        _sci.sendEditor(QScintilla.SCI_MARKERADD, 3, 12);
+        _sci.sendEditor(QScintilla.SCI_MARKERADD, 4, 13);
         
         if (loadSetting() == false){
             close();
             return ;
         }
         
-		btnClose = (QXPushButton)attachByName(new QXPushButton(), "btnClose");
+		btnClose = (QPushButton)attachByName(new QPushButton(), "btnClose");
 
         btnClose.setOnClickListener(
         new onClickListener(){
-            public void onClick(QXObject obj, bool checked)override{
+            public void onClick(QObject obj, bool checked)override{
                 saveSetting();
                 applySetting();
-                //QxApp.statusBar.showStatusMessage("部分设置需要在XStudio重新开启后生效.");
+                //QApp.statusBar.showStatusMessage("部分设置需要在XStudio重新开启后生效.");
                 if (oldbuildinsetting != isShowBuildin()){
 					XWndClass.refresh();
 				}
@@ -365,7 +365,7 @@ class Setting : QXDialog {
         });
         
         setOnLayoutEventListener(new onLayoutEventListener(){
-                public void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+                public void onResize(QObject obj, int w, int h, int oldw, int oldh)override {
 					_listview.resize(141, h - 50);
 					btnClose.move(w - 100, h - 40);
 					//_propTable.move(170, 40);
@@ -397,7 +397,7 @@ class Setting : QXDialog {
     
     public void loadFeature(@NotNilptr JsonObject confi, ItemRecord xp){
 
-        QXPropertyBrowser.QtVariantPropertyManager variantManager = new QXPropertyBrowser.QtVariantPropertyManager(_propTable);
+        QPropertyBrowser.QtVariantPropertyManager variantManager = new QPropertyBrowser.QtVariantPropertyManager(_propTable);
         
         while(confi != nilptr){
             String cfgName = confi.getName();
@@ -441,7 +441,7 @@ class Setting : QXDialog {
             }
             confi = (JsonObject)confi.next();
         }
-        _propTable.setFactoryForManager(variantManager, new QXPropertyBrowser.QtVariantEditorFactory(_propTable));
+        _propTable.setFactoryForManager(variantManager, new QPropertyBrowser.QtVariantEditorFactory(_propTable));
         _propTable.setPropertiesWithoutValueMarked(true);
         _propTable.setRootIsDecorated(false);
     }
@@ -471,7 +471,7 @@ class Setting : QXDialog {
     
     public void loadProperites( @NotNilptr JsonObject root, IXPlugin xp, bool noload){
         bool loaded = noload;
-        //new QXPropertyBrowser.QtVariantPropertyManager()
+        //new QPropertyBrowser.QtVariantPropertyManager()
 		while(root != nilptr){
 			String featName = root.getName();
 			
@@ -492,9 +492,9 @@ class Setting : QXDialog {
 		}
     }
     
-    public void loadOpenPath(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager, @NotNilptr String name, @NotNilptr JsonObject root, ItemRecord xp){
+    public void loadOpenPath(@NotNilptr QPropertyBrowser.QtVariantPropertyManager manager, @NotNilptr String name, @NotNilptr JsonObject root, ItemRecord xp){
         String [] kv = name.split(':');
-        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
+        QPropertyBrowser.QtVariantProperty item = (QPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QPropertyBrowser.QtVariantProperty(), kv[0]);
         String defaultValue = getSetting(nilptr, kv[1]);
         
         item.setTagObject(new ItemValue(xp));
@@ -505,12 +505,12 @@ class Setting : QXDialog {
         item.setAttributeEnumNames(options);
         
         manager.setPropertyEventListener(item,
-        new QXPropertyBrowser.PropertyManager.onPropertyEventListener(){
+        new QPropertyBrowser.PropertyManager.onPropertyEventListener(){
             void onVariantPropertyValueChanged(long prop, int dataType, String stringValue)override{
                 if (stringValue != nilptr){
                     if (stringValue.parseInt() != 0){
                         item.setValue(defaultValue);
-                        String newValue = QXFileDialog.getOpenFileName("浏览 - " + kv[0], options[0],"*",Setting.this);
+                        String newValue = QFileDialog.getOpenFileName("浏览 - " + kv[0], options[0],"*",Setting.this);
                         if (newValue != nilptr){
                             //_prop.setValue(_project,_curconfig, kv[1], newValue);
                             options[0] = newValue;
@@ -525,9 +525,9 @@ class Setting : QXDialog {
         currentProps.put(kv[1], item);
     }
     
-    public void loadPath(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name, @NotNilptr JsonObject root, ItemRecord xp){
+    public void loadPath(@NotNilptr QPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name, @NotNilptr JsonObject root, ItemRecord xp){
         String [] kv = name.split(':');
-        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
+        QPropertyBrowser.QtVariantProperty item = (QPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QPropertyBrowser.QtVariantProperty(), kv[0]);
         String defaultText = getSetting(nilptr, kv[1]);
         
         String [] options = new String[2];
@@ -537,12 +537,12 @@ class Setting : QXDialog {
         item.setTagObject(new ItemValue(xp));
         
         manager.setPropertyEventListener(item,
-        new QXPropertyBrowser.PropertyManager.onPropertyEventListener(){
+        new QPropertyBrowser.PropertyManager.onPropertyEventListener(){
             void onVariantPropertyValueChanged(long prop, int dataType, String stringValue)override{
                 if (stringValue != nilptr){
                     if (stringValue.parseInt() != 0){
                         item.setValue("0");
-                        String newValue = QXFileDialog.getFolderPath("选择目录",options[0],nilptr,Setting.this);
+                        String newValue = QFileDialog.getFolderPath("选择目录",options[0],nilptr,Setting.this);
                         if (newValue != nilptr){
                             options[0] = newValue;
                             item.setAttributeEnumNames(options);
@@ -556,9 +556,9 @@ class Setting : QXDialog {
         currentProps.put(kv[1], item);
     }
     
-    public void loadSavePath(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name,@NotNilptr  JsonObject root, ItemRecord xp){
+    public void loadSavePath(@NotNilptr QPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name,@NotNilptr  JsonObject root, ItemRecord xp){
         String [] kv = name.split(':');
-        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
+        QPropertyBrowser.QtVariantProperty item = (QPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QPropertyBrowser.QtVariantProperty(), kv[0]);
         String defaultValue = getSetting(nilptr, kv[1]);
         
         String [] options = new String[2];
@@ -568,12 +568,12 @@ class Setting : QXDialog {
         item.setTagObject(new ItemValue(xp));
         
         manager.setPropertyEventListener(item,
-        new QXPropertyBrowser.PropertyManager.onPropertyEventListener(){
+        new QPropertyBrowser.PropertyManager.onPropertyEventListener(){
             void onVariantPropertyValueChanged(long prop, int dataType, String stringValue)override{
                 if (stringValue != nilptr){
                     if (stringValue.parseInt() != 0){
                         item.setValue(defaultValue);
-                        String newValue = QXFileDialog.getOpenFileName("浏览 - " + kv[0], options[0],"*",Setting.this);
+                        String newValue = QFileDialog.getOpenFileName("浏览 - " + kv[0], options[0],"*",Setting.this);
                         if (newValue != nilptr){
                             //_prop.setValue(_project,_curconfig, kv[1], newValue);
                             options[0] = newValue;
@@ -588,10 +588,10 @@ class Setting : QXDialog {
         currentProps.put(kv[1], item);
     }
     
-    public void loadTextparams(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name, @NotNilptr JsonObject root, ItemRecord xp){
+    public void loadTextparams(@NotNilptr QPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name, @NotNilptr JsonObject root, ItemRecord xp){
         String [] kv = name.split(':');
         
-        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
+        QPropertyBrowser.QtVariantProperty item = (QPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QPropertyBrowser.QtVariantProperty(), kv[0]);
         
         item.setFlags(2);
         
@@ -625,7 +625,7 @@ class Setting : QXDialog {
         item.setAttributeEnumNames(options);
         
         manager.setPropertyEventListener(item,
-        new QXPropertyBrowser.PropertyManager.onPropertyEventListener(defaultValue){
+        new QPropertyBrowser.PropertyManager.onPropertyEventListener(defaultValue){
             public onPropertyEventListener(String def){
                 defText = def;
             }
@@ -667,9 +667,9 @@ class Setting : QXDialog {
         currentProps.put(kv[1], item);
     }
     
-    public void loadTextItem(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name,@NotNilptr  JsonObject root, ItemRecord xp){
+    public void loadTextItem(@NotNilptr QPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name,@NotNilptr  JsonObject root, ItemRecord xp){
         String [] kv = name.split(':');
-        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
+        QPropertyBrowser.QtVariantProperty item = (QPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QPropertyBrowser.QtVariantProperty(), kv[0]);
         String defaultValue = getSetting(nilptr, kv[1]);
         item.setTagObject(new ItemValue(xp));
         String [] options = new String[2];
@@ -678,7 +678,7 @@ class Setting : QXDialog {
         item.setAttributeEnumNames(options);
         
         manager.setPropertyEventListener(item,
-        new QXPropertyBrowser.PropertyManager.onPropertyEventListener(){
+        new QPropertyBrowser.PropertyManager.onPropertyEventListener(){
             void onVariantPropertyValueChanged(long prop, int dataType, String stringValue)override{
                 if (stringValue != nilptr){
                     if (stringValue.parseInt() != 0){
@@ -710,9 +710,9 @@ class Setting : QXDialog {
         currentProps.put(kv[1], item);
     }
     
-    public void loadString(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name,@NotNilptr  JsonObject root, ItemRecord xp){
+    public void loadString(@NotNilptr QPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name,@NotNilptr  JsonObject root, ItemRecord xp){
         String [] kv = name.split(':');
-        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addProperty(new QXPropertyBrowser.QtVariantProperty(),QXVariant.String, kv[0]);
+        QPropertyBrowser.QtVariantProperty item = (QPropertyBrowser.QtVariantProperty)manager.addProperty(new QPropertyBrowser.QtVariantProperty(),QVariant.String, kv[0]);
         
         item.setTagObject(new ItemValue(xp));
         
@@ -722,9 +722,9 @@ class Setting : QXDialog {
     
     }
 
-    public void loadBoolean(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name,@NotNilptr  JsonObject root, ItemRecord xp){
+    public void loadBoolean(@NotNilptr QPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name,@NotNilptr  JsonObject root, ItemRecord xp){
         String [] kv = name.split(':');
-        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
+        QPropertyBrowser.QtVariantProperty item = (QPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QPropertyBrowser.QtVariantProperty(), kv[0]);
   
         item.setTagObject(new ItemValue(xp));
         item.setFlags(1);
@@ -749,9 +749,9 @@ class Setting : QXDialog {
         
     }
     
-    public void loadOptions(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name,@NotNilptr  JsonObject root, ItemRecord xp){
+    public void loadOptions(@NotNilptr QPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name,@NotNilptr  JsonObject root, ItemRecord xp){
         String [] kv = name.split(':');
-        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
+        QPropertyBrowser.QtVariantProperty item = (QPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QPropertyBrowser.QtVariantProperty(), kv[0]);
         JsonArray list = root.getArray("list");
         
         if (list == nilptr){
@@ -805,9 +805,9 @@ class Setting : QXDialog {
         currentProps.put(kv[1], item);
     }
     
-    public void loadKeySequence(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name,@NotNilptr  JsonObject root, ItemRecord xp){
+    public void loadKeySequence(@NotNilptr QPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name,@NotNilptr  JsonObject root, ItemRecord xp){
         String [] kv = name.split(':');
-        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addProperty(new QXPropertyBrowser.QtVariantProperty(),QXVariant.KeySequence, kv[0]);
+        QPropertyBrowser.QtVariantProperty item = (QPropertyBrowser.QtVariantProperty)manager.addProperty(new QPropertyBrowser.QtVariantProperty(),QVariant.KeySequence, kv[0]);
 
         item.setTagObject(new ItemValue(xp));
         
@@ -869,13 +869,13 @@ class Setting : QXDialog {
         return prefix + "00000000";
     }
     
-    public void loadColor(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name, JsonObject root, ItemRecord xp){
+    public void loadColor(@NotNilptr QPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr  String name, JsonObject root, ItemRecord xp){
         String [] kv = name.split(':');
-        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addProperty(new QXPropertyBrowser.QtVariantProperty(),QXVariant.Color, kv[0]);
+        QPropertyBrowser.QtVariantProperty item = (QPropertyBrowser.QtVariantProperty)manager.addProperty(new QPropertyBrowser.QtVariantProperty(),QVariant.Color, kv[0]);
         
         item.setTagObject(new ItemValue(xp));
         
-        QXPropertyBrowser.QtBrowserItem pitem = _propTable.addProperty(item);
+        QPropertyBrowser.QtBrowserItem pitem = _propTable.addProperty(item);
         
         _propTable.setItemExpand(pitem,false);
         
@@ -885,7 +885,7 @@ class Setting : QXDialog {
         currentProps.put(kv[1], item);
         
         manager.setPropertyEventListener(item,
-            new QXPropertyBrowser.PropertyManager.onPropertyEventListener(){
+            new QPropertyBrowser.PropertyManager.onPropertyEventListener(){
                 void onVariantPropertyValueChanged(long prop, int dataType, String stringValue)override{
                     if (stringValue != nilptr){
                         preference.setSetting(kv[1], stringValue);
@@ -897,9 +897,9 @@ class Setting : QXDialog {
     }
 
     
-    public void loadStringList(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager, @NotNilptr String name, @NotNilptr JsonObject root, ItemRecord xp){
+    public void loadStringList(@NotNilptr QPropertyBrowser.QtVariantPropertyManager manager, @NotNilptr String name, @NotNilptr JsonObject root, ItemRecord xp){
         String [] kv = name.split(':');
-        QXPropertyBrowser.QtVariantProperty item = (QXPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QXPropertyBrowser.QtVariantProperty(), kv[0]);
+        QPropertyBrowser.QtVariantProperty item = (QPropertyBrowser.QtVariantProperty)manager.addEnumProperty(new QPropertyBrowser.QtVariantProperty(), kv[0]);
         JsonArray list = root.getArray("list");
         
         item.setTagObject(new ItemValue(xp));
@@ -924,16 +924,16 @@ class Setting : QXDialog {
         }
     }
     
-    public void onLoadList(@NotNilptr QXPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr QXPropertyBrowser.QtVariantProperty item,@NotNilptr  String kv, String defaultValue){
+    public void onLoadList(@NotNilptr QPropertyBrowser.QtVariantPropertyManager manager,@NotNilptr QPropertyBrowser.QtVariantProperty item,@NotNilptr  String kv, String defaultValue){
         if (kv.equals("style_color")){
 			manager.setPropertyEventListener(item,
-            new QXPropertyBrowser.PropertyManager.onPropertyEventListener(){
+            new QPropertyBrowser.PropertyManager.onPropertyEventListener(){
 				void onVariantPropertyValueChanged(long prop, int dataType, String stringValue)override{
 					if (stringValue != nilptr){
                         if (stringValue.parseInt() > 1){
-							if (QXMessageBox.Question("注意","加载选择的配色方案后,现有自定义配色设置将丢失?",QXMessageBox.Yes,QXMessageBox.No) == QXMessageBox.Yes){
+							if (QMessageBox.Question("注意","加载选择的配色方案后,现有自定义配色设置将丢失?",QMessageBox.Yes,QMessageBox.No) == QMessageBox.Yes){
 								if (loadColorSet(stringValue.parseInt()) == false){
-									QXMessageBox.Critical("注意","配色方案文件丢失,不能加载配色设置",QXMessageBox.Ok,QXMessageBox.Ok);
+									QMessageBox.Critical("注意","配色方案文件丢失,不能加载配色设置",QMessageBox.Ok,QMessageBox.Ok);
                                 }
 								reloadProperty();
 								preference.setSetting("style_color", "自定义");
@@ -947,13 +947,13 @@ class Setting : QXDialog {
         }else
         if (kv.equals("shortkeystyle")){
 			manager.setPropertyEventListener(item,
-            new QXPropertyBrowser.PropertyManager.onPropertyEventListener(){
+            new QPropertyBrowser.PropertyManager.onPropertyEventListener(){
 				void onVariantPropertyValueChanged(long prop, int dataType, String stringValue)override{
 					if (stringValue != nilptr){
                         if (stringValue.parseInt() != 0){
-							if (QXMessageBox.Question("注意","加载选择的键盘布局后,现有加速键设置将丢失?",QXMessageBox.Yes,QXMessageBox.No) == QXMessageBox.Yes){
+							if (QMessageBox.Question("注意","加载选择的键盘布局后,现有加速键设置将丢失?",QMessageBox.Yes,QMessageBox.No) == QMessageBox.Yes){
 								if (loadKeyMap(stringValue.parseInt()) == false){
-									QXMessageBox.Critical("注意","加速键配置文件丢失,不能加载键盘布局",QXMessageBox.Ok,QXMessageBox.Ok);
+									QMessageBox.Critical("注意","加速键配置文件丢失,不能加载键盘布局",QMessageBox.Ok,QMessageBox.Ok);
                                 }
 								reloadProperty();
 								preference.setSetting("shortkeystyle", "0");
@@ -967,13 +967,13 @@ class Setting : QXDialog {
         }else
         if (kv.equals("editorfont")){
 			manager.setPropertyEventListener(item,
-            new QXPropertyBrowser.PropertyManager.onPropertyEventListener(){
+            new QPropertyBrowser.PropertyManager.onPropertyEventListener(){
 				void onVariantPropertyValueChanged(long prop, int dataType, String stringValue)override{
 					if (stringValue != nilptr){
                         if (stringValue.parseInt() != 0){
 							item.setValue(defaultValue);
 							flushSetting();
-							String newFont = QXFontDialog.getFontDialog("选择字体",getSetting(nilptr,"editorfont"),Setting.this);
+							String newFont = QFontDialog.getFontDialog("选择字体",getSetting(nilptr,"editorfont"),Setting.this);
                             
 							if (newFont != nilptr){
 								preference.setSetting("editorfont", newFont);
@@ -988,13 +988,13 @@ class Setting : QXDialog {
         }else
         if (kv.equals("workspace")){
 			manager.setPropertyEventListener(item,
-            new QXPropertyBrowser.PropertyManager.onPropertyEventListener(){
+            new QPropertyBrowser.PropertyManager.onPropertyEventListener(){
 				void onVariantPropertyValueChanged(long prop, int dataType, String stringValue)override{
 					if (stringValue != nilptr){
                         if (stringValue.parseInt() != 0){
 							item.setValue(defaultValue);
 							flushSetting();
-							String newFont = QXFileDialog.getFolderPath("选择默认工作空间",getSetting(nilptr,"workspace"),nilptr,Setting.this);
+							String newFont = QFileDialog.getFolderPath("选择默认工作空间",getSetting(nilptr,"workspace"),nilptr,Setting.this);
 							if (newFont != nilptr){
 								preference.setSetting("workspace", newFont);
 								reloadProperty();
@@ -1088,175 +1088,175 @@ class Setting : QXDialog {
     public String szKeywords2 = "";
     
     public void syntaxForXlang() {
-        _sci.sendEditor(QXSci.SCI_CLEARDOCUMENTSTYLE, 0, 0);
+        _sci.sendEditor(QScintilla.SCI_CLEARDOCUMENTSTYLE, 0, 0);
 
-        _sci.sendEditor(QXSci.SCI_SETLEXER, QXSci.SCLEX_CPP, 0);
-        _sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);
-        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_DEFAULT, getColorRef("defaultbackcolor"));
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_DEFAULT, getColorRef("defaultforecolor"));
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, 75, getColorRef("defaultforecolor"));
-        //_sci.sendEditor(QXSci.STYLE_LINENUMBER, 1, 0);
+        _sci.sendEditor(QScintilla.SCI_SETLEXER, QScintilla.SCLEX_CPP, 0);
+        _sci.sendEditor(QScintilla.SCI_SETCODEPAGE, QScintilla.SC_CP_UTF8);
+        _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.STYLE_DEFAULT, getColorRef("defaultbackcolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_DEFAULT, getColorRef("defaultforecolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, 75, getColorRef("defaultforecolor"));
+        //_sci.sendEditor(QScintilla.STYLE_LINENUMBER, 1, 0);
         //bool bmac = (_system_.getPlatformId() == 2);
 
 
-        _sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,Setting.getEditorFont());
-        _sci.sendEditor(QXSci.SCI_STYLESETSIZEFRACTIONAL, QXSci.STYLE_DEFAULT,Setting.getEditorFontSize());
+        _sci.sendEditor(QScintilla.SCI_STYLESETFONT, QScintilla.STYLE_DEFAULT,Setting.getEditorFont());
+        _sci.sendEditor(QScintilla.SCI_STYLESETSIZEFRACTIONAL, QScintilla.STYLE_DEFAULT,Setting.getEditorFontSize());
 
 
-        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
+        _sci.sendEditor(QScintilla.SCI_STYLECLEARALL, 0, 0);
 
-        _sci.sendEditor(QXSci.SCI_SETSELBACK,1,getColorRef("selectedbackcolor"));
-        _sci.sendEditor(QXSci.SCI_SETSELFORE,0,getColorRef("selectedforecolor"));
+        _sci.sendEditor(QScintilla.SCI_SETSELBACK,1,getColorRef("selectedbackcolor"));
+        _sci.sendEditor(QScintilla.SCI_SETSELFORE,0,getColorRef("selectedforecolor"));
         //C++语法解析
-        _sci.sendEditor(QXSci.SCI_SETLEXER, QXSci.SCLEX_CPP, 0);
-        _sci.sendEditor(QXSci.SCI_SETKEYWORDS, 0, szKeywords1);//设置关键字
-        _sci.sendEditor(QXSci.SCI_SETKEYWORDS, 1, szKeywords2);//设置关键字
+        _sci.sendEditor(QScintilla.SCI_SETLEXER, QScintilla.SCLEX_CPP, 0);
+        _sci.sendEditor(QScintilla.SCI_SETKEYWORDS, 0, szKeywords1);//设置关键字
+        _sci.sendEditor(QScintilla.SCI_SETKEYWORDS, 1, szKeywords2);//设置关键字
         // 下面设置各种语法元素风格
-        _sci.sendEditor(QXSci.SCI_SETEOLMODE, 1, 0);
+        _sci.sendEditor(QScintilla.SCI_SETEOLMODE, 1, 0);
 
-        _sci.sendEditor(QXSci.SCI_MARKERDEFINE, MARK_BREAKPOINT, 0);
-        _sci.sendEditor(QXSci.SCI_MARKERSETBACK, MARK_BREAKPOINT,getColorRef("breakpointbackcolor"));
-        _sci.sendEditor(QXSci.SCI_MARKERSETFORE, MARK_BREAKPOINT,getColorRef("breakpointforecolor"));
+        _sci.sendEditor(QScintilla.SCI_MARKERDEFINE, MARK_BREAKPOINT, 0);
+        _sci.sendEditor(QScintilla.SCI_MARKERSETBACK, MARK_BREAKPOINT,getColorRef("breakpointbackcolor"));
+        _sci.sendEditor(QScintilla.SCI_MARKERSETFORE, MARK_BREAKPOINT,getColorRef("breakpointforecolor"));
 
-        _sci.sendEditor(QXSci.SCI_MARKERDEFINE, MARK_POINTER,4);
-        _sci.sendEditor(QXSci.SCI_MARKERSETFORE, MARK_POINTER,getColorRef("markpointbackcolor"));
-        _sci.sendEditor(QXSci.SCI_MARKERSETBACK, MARK_POINTER,getColorRef("markpointforecolor"));
+        _sci.sendEditor(QScintilla.SCI_MARKERDEFINE, MARK_POINTER,4);
+        _sci.sendEditor(QScintilla.SCI_MARKERSETFORE, MARK_POINTER,getColorRef("markpointbackcolor"));
+        _sci.sendEditor(QScintilla.SCI_MARKERSETBACK, MARK_POINTER,getColorRef("markpointforecolor"));
 
-        _sci.sendEditor(QXSci.SCI_MARKERDEFINE,MARK_MODIFIED,25);
-        _sci.sendEditor(QXSci.SCI_MARKERSETFORE,MARK_MODIFIED,getColorRef("modifiedmarkforecolor"));
-        _sci.sendEditor(QXSci.SCI_MARKERSETBACK,MARK_MODIFIED,getColorRef("modifiedmarkbackcolor"));
+        _sci.sendEditor(QScintilla.SCI_MARKERDEFINE,MARK_MODIFIED,25);
+        _sci.sendEditor(QScintilla.SCI_MARKERSETFORE,MARK_MODIFIED,getColorRef("modifiedmarkforecolor"));
+        _sci.sendEditor(QScintilla.SCI_MARKERSETBACK,MARK_MODIFIED,getColorRef("modifiedmarkbackcolor"));
 
-        _sci.sendEditor(QXSci.SCI_MARKERDEFINE,MARK_SAVED,25);
-        _sci.sendEditor(QXSci.SCI_MARKERSETFORE,MARK_SAVED,getColorRef("savedmarkforecolor"));
-        _sci.sendEditor(QXSci.SCI_MARKERSETBACK,MARK_SAVED,getColorRef("savedmarkbackcolor"));
+        _sci.sendEditor(QScintilla.SCI_MARKERDEFINE,MARK_SAVED,25);
+        _sci.sendEditor(QScintilla.SCI_MARKERSETFORE,MARK_SAVED,getColorRef("savedmarkforecolor"));
+        _sci.sendEditor(QScintilla.SCI_MARKERSETBACK,MARK_SAVED,getColorRef("savedmarkbackcolor"));
 
         current_modify_mark = MARK_MODIFIED;
         reserve_modify_mark = MARK_SAVED;
 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,BREAKPOINT_INDEX, 15);
-        _sci.sendEditor(QXSci.SCI_SETMARGINSENSITIVEN,BREAKPOINT_INDEX, 1);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN,BREAKPOINT_INDEX, 15);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINSENSITIVEN,BREAKPOINT_INDEX, 1);
 
         if (Setting.isIndentGuide()) {
-            _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_INDENTGUIDE, getColorRef("indentguidecolor"));
-            _sci.sendEditor(QXSci.SCI_SETINDENTATIONGUIDES, QXSci.SC_IV_LOOKBOTH);
+            _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_INDENTGUIDE, getColorRef("indentguidecolor"));
+            _sci.sendEditor(QScintilla.SCI_SETINDENTATIONGUIDES, QScintilla.SC_IV_LOOKBOTH);
         } else {
-            _sci.sendEditor(QXSci.SCI_SETINDENTATIONGUIDES, QXSci.SC_IV_NONE);
+            _sci.sendEditor(QScintilla.SCI_SETINDENTATIONGUIDES, QScintilla.SC_IV_NONE);
         }
 
         if (Setting.isShowLineNumber()) {
-            _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,LINENUMBER_INDEX, 40);
+            _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN,LINENUMBER_INDEX, 40);
         } else {
-            _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,LINENUMBER_INDEX, 0);
+            _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN,LINENUMBER_INDEX, 0);
         }
 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,DEBUGPOINT_INDEX, 15);
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,MODIFIMARK_INDEX, 3);
-        //_sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN,4, 0);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN,DEBUGPOINT_INDEX, 15);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN,MODIFIMARK_INDEX, 3);
+        //_sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN,4, 0);
 
-        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, BREAKPOINT_INDEX, QXSci.SC_MARGIN_SYMBOL);
-        _sci.sendEditor(QXSci.SCI_SETMARGINMASKN, BREAKPOINT_INDEX, 1 << MARK_BREAKPOINT);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINTYPEN, BREAKPOINT_INDEX, QScintilla.SC_MARGIN_SYMBOL);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINMASKN, BREAKPOINT_INDEX, 1 << MARK_BREAKPOINT);
 
-        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, LINENUMBER_INDEX, QXSci.SC_MARGIN_NUMBER);
-        _sci.sendEditor(QXSci.SCI_SETMARGINMASKN, LINENUMBER_INDEX, 0);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINTYPEN, LINENUMBER_INDEX, QScintilla.SC_MARGIN_NUMBER);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINMASKN, LINENUMBER_INDEX, 0);
 
-        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, DEBUGPOINT_INDEX, QXSci.SC_MARGIN_SYMBOL);
-        _sci.sendEditor(QXSci.SCI_SETMARGINMASKN, DEBUGPOINT_INDEX, 1 << MARK_POINTER);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINTYPEN, DEBUGPOINT_INDEX, QScintilla.SC_MARGIN_SYMBOL);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINMASKN, DEBUGPOINT_INDEX, 1 << MARK_POINTER);
 
-        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, MODIFIMARK_INDEX, QXSci.SC_MARGIN_SYMBOL);
-        _sci.sendEditor(QXSci.SCI_SETMARGINMASKN, MODIFIMARK_INDEX, (1 << MARK_MODIFIED) | (1 << MARK_SAVED));
+        _sci.sendEditor(QScintilla.SCI_SETMARGINTYPEN, MODIFIMARK_INDEX, QScintilla.SC_MARGIN_SYMBOL);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINMASKN, MODIFIMARK_INDEX, (1 << MARK_MODIFIED) | (1 << MARK_SAVED));
 
 
-        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_LINENUMBER, getColorRef("linenumberbackcolor"));
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_LINENUMBER, getColorRef("linenumberforecolor"));
-        _sci.sendEditor(QXSci.SCI_SETMARGINLEFT, 0, 0);
+        _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.STYLE_LINENUMBER, getColorRef("linenumberbackcolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_LINENUMBER, getColorRef("linenumberforecolor"));
+        _sci.sendEditor(QScintilla.SCI_SETMARGINLEFT, 0, 0);
 
-        _sci.sendEditor(QXSci.SCI_STYLESETBOLD, QXSci.STYLE_BRACELIGHT, 1);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_BRACELIGHT, getColorRef("matchedbraceforecolor"));
-        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_BRACEBAD, getColorRef("matchedbracebackcolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETBOLD, QScintilla.STYLE_BRACELIGHT, 1);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_BRACELIGHT, getColorRef("matchedbraceforecolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.STYLE_BRACEBAD, getColorRef("matchedbracebackcolor"));
 
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTDOCKEYWORD, getColorRef("doccommentkeyforecolor"));
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTDOCKEYWORDERROR, getColorRef("doccommenterrforeforecolor"));
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_GLOBALCLASS, getColorRef("globalclassforecolor"));
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_OPERATOR, getColorRef("operatorforecolor"));
-        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.SCE_C_STRINGEOL, getColorRef("stringeolcolor"));
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_WORD, getColorRef("wordforecolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_COMMENTDOCKEYWORD, getColorRef("doccommentkeyforecolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_COMMENTDOCKEYWORDERROR, getColorRef("doccommenterrforeforecolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_GLOBALCLASS, getColorRef("globalclassforecolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_OPERATOR, getColorRef("operatorforecolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.SCE_C_STRINGEOL, getColorRef("stringeolcolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_WORD, getColorRef("wordforecolor"));
 
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_WORD2, getColorRef("word2forecolor"));
-        _sci.sendEditor(QXSci.SCI_STYLESETBOLD, QXSci.SCE_C_WORD2, 1);
-        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.SCE_C_WORD2, getColorRef("word2backcolor"));
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_STRING, getColorRef("stringforecolor"));
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_NUMBER, getColorRef("numberforecolor"));
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_CHARACTER, getColorRef("charforecolor"));
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_PREPROCESSOR, getColorRef("preprocessorforecolor"));
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENT, getColorRef("commentforecolor"));
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTLINE, getColorRef("commentlineforecolor"));
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTDOC, getColorRef("doccommentforecolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_WORD2, getColorRef("word2forecolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETBOLD, QScintilla.SCE_C_WORD2, 1);
+        _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.SCE_C_WORD2, getColorRef("word2backcolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_STRING, getColorRef("stringforecolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_NUMBER, getColorRef("numberforecolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_CHARACTER, getColorRef("charforecolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_PREPROCESSOR, getColorRef("preprocessorforecolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_COMMENT, getColorRef("commentforecolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_COMMENTLINE, getColorRef("commentlineforecolor"));
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_COMMENTDOC, getColorRef("doccommentforecolor"));
 
-        _sci.sendEditor(QXSci.SCI_CALLTIPSETBACK, getColorRef("calltipsbackcolor"));
-        _sci.sendEditor(QXSci.SCI_CALLTIPSETFORE, getColorRef("calltipsforecolor"));
+        _sci.sendEditor(QScintilla.SCI_CALLTIPSETBACK, getColorRef("calltipsbackcolor"));
+        _sci.sendEditor(QScintilla.SCI_CALLTIPSETFORE, getColorRef("calltipsforecolor"));
 
-        //_sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.SCE_C_COMMENTDOC, 0xff504f4f);
+        //_sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_COMMENTDOC, 0xff504f4f);
 
-        _sci.sendEditor(QXSci.SCI_SETCARETFORE,getColorRef("caretcolor"),0);
+        _sci.sendEditor(QScintilla.SCI_SETCARETFORE,getColorRef("caretcolor"),0);
 
-        _sci.sendEditor(QXSci.SCI_SETCARETLINEVISIBLE, 1);
-        _sci.sendEditor(QXSci.SCI_SETCARETLINEBACK, getColorRef("caretlinebackcolor"));
+        _sci.sendEditor(QScintilla.SCI_SETCARETLINEVISIBLE, 1);
+        _sci.sendEditor(QScintilla.SCI_SETCARETLINEBACK, getColorRef("caretlinebackcolor"));
 
-        _sci.sendEditor(QXSci.SCI_SETTABWIDTH, 4);
-        _sci.sendEditor(QXSci.SCI_SETEOLMODE, QXSci.SC_EOL_LF, 0);
+        _sci.sendEditor(QScintilla.SCI_SETTABWIDTH, 4);
+        _sci.sendEditor(QScintilla.SCI_SETEOLMODE, QScintilla.SC_EOL_LF, 0);
 
         _sci.setIndicForeColor(1, getColorRef("indicforecolor"));
         _sci.setIndicUnderColor(1, getColorRef("indicbackcolor"));
 
 
-        _sci.sendEditor(QXSci.SCI_SETPROPERTY,"fold","1");
-        _sci.sendEditor(QXSci.SCI_SETPROPERTY,"fold.comment","1");
+        _sci.sendEditor(QScintilla.SCI_SETPROPERTY,"fold","1");
+        _sci.sendEditor(QScintilla.SCI_SETPROPERTY,"fold.comment","1");
 
-        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, MARGIN_FOLD_INDEX, QXSci.SC_MARGIN_SYMBOL);//页边类型
-        _sci.sendEditor(QXSci.SCI_SETMARGINMASKN, MARGIN_FOLD_INDEX, QXSci.SC_MASK_FOLDERS); //页边掩码
+        _sci.sendEditor(QScintilla.SCI_SETMARGINTYPEN, MARGIN_FOLD_INDEX, QScintilla.SC_MARGIN_SYMBOL);//页边类型
+        _sci.sendEditor(QScintilla.SCI_SETMARGINMASKN, MARGIN_FOLD_INDEX, QScintilla.SC_MASK_FOLDERS); //页边掩码
 
-        _sci.sendEditor(QXSci.SCI_SETFOLDMARGINCOLOUR, 1, getColorRef("foldmargincolor"));
-        _sci.sendEditor(QXSci.SCI_SETFOLDMARGINHICOLOUR, 1, getColorRef("foldmarginhicolor"));
+        _sci.sendEditor(QScintilla.SCI_SETFOLDMARGINCOLOUR, 1, getColorRef("foldmargincolor"));
+        _sci.sendEditor(QScintilla.SCI_SETFOLDMARGINHICOLOUR, 1, getColorRef("foldmarginhicolor"));
 
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, MARGIN_FOLD_INDEX, 11); //页边宽度
-        _sci.sendEditor(QXSci.SCI_SETMARGINSENSITIVEN, MARGIN_FOLD_INDEX, 1); //响应鼠标消息
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, MARGIN_FOLD_INDEX, 11); //页边宽度
+        _sci.sendEditor(QScintilla.SCI_SETMARGINSENSITIVEN, MARGIN_FOLD_INDEX, 1); //响应鼠标消息
 
 
         // 折叠标签样式 //折叠页边颜色
-        _sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDER, QXSci.SC_MARK_BOXPLUS);
-        _sci.sendEditor(QXSci.SCI_MARKERSETFORE,QXSci.SC_MARKNUM_FOLDER,getColorRef("folderforecolor"));
-        _sci.sendEditor(QXSci.SCI_MARKERSETBACK,QXSci.SC_MARKNUM_FOLDER,getColorRef("folderbackcolor"));
+        _sci.sendEditor(QScintilla.SCI_MARKERDEFINE, QScintilla.SC_MARKNUM_FOLDER, QScintilla.SC_MARK_BOXPLUS);
+        _sci.sendEditor(QScintilla.SCI_MARKERSETFORE,QScintilla.SC_MARKNUM_FOLDER,getColorRef("folderforecolor"));
+        _sci.sendEditor(QScintilla.SCI_MARKERSETBACK,QScintilla.SC_MARKNUM_FOLDER,getColorRef("folderbackcolor"));
 
-        _sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDEROPEN, QXSci.SC_MARK_BOXMINUS);
-        setMarginColor(QXSci.SC_MARKNUM_FOLDEROPEN,getColorRef("folderopenforecolor"), getColorRef("folderopenbackcolor"));
+        _sci.sendEditor(QScintilla.SCI_MARKERDEFINE, QScintilla.SC_MARKNUM_FOLDEROPEN, QScintilla.SC_MARK_BOXMINUS);
+        setMarginColor(QScintilla.SC_MARKNUM_FOLDEROPEN,getColorRef("folderopenforecolor"), getColorRef("folderopenbackcolor"));
 
-        _sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDEREND,  QXSci.SC_MARK_BOXPLUSCONNECTED);
-        setMarginColor(QXSci.SC_MARKNUM_FOLDEREND,getColorRef("folderendforecolor"), getColorRef("folderendbackcolor"));
+        _sci.sendEditor(QScintilla.SCI_MARKERDEFINE, QScintilla.SC_MARKNUM_FOLDEREND,  QScintilla.SC_MARK_BOXPLUSCONNECTED);
+        setMarginColor(QScintilla.SC_MARKNUM_FOLDEREND,getColorRef("folderendforecolor"), getColorRef("folderendbackcolor"));
 
-        _sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDEROPENMID, QXSci.SC_MARK_BOXMINUSCONNECTED);
-        setMarginColor(QXSci.SC_MARKNUM_FOLDEROPENMID,getColorRef("foldermidforecolor"), getColorRef("foldermidbackcolor"));
+        _sci.sendEditor(QScintilla.SCI_MARKERDEFINE, QScintilla.SC_MARKNUM_FOLDEROPENMID, QScintilla.SC_MARK_BOXMINUSCONNECTED);
+        setMarginColor(QScintilla.SC_MARKNUM_FOLDEROPENMID,getColorRef("foldermidforecolor"), getColorRef("foldermidbackcolor"));
 
-        _sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDERMIDTAIL, QXSci.SC_MARK_TCORNER);
-        setMarginColor(QXSci.SC_MARKNUM_FOLDERMIDTAIL,getColorRef("foldermidtailforecolor"), getColorRef("foldermidtailbackcolor"));
+        _sci.sendEditor(QScintilla.SCI_MARKERDEFINE, QScintilla.SC_MARKNUM_FOLDERMIDTAIL, QScintilla.SC_MARK_TCORNER);
+        setMarginColor(QScintilla.SC_MARKNUM_FOLDERMIDTAIL,getColorRef("foldermidtailforecolor"), getColorRef("foldermidtailbackcolor"));
 
-        _sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDERSUB, QXSci.SC_MARK_VLINE);
-        setMarginColor(QXSci.SC_MARKNUM_FOLDERSUB,getColorRef("foldersubforecolor"), getColorRef("foldersubbackcolor"));
+        _sci.sendEditor(QScintilla.SCI_MARKERDEFINE, QScintilla.SC_MARKNUM_FOLDERSUB, QScintilla.SC_MARK_VLINE);
+        setMarginColor(QScintilla.SC_MARKNUM_FOLDERSUB,getColorRef("foldersubforecolor"), getColorRef("foldersubbackcolor"));
 
-        _sci.sendEditor(QXSci.SCI_MARKERDEFINE, QXSci.SC_MARKNUM_FOLDERTAIL, QXSci.SC_MARK_LCORNER);
-        setMarginColor(QXSci.SC_MARKNUM_FOLDERTAIL,getColorRef("foldertailforecolor"), getColorRef("foldertailbackcolor"));
+        _sci.sendEditor(QScintilla.SCI_MARKERDEFINE, QScintilla.SC_MARKNUM_FOLDERTAIL, QScintilla.SC_MARK_LCORNER);
+        setMarginColor(QScintilla.SC_MARKNUM_FOLDERTAIL,getColorRef("foldertailforecolor"), getColorRef("foldertailbackcolor"));
 
         // 折叠标签颜色
         
         _sci.setText(_sci.getText());
-        _sci.sendEditor(QXSci.SCI_MARKERADD, 1, 8);
-        _sci.sendEditor(QXSci.SCI_MARKERADD, 2, 9);
-        _sci.sendEditor(QXSci.SCI_MARKERADD, 3, 12);
-        _sci.sendEditor(QXSci.SCI_MARKERADD, 4, 13);
+        _sci.sendEditor(QScintilla.SCI_MARKERADD, 1, 8);
+        _sci.sendEditor(QScintilla.SCI_MARKERADD, 2, 9);
+        _sci.sendEditor(QScintilla.SCI_MARKERADD, 3, 12);
+        _sci.sendEditor(QScintilla.SCI_MARKERADD, 4, 13);
     }
 
     public void setMarginColor(int id, int fore, int back) {
-        _sci.sendEditor(QXSci.SCI_MARKERSETFORE, id, fore);
-        _sci.sendEditor(QXSci.SCI_MARKERSETBACK, id, back);
+        _sci.sendEditor(QScintilla.SCI_MARKERSETFORE, id, fore);
+        _sci.sendEditor(QScintilla.SCI_MARKERSETBACK, id, back);
     }
     
     public static void applySetting(){
@@ -1264,12 +1264,12 @@ class Setting : QXDialog {
         if (_template_root != nilptr){
             preference.apply(_template_root);
         }
-        QxApp._theApp.reconfig();
+        XStudioApp._theApp.reconfig();
         applyPlugins();
     }
     
     public void flushSetting(){
-        Map.Iterator<String, QXPropertyBrowser.QtVariantProperty> iter = currentProps.iterator();
+        Map.Iterator<String, QPropertyBrowser.QtVariantProperty> iter = currentProps.iterator();
         for (; iter.hasNext(); iter.next()){
             String key = iter.getKey();
             
@@ -1277,7 +1277,7 @@ class Setting : QXDialog {
                 key = "unknow";
             }
             
-            QXPropertyBrowser.QtVariantProperty item = iter.getValue();
+            QPropertyBrowser.QtVariantProperty item = iter.getValue();
             
             if (item != nilptr){
                 String value = item.getValue();
@@ -1302,7 +1302,7 @@ class Setting : QXDialog {
                     }
                     
                     if (false == setSetting(key, value)){
-                        QXMessageBox.Critical("错误", key + "字段更改失败.", QXMessageBox.Ok, QXMessageBox.Ok);
+                        QMessageBox.Critical("错误", key + "字段更改失败.", QMessageBox.Ok, QMessageBox.Ok);
                     }
                 }
             }
@@ -1431,7 +1431,7 @@ class Setting : QXDialog {
         return nw;
     }
     
-    public static QXFont editorFont;
+    public static QFont editorFont;
     
     public static String getEditorFont(){
     
@@ -1440,7 +1440,7 @@ class Setting : QXDialog {
     	if (editorFont == nilptr){
 			String sfont = get("editorfont");
             if (sfont.length() > 0){
-				editorFont = QXFont.loadFromString(sfont); 
+				editorFont = QFont.loadFromString(sfont); 
             }
 		}
         
@@ -1463,7 +1463,7 @@ class Setting : QXDialog {
 		if (editorFont == nilptr){
 			String font = get("editorfont");
             if (font.length() != 0){
-				editorFont = QXFont.loadFromString(font); 
+				editorFont = QFont.loadFromString(font); 
             }
 		}
         

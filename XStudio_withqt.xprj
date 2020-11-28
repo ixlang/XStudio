@@ -1,0 +1,76 @@
+{
+	"XStudio":	{
+		"version":	"1.2",
+		"language":	"xlang",
+		"sources":	["qxapp.xcs", "XSourceEditor.xcsm", "XWorkspace.xcsm", "XWndSln.xcsm", "XWndClass.xcsm", "XWndOutput.xcsm", "XWndInfo.xcsm", "XMenuManager.xcsm", "Configure.xcsm", "Project.xcsm", "Wizard.xcsm", "Builder.xcsm", "Windows.xcsm", "XFindDlg.xcsm", "Variable.xcsm", "ProjectPropManager.xcsm", "XProperites.xcsm", "IBuilder.xcsm", "props/XlangProjectProp.xcsm", "ProjectPropInterface.xcsm", "file/FileInputStream.xcs", "file/FileOutputStream.xcs", ".\\qt5\\widgets\\QEvent.xcsm", ".\\qt5\\widgets\\QObject.xcsm", ".\\qt5\\widgets\\QCore.xcsm", ".\\qt5\\widgets\\QWidget.xcsm", "qt5/widgets/ColorRole.xcsm", ".\\qt5\\widgets\\QPalette.xcsm", ".\\qt5\\widgets\\QNative.xcsm", "qt5/widgets/QStyle.xcsm", "qt5/widgets/QDockWidget.xcsm", "qt5/widgets/QApplication.xcsm", "qt5/widgets/QMainWindow.xcsm", "qt5/widgets/QTypes.xcsm", "qt5/widgets/QSci.xcsm", "qt5/widgets/QFont.xcsm", "qt5/widgets/QMenuBar.xcsm", "qt5/widgets/QAction.xcsm", "qt5/widgets/QMenu.xcsm", "qt5/widgets/QMdiArea.xcsm", "qt5/widgets/QMdiSubWindow.xcsm", ".\\qt5\\widgets\\QTreeWidget.xcsm", "qt5/widgets/QListView.xcsm", "qt5/widgets/QPushButton.xcsm", "qt5/widgets/QFileDialog.xcsm", "qt5/widgets/QLineEdit.xcsm", "qt5/widgets/QDialog.xcsm", "qt5/widgets/QComboBox.xcsm", "qt5/widgets/QPropertyBrowser.xcsm", "qt5/widgets/QVariant.xcsm", "qt5/widgets/QMessageBox.xcsm", "qt5/widgets/QLabel.xcsm", "qt5/widgets/QCheckBox.xcsm", "qt5/widgets/QStatusBar.xcs", "StatusBarMgr.xcs", "qt5/widgets/QProgressBar.xcs", "XIntelliSense.xcs", "XDebuggee.xcsm", ".\\stackWnd.xcsm", ".\\ListWidget.xcsm", ".\\AutoWnd.xcsm", ".\\WatchWnd.xcsm", ".\\BreakPointWnd.xcsm", ".\\memorywnd.xcsm", "./qt5/widgets\\QBuffer.xcsm", "./qt5/widgets\\QByteArray.xcsm", "./qt5/widgets\\QIcon.xcsm", ".\\Resource.xcsm", ".\\XFindresWnd.xcsm", ".\\XFinder.xcsm", ".\\XDebugPort.xcsm", ".\\XLogcat.xcsm", ".\\FilterEdit.xcsm", ".\\TextDetail.xcsm", ".\\inputdlg.xcsm", ".\\Setting.xcsm", ".\\XIndex.xcsm", ".\\Recently.xcsm", ".\\AddObject.xcsm", ".\\ThreadManager.xcsm", ".\\XWndObjectDump.xcsm", "qt5/widgets/QPainter.xcsm", "qt5/widgets/QPoint.xcsm", "qt5/widgets/QRect.xcsm", "qt5/widgets/QImage.xcsm", "qt5/widgets/QMatrix.xcsm", ".\\uicomponent\\ProgressView.xcsm", ".\\uicomponent\\Switche.xcsm", ".\\qt5\\widgets\\QToolBar.xcsm", ".\\ConfigMgr.xcsm", ".\\FirstPrepare.xcsm", ".\\qt5\\widgets\\QFileSystemWatcher.xcsm", ".\\ActionRecorder.xcsm", ".\\CPlusplusProp.xcsm", ".\\Utils.xcsm", ".\\ExportTool.xcsm", ".\\PackageManager.xcsm", ".\\PackageViewer.xcsm", ".\\xstudio.version", ".\\XPlatform.xcsm", ".\\OverrideDlg.xcsm", ".\\qt5\\widgets\\QTableWidget.xcsm", ".\\qt5\\widgets\\QBrush.xcsm", ".\\qt5\\widgets\\QPath.xcsm", ".\\IXPlugin.xcsm", ".\\MemoryLookupWnd.xcsm", ".\\HexEditor.xcsm", ".\\qt5\\widgets\\QPrintDialog.xcsm", ".\\qt5\\widgets\\QAbstractPrintDialog.xcsm", ".\\qt5\\widgets\\QPrinter.xcsm", ".\\qt5\\widgets\\QPagedPaintDevice.xcsm", ".\\qt5\\widgets\\QPaintDevice.xcsm", ".\\qt5\\widgets\\QPrintPreviewDialog.xcsm", ".\\qt5\\widgets\\ReportEngine.xcsm", ".\\qt5\\widgets\\QDateTimeEdit.xcsm", ".\\qt5\\widgets\\QDateEdit.xcsm", ".\\qt5\\widgets\\QTimeEdit.xcsm", ".\\qt5\\widgets\\QTextEdit.xcsm", ".\\TreeStateSaver.xcsm", ".\\ExtensionManager.xcsm", ".\\DownloadCenter.xcsm", ".\\DownloadManager.xcsm", ".\\IXIntelliSense.x", ".\\MultiSelectDialog.x", ".\\qt5\\widgets\\QHBoxLayout.x", ".\\qt5\\widgets\\QVBoxLayout.x", ".\\qt5\\widgets\\QBoxLayout.x", ".\\qt5\\widgets\\QLayout.x", ".\\DocumentView.x", ".\\XUIEditor.x", ".\\qt5\\widgets\\QSlider.x", ".\\qt5\\widgets\\QAbstractSlider.x"],
+		"configures":	{
+			"debug":	{
+				"path":	{
+					"incpath":	[],
+					"libpath":	["libs"]
+				},
+				"acmd":	"",
+				"libs":	[],
+				"links":	[],
+				"depends":	[],
+				"wtype":	"",
+				"ostype":	"",
+				"sstype":	"",
+				"outname":	"$(ProjectName)1$(Ext)",
+				"outpath":	"D:\\Programs\\windows_x64",
+				"command":	"-ce",
+				"uaclevel":	"默认",
+				"prebuild":	"",
+				"preclean":	"",
+				"makebuild":	"",
+				"makeclean":	"",
+				"afterbuild":	"",
+				"afterclean":	"",
+				"cmd":	"$(Output)",
+				"args":	"$(Output)",
+				"workdir":	"D:\\Programs\\windows_x64",
+				"ignorewarning":	"",
+				"warexcp":	"-we",
+				"compdest":	"-z",
+				"ignorewl":	"204;164;135;200;298;324;323;322",
+				"debugable":	"-dbg",
+				"debugdatabase":	"",
+				"warnilptr":	"-wn"
+			},
+			"release":	{
+				"path":	{
+					"incpath":	[],
+					"libpath":	["libs"]
+				},
+				"acmd":	"",
+				"prebuild":	"",
+				"preclean":	"",
+				"makebuild":	"",
+				"makeclean":	"",
+				"afterbuild":	"",
+				"afterclean":	"",
+				"name":	"release",
+				"cmd":	"$(Output)",
+				"args":	"$(Output)",
+				"workdir":	"D:\\Programs\\windows_x64",
+				"ignorewarning":	"",
+				"compdest":	"-z",
+				"ignorewl":	"204;164;135;200",
+				"debugable":	"",
+				"debugdatabase":	"",
+				"libs":	["FileSystem_1.0.0.2.lix"],
+				"links":	[],
+				"depends":	[],
+				"wtype":	"-arch:x86_64",
+				"ostype":	"-xcross-windows",
+				"outname":	"$(ProjectName)1$(Ext)",
+				"outpath":	"D:\\Programs\\windows_x64",
+				"command":	"-ce",
+				"uaclevel":	"默认"
+			}
+		},
+		"comment":	"\r此项目为 XStudio 的源代码\r\r使用了QT 界面库作为XNL的底层调用,\r\rQTdll的代码在example文件夹中可以找到, \r\r该项目约有25000行代码.\r\r可以使用编译好的xide打开此项目进行修改编辑以及调试等.\r\r因为有部分第三方XNL调用以及资源文件依赖,所以编译生成\r\r的可执行文件需要放在与此ide相同目录下才可以正常运行.\r\r版本控制系统暂未处理\r\remail:3.vc@163.com  你也可以向此邮件发送你的建议.",
+		"icofile":	"xide.ico",
+		"versioninc":	"1"
+	}
+}

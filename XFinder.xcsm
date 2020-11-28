@@ -94,7 +94,7 @@ class XFinder{
             }
         }else
 		if (scope == SCOPE_ALLOPENED){
-			Map.Iterator<String, XSourceEditor> iter = XSourceEditor.editorMgr.iterator();
+			Map.Iterator<String, DocumentView> iter = DocumentView.editorMgr.iterator();
             while (iter.hasNext()){
 				String file = iter.getKey();
                 if (file != nilptr){
@@ -215,7 +215,7 @@ class XFinder{
     }
     
     public static void replaceOnFile(@NotNilptr FindItem item,@NotNilptr  String replaceStr){
-		XSourceEditor wnd = XSourceEditor.findDocumentWindow(nilptr, item.file, false);
+		DocumentView wnd = DocumentView.findDocumentWindow(nilptr, item.file, false);
         
         if (wnd != nilptr){
 			wnd.replaceText(item.position, item.findlen, replaceStr);

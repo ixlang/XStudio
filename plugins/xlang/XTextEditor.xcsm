@@ -26,7 +26,7 @@ class XTextEditor : TextEditorPlugin{
 		//TODO:	
 		return true;
 	}
-    void configEditor(Project, String , QXSci , bool)override{
+    void configEditor(Project, String , QScintilla , bool)override{
         
     }
 	SyntaxHighlighting getColorConfigure(String styleName) override {

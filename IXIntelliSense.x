@@ -14,6 +14,7 @@ class IXIntelliSense{
     public interface XIntelliResult{
         @NotNilptr String get_name();
         int get_type();
+        int get_visibility();
         bool hasProp(char c);
         XIntelliResult get_class();
         XIntelliResult[] get_params();
@@ -21,6 +22,7 @@ class IXIntelliSense{
         int get_line();
         int get_row();
         InputDescription makeInputText();
+        void accept();
     };
     
     public interface InputDescription{

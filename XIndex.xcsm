@@ -1,21 +1,21 @@
 //xlang Source, Name:XIndex.xcsm
 //Date: Wed Sep 21:21:54 2018
 
-class XIndexWindow : QXMdiSubWindow
+class XIndexWindow : QMdiSubWindow
 {
-    public QXWidget indexPage;
-    QXLabel [] labels = new QXLabel[10];
-    QXLabel lblnew, lblopen, verslabel;
-    QXLabel lblhelp, lblrule;
+    public QWidget indexPage;
+    QLabel [] labels = new QLabel[10];
+    QLabel lblnew, lblopen, verslabel;
+    QLabel lblhelp, lblrule;
     
 
     Object state;
     Recently.RecentlyObject [] objects = new Recently.RecentlyObject[10];
-    public bool create( @NotNilptr QXWidget parent)
+    public bool create( @NotNilptr QWidget parent)
     {
         if (super.create(parent)) {
-            indexPage = new QXWidget();
-            if (indexPage.load("ui/index.ui") == false) {
+            indexPage = new QWidget();
+            if (indexPage.load(UIManager.getUIData(__xPackageResource("ui/index.ui"))) == false) {
                 return false;
             }
 
@@ -30,17 +30,17 @@ class XIndexWindow : QXMdiSubWindow
             setWidget(indexPage);
             indexPage.show();
             setMaximized(true);
-            verslabel = (QXLabel)indexPage.findByName("label");
+            verslabel = (QLabel)indexPage.findByName("label");
 
-            lblrule = (QXLabel)indexPage.findByName("label_22");
-            lblhelp = (QXLabel)indexPage.findByName("label_17");
+            lblrule = (QLabel)indexPage.findByName("label_22");
+            lblhelp = (QLabel)indexPage.findByName("label_17");
 
-            lblnew = (QXLabel)indexPage.findByName("lblnew");
-            lblopen = (QXLabel)indexPage.findByName("lblopen");
+            lblnew = (QLabel)indexPage.findByName("lblnew");
+            lblopen = (QLabel)indexPage.findByName("lblopen");
 
             verslabel.setText("XStudio " + Utils.getAppMajorVersion());
             for (int i =0; i < 10; i ++) {
-                labels[i] = (QXLabel)indexPage.findByName("rl" + i);
+                labels[i] = (QLabel)indexPage.findByName("rl" + i);
                 labels[i].setOnMouseEventListener(recentlistener);
             }
 
@@ -48,25 +48,25 @@ class XIndexWindow : QXMdiSubWindow
             state = XWorkspace.hideDocks();
 
             lblhelp.setOnMouseEventListener(new onMouseEventListener() {
-                void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source) {
+                void onMouseButtonRelease(QObject obj, int Button, int x, int y, int flags, int source) {
                     if (Button == 1) {
                         String url = _system_.getAppPath().findVolumePath().appendPath("./document/html/index.html");
-                        QXCore.openLocal(String.formatPath(url, false));
+                        QCore.openLocal(String.formatPath(url, false));
                     }
                 }
             });
 
             lblrule.setOnMouseEventListener(new onMouseEventListener() {
-                void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source) {
+                void onMouseButtonRelease(QObject obj, int Button, int x, int y, int flags, int source) {
                     if (Button == 1) {
                         String url = _system_.getAppPath().findVolumePath().appendPath("./document/xrule.html");
-                        QXCore.openLocal(String.formatPath(url, false));
+                        QCore.openLocal(String.formatPath(url, false));
                     }
                 }
             });
 
             lblnew.setOnMouseEventListener(new onMouseEventListener() {
-                void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source) {
+                void onMouseButtonRelease(QObject obj, int Button, int x, int y, int flags, int source) {
                     if (Button == 1) {
                         XWorkspace.workspace.createProject();
                     }
@@ -74,7 +74,7 @@ class XIndexWindow : QXMdiSubWindow
             });
 
             lblopen.setOnMouseEventListener(new onMouseEventListener() {
-                void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source) {
+                void onMouseButtonRelease(QObject obj, int Button, int x, int y, int flags, int source) {
                     if (Button == 1) {
                         XWorkspace.workspace.doOpen();
                     }
@@ -90,7 +90,7 @@ class XIndexWindow : QXMdiSubWindow
 
     onMouseEventListener recentlistener =  new onMouseEventListener()
     {
-        void onMouseButtonRelease(QXObject obj, int Button, int x, int y, int flags, int source) {
+        void onMouseButtonRelease(QObject obj, int Button, int x, int y, int flags, int source) {
             if (Button == 1) {
                 for (int i = 0; i < 10; i ++) {
                     if (labels[i] == obj) {

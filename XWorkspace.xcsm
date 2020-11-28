@@ -1,39 +1,39 @@
 
-class XWorkspace : QXMdiArea
+class XWorkspace : QMdiArea
 {
-    public QXMainWindow mainWindow;
+    public QMainWindow mainWindow;
     XWndSln slnView;
     public static XFindDlg findDlg;
     static Thread _debugThread;
     Builder _builder = new Builder();
     Project currentProject;
     Thread _autoComp_thread;
-    public QXFileSystemWatcher qfsw = new QXFileSystemWatcher();
+    public QFileSystemWatcher qfsw = new QFileSystemWatcher();
     Thread _run_thread;
     XStackInfor stackWnd;
     XIntelliSense.XIntelliResult  [] autocomp;
     public static const long AUTODOMPEVENTID = 1;
     public XDebuggee debuggee = new XDebuggee(this);
     public static XWorkspace workspace;
-    QXComboBox cfgSel = new QXComboBox();
+    QComboBox cfgSel = new QComboBox();
     bool bExternModifyAutoload = false;
-    QXSci.QSciPrinter g_printer = new QXSci.QSciPrinter();
+    
     static ActionRecorder ar = new ActionRecorder();
 
     static String strAppTitle = "XStudio " + Utils.getVersion() + " build:" + Utils.getAppBuildVersion() + " (" + _system_.getAppVersion() + ")";
     
     onDragListener draglistener = new onDragListener()
     {
-        bool onDragEnter(QXObject obj, int l,int t,int r,int b) {
+        bool onDragEnter(QObject obj, int l,int t,int r,int b) {
             return true;
         }
-        bool onDragMove(QXObject obj,int l,int t,int r,int b) {
+        bool onDragMove(QObject obj,int l,int t,int r,int b) {
             return true;
         }
-        bool onDragLeave(QXObject obj,int l,int t,int r,int b) {
+        bool onDragLeave(QObject obj,int l,int t,int r,int b) {
             return true;
         }
-        void onDrop(@NotNilptr QXObject obj,@NotNilptr  Object [] object) {
+        void onDrop(@NotNilptr QObject obj,@NotNilptr  Object [] object) {
             if (object.length > 0) {
                 try {
                     for (int i =0; i < object.length; i++) {
@@ -63,18 +63,22 @@ class XWorkspace : QXMdiArea
     public WorkspaceController _controller = new WorkspaceController()
     {
         public TextEditorController findTextEditor(@NotNilptr String path, bool openIfNotFound) override{
-            XSourceEditor editor = XSourceEditor.findDocumentWindow(XWorkspace.this,path,openIfNotFound);
+            DocumentView editor = DocumentView.findDocumentWindow(XWorkspace.this,path,openIfNotFound);
             if (editor != nilptr) {
-                return editor.getController();
+                if (editor.instanceOf(XSourceEditor)){
+                    return ((XSourceEditor)editor).getController();
+                }
             }
             return nilptr;
         }
 
         public TextEditorController openTextEditor(@NotNilptr String path)override {
-            XSourceEditor editor = XSourceEditor.findDocumentWindow(XWorkspace.this,path, true);
+            DocumentView editor = DocumentView.findDocumentWindow(XWorkspace.this,path, true);
             if (editor != nilptr) {
                 setActiveSubWindow(editor);
-                return editor.getController();
+                if (editor.instanceOf(XSourceEditor)){
+                    return ((XSourceEditor)editor).getController();
+                }
             }
             return nilptr;
         }
@@ -84,19 +88,21 @@ class XWorkspace : QXMdiArea
         }
         
         public TextEditorController createTextEditor()override {
-            XSourceEditor editor = (XSourceEditor)createSubWnd(true);
+            DocumentView editor = (DocumentView)createSubWnd(true);
             if (editor != nilptr) {
-                return editor.getController();
+                if (editor.instanceOf(XSourceEditor)){
+                    return ((XSourceEditor)editor).getController();
+                }
             }
             return nilptr;
         }
 
         public bool saveFile(@NotNilptr String path)override {
-            return XSourceEditor.findSaveFile(path);
+            return DocumentView.findSaveFile(path);
         }
 
         public bool toggleBreakpointAtLine(@NotNilptr String path, long line, bool bSet)override {
-            XSourceEditor.toggleBreakPointOnFile(XWorkspace.this,path, line, bSet);
+            DocumentView.toggleBreakPointOnFile(XWorkspace.this,path, line, bSet);
             return true;
         }
 
@@ -120,7 +126,7 @@ class XWorkspace : QXMdiArea
             XWndOutput.Output(text, id);
         }
         public void setStatus(String text)override {
-            QxApp.statusBar.showStatusMessage(text);
+            XStudioApp.statusBar.showStatusMessage(text);
         }
 
         public int registryOutput(String icon){
@@ -128,9 +134,9 @@ class XWorkspace : QXMdiArea
         }
         
         public TextEditorController currentTextEditor() override{
-            XSourceEditor wnd = (XSourceEditor)currentSubWindow();
-            if (wnd != nilptr) {
-                return wnd.getController();
+            DocumentView wnd = (DocumentView)currentSubWindow();
+            if (wnd != nilptr && wnd.instanceOf(XSourceEditor)) {
+                return ((XSourceEditor)wnd).getController();
             }
             return nilptr;
         }
@@ -144,7 +150,7 @@ class XWorkspace : QXMdiArea
         }
 
         public bool addMenu(int mainid, String name,@NotNilptr  String text, String icon,String shortcut, IXPlugin plugin) override{
-            return QxApp._theApp.menuMgr.addMenu(mainid, name, text, icon, shortcut, plugin);
+            return XStudioApp._theApp.menuMgr.addMenu(mainid, name, text, icon, shortcut, plugin);
         }
 
         public void RunOnUi(UIRunnable r) override{
@@ -174,7 +180,7 @@ class XWorkspace : QXMdiArea
             return XWorkspace.this.build(lis);
         }
         
-        public QXMainWindow getMainWindow(){
+        public QMainWindow getMainWindow(){
             return mainWindow;
         }
         
@@ -198,7 +204,7 @@ class XWorkspace : QXMdiArea
             StatusBarMgr.hideProgress(text);
         }
         public void requestReconfigureSystem(){
-            QxApp._theApp.reconfig();
+            XStudioApp._theApp.reconfig();
         }
         
         
@@ -208,11 +214,14 @@ class XWorkspace : QXMdiArea
             String path = nilptr;
             bool bEditing = false;
             
-            public SourceContentImpl(@NotNilptr XSourceEditor wnd){
-                txtContent = wnd.getTextContent();
-                charset = wnd.defaultCharset;
-                path = wnd.filePath;
-                bEditing = true;
+            public SourceContentImpl(@NotNilptr DocumentView wnd){
+                if (wnd != nilptr && wnd.instanceOf(XSourceEditor)){
+                    XSourceEditor xwnd = (XSourceEditor)wnd;
+                    txtContent = xwnd.getTextContent();
+                    charset = xwnd.defaultCharset;
+                    path = xwnd.getFilePath();
+                    bEditing = true;
+                }
             }
             
             public SourceContentImpl(@NotNilptr String file){
@@ -231,7 +240,7 @@ class XWorkspace : QXMdiArea
                     _system_.readFile(hfile,data,0,fl);
                     _system_.closeFile(hfile);
                     
-                    charset = XSourceEditor.getCharsetCache(file);
+                    charset = DocumentView.getCharsetCache(file);
                     
                     if (charset == nilptr){
                         charset = String.detectCharset(data,0,fl);
@@ -269,13 +278,49 @@ class XWorkspace : QXMdiArea
             public String getCharset()override{
                 return charset;
             }
+            
+            public bool updateContent(String content)override{
+                bool success =false;
+                if (bEditing){
+                    DocumentView wnd = DocumentView.findFileWindow(path);
+                    if (wnd != nilptr) {
+                        if (wnd.instanceOf(XSourceEditor)){
+                            ((XSourceEditor)wnd).setText(content);
+                            wnd.setModified(true);
+                            success = true;
+                        }
+                    }
+                }
+                
+                if (success == false){
+                    Backuper fb = new Backuper(path);
+                    long hfile = _system_.openFile(path,"w");
+                    if (hfile != 0 ){
+                        byte [] data = content.getBytes();
+                        if (data != nilptr){                            
+                            _system_.writeFile(hfile,data,0,data.length);
+                            _system_.closeFile(hfile);
+                            success = true;
+                            
+                        }
+                    }
+                    if (success == false){
+                        fb.restore();
+                    }else{
+                        fb.complete();
+                    }
+                }
+                return success;
+            }
         };
         
         public SourceContent getSourceContent(@NotNilptr String sourcefile)override{
             String _content = nilptr;
-            XSourceEditor wnd = XSourceEditor.findFileWindow(sourcefile);
+            DocumentView wnd = DocumentView.findFileWindow(sourcefile);
             if (wnd != nilptr) {
-                 return new SourceContentImpl(wnd);
+                 if (wnd.instanceOf(XSourceEditor)){
+                    return new SourceContentImpl((XSourceEditor)wnd);
+                 }
             }else{
                 try{
                     return new SourceContentImpl(sourcefile);
@@ -289,7 +334,7 @@ class XWorkspace : QXMdiArea
         
     };
 
-    public void setupOnDrag(@NotNilptr QXWidget w)
+    public void setupOnDrag(@NotNilptr QWidget w)
     {
         w.setAcceptDrops(true);
         w.setOnDragListener(draglistener);
@@ -311,12 +356,11 @@ class XWorkspace : QXMdiArea
         wndsln.workspace = this;
     }
 
-    public QXMdiSubWindow createSubWnd(bool bshow)
+    public QMdiSubWindow createSubWnd(bool bshow)
     {
-        XSourceEditor wnd = new XSourceEditor(this);
+        XSourceEditor wnd = (XSourceEditor)DocumentView.createView(this, nilptr);
         if (wnd.create(this)) {
             if (bshow) {
-                //setViewMode(TabbedView);
                 wnd.show();
             }
             updateDocumentStatus();
@@ -379,19 +423,19 @@ class XWorkspace : QXMdiArea
     {
         bool []bs = (bool[])state;
         int i = 0;
-        QxApp._theApp.wndclass.setVisible(bs[i++]);
-        QxApp._theApp.wndsln.setVisible(bs[i++]);
-        QxApp._theApp.wndOutput.setVisible(bs[i++]);
-        QxApp._theApp.wndInfor.setVisible(bs[i++]);
-        QxApp._theApp.wndStack.setVisible(bs[i++]);
-        QxApp._theApp.autoWndInfo.setVisible(bs[i++]);
-        QxApp._theApp.memlookupWnd.setVisible(bs[i++]);
-        QxApp._theApp.watchWndInfo.setVisible(bs[i++]);
-        QxApp._theApp.bpWndInfo.setVisible(bs[i++]);
-        QxApp._theApp.findWnd.setVisible(bs[i++]);
-        QxApp._theApp.memoryWnd.setVisible(bs[i++]);
-        QxApp._theApp.logcatWnd.setVisible(bs[i++]);
-        QxApp._theApp.xDumpWnd.setVisible(bs[i++]);
+        XStudioApp._theApp.wndclass.setVisible(bs[i++]);
+        XStudioApp._theApp.wndsln.setVisible(bs[i++]);
+        XStudioApp._theApp.wndOutput.setVisible(bs[i++]);
+        XStudioApp._theApp.wndInfor.setVisible(bs[i++]);
+        XStudioApp._theApp.wndStack.setVisible(bs[i++]);
+        XStudioApp._theApp.autoWndInfo.setVisible(bs[i++]);
+        XStudioApp._theApp.memlookupWnd.setVisible(bs[i++]);
+        XStudioApp._theApp.watchWndInfo.setVisible(bs[i++]);
+        XStudioApp._theApp.bpWndInfo.setVisible(bs[i++]);
+        XStudioApp._theApp.findWnd.setVisible(bs[i++]);
+        XStudioApp._theApp.memoryWnd.setVisible(bs[i++]);
+        XStudioApp._theApp.logcatWnd.setVisible(bs[i++]);
+        XStudioApp._theApp.xDumpWnd.setVisible(bs[i++]);
         PluginsController.showPluginsDocks(true);
     }
 
@@ -400,33 +444,33 @@ class XWorkspace : QXMdiArea
         bool []bs = new bool[13];
         int i = 0;
 
-        bs[i++] = QxApp._theApp.wndclass.isVisible();
-        bs[i++] = QxApp._theApp.wndsln.isVisible();
-        bs[i++] = QxApp._theApp.wndOutput.isVisible();
-        bs[i++] = QxApp._theApp.wndInfor.isVisible();
-        bs[i++] = QxApp._theApp.wndStack.isVisible();
-        bs[i++] = QxApp._theApp.memlookupWnd.isVisible();
-        bs[i++] = QxApp._theApp.autoWndInfo.isVisible();
-        bs[i++] = QxApp._theApp.watchWndInfo.isVisible();
-        bs[i++] = QxApp._theApp.bpWndInfo.isVisible();
-        bs[i++] = QxApp._theApp.findWnd.isVisible();
-        bs[i++] = QxApp._theApp.memoryWnd.isVisible();
-        bs[i++] = QxApp._theApp.logcatWnd.isVisible();
-        bs[i++] = QxApp._theApp.xDumpWnd.isVisible();
+        bs[i++] = XStudioApp._theApp.wndclass.isVisible();
+        bs[i++] = XStudioApp._theApp.wndsln.isVisible();
+        bs[i++] = XStudioApp._theApp.wndOutput.isVisible();
+        bs[i++] = XStudioApp._theApp.wndInfor.isVisible();
+        bs[i++] = XStudioApp._theApp.wndStack.isVisible();
+        bs[i++] = XStudioApp._theApp.memlookupWnd.isVisible();
+        bs[i++] = XStudioApp._theApp.autoWndInfo.isVisible();
+        bs[i++] = XStudioApp._theApp.watchWndInfo.isVisible();
+        bs[i++] = XStudioApp._theApp.bpWndInfo.isVisible();
+        bs[i++] = XStudioApp._theApp.findWnd.isVisible();
+        bs[i++] = XStudioApp._theApp.memoryWnd.isVisible();
+        bs[i++] = XStudioApp._theApp.logcatWnd.isVisible();
+        bs[i++] = XStudioApp._theApp.xDumpWnd.isVisible();
 
-        QxApp._theApp.wndclass.setVisible(false);
-        QxApp._theApp.wndsln.setVisible(false);
-        QxApp._theApp.wndOutput.setVisible(false);
-        QxApp._theApp.wndInfor.setVisible(false);
-        QxApp._theApp.wndStack.setVisible(false);
-        QxApp._theApp.autoWndInfo.setVisible(false);
-        QxApp._theApp.watchWndInfo.setVisible(false);
-        QxApp._theApp.bpWndInfo.setVisible(false);
-        QxApp._theApp.findWnd.setVisible(false);
-        QxApp._theApp.memoryWnd.setVisible(false);
-        QxApp._theApp.logcatWnd.setVisible(false);
-        QxApp._theApp.xDumpWnd.setVisible(false);
-        QxApp._theApp.memlookupWnd.setVisible(false);
+        XStudioApp._theApp.wndclass.setVisible(false);
+        XStudioApp._theApp.wndsln.setVisible(false);
+        XStudioApp._theApp.wndOutput.setVisible(false);
+        XStudioApp._theApp.wndInfor.setVisible(false);
+        XStudioApp._theApp.wndStack.setVisible(false);
+        XStudioApp._theApp.autoWndInfo.setVisible(false);
+        XStudioApp._theApp.watchWndInfo.setVisible(false);
+        XStudioApp._theApp.bpWndInfo.setVisible(false);
+        XStudioApp._theApp.findWnd.setVisible(false);
+        XStudioApp._theApp.memoryWnd.setVisible(false);
+        XStudioApp._theApp.logcatWnd.setVisible(false);
+        XStudioApp._theApp.xDumpWnd.setVisible(false);
+        XStudioApp._theApp.memlookupWnd.setVisible(false);
         PluginsController.showPluginsDocks(false);
         return bs;
     }
@@ -462,7 +506,7 @@ class XWorkspace : QXMdiArea
     {
         lastBuildSuccess = false;
         if (currentProject != nilptr) {
-            QXMessageBox.Critical("注意", "当前工作空间已经打开一个项目, 请先关闭已有项目", QXMessageBox.Ok, QXMessageBox.Ok);
+            QMessageBox.Critical("注意", "当前工作空间已经打开一个项目, 请先关闭已有项目", QMessageBox.Ok, QMessageBox.Ok);
             return nilptr;
         }
         Project project = new Project();
@@ -482,7 +526,7 @@ class XWorkspace : QXMdiArea
             Utils.chechUpdate(1);
             return project;
         } else {
-            QXMessageBox.Critical("失败", "不是有效的项目文件:" + file, QXMessageBox.Ok, QXMessageBox.Ok);
+            QMessageBox.Critical("失败", "不是有效的项目文件:" + file, QMessageBox.Ok, QMessageBox.Ok);
         }
         return nilptr;
     }
@@ -509,7 +553,7 @@ class XWorkspace : QXMdiArea
     public bool closeFor(String file)
     {
         if (file != nilptr){
-            return XSourceEditor.closeForFile(file);
+            return DocumentView.closeForFile(file);
         }
         
         return false;
@@ -595,13 +639,13 @@ class XWorkspace : QXMdiArea
         bool bclose = true;
         if (currentProject != nilptr) {
             if (currentProject.isModified()) {
-                int rt = QXMessageBox.Question("提示","项目[" + currentProject.getName() + "]已发生更改, 是否保存?",  QXMessageBox.Cancel | QXMessageBox.No | QXMessageBox.Save, QXMessageBox.Save);
-                if (rt == QXMessageBox.Save) {
+                int rt = QMessageBox.Question("提示","项目[" + currentProject.getName() + "]已发生更改, 是否保存?",  QMessageBox.Cancel | QMessageBox.No | QMessageBox.Save, QMessageBox.Save);
+                if (rt == QMessageBox.Save) {
                     saveProject();
                     bclose = true;
-                } else if (rt == QXMessageBox.No) {
+                } else if (rt == QMessageBox.No) {
                     bclose = true;
-                } else if (rt == QXMessageBox.Cancel) {
+                } else if (rt == QMessageBox.Cancel) {
                     bclose = false;
                 }
             }
@@ -612,8 +656,8 @@ class XWorkspace : QXMdiArea
         
         if (bclose){
             if (DownloadCenter.hasDownload()){
-                int rt = QXMessageBox.Question("提示","有下载任务在进行中,是否继续退出?",  QXMessageBox.Yes | QXMessageBox.No , QXMessageBox.No);
-                if (rt == QXMessageBox.Yes){
+                int rt = QMessageBox.Question("提示","有下载任务在进行中,是否继续退出?",  QMessageBox.Yes | QMessageBox.No , QMessageBox.No);
+                if (rt == QMessageBox.Yes){
                     DownloadCenter.stopAlldownload();
                 }else{
                     bclose = false;
@@ -626,16 +670,21 @@ class XWorkspace : QXMdiArea
     public void openOutput()
     {
         if (currentProject != nilptr) {
-            String uri = nilptr;
-            IXPlugin ixplugin = currentProject.getProjectPlugin();
+            List<IProjectPlugin> ips = PluginsController.getProjectPluginList();
             
-            if (ixplugin != nilptr){
-                IProjectPlugin ipp = ixplugin.getProjectPlugin();
-                if (ipp != nilptr){
-                    uri = ipp.getTargetPath(currentProject);
+            String uri = nilptr;
+            
+            if (ips != nilptr){
+                List.Iterator<IProjectPlugin> iip = ips.iterator();
+                while (iip.hasNext()){
+                    IProjectPlugin ip = iip.next();
+                    uri = ip.getTargetPath(currentProject);
+                    if (uri != nilptr){
+                        break;
+                    }
                 }
             }
-
+            
             if (uri == nilptr){
                 uri = currentProject.getOutputDir();
             }else{
@@ -643,15 +692,15 @@ class XWorkspace : QXMdiArea
             }
             
             if (uri != nilptr) {
-                QXCore.openLocal(String.formatPath(uri,false));
+                QCore.openLocal(String.formatPath(uri,false));
             }
         }
     }
     public bool showProperites(String args)
     {
         if (currentProject != nilptr) {
-            QXDialog newDlg = new QXDialog();
-            if (newDlg.load("ui/properites.ui") == false) {
+            QDialog newDlg = new QDialog();
+            if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/properites.ui"))) == false) {
                 return false;
             }
             XProperites wizard = new XProperites(currentProject, args);
@@ -721,8 +770,8 @@ class XWorkspace : QXMdiArea
     
     public bool showSetting()
     {
-        QXDialog newDlg = new QXDialog();
-        if (newDlg.load("ui/setting.ui") == false) {
+        QDialog newDlg = new QDialog();
+        if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/setting.ui"))) == false) {
             return false;
         }
         Setting wizard = new Setting();
@@ -789,7 +838,7 @@ class XWorkspace : QXMdiArea
     public void doOpen()
     {
         String file = Recently.getLastPath();
-        file = QXFileDialog.getOpenFileName("打开文件", file, getAllFilter(), this);
+        file = QFileDialog.getOpenFileName("打开文件", file, getAllFilter(), this);
         openFile(file);
     }
 
@@ -820,8 +869,8 @@ class XWorkspace : QXMdiArea
         /*Project project = new Project();
         project.createProject("helloworld");*/
 
-        QXDialog newDlg = new QXDialog();
-        if (newDlg.load("ui/newproj.ui") == false) {
+        QDialog newDlg = new QDialog();
+        if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/newproj.ui"))) == false) {
             return false;
         }
         WizardDialog wizard = new WizardDialog(this);
@@ -831,23 +880,23 @@ class XWorkspace : QXMdiArea
 
     public void gotoDef()
     {
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
-            wnd.gotodef();
+            wnd.gotoCursordef();
         }
     }
 
     public void closeCurrentDocument()
     {
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.close();
         }
     }
 
-   public  QXWidget currentSubWindow()override
+   public  QWidget currentSubWindow()override
     {
-        QXWidget win = super.currentSubWindow();
+        QWidget win = super.currentSubWindow();
         if (win == indexPage || win == nilptr) {
             return nilptr;
         }
@@ -857,7 +906,7 @@ class XWorkspace : QXMdiArea
     public void saveFile()
     {
         try {
-            XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+            DocumentView wnd = (DocumentView)currentSubWindow();
             if (wnd != nilptr) {
                 wnd.saveFile();
             }
@@ -868,7 +917,7 @@ class XWorkspace : QXMdiArea
 
     public void saveFileAs()
     {
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.saveFileAs();
         }
@@ -915,8 +964,8 @@ class XWorkspace : QXMdiArea
             }
 
             if (isDebugging()) {
-                int rt = QXMessageBox.Question("注意", "调试器正在运行, 是否关闭调试器并退出?", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Cancel);
-                if (rt == QXMessageBox.Cancel) {
+                int rt = QMessageBox.Question("注意", "调试器正在运行, 是否关闭调试器并退出?", QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Cancel);
+                if (rt == QMessageBox.Cancel) {
                     return false;
                 }
             }
@@ -937,14 +986,14 @@ class XWorkspace : QXMdiArea
             }
             return true;
         } else {
-            QXMessageBox.Critical("注意", "当前工作空间没有打开一个项目", QXMessageBox.Ok, QXMessageBox.Ok);
+            QMessageBox.Critical("注意", "当前工作空间没有打开一个项目", QMessageBox.Ok, QMessageBox.Ok);
         }
         return true;
     }
 
     public void openExtMgr(){
-        QXDialog newDlg = new QXDialog();
-        if (newDlg.load("ui/extmgr.ui") == false) {
+        QDialog newDlg = new QDialog();
+        if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/extmgr.ui"))) == false) {
             return ;
         }
         ExtensionManager extmgrwin = new ExtensionManager();
@@ -955,8 +1004,8 @@ class XWorkspace : QXMdiArea
     
     public bool showAllWindows()
     {
-        QXDialog newDlg = new QXDialog();
-        if (newDlg.load("ui/Windows.ui") == false) {
+        QDialog newDlg = new QDialog();
+        if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/Windows.ui"))) == false) {
             return false;
         }
         Windows winlist = new Windows();
@@ -978,8 +1027,8 @@ class XWorkspace : QXMdiArea
             for (int i =0, c = currentProject.getSourceFileCount(); i < c; i++) {
                 String file = currentProject.getSourcePath(i);
                 
-                if (file != nilptr && XSourceEditor.findSaveFile(file)) {
-                    QxApp.statusBar.showStatusMessage(file + "已保存.");
+                if (file != nilptr && DocumentView.findSaveFile(file)) {
+                    XStudioApp.statusBar.showStatusMessage(file + "已保存.");
                     bSaveModified = true;
                 }
             }
@@ -1056,7 +1105,7 @@ class XWorkspace : QXMdiArea
             String file = String.formatPath(_project.getProjectDir().appendPath("Makefile"), false);
 
             if (_system_.fileExists(file)) {
-                if (QXMessageBox.Warning("注意","文件" + file + "已存在,将覆盖现有文件,是否继续?",QXMessageBox.Yes | QXMessageBox.Cancel,QXMessageBox.Cancel) == QXMessageBox.Cancel) {
+                if (QMessageBox.Warning("注意","文件" + file + "已存在,将覆盖现有文件,是否继续?",QMessageBox.Yes | QMessageBox.Cancel,QMessageBox.Cancel) == QMessageBox.Cancel) {
                     return ;
                 }
             }
@@ -1074,7 +1123,7 @@ class XWorkspace : QXMdiArea
                         fos.write(data);
                         fos.close();
                     } catch(Exception e) {
-                        QXMessageBox.Critical("错误","无法写入文件:" + file,QXMessageBox.Ok,QXMessageBox.Ok);
+                        QMessageBox.Critical("错误","无法写入文件:" + file,QMessageBox.Ok,QMessageBox.Ok);
                     }
                     XWndOutput.Output("\n已生成:" + file + "\n", 0);
                 }else{
@@ -1086,7 +1135,7 @@ class XWorkspace : QXMdiArea
     }
 
     public void installPlugin(){
-        String []files = QXFileDialog.getOpenFileNames("浏览文件", nilptr,  "XStudio 插件(*.xsp)", this);
+        String []files = QFileDialog.getOpenFileNames("浏览文件", nilptr,  "XStudio 插件(*.xsp)", this);
         if (files != nilptr && files.length > 0) {
             closeIndexPage();
             for (int i = 0; i < files.length; i++) {
@@ -1095,13 +1144,13 @@ class XWorkspace : QXMdiArea
                 installPlugin(file);
             }
             _builder.OutputText("已安装:" + files.length + "插件\n", 0);
-            PluginsController.initPlugins(QxApp._theApp._xstudio_controller);
+            PluginsController.initPlugins(XStudioApp._theApp._xstudio_controller);
         }
     }
     
     public void installCompileExt()
     {
-        String []files = QXFileDialog.getOpenFileNames("浏览文件", nilptr,  "xlang 编译器扩展包(*.xep)", this);
+        String []files = QFileDialog.getOpenFileNames("浏览文件", nilptr,  "xlang 编译器扩展包(*.xep)", this);
         if (files != nilptr && files.length > 0) {
             closeIndexPage();
             for (int i = 0; i < files.length; i++) {
@@ -1358,18 +1407,18 @@ class XWorkspace : QXMdiArea
     public void  generateSource()
     {
         if (currentProject != nilptr) {
-            String path = QXFileDialog.getFolderPath("选择输出目录", currentProjectDir(), nilptr, this);
+            String path = QFileDialog.getFolderPath("选择输出目录", currentProjectDir(), nilptr, this);
 
             if (path != nilptr && path.length() > 0) {
                 XlangProjectProp.BuildParams params = new XlangProjectProp.BuildParams();
                 params.forgs = true;
                 params.output_source = path;
-                if (QXMessageBox.Question("注意", "该目录下与生成目标同名的文件将会被覆写!", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Cancel) == QXMessageBox.Ok) {
+                if (QMessageBox.Question("注意", "该目录下与生成目标同名的文件将会被覆写!", QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Cancel) == QMessageBox.Ok) {
                     if (currentProject != nilptr) {
                         saveAllFile();
                         build_project(_builder, nilptr, params);
                     } else {
-                        QXMessageBox.Critical("错误", "当前工作空间未载入一个项目.", QXMessageBox.Ok, QXMessageBox.Ok);
+                        QMessageBox.Critical("错误", "当前工作空间未载入一个项目.", QMessageBox.Ok, QMessageBox.Ok);
                     }
                 }
             }
@@ -1381,8 +1430,8 @@ class XWorkspace : QXMdiArea
         if (currentProject != nilptr) {
             
             if (isDebugging() || _run_thread != nilptr) {
-                int rt = QXMessageBox.Question("注意", "程序正在运行, 是否关闭并继续?", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Cancel);
-                if (rt == QXMessageBox.Cancel) {
+                int rt = QMessageBox.Question("注意", "程序正在运行, 是否关闭并继续?", QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Cancel);
+                if (rt == QMessageBox.Cancel) {
                     lastBuildSuccess = false;
                     return ;
                 }
@@ -1396,8 +1445,8 @@ class XWorkspace : QXMdiArea
     {
         if (currentProject != nilptr) {
             if (isDebugging() || _run_thread != nilptr) {
-                int rt = QXMessageBox.Question("注意", "程序正在运行, 是否关闭并继续?", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Cancel);
-                if (rt == QXMessageBox.Cancel) {
+                int rt = QMessageBox.Question("注意", "程序正在运行, 是否关闭并继续?", QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Cancel);
+                if (rt == QMessageBox.Cancel) {
                     return ;
                 }
                 stopRun();
@@ -1408,10 +1457,10 @@ class XWorkspace : QXMdiArea
 
     public void createConfigToolbar()
     {
-        QXToolBar qtb = (QXToolBar)mainWindow.attachByName(new QXToolBar(), "toolBar_3");
+        QToolBar qtb = (QToolBar)mainWindow.attachByName(new QToolBar(), "toolBar_3");
         
         if (qtb != nilptr){
-            QXAction actiondebug = (QXAction)mainWindow.findByName("actiondebug");
+            QAction actiondebug = (QAction)mainWindow.findByName("actiondebug");
 
             cfgSel.create();
 
@@ -1423,7 +1472,7 @@ class XWorkspace : QXMdiArea
 
             cfgSel.setOnComboBoxEventListener(
             new onComboBoxEventListener() {
-                void onItemSelected(QXObject obj, int id) {
+                void onItemSelected(QObject obj, int id) {
                     if (currentProject != nilptr) {
                         String selcfgname = cfgSel.getCurrentText();
                         if (selcfgname.length() > 0){
@@ -1441,24 +1490,24 @@ class XWorkspace : QXMdiArea
     {
         runOnUi(new Runnable() {
             void run()override {
-                XSourceEditor.notifyFileChange(path, bExternModifyAutoload);
+                DocumentView.notifyFileChange(XWorkspace. this, path, bExternModifyAutoload);
             }
         });
     }
 
-    public void setMainWindow(QXMainWindow w)
+    public void setMainWindow(QMainWindow w)
     {
         mainWindow = w;
         createConfigToolbar();
         qfsw.create(this);
         qfsw.setOnFileSystemChangeListener(
         new onFileSystemChangeListener() {
-            void onFileChanged(QXObject,@NotNilptr String path) {
+            void onFileChanged(QObject,@NotNilptr String path) {
                 _system_.sleep(20);
                 notifyFileChange(path);
             }
 
-            void onDirChange(QXObject,@NotNilptr String path) {
+            void onDirChange(QObject,@NotNilptr String path) {
 
             }
         });
@@ -1467,14 +1516,14 @@ class XWorkspace : QXMdiArea
 
     public void toggleBreakpoint()
     {
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.toggleBreakpoint();
         }
     }
     public void UnDo()
     {
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.UnDo();
         }
@@ -1482,7 +1531,7 @@ class XWorkspace : QXMdiArea
 
     public void ReDo()
     {
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.ReDo();
         }
@@ -1490,29 +1539,29 @@ class XWorkspace : QXMdiArea
 
     public void insertNewLine()
     {
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.insertNewLine();
         }
     }
-
+    
     public void appendNewLine()
     {
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.appendNewLine();
         }
     }
 
     public void convertCharset(){
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.convertCharset();
         }
     }
     
     public void UpdateCodepage(){
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.UpdateCodepage();
         }
@@ -1524,7 +1573,7 @@ class XWorkspace : QXMdiArea
             XWndOutput.outputWnd.Copy();
             return;
         }
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.Copy();
         }
@@ -1532,7 +1581,7 @@ class XWorkspace : QXMdiArea
 
     public void Paste()
     {
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.Paste();
         }
@@ -1540,7 +1589,7 @@ class XWorkspace : QXMdiArea
 
     public void Cut()
     {
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.Cut();
         }
@@ -1548,7 +1597,7 @@ class XWorkspace : QXMdiArea
 
     public void Delete()
     {
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.Delete();
         }
@@ -1556,7 +1605,7 @@ class XWorkspace : QXMdiArea
 
     public void DeleteCurLine()
     {
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.DeleteCurLine();
         }
@@ -1570,7 +1619,7 @@ class XWorkspace : QXMdiArea
     public void findAgain()
     {
         if (XFindDlg.bFindAll == false) {
-            XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+            DocumentView wnd = (DocumentView)currentSubWindow();
             if (wnd != nilptr) {
                 wnd.findAgain();
             }
@@ -1584,14 +1633,14 @@ class XWorkspace : QXMdiArea
         InputDialog.requestInput(new InputDialog.onInputListener() {
             bool onInputOk(@NotNilptr String text)override {
                 if (text.length() == 0 || text.isDigit() == false) {
-                    QXMessageBox.Critical("错误", "输入了不正确的行号", QXMessageBox.Ok, QXMessageBox.Ok);
+                    QMessageBox.Critical("错误", "输入了不正确的行号", QMessageBox.Ok, QMessageBox.Ok);
                     return false;
                 }
                 int line = text.parseInt();
-                XSourceEditor wnd = (XSourceEditor)XWorkspace.this.currentSubWindow();
+                DocumentView wnd = (DocumentView)XWorkspace.this.currentSubWindow();
 
                 if (wnd == nilptr) {
-                    QXMessageBox.Critical("提示", "当前没有正在编辑的文件", QXMessageBox.Ok, QXMessageBox.Ok);
+                    QMessageBox.Critical("提示", "当前没有正在编辑的文件", QMessageBox.Ok, QMessageBox.Ok);
                     return true;
                 }
 
@@ -1615,19 +1664,19 @@ class XWorkspace : QXMdiArea
 
     public void FindReplace()
     {
-        QXMainWindow mwin = mainWindow;
+        QMainWindow mwin = mainWindow;
         
         if (mwin != nilptr){
             if (findDlg == nilptr) {
-                QXDialog newDlg = new QXDialog();
+                QDialog newDlg = new QDialog();
                 
-                if (newDlg.load("ui/findreplace.ui", mwin) == false) {
+                if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/findreplace.ui")), mwin) == false) {
                     return ;
                 }
                 findDlg = new XFindDlg(this);
                 findDlg.attach(newDlg);
             }
-            XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+            DocumentView wnd = (DocumentView)currentSubWindow();
             if (wnd != nilptr) {
                 String text = wnd.getSelectedText();
                 findDlg.setDefaultFindText(text);
@@ -1643,9 +1692,9 @@ class XWorkspace : QXMdiArea
                 XWorkspace.this.currentProject.stopRun();
             } else if (isDebugging()) {
             
-                int rt = QXMessageBox.Question("提示","是否终止运行调试客户端程序?, 点 [No] 仅分离调试器, 客户端程序将继续运行.",  QXMessageBox.Yes | QXMessageBox.No , QXMessageBox.Yes);
+                int rt = QMessageBox.Question("提示","是否终止运行调试客户端程序?, 点 [No] 仅分离调试器, 客户端程序将继续运行.",  QMessageBox.Yes | QMessageBox.No , QMessageBox.Yes);
                 
-                if (rt == QXMessageBox.Yes){
+                if (rt == QMessageBox.Yes){
                     debuggee.dbgSendExit();
                     _system_.sleep(50);
                 }
@@ -1692,7 +1741,7 @@ class XWorkspace : QXMdiArea
             InputDialog.requestInput(new InputDialog.onInputListener() {
                 bool onInputOk(@NotNilptr String text)override {
                     if (text.length() == 0) {
-                        QXMessageBox.Critical("错误", "项目名称不合法", QXMessageBox.Ok, QXMessageBox.Ok);
+                        QMessageBox.Critical("错误", "项目名称不合法", QMessageBox.Ok, QMessageBox.Ok);
                         return false;
                     }
                     savesaTempWithDescr(text);
@@ -1785,7 +1834,7 @@ class XWorkspace : QXMdiArea
         bool onInputOk(@NotNilptr String text)override {
             int spf = text.indexOf(':');
             if (spf < 1) {
-                QXMessageBox.Critical("错误", "输入了不正确的地址", QXMessageBox.Ok, QXMessageBox.Ok);
+                QMessageBox.Critical("错误", "输入了不正确的地址", QMessageBox.Ok, QMessageBox.Ok);
                 return false;
             }
 
@@ -1793,7 +1842,7 @@ class XWorkspace : QXMdiArea
             int port = text.substring(spf + 1, text.length()).parseInt();
 
             if (port <=0 || port >= 65535) {
-                QXMessageBox.Critical("提示", "端口范围错误0~65535", QXMessageBox.Ok, QXMessageBox.Ok);
+                QMessageBox.Critical("提示", "端口范围错误0~65535", QMessageBox.Ok, QMessageBox.Ok);
                 return false;
             }
             defaultaddress = text;
@@ -1817,7 +1866,7 @@ class XWorkspace : QXMdiArea
     public void remoteDebug()
     {
         if (_debugThread != nilptr) {
-            QXMessageBox.Critical("注意", "调试器正忙, 请稍候再试", QXMessageBox.Ok, QXMessageBox.Ok);
+            QMessageBox.Critical("注意", "调试器正忙, 请稍候再试", QMessageBox.Ok, QMessageBox.Ok);
             return ;
         }
 
@@ -1828,14 +1877,14 @@ class XWorkspace : QXMdiArea
     public void attachDebug ()
     {
         if (_debugThread != nilptr) {
-            QXMessageBox.Critical("注意", "调试器正忙, 请稍候再试", QXMessageBox.Ok, QXMessageBox.Ok);
+            QMessageBox.Critical("注意", "调试器正忙, 请稍候再试", QMessageBox.Ok, QMessageBox.Ok);
             return ;
         }
         
         DebuggeeManager dc = ProjectPropManager.getDebuggeeManager();
         String [] langs = dc.namelist.toArray(new String[0]);
         if (langs.length == 0){
-            QXMessageBox.Critical("注意", "没有安装可用于调试的扩展组件 .", QXMessageBox.Ok, QXMessageBox.Ok);
+            QMessageBox.Critical("注意", "没有安装可用于调试的扩展组件 .", QMessageBox.Ok, QMessageBox.Ok);
             return ;
         }
         ProjectPropInterface ppi = nilptr;
@@ -2069,11 +2118,11 @@ class XWorkspace : QXMdiArea
             break;
 
         case NOTIFY_DEBUG_NOTSUPPORT:
-            QXMessageBox.Critical("注意", "目标程序不支持调试,请在[项目]->[属性]->[编译选项]中开启调试后重新编译", QXMessageBox.Ok, QXMessageBox.Ok);
+            QMessageBox.Critical("注意", "目标程序不支持调试,请在[项目]->[属性]->[编译选项]中开启调试后重新编译", QMessageBox.Ok, QMessageBox.Ok);
             break;
 
         case NOTIFY_DEBUG_EXENOTEXISTS:
-            QXMessageBox.Critical("注意", "目标程序不存在,无法启动调试运行,请尝试重新生成", QXMessageBox.Ok, QXMessageBox.Ok);
+            QMessageBox.Critical("注意", "目标程序不存在,无法启动调试运行,请尝试重新生成", QMessageBox.Ok, QMessageBox.Ok);
             break;
         }
     }
@@ -2122,16 +2171,16 @@ class XWorkspace : QXMdiArea
 
     public void matchbrace()
     {
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.matchBrace();
         }
     }
     public void overrideFunction()
     {
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
-            wnd.overrideObject(wnd._sci.currentPosition());
+            wnd.overrideObject();
         }
     }
 
@@ -2166,16 +2215,16 @@ class XWorkspace : QXMdiArea
         runOnUi(new Runnable() {
             void run()override {
                 if (Setting.isIntellisense()) {
-                    QxApp.statusBar.showStatusMessage("XIntelliSense 结束.");
+                    XStudioApp.statusBar.showStatusMessage("XIntelliSense 结束.");
                 } else {
-                    QxApp.statusBar.showStatusMessage("XIntelliSense 未启用.");
+                    XStudioApp.statusBar.showStatusMessage("XIntelliSense 未启用.");
                 }
             }
         });
     }
-    public bool XIntelliSense(XSourceEditor editor, String originalName,String content,long position, int line, int column)
+    public bool XIntelliSense(DocumentView editor, String originalName,String content,long position, int line, int column)
     {
-        QxApp.statusBar.showStatusMessage("正在运行 XIntelliSense...");
+        XStudioApp.statusBar.showStatusMessage("正在运行 XIntelliSense...");
         synchronized(xintellisencelock) {
             Project project = currentProject;
             if ((_autoComp_thread == nilptr) && (project != nilptr)) {
@@ -2192,7 +2241,7 @@ class XWorkspace : QXMdiArea
                 return true;
             }
         }
-        //QxApp.statusBar.showStatusMessage("XIntelliSense 失败");
+        //XStudioApp.statusBar.showStatusMessage("XIntelliSense 失败");
         return false;
 
     }
@@ -2213,7 +2262,7 @@ class XWorkspace : QXMdiArea
                 }
                 
                 if (filter != nilptr){
-                    String []files = QXFileDialog.getOpenFileNames("添加已有文件", nilptr,  filter + "html 网页(*.htm *.html);;纯文本文件 (*.txt);;其他文件 (*.* *)", this);
+                    String []files = QFileDialog.getOpenFileNames("添加已有文件", nilptr,  filter + "html 网页(*.htm *.html);;纯文本文件 (*.txt);;其他文件 (*.* *)", this);
                     
                     if (files != nilptr && files.length > 0) {
                         for (int i =0; i < files.length; i++) {
@@ -2241,7 +2290,7 @@ class XWorkspace : QXMdiArea
         }
     }
 
-    public bool XIntelliSenseL(XSourceEditor editor, String originalName, String content, int line, int column)
+    public bool XIntelliSenseL(DocumentView editor, String originalName, String content, int line, int column)
     {
         synchronized(xintellisencelock) {
             if (_autoComp_thread == nilptr) {
@@ -2257,7 +2306,7 @@ class XWorkspace : QXMdiArea
                 return true;
             }
         }
-        //QxApp.statusBar.showStatusMessage("XIntelliSense 失败");
+        //XStudioApp.statusBar.showStatusMessage("XIntelliSense 失败");
         return false;
     }
 
@@ -2266,7 +2315,7 @@ class XWorkspace : QXMdiArea
     public bool XIntelliSense()
     {
         if (currentProject != nilptr) {
-            QxApp.statusBar.showStatusMessage("正在运行 XIntelliSense...");
+            XStudioApp.statusBar.showStatusMessage("正在运行 XIntelliSense...");
             synchronized(xintellisencelock) {
                 if (_autoComp_thread == nilptr) {
                     _autoComp_thread = new Thread() {
@@ -2294,7 +2343,7 @@ class XWorkspace : QXMdiArea
                     return true;
                 }
             }
-            //QxApp.statusBar.showStatusMessage("XIntelliSense 失败");
+            //XStudioApp.statusBar.showStatusMessage("XIntelliSense 失败");
         }
         return false;
     }
@@ -2331,9 +2380,9 @@ class XWorkspace : QXMdiArea
                 for (int i = 0; i < c; i++) {
                     String _sourcePath = project.getSourcePath(i);
                     if (_sourcePath != nilptr && _sourcePath.equals(except) == false) {
-                        XSourceEditor wnd = XSourceEditor.findFileWindow(_sourcePath);
-                        if (wnd != nilptr) {
-                            String _content = wnd.getTextContent();
+                        DocumentView wnd = DocumentView.findFileWindow(_sourcePath);
+                        if (wnd != nilptr && wnd.instanceOf(XSourceEditor)) {
+                            String _content = ((XSourceEditor)wnd).getTextContent();
                             _intelliSense.update(_sourcePath, _content);
                         }
                     }
@@ -2378,94 +2427,94 @@ class XWorkspace : QXMdiArea
                 fos.close();
 
                 String path = _system_.getAppDirectory().appendPath("xdbg_uac.exe");
-                QxApp.lastTask = path;
+                XStudioApp.lastTask = path;
                 workspace.mainWindow.close();
-                QxApp.lastTask = nilptr;
+                XStudioApp.lastTask = nilptr;
             }
         } catch(Exception e) {
-            QXMessageBox.Critical("失败", "无法写入调试文件:" + filepath + "请确认目录可写.", QXMessageBox.Ok, QXMessageBox.Ok);
+            QMessageBox.Critical("失败", "无法写入调试文件:" + filepath + "请确认目录可写.", QMessageBox.Ok, QMessageBox.Ok);
         }
     }
     
     public void setUpper(){
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.setUpper();
         }
     }
     
     public void setLower(){
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.setLower();
         }
     }
     
     public void CursorUp(){
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.CursorUp();
         }
     }
 
     public void CursorLeft(){
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.CursorLeft();
         }
     }
     
     public void CursorRight(){
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.CursorRight();
         }
     }
 
     public void CursorDown(){
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.CursorDown();
         }
     }
  
     public void CursorLineBegin(){
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.CursorLineBegin();
         }
     } 
  
     public void CursorLineEnd(){
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.CursorLineEnd();
         }
     }
 
     public void CursorPrevPage(){
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.CursorPrevPage();
         }
     }
 
     public void CursorNextPage(){
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.CursorNextPage();
         }
     }
 
     public void CursortoTop(){
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.CursortoTop();
         }
     }
 
     public void CursortoBottom(){
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
             wnd.CursortoBottom();
         }
@@ -2473,12 +2522,9 @@ class XWorkspace : QXMdiArea
     
     
     public void doPrint(){
-        XSourceEditor wnd = (XSourceEditor)currentSubWindow();
+        DocumentView wnd = (DocumentView)currentSubWindow();
         if (wnd != nilptr) {
-            QPrintDialog printdlg = new QPrintDialog(this, g_printer);
-            if (printdlg.exec() != 0){
-                g_printer.printRange(wnd._sci, -1, -1);
-            }
+            wnd.doPrint();
         }
     }
     
@@ -2493,7 +2539,7 @@ class XWorkspace : QXMdiArea
         Project project = currentProject;
         if (project != nilptr) {
         
-            String deploy_path = QXFileDialog.getFolderPath("选择部署目录", nilptr, nilptr, XWorkspace.workspace);
+            String deploy_path = QFileDialog.getFolderPath("选择部署目录", nilptr, nilptr, XWorkspace.workspace);
             if (deploy_path == nilptr || deploy_path .length() == 0){ 
                 return ;
             }

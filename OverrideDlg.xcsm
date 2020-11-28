@@ -1,11 +1,11 @@
 //xlang Source, Name:OverrideDlg.xcsm 
 //Date: Tue Feb 00:33:49 2019 
 
-class OverrideDlg : QXDialog {
+class OverrideDlg : QDialog {
 
 	int addType = 0;
-    QXPushButton btnAdd, btnClose;
-    QXTreeView _treeview;
+    QPushButton btnAdd, btnClose;
+    QTreeWidget _treeview;
     //Project currentProject;
     XIntelliSense.XIntelliResult [] result;
     XSourceEditor editwnd;
@@ -18,25 +18,25 @@ class OverrideDlg : QXDialog {
         
     public void onAttach()override{ 
     
-        setWindowFlags(CustomizeWindowHint | WindowCloseButtonHint);
+        setWindowFlags(Constant.CustomizeWindowHint | Constant.WindowCloseButtonHint);
         
         //setFixedSize(width(), height());
         
-        btnAdd = (QXPushButton)attachByName(new QXPushButton(), "btnAdd");
-        btnClose = (QXPushButton)attachByName(new QXPushButton(), "btnClose");
+        btnAdd = (QPushButton)attachByName(new QPushButton(), "btnAdd");
+        btnClose = (QPushButton)attachByName(new QPushButton(), "btnClose");
         
         //checkListener
-        _treeview = (QXTreeView)attachByName(new QXTreeView(), "treeWidget");
+        _treeview = (QTreeWidget)attachByName(new QTreeWidget(), "treeWidget");
         
         /*if (currentProject == nilptr){
 			close();
-			QXMessageBox.Critical("注意", "当前没有载入项目", QXMessageBox.Ok, QXMessageBox.Ok);
+			QMessageBox.Critical("注意", "当前没有载入项目", QMessageBox.Ok, QMessageBox.Ok);
             return ;
         }*/
         
         btnAdd.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
             
 				String def ="";
 				long [] items = _treeview.getTopItems();
@@ -54,7 +54,7 @@ class OverrideDlg : QXDialog {
         
         btnClose.setOnClickListener(
         new onClickListener(){
-            void onClick(QXObject obj, bool checked)override{
+            void onClick(QObject obj, bool checked)override{
 				close();
             }
         });
@@ -76,7 +76,7 @@ class OverrideDlg : QXDialog {
         loadObject(result);
         
          /*setOnLayoutEventListener(new onLayoutEventListener(){
-			void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+			void onResize(QObject obj, int w, int h, int oldw, int oldh)override {
 				_treeview.resize(w - 40, h-  210);
                 
                 edtName.resize(w - 90, 20);
@@ -157,7 +157,7 @@ class OverrideDlg : QXDialog {
                     }
                 }
                 if (item != 0){
-                    _treeview.modifyItemFlags(item, QXTreeView.ItemIsUserCheckable, 0);
+                    _treeview.modifyItemFlags(item, QTreeWidget.ItemIsUserCheckable, 0);
                     _treeview.setItemCheck(item, 0, false);
                 }
             }
@@ -165,9 +165,9 @@ class OverrideDlg : QXDialog {
 	}
     
     public static void requesOverrideObject(XSourceEditor wnd, long pos, XIntelliSense.XIntelliResult [] res){
-		QXDialog newDlg = new QXDialog();
+		QDialog newDlg = new QDialog();
         
-        if (newDlg.load("ui/override.ui") == false){
+        if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/override.ui"))) == false){
             return ;
         }
         

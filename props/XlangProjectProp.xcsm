@@ -356,6 +356,21 @@ class XlangProjectProp : ProjectPropInterface {
             }
             return true;
         }
+        if (key.equals("stringoutput")) {
+            if (value.equals("禁用(nilptr)")) {
+                configure.setOption("stringoutput", "");
+            } else 
+            if (value.equals("字符串池(-stringlists)")) {
+                configure.setOption("stringoutput", "-stringlists");
+            } else{
+                configure.setOption("stringoutput", "-stringlists-sign");
+            }
+            return true;
+        }
+        if (key.equals("strlistfile") || key.equals("languagefile")) {
+            configure.setOption(key, value);
+            return true;
+        }
         if (key.equals("debugable")) {
             if (value.equals("禁用(nilptr)")) {
                 configure.setOption("debugable", "");
@@ -530,6 +545,20 @@ class XlangProjectProp : ProjectPropInterface {
             } else {
                 return "1";
             }
+        }
+        if (key.equals("stringoutput")) {
+            String options = configure.getOption(key);
+            if (options.equals("")) {
+                return "0" ;
+            } else 
+            if (options.equals("-stringlists-sign")) {
+                return "2" ;
+            } else{
+                return "1" ;
+            }
+        }
+        if (key.equals("strlistfile")  || key.equals("languagefile")) {
+            return configure.getOption(key);
         }
         if (key.equals("debuginfo")) {
             String options = configure.getOption("debugdatabase");
@@ -1248,6 +1277,8 @@ class XlangProjectProp : ProjectPropInterface {
             }
         }
 
+
+        
         args.add("-o");
 
         String out_path = configure.getOption("outpath");
@@ -1270,6 +1301,39 @@ class XlangProjectProp : ProjectPropInterface {
                 args.add(out_path.appendPath(configure.getOption("outname")));
             }
         }
+        
+        String strlist = configure.getOption("stringoutput");
+        if (strlist.length() != 0){
+            args.add(strlist);
+            String stroutfile = configure.getOption("strlistfile");
+            if (stroutfile.length() == 0){
+                stroutfile = "string.xts";
+                if (_system_.getPlatformId() == 0) { /* windows */
+                    args.add("\"" + out_path.appendPath(stroutfile) + "\"");
+                } else {
+                    args.add(out_path.appendPath(stroutfile));
+                }
+            }else{
+                stroutfile = String.formatPath(XEnvironment.MapVariable(object, configure, stroutfile), false);
+                if (_system_.getPlatformId() == 0) { /* windows */
+                    args.add("\"" + stroutfile + "\"");
+                } else {
+                    args.add(stroutfile);
+                }
+            }
+        }
+        
+        strlist = configure.getOption("languagefile");
+        if (strlist.length() != 0){
+            args.add("-langmapping");
+            strlist = String.formatPath(XEnvironment.MapVariable(object, configure, strlist), false);
+            if (_system_.getPlatformId() == 0) { /* windows */
+                args.add("\"" + strlist + "\"");
+            } else {
+                args.add(strlist);
+            }
+        }
+        
         String [] szArgs = new String[args.size() + __args.size()];
 
         int argpos = 0;
@@ -1737,7 +1801,7 @@ class XlangProjectProp : ProjectPropInterface {
                 if (e.getErrorCode() == 0x000002E4) {
                     XWorkspace.workspace.runOnUi(new Runnable() {
                         void run()override {
-                            if (QXMessageBox.Question("注意", "被调试程序需要提升权限, 是否重新以提升的权限运行?", QXMessageBox.Ok | QXMessageBox.Cancel, QXMessageBox.Ok) == QXMessageBox.Ok) {
+                            if (QMessageBox.Question("注意", "被调试程序需要提升权限, 是否重新以提升的权限运行?", QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Ok) == QMessageBox.Ok) {
                                 XWorkspace.runAsAdministrator();
                             }
                         }
@@ -2186,7 +2250,7 @@ class XlangProjectProp : ProjectPropInterface {
             String destProj = String.formatPath(projectDir.appendPath(filename), false);
 
             if (XPlatform.existsSystemFile(destProj)) {
-                if (QXMessageBox.Question("注意", destProj + "<a style=\"color:#ffff0000\">继续建立新文件将改写原有文件?</a>", QXMessageBox.Ok | QXMessageBox.No, QXMessageBox.Ok) == QXMessageBox.No) {
+                if (QMessageBox.Question("注意", destProj + "<a style=\"color:#ffff0000\">继续建立新文件将改写原有文件?</a>", QMessageBox.Ok | QMessageBox.No, QMessageBox.Ok) == QMessageBox.No) {
                     return false;
                 }
             }
@@ -2207,7 +2271,7 @@ class XlangProjectProp : ProjectPropInterface {
         return false;
     }
     
-    public ICompileInfo parseOutputLine(@NotNilptr QXSci sci, int position, int line,@NotNilptr  String lineText){
+    public ICompileInfo parseOutputLine(@NotNilptr QScintilla sci, int position, int line,@NotNilptr  String lineText){
         int pos = lineText.lastIndexOf('(');
         bool succeed = false;
         try{
@@ -2283,16 +2347,16 @@ class XlangProjectProp : ProjectPropInterface {
 
         if (userType != nilptr && userType.equals("project")) {
             if (Pattern.test(projectName, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true) == false) {
-                QXMessageBox.Critical("错误", "项目名称不合法", QXMessageBox.Ok, QXMessageBox.Ok);
+                QMessageBox.Critical("错误", "项目名称不合法", QMessageBox.Ok, QMessageBox.Ok);
                 return false;
             }
             String priject_dir = String.formatPath(projectDir.appendPath(projectName), false);
             if (XPlatform.existsSystemFile(priject_dir)) {
-                QXMessageBox.Critical("错误", "该位置已存在同名项目, 请重新选择路径或者改变项目名", QXMessageBox.Ok, QXMessageBox.Ok);
+                QMessageBox.Critical("错误", "该位置已存在同名项目, 请重新选择路径或者改变项目名", QMessageBox.Ok, QMessageBox.Ok);
                 return false;
             } else {
                 if (mkdirs(priject_dir) == false) {
-                    QXMessageBox.Critical("错误", "无法在此位置建立新目录, 请重新选择路径", QXMessageBox.Ok, QXMessageBox.Ok);
+                    QMessageBox.Critical("错误", "无法在此位置建立新目录, 请重新选择路径", QMessageBox.Ok, QMessageBox.Ok);
                     return false;
                 }
             }
@@ -2301,16 +2365,16 @@ class XlangProjectProp : ProjectPropInterface {
 
         if (uuid.equals("100911ae-27e8-4479-a56f-af015358f1a6")) {
             if (Pattern.test(projectName, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true) == false) {
-                QXMessageBox.Critical("错误", "项目名称不合法", QXMessageBox.Ok, QXMessageBox.Ok);
+                QMessageBox.Critical("错误", "项目名称不合法", QMessageBox.Ok, QMessageBox.Ok);
                 return false;
             }
             String priject_dir = String.formatPath(projectDir.appendPath(projectName), false);
             if (XPlatform.existsSystemFile(priject_dir)) {
-                QXMessageBox.Critical("错误", "该位置已存在同名项目, 请重新选择路径或者改变项目名", QXMessageBox.Ok, QXMessageBox.Ok);
+                QMessageBox.Critical("错误", "该位置已存在同名项目, 请重新选择路径或者改变项目名", QMessageBox.Ok, QMessageBox.Ok);
                 return false;
             } else {
                 if (mkdirs(priject_dir) == false) {
-                    QXMessageBox.Critical("错误", "无法在此位置建立新目录, 请重新选择路径", QXMessageBox.Ok, QXMessageBox.Ok);
+                    QMessageBox.Critical("错误", "无法在此位置建立新目录, 请重新选择路径", QMessageBox.Ok, QMessageBox.Ok);
                     return false;
                 }
             }
@@ -2329,16 +2393,16 @@ class XlangProjectProp : ProjectPropInterface {
         {
 
             if (Pattern.test(projectName, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true) == false) {
-                QXMessageBox.Critical("错误", "项目名称不合法", QXMessageBox.Ok, QXMessageBox.Ok);
+                QMessageBox.Critical("错误", "项目名称不合法", QMessageBox.Ok, QMessageBox.Ok);
                 return false;
             }
             String priject_dir = String.formatPath(projectDir.appendPath(projectName), false);
             if (XPlatform.existsSystemFile(priject_dir)) {
-                QXMessageBox.Critical("错误", "该位置已存在同名项目, 请重新选择路径或者改变项目名", QXMessageBox.Ok, QXMessageBox.Ok);
+                QMessageBox.Critical("错误", "该位置已存在同名项目, 请重新选择路径或者改变项目名", QMessageBox.Ok, QMessageBox.Ok);
                 return false;
             } else {
                 if (mkdirs(priject_dir) == false) {
-                    QXMessageBox.Critical("错误", "无法在此位置建立新目录, 请重新选择路径", QXMessageBox.Ok, QXMessageBox.Ok);
+                    QMessageBox.Critical("错误", "无法在此位置建立新目录, 请重新选择路径", QMessageBox.Ok, QMessageBox.Ok);
                     return false;
                 }
             }

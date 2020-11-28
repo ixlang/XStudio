@@ -1,20 +1,20 @@
 //xlang Source, Name:DeviceListDialog.xcsm 
 //Date: Mon Dec 19:27:20 2019 
 
-class DeviceListDialog : QXDialog{
-    QXPushButton btnref, btndef, btnclose;
-    QXCheckBox chklogcat;
-    QXComboBox cbbloglvl;
-    QXTreeView list;
+class DeviceListDialog : QDialog{
+    QPushButton btnref, btndef, btnclose;
+    QCheckBox chklogcat;
+    QComboBox cbbloglvl;
+    QTreeWidget list;
     Device [] devices;
     long defitem = 0;
     Thread refthread;
     
-    DeviceListDialog(QXDialog d){
+    DeviceListDialog(QDialog d){
         attach (d);
     }
     
-    public static void create(QXDialog d){
+    public static void create(QDialog d){
         DeviceListDialog ad = new DeviceListDialog(d);
         ad.show();
     }
@@ -24,14 +24,14 @@ class DeviceListDialog : QXDialog{
     void onAttach(){
         setWindowIcon(Resources.thumb_png);
 
-        chklogcat = (QXCheckBox)attachByName(new QXCheckBox(), "chklogcat");
-        cbbloglvl = (QXComboBox)attachByName(new QXComboBox(), "cbbloglvl");
+        chklogcat = (QCheckBox)attachByName(new QCheckBox(), "chklogcat");
+        cbbloglvl = (QComboBox)attachByName(new QComboBox(), "cbbloglvl");
         
-        btnref = (QXPushButton)attachByName(new QXPushButton(), "btnref");
-        btndef = (QXPushButton)attachByName(new QXPushButton(), "btndef");
-        btnclose = (QXPushButton)attachByName(new QXPushButton(), "btnclose");
+        btnref = (QPushButton)attachByName(new QPushButton(), "btnref");
+        btndef = (QPushButton)attachByName(new QPushButton(), "btndef");
+        btnclose = (QPushButton)attachByName(new QPushButton(), "btnclose");
         
-        list = (QXTreeView)attachByName(new QXTreeView(), "devlist");
+        list = (QTreeWidget)attachByName(new QTreeWidget(), "devlist");
         
         String [] columns = {"设备", "序号", "类型"};
         
@@ -46,22 +46,22 @@ class DeviceListDialog : QXDialog{
         cbbloglvl.addItems(lvlitems);
         cbbloglvl.setCurrentIndex(LogcatCacher.logcat_level);
         chklogcat.setOnClickListener(
-        new QXDialog.onClickListener() {
-            void onClick(QXObject obj, bool checked)override {
+        new onClickListener() {
+            void onClick(QObject obj, bool checked)override {
                 XAndroid.setLogcatEnable(checked);
             }
         });
         
         btnref.setOnClickListener(
-        new QXDialog.onClickListener() {
-            void onClick(QXObject obj, bool checked)override {
+        new onClickListener() {
+            void onClick(QObject obj, bool checked)override {
                 refreshDevice();
             }
         });
         
         btndef.setOnClickListener(
-        new QXDialog.onClickListener() {
-            void onClick(QXObject obj, bool checked)override {
+        new onClickListener() {
+            void onClick(QObject obj, bool checked)override {
                 long item = list.getSelItem();
                 if (item != 0){
                     String defdev = list.getItemText(item, 1);
@@ -72,21 +72,21 @@ class DeviceListDialog : QXDialog{
                     defitem = item;
                     XAndroid.setDefaultDevice(defdev);
                 }else{
-                    QXMessageBox.Critical("注意","选择的设备无效",QXMessageBox.Ok,QXMessageBox.Ok);
+                    QMessageBox.Critical("注意","选择的设备无效",QMessageBox.Ok,QMessageBox.Ok);
                 }
             }
         });
         
         btnclose.setOnClickListener(
-        new QXDialog.onClickListener() {
-            void onClick(QXObject obj, bool checked)override {
+        new onClickListener() {
+            void onClick(QObject obj, bool checked)override {
                 close();
             }
         });
         
         cbbloglvl.setOnComboBoxEventListener(
             new onComboBoxEventListener() {
-                void onItemSelected(QXObject obj, int id) {
+                void onItemSelected(QObject obj, int id) {
                     XAndroid.setLogcatLevel(id);
                 }
             }

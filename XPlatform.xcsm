@@ -58,6 +58,12 @@ class XPlatform{
         return _system_.openFile(original_path, mode);
     }
     
+    public static bool renameFile(@NotNilptr String oldfile,@NotNilptr  String newfile){
+		String old_file = converToPlatformCharSet(oldfile);
+        String new_file = converToPlatformCharSet(newfile);
+        return _system_.rename(old_file, new_file);
+    }
+    
     public static bool existsSystemFile(@NotNilptr String filepath){
 		String original_path = converToPlatformCharSet(filepath);
         return _system_.fileExists(original_path);

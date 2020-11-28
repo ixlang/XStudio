@@ -1,39 +1,39 @@
 //xlang Source, Name:StatusBarMgr.xcs 
 //Date: Sat Aug 11:30:44 2018 
 class StatusBarMgr{
-	QXMainWindow mainWindow;
-	static QXStatusBar statusBar;
+	QMainWindow mainWindow;
+	static QStatusBar statusBar;
     static StatusBarMgr statusmgr;
-	static QXProgressBar progressBar;
-	static QXLabel status;
-    static QXPushButton background_task;
+	static QProgressBar progressBar;
+	static QLabel status;
+    static QPushButton background_task;
     
     static Timer task_timer = new Timer();
     
-	public bool create(QXMainWindow win){  
+	public bool create(QMainWindow win){  
 		mainWindow = win; 
 		statusBar = mainWindow.getStatusBar();
         statusmgr = this;
 		
-        status = new QXLabel();
+        status = new QLabel();
         status.create();
         statusBar.addWidget(status, 1);
         status.setText("已就绪");
                 
-        background_task = new QXPushButton();
+        background_task = new QPushButton();
         background_task.create();
         background_task.hide();
         background_task.resize(20,20);
         background_task.setFixedWidth(20);
         statusBar.addPermanentWidget(background_task, 0);
         
-        background_task.setOnClickListener(new QXWidget.onClickListener(){
-            void onPress(QXObject obj) override{
+        background_task.setOnClickListener(new onClickListener(){
+            void onPress(QObject obj) override{
                 showDLMgr();
             }
         });
         
-        progressBar = new QXProgressBar();
+        progressBar = new QProgressBar();
         progressBar.create();
         progressBar.resize(200,16);
         progressBar.hide();
@@ -85,8 +85,8 @@ class StatusBarMgr{
     
     public static bool showDLMgr()
     {
-        QXDialog newDlg = new QXDialog();
-        if (newDlg.load("ui/dlmgr.ui") == false) {
+        QDialog newDlg = new QDialog();
+        if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/dlmgr.ui"))) == false) {
             return false;
         }
         DownloadManager dlmgr = new DownloadManager();

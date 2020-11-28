@@ -1,7 +1,7 @@
 
-class XWndOutput: QXDockWidget
+class XWndOutput: QDockWidget
 {
-    QXSci _scicomm, _sciext;
+    QScintilla _scicomm, _sciext;
     static const long APPENTEVENTID = 1;
     List<String> outputList = new List<String>();
     List<String> outputListext = new List<String>();
@@ -9,13 +9,13 @@ class XWndOutput: QXDockWidget
     static bool outputInFocus = false;
     public static XWndOutput outputWnd;
     Thread mergeThread = nilptr, mergeThreadext = nilptr;
-    QXPushButton btnCls;
-    QXWidget edtarea;
+    QPushButton btnCls;
+    QWidget edtarea;
     //Timer urlmon = new Timer();
     bool [] output_flags = new bool[16];
     int output_count = 2;
     bool sciisHand = false;
-    QXPushButton [] btnOutput = new QXPushButton[16];
+    QPushButton [] btnOutput = new QPushButton[16];
     
     Pattern url_match = new Pattern("((http[s]{0,1}|ftp)://[a-zA-Z0-9\\.\\-]" +
                                     "+\\.([a-zA-Z]{2,4})(:\\d+)?(/[a-zA-Z0-9\\.\\-~!@#$%^&*+?:_/=<>]*)?)|" +
@@ -188,7 +188,7 @@ class XWndOutput: QXDockWidget
         mergeThread.start();
     }
 
-    public int appendTextAndScroll(@NotNilptr QXSci _sci,@NotNilptr  String appstr){
+    public int appendTextAndScroll(@NotNilptr QScintilla _sci,@NotNilptr  String appstr){
         long displaytime = _system_.currentTimeMillis();
         bool bWrap = _sci.isWrap();
         int cutcountline  = 0;
@@ -298,94 +298,94 @@ class XWndOutput: QXDockWidget
         mergeThreadext.start();
     }
     
-    public void syntaxForOutput(@NotNilptr QXSci _sci)
+    public void syntaxForOutput(@NotNilptr QScintilla _sci)
     {
         if (Setting.isDarkStyle()) {
             syntaxForOutputDark(_sci);
             return ;
         }
-        _sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);
+        _sci.sendEditor(QScintilla.SCI_SETCODEPAGE, QScintilla.SC_CP_UTF8);
         //_sci.setWrap(true);
-        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_DEFAULT, 0xffffffff);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_DEFAULT, 0xff222827);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, 75, 0xff222827);
-        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
-        _sci.sendEditor(QXSci.SCI_CLEARDOCUMENTSTYLE, 0, 0);
+        _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.STYLE_DEFAULT, 0xffffffff);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_DEFAULT, 0xff222827);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, 75, 0xff222827);
+        _sci.sendEditor(QScintilla.SCI_STYLECLEARALL, 0, 0);
+        _sci.sendEditor(QScintilla.SCI_CLEARDOCUMENTSTYLE, 0, 0);
 
-        //_sci.sendEditor(QXSci.STYLE_LINENUMBER, 1, 0);
+        //_sci.sendEditor(QScintilla.STYLE_LINENUMBER, 1, 0);
         bool bmac = (_system_.getPlatformId() == 2);
         if (bmac == false) {
-            _sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,"Consolas");
-            _sci.sendEditor(QXSci.SCI_STYLESETSIZE, QXSci.STYLE_DEFAULT,9);
+            _sci.sendEditor(QScintilla.SCI_STYLESETFONT, QScintilla.STYLE_DEFAULT,"Consolas");
+            _sci.sendEditor(QScintilla.SCI_STYLESETSIZE, QScintilla.STYLE_DEFAULT,9);
         } else {
-            _sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,"Monaco");
-            _sci.sendEditor(QXSci.SCI_STYLESETSIZE, QXSci.STYLE_DEFAULT,11);
+            _sci.sendEditor(QScintilla.SCI_STYLESETFONT, QScintilla.STYLE_DEFAULT,"Monaco");
+            _sci.sendEditor(QScintilla.SCI_STYLESETSIZE, QScintilla.STYLE_DEFAULT,11);
         }
 
-        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
-        _sci.sendEditor(QXSci.SCI_SETEOLMODE, 1, 0);
-        _sci.sendEditor(QXSci.SCI_SETSELBACK,1,0xfff1ebe5);
-        _sci.sendEditor(QXSci.SCI_SETSELFORE,0,0);
+        _sci.sendEditor(QScintilla.SCI_STYLECLEARALL, 0, 0);
+        _sci.sendEditor(QScintilla.SCI_SETEOLMODE, 1, 0);
+        _sci.sendEditor(QScintilla.SCI_SETSELBACK,1,0xfff1ebe5);
+        _sci.sendEditor(QScintilla.SCI_SETSELFORE,0,0);
 
-        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, 0, QXSci.SC_MARGIN_NUMBER);
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 0, 65);
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 1, 5);
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 2, 0);
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 3, 0);
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 4, 0);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINTYPEN, 0, QScintilla.SC_MARGIN_NUMBER);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 0, 65);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 1, 5);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 2, 0);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 3, 0);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 4, 0);
 
-        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_LINENUMBER, 0xffefefef);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_LINENUMBER, 0xffaf912b);
-        _sci.sendEditor(QXSci.SCI_SETMARGINLEFT, 0, 0);
+        _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.STYLE_LINENUMBER, 0xffefefef);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_LINENUMBER, 0xffaf912b);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINLEFT, 0, 0);
 
-        _sci.sendEditor(QXSci.SCI_SETCARETFORE,0xff000000,0);
+        _sci.sendEditor(QScintilla.SCI_SETCARETFORE,0xff000000,0);
 
-        _sci.sendEditor(QXSci.SCI_SETCARETLINEVISIBLE, 1);
-        _sci.sendEditor(QXSci.SCI_SETCARETLINEBACK, 0xffefefef);
+        _sci.sendEditor(QScintilla.SCI_SETCARETLINEVISIBLE, 1);
+        _sci.sendEditor(QScintilla.SCI_SETCARETLINEBACK, 0xffefefef);
 
-        _sci.sendEditor(QXSci.SCI_SETTABWIDTH, 4);
+        _sci.sendEditor(QScintilla.SCI_SETTABWIDTH, 4);
         _sci.setWrap(Setting.isOutputWrap());
     }
 
-    public void syntaxForOutputDark(@NotNilptr QXSci _sci)
+    public void syntaxForOutputDark(@NotNilptr QScintilla _sci)
     {
-        _sci.sendEditor(QXSci.SCI_SETCODEPAGE, QXSci.SC_CP_UTF8);
+        _sci.sendEditor(QScintilla.SCI_SETCODEPAGE, QScintilla.SC_CP_UTF8);
         //_sci.setWrap(true);
-        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_DEFAULT, 0xff262525);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_DEFAULT, 0xffefefef);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, 75, 0xffefefef);
-        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
-        _sci.sendEditor(QXSci.SCI_CLEARDOCUMENTSTYLE, 0, 0);
+        _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.STYLE_DEFAULT, 0xff262525);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_DEFAULT, 0xffefefef);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, 75, 0xffefefef);
+        _sci.sendEditor(QScintilla.SCI_STYLECLEARALL, 0, 0);
+        _sci.sendEditor(QScintilla.SCI_CLEARDOCUMENTSTYLE, 0, 0);
 
-        //_sci.sendEditor(QXSci.STYLE_LINENUMBER, 1, 0);
+        //_sci.sendEditor(QScintilla.STYLE_LINENUMBER, 1, 0);
         bool bmac = (_system_.getPlatformId() == 2);
         if (bmac == false) {
-            _sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,"Consolas");
-            _sci.sendEditor(QXSci.SCI_STYLESETSIZE, QXSci.STYLE_DEFAULT,9);
+            _sci.sendEditor(QScintilla.SCI_STYLESETFONT, QScintilla.STYLE_DEFAULT,"Consolas");
+            _sci.sendEditor(QScintilla.SCI_STYLESETSIZE, QScintilla.STYLE_DEFAULT,9);
         } else {
-            _sci.sendEditor(QXSci.SCI_STYLESETFONT, QXSci.STYLE_DEFAULT,"Monaco");
-            _sci.sendEditor(QXSci.SCI_STYLESETSIZE, QXSci.STYLE_DEFAULT,11);
+            _sci.sendEditor(QScintilla.SCI_STYLESETFONT, QScintilla.STYLE_DEFAULT,"Monaco");
+            _sci.sendEditor(QScintilla.SCI_STYLESETSIZE, QScintilla.STYLE_DEFAULT,11);
         }
-        _sci.sendEditor(QXSci.SCI_STYLECLEARALL, 0, 0);
-        _sci.sendEditor(QXSci.SCI_SETEOLMODE, 1, 0);
-        _sci.sendEditor(QXSci.SCI_SETSELBACK,1,0xff3e4849);
-        _sci.sendEditor(QXSci.SCI_SETSELFORE,0,0);
+        _sci.sendEditor(QScintilla.SCI_STYLECLEARALL, 0, 0);
+        _sci.sendEditor(QScintilla.SCI_SETEOLMODE, 1, 0);
+        _sci.sendEditor(QScintilla.SCI_SETSELBACK,1,0xff3e4849);
+        _sci.sendEditor(QScintilla.SCI_SETSELFORE,0,0);
 
-        _sci.sendEditor(QXSci.SCI_SETMARGINTYPEN, 0, QXSci.SC_MARGIN_NUMBER);
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 0, 65);
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 1, 5);
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 2, 0);
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 3, 0);
-        _sci.sendEditor(QXSci.SCI_SETMARGINWIDTHN, 4, 0);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINTYPEN, 0, QScintilla.SC_MARGIN_NUMBER);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 0, 65);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 1, 5);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 2, 0);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 3, 0);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, 4, 0);
 
-        _sci.sendEditor(QXSci.SCI_STYLESETBACK, QXSci.STYLE_LINENUMBER, 0xff262525);
-        _sci.sendEditor(QXSci.SCI_STYLESETFORE, QXSci.STYLE_LINENUMBER, 0xff666666);
-        _sci.sendEditor(QXSci.SCI_SETMARGINLEFT, 0, 0);
+        _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.STYLE_LINENUMBER, 0xff262525);
+        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.STYLE_LINENUMBER, 0xff666666);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINLEFT, 0, 0);
 
-        _sci.sendEditor(QXSci.SCI_SETCARETFORE,0xffffffff,0);
+        _sci.sendEditor(QScintilla.SCI_SETCARETFORE,0xffffffff,0);
 
-        _sci.sendEditor(QXSci.SCI_SETCARETLINEVISIBLE, 1);
-        _sci.sendEditor(QXSci.SCI_SETCARETLINEBACK, 0xff202020);
+        _sci.sendEditor(QScintilla.SCI_SETCARETLINEVISIBLE, 1);
+        _sci.sendEditor(QScintilla.SCI_SETCARETLINEBACK, 0xff202020);
         _sci.setWrap(Setting.isOutputWrap());
     }
 
@@ -399,7 +399,7 @@ class XWndOutput: QXDockWidget
     }
     
     onClickListener extclick = new onClickListener(){
-        void onClick(@NotNilptr QXObject obj, bool checked) {
+        void onClick(@NotNilptr QObject obj, bool checked) {
             int n = (int)obj.getTag();
             output_flags[n] = checked;
             switch_sci(false);
@@ -439,49 +439,49 @@ class XWndOutput: QXDockWidget
     
     public void onAttach()
     {
-        edtarea = (QXWidget)attachByName(new QXWidget(),"edtarea");
+        edtarea = (QWidget)attachByName(new QWidget(),"edtarea");
         
-        btnOutput[0] = (QXPushButton)attachByName(new QXPushButton(),"btnBuild");
-        btnOutput[1] = (QXPushButton)attachByName(new QXPushButton(),"btnDebug");
+        btnOutput[0] = (QPushButton)attachByName(new QPushButton(),"btnBuild");
+        btnOutput[1] = (QPushButton)attachByName(new QPushButton(),"btnDebug");
         
         for (int i =2; i < 16; i ++){
-            btnOutput[i] = (QXPushButton)attachByName(new QXPushButton(),"btnDebug_" + i);
+            btnOutput[i] = (QPushButton)attachByName(new QPushButton(),"btnDebug_" + i);
             btnOutput[i].hide();
             btnOutput[i].setTag(i);
             btnOutput[i].setOnClickListener(extclick);
         }
         
-        btnCls = (QXPushButton)attachByName(new QXPushButton(),"btnCls");
+        btnCls = (QPushButton)attachByName(new QPushButton(),"btnCls");
         btnOutput[0].setOnClickListener(new onClickListener(){
-            void onClick(QXObject obj, bool checked) {
+            void onClick(QObject obj, bool checked) {
                 output_flags[0] = checked;
                 switch_sci(true);
             }
         });
         
         btnOutput[1].setOnClickListener(new onClickListener(){
-            void onClick(QXObject obj, bool checked) {
+            void onClick(QObject obj, bool checked) {
                 output_flags[1] = checked;
                 switch_sci(true);
             }
         });
         
         btnCls.setOnClickListener(new onClickListener(){
-            void onClick(QXObject obj, bool checked) {
+            void onClick(QObject obj, bool checked) {
                 _scicomm.setText("");
                 _sciext.setText("");
             }
         });
         
-        _scicomm = new QXSci();
-        _sciext = new QXSci();
+        _scicomm = new QScintilla();
+        _sciext = new QScintilla();
 
         initSci(_scicomm);
         initSci(_sciext);
 
         outputWnd = this;
         edtarea.setOnLayoutEventListener(new onLayoutEventListener() {
-            void onResize(QXObject obj, int w, int h, int oldw, int oldh)override {
+            void onResize(QObject obj, int w, int h, int oldw, int oldh)override {
                 if (_scicomm != nilptr) {
                     _scicomm.resize(w, h );
                 }
@@ -506,12 +506,12 @@ class XWndOutput: QXDockWidget
         btnOutput[1].setCheck(true);
     }
 
-    public void initSci(@NotNilptr QXSci _sci){
+    public void initSci(@NotNilptr QScintilla _sci){
         __nilptr_safe(edtarea);
         if (_sci.create(edtarea)) {
             syntaxForOutput(_sci);
             _sci.setOnSciEventListener(new SciEventListener() {
-                void ON_DOUBLECLICK(@NotNilptr QXSci sci,int position, int line, int modifiers) {
+                void ON_DOUBLECLICK(@NotNilptr QScintilla sci,int position, int line, int modifiers) {
 
                     String lineText = sci.getText(line);
                     if (lineText.length() > 0) {
@@ -539,28 +539,28 @@ class XWndOutput: QXDockWidget
                 }
             });
             
-            _sci.setIndicStyle(1, QXSci.INDIC_PLAIN);
-            _sci.sendEditor(QXSci.SCI_INDICSETFORE,1,0xfff0d964);
+            _sci.setIndicStyle(1, QScintilla.INDIC_PLAIN);
+            _sci.sendEditor(QScintilla.SCI_INDICSETFORE,1,0xfff0d964);
             _sci.setIndicCurrent(1);
             
-            QXWidget viewport = _sci.viewPort();
+            QWidget viewport = _sci.viewPort();
             if (viewport != nilptr){
                 viewport.setOnMouseEventListener(new onMouseEventListener() {
 
-                    void onMouseMove(QXObject obj, int Button, int x, int y, int flags, int source)override {
+                    void onMouseMove(QObject obj, int Button, int x, int y, int flags, int source)override {
                         if (sciisHand) {
                             int pos = _sci.positionFromPoint(x, y);
                             int start = _sci.getIndicStart(1, pos);
                             int end = _sci.getIndicEnd(1, start);
                             int dic = _sci.IndicForPosition(start);
                             if (dic != 0 && start != 0 && end != 0) {
-                                _sci.setCursor(QXSci.cursorHand);
+                                _sci.setCursor(QScintilla.cursorHand);
                                 showTips(_sci, pos, "按下鼠标左键在浏览器中访问链接.");
                             }
                         }
                     }
 
-                    void onMouseButtonPress(QXObject obj, int Button, int x, int y, int flags, int source)override {
+                    void onMouseButtonPress(QObject obj, int Button, int x, int y, int flags, int source)override {
                         if (sciisHand) {
                             int pos = _sci.positionFromPoint(x, y);
                             int start = _sci.getIndicStart(1, pos);
@@ -580,17 +580,17 @@ class XWndOutput: QXDockWidget
             }
             _sci.setOnKeyEventListener(new onKeyEventListener() {
 
-                bool onKeyPress(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier)override {
-                    if (key == Key_Control && sciisHand == false) {
+                bool onKeyPress(QObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier)override {
+                    if (key == Constant.Key_Control && sciisHand == false) {
                         sciisHand = true;
                         testUrl(_sci);
                     }
 
                     return true;
                 }
-                bool onKeyRelease(QXObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier)override {
-                    if (key == Key_Control ) {
-                        _sci.setCursor(QXSci.cursorText);
+                bool onKeyRelease(QObject obj, int key, bool repeat, int count, String text, int scanCode, int virtualKey, int modifier)override {
+                    if (key == Constant.Key_Control ) {
+                        _sci.setCursor(QScintilla.cursorText);
                         sciisHand = false;
                     }
                     return true;
@@ -598,30 +598,30 @@ class XWndOutput: QXDockWidget
             });
 
             _sci.setOnFocusEventListener(new onFocusEventListener() {
-                void onFocusIn(QXObject obj, bool focus, int reson) {
+                void onFocusIn(QObject obj, bool focus, int reson) {
                     sciisHand = false;
                     XFindDlg.findinOutput = true;
-                    _sci.setCursor(QXSci.cursorText);
+                    _sci.setCursor(QScintilla.cursorText);
                 }
-                void onFocusOut(QXObject obj, bool focus, int reson) {
+                void onFocusOut(QObject obj, bool focus, int reson) {
                     sciisHand = false;
-                    _sci.setCursor(QXSci.cursorText);
+                    _sci.setCursor(QScintilla.cursorText);
                 }
             });
         }
     }
-    public void showTips(@NotNilptr QXSci _sci, int position, String content)
+    public void showTips(@NotNilptr QScintilla _sci, int position, String content)
     {
         _sci.showTips(position, content);
     }
-    public QXSci getCurrentSci(){
+    public QScintilla getCurrentSci(){
         if (_scicomm.isVisible()){
             return _scicomm;
         }else{
             return _sciext;
         }
     }
-    public void testUrl(@NotNilptr QXSci _sci)
+    public void testUrl(@NotNilptr QScintilla _sci)
     {
         if (_sci.isModified()) {
             String text = _sci.getText();
