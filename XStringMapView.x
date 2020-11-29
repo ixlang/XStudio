@@ -14,7 +14,7 @@ class XStringMapView : DocumentView{
     QPushButton btnfirst, btnlast, btnprev, btnnext, btndel, btnimport;
     QComboBox pagecmb;
     
-    bool bloaded = false;
+    bool bloaded = false, bUpdating = false;
     
     static String unescape(String text){
         return text.replace("\t", "\\t").replace("\b", "\\b").replace("\r", "\\r").replace("\n", "\\n");
@@ -420,6 +420,21 @@ class XStringMapView : DocumentView{
                     
                     }
                 });
+                
+            _container.setOnTableWidgetEventListener(new TableWidgetEventListener(){
+                public void onCellChange(QTableWidget object, int row,int column) {
+                    if (bUpdating){
+                        return ;
+                    }
+                    int n = currentPage * 1024 + row;
+                    if (n >= 0 && n < langvect.size()){
+                        if (langvect[n].setLangText(curlang, _container.getText(row, 1))){
+                            setModified(true);
+                        }
+                    }
+                }
+            });
+            
             _container.show();
             return true;
         }
@@ -443,22 +458,11 @@ class XStringMapView : DocumentView{
     }
         
     void updatecontent(){
-        int begin = currentPage * 1024;
-        bool modified = isModified();
-        for (int i = 0; i < 1024; i++){
-            int n = i + begin;
-            if (n < langvect.size()){
-                if (langvect[n].setLangText(curlang, _container.getText(i, 1))){
-                    modified = true;
-                }
-            }else{
-                break;
-            }
-        }
-        setModified(modified);
+
     }
     
     void updateDisplay(){
+        bUpdating = true;
         int begin = currentPage * 1024;
         if (begin < langvect.size()){
  
@@ -487,6 +491,7 @@ class XStringMapView : DocumentView{
             }
         }
         pagecmb.setText("" + (currentPage + 1));
+        bUpdating = false;
     }
     
 

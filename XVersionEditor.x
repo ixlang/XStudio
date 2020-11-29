@@ -5,7 +5,7 @@ class XVersionEditor : DocumentView{
     QTableWidget _container;
     XWorkspace _workspace;
     JsonObject versionObj = nilptr;
-    
+    bool updating = false;
     static String [] HVComulns = {" 公司名称   ", " 版权描述   ", " 产品版本   "," 产品名称   ", " 文件名称   ", " 文件版本   ",  " 文件描述   "};
     static String [] HHComulns = {"值"};
     
@@ -34,6 +34,23 @@ class XVersionEditor : DocumentView{
             
             _container.setVHColumns(HVComulns);
             _container.setHHColumns(HHComulns);
+            
+            _container.setOnTableWidgetEventListener(new TableWidgetEventListener(){
+                public void onCellChange(QTableWidget object, int row,int column) {
+                    if (updating){
+                        return;
+                    }
+                    String [] keys = {"CompanyName", "LegalCopyright", "ProductVersion", "ProductName", "InternalName", "FileVersion", "FileDescription" };
+                    if (versionObj != nilptr && row >= 0 && row < keys.length){
+                        while (versionObj.has(keys[row])){
+                            versionObj.remove(keys[row]);
+                        }
+                        String text = object.getText(row,column);
+                        versionObj.put(keys[row],text);
+                        setModified(true);
+                    }
+                }
+            });
             
             _container.show();
             return true;
@@ -67,10 +84,12 @@ class XVersionEditor : DocumentView{
     }
     
     void loadVersion(){
+        updating = true;
         String [] keys = {"CompanyName", "LegalCopyright", "ProductVersion", "ProductName", "InternalName", "FileVersion", "FileDescription" };
         for (int i =0; i < keys.length; i++){
             setToTable(keys[i], i);
         }
+        updating = false;
     }
     
 
