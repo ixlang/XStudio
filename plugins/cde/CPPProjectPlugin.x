@@ -56,8 +56,10 @@ class CPPProjectPlugin : IProjectPlugin{
             }
         }
         
-        __ais[0].setEnabled(enabled);
-        __ais[1].setEnabled(enabled);
+        if (__ais != nilptr){
+            __ais[0].setEnabled(enabled);
+            __ais[1].setEnabled(enabled);
+        }
     }
     
 	bool onpreRun(IProject project, bool debug) override {
