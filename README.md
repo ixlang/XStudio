@@ -72,7 +72,7 @@ F5 即可运行;
 
 ## 已支持的其他语言类型的开发
 
-### CDE (C/C++ Develop Extends)：多平台的 C/C++ 项目开发支持(扩展组件下载地址:https://xlang.link/publish/cde.xsp 或本repo 的 Release 中cde.xsp)
+### CDE (C/C++ Develop Extends)：多平台的 C/C++ 项目开发支持(扩展组件下载地址:http://release.xlang.link/extensions/xstudio/cde.xsp)
 ### CDE 扩展已支持的细节:
  从新建项目向导中建立C/C++项目
  代码高亮
