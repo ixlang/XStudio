@@ -1,8 +1,8 @@
 # XStudio
 XStudio 是 xlang 语言的御用集成开发环境, 此项目使用 xlang 开发, 支持各种平台(windows, linux, mac), 并且具有高度扩展和可定制性, 另外已经支持用作 C/C++ 项目的开发, 未来将会支持更多其他语言和类型的开发.
 
-![11](https://xlang.link/ide.png)
-![22](https://xlang.link/ide1.png)
+![11](https://xlang.link/ide.jpg)
+![22](https://xlang.link/ide1.jpg)
 
 该项目支持任何形式的修改与分发.
 
