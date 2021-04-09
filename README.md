@@ -23,7 +23,8 @@ XStudio 是 xlang 语言的御用集成开发环境, 此项目使用 xlang 开�
 
 ![image](https://raw.githubusercontent.com/ixlang/XStudio/master/IDE.jpg)
 编译环境下载: http://xlang.link/ 无需安装，解压即用.
-
+![](https://xlang.link/ide.png)
+![](https://xlang.link/ide1.png)
 # 编译步骤
 到 http://xlang.link/download.html 下载你的操作系统对应的xlang开发包, 解压后运行 XStudio 打开此项目中的 XStudio.xprj;
 
