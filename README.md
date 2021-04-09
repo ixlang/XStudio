@@ -26,21 +26,6 @@ xlang 语言的集成开发环境, 此项目使用 xlang 开发
 
 编译环境下载: http://xlang.link/ 无需安装，解压即用.
 
-## windows 下运行图
-
-![](https://github.com/ixlang/XStudio/blob/master/case382.png)
-
-
-## Linux(ubuntu) 下运行图
-
-![](https://github.com/ixlang/XStudio/blob/master/case263.png)
-
-
-## Mac OSX 下运行图
-
-![](https://github.com/ixlang/XStudio/blob/master/case148.png)
-
-
 # 编译步骤
 到 http://xlang.link/download.html 下载你的操作系统对应的xlang开发包, 解压后运行 XStudio 打开此项目中的 XStudio.xprj;
 
