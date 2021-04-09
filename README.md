@@ -21,7 +21,7 @@ XStudio 是 xlang 语言的御用集成开发环境, 此项目使用 xlang 开�
     窗口视图
     类视图、项目大纲、运行时GC监控、运行时对象浏览器、查找结果、logcat视图、线程\堆栈、Output（输出）、自动（Auto）、Watch、信息、断点
 
-
+![image](https://raw.githubusercontent.com/ixlang/XStudio/master/IDE.jpg)
 编译环境下载: http://xlang.link/ 无需安装，解压即用.
 
 # 编译步骤
