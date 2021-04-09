@@ -138,12 +138,12 @@ class BreakPointWnd : ListDockWidget{
 				Map<int,BreakPointRequest> smap =  breakPoints.get(sfile);
                 
                 if (smap != nilptr){
-					smap.remove(sline.parseInt());
+					smap.remove(sline.parseInt() - 1);
                     int repos = sline.indexOf("-> ");
                     if (repos != -1){
-						XSourceEditor.toggleBreakPointOnFile(XWorkspace.workspace, sfile, sline.substring(repos + 3, sline.length()).parseInt(), false);
+						XSourceEditor.toggleBreakPointOnFile(XWorkspace.workspace, sfile, sline.substring(repos + 3, sline.length()).parseInt() - 1, false);
                     }
-                    XSourceEditor.toggleBreakPointOnFile(XWorkspace.workspace, sfile, sline.parseInt(), false);
+                    XSourceEditor.toggleBreakPointOnFile(XWorkspace.workspace, sfile, sline.parseInt() - 1, false);
                 }
                 
             }catch(Exception e){
@@ -269,6 +269,7 @@ class BreakPointWnd : ListDockWidget{
         
 		String []acts = {"删除"};
 		_contextMenu.create(list, acts, menuListener, nilptr);
+        _contextMenu.setEnable(0,true);
 	}
     
     public static void setBreakPoint(String file, int reqline, int realine, bool set, int error){

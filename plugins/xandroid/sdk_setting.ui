@@ -24,7 +24,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="edtjava"/>
+      <widget class="QLineEdit" name="edtjava">
+       <property name="whatsThis">
+        <string>jdk根目录(bin/javac 或者 bin/javac.exe所在目录)</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QPushButton" name="b0">
@@ -40,6 +44,9 @@
          <width>20</width>
          <height>16777215</height>
         </size>
+       </property>
+       <property name="whatsThis">
+        <string>在线下载并安装jdk</string>
        </property>
        <property name="text">
         <string/>
@@ -62,7 +69,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="edtsdk"/>
+      <widget class="QLineEdit" name="edtsdk">
+       <property name="whatsThis">
+        <string>Adnroid Sdk 根目录</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QPushButton" name="b1">
@@ -78,6 +89,9 @@
          <width>20</width>
          <height>16777215</height>
         </size>
+       </property>
+       <property name="whatsThis">
+        <string>在线下载并安装android sdk</string>
        </property>
        <property name="text">
         <string/>
@@ -100,7 +114,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="edtndk"/>
+      <widget class="QLineEdit" name="edtndk">
+       <property name="whatsThis">
+        <string>Android NDK根目录</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QPushButton" name="b2">
@@ -116,6 +134,9 @@
          <width>20</width>
          <height>16777215</height>
         </size>
+       </property>
+       <property name="whatsThis">
+        <string>在线下载并安装android ndk</string>
        </property>
        <property name="text">
         <string/>
@@ -148,6 +169,9 @@
             <height>16777215</height>
            </size>
           </property>
+          <property name="whatsThis">
+           <string>可用的组建工具</string>
+          </property>
           <column>
            <property name="text">
             <string notr="true">1</string>
@@ -168,6 +192,9 @@
         </item>
         <item>
          <widget class="QTreeWidget" name="apilist">
+          <property name="whatsThis">
+           <string>可用的android sdk版本</string>
+          </property>
           <column>
            <property name="text">
             <string notr="true">1</string>
@@ -191,6 +218,9 @@
      </item>
      <item>
       <widget class="QProgressBar" name="pgbdl">
+       <property name="whatsThis">
+        <string>下载进度</string>
+       </property>
        <property name="value">
         <number>24</number>
        </property>

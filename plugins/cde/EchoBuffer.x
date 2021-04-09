@@ -112,7 +112,7 @@ class EchoBuffer{
     }
     
     public @NotNilptr int match(@NotNilptr Pattern pattern){
-        Pattern.Result res = pattern.match(new String(data, 0, length),Pattern.NOTEMPTY);
+        Pattern.Result res = pattern.matchAll(new String(data, 0, length),0, -1, Pattern.NOTEMPTY);
         if (res.length() != 0){
             return res.get(res.length() - 1).end();
         }

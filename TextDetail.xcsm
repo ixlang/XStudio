@@ -148,7 +148,9 @@ class TextDetail : QDialog {
                 }
                 
                 createContextMenu();
-                    
+                
+                _contextMenu.enableAll(true);
+                
                 show();
                 
                 setOnActivateListener(new onActivateListener(){

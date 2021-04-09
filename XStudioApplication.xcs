@@ -12,7 +12,7 @@ class ArgsProcessor {
     public String xcross = nilptr;
     public String arch = nilptr;
     public String project = nilptr;
-
+    
     public static const int CMD_INSTXP = 1,
                      CMD_LOADXPRJ = 2,
                      CMD_BUILD = 3;
@@ -88,6 +88,7 @@ class XStudioApp : QApplication {
     public XLogcatWnd logcatWnd;
     public XWndObjectDump xDumpWnd;
     public MemoryLookupWnd memlookupWnd;
+    public XFindDlg finddlg;
 
     static String [] _appargs;
     public static XStudioApp _theApp;
@@ -130,6 +131,7 @@ class XStudioApp : QApplication {
         watchWndInfo = (WatchWnd)mainWindow.attachByName(new WatchWnd(), "watchinfo");
         bpWndInfo = (BreakPointWnd)mainWindow.attachByName(new BreakPointWnd(), "bpinfo");
         memlookupWnd = (MemoryLookupWnd)mainWindow.attachByName(new MemoryLookupWnd(), "memlookup");
+        finddlg = (XFindDlg)mainWindow.attachByName(new XFindDlg(), "findwnd");
         findWnd = (XFindresWnd)mainWindow.attachByName(new XFindresWnd(), "findinfo");
         memoryWnd = (XMemoryWnd)mainWindow.attachByName(new XMemoryWnd(), "memoryinfo");
         logcatWnd = (XLogcatWnd)mainWindow.attachByName(new XLogcatWnd(), "wnd_log");
@@ -177,7 +179,7 @@ class XStudioApp : QApplication {
         if (mainWindow.load(UIManager.getUIData(__xPackageResource("ui/mainwindow.ui"))) == false) {
             return false;
         }
-
+        
         mainWindow.setAcceptDrops(true);
         loadConfig();
 
@@ -192,12 +194,14 @@ class XStudioApp : QApplication {
         });*/
 
         menuMgr.init(this);
-        createDocks();
-
         _mdispace = (XWorkspace)mainWindow.findByName("mdiArea");
         if (_mdispace == nilptr){
             return false;
         }
+        
+        createDocks();
+
+        
         __nilptr_safe(_mdispace);
         _mdispace.setMainWindow(mainWindow);
         _mdispace.setSlnView(wndsln);

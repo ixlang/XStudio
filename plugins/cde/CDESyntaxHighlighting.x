@@ -208,6 +208,12 @@ class CDESyntaxHighlighting : SyntaxHighlighting{
 		return 0xffffffff;
     }
     
+    
+    /** 折叠边高亮色*/
+    int getFoldHIColor()override{
+		return 0xffff55aa;
+    }
+    
     /** 折叠标记背景颜色*/
     int getFolderBackColor()override{
 		return 0xff9c9c9c;

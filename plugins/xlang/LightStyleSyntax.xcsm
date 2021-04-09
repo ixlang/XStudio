@@ -203,6 +203,11 @@ class LightStyleSyntax : SyntaxHighlighting{
 		return 0xffefefef;
     }
     
+    /** 折叠边栏颜色*/
+    int getFoldHIColor()override{
+		return 0xffffb32e;
+    }
+    
     /** 折叠边高亮色*/
     int getFoldMarginHIColor()override{
 		return 0xffffffff;

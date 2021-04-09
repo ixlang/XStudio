@@ -1,28 +1,34 @@
 
-class XFindDlg : QDialog
+class XFindDlg : QDockWidget
 {
-    QPushButton btnClose, btnFind, btnFindAgain, benFindall, btnReplace, btnReplaceAll;
-    XWorkspace _workspace;
+    public static XFindDlg _finddlg ;
+    QPushButton btnClose, btnFind, btnFindAgain, benFindall, btnReplace, btnReplaceAll, btnclrfind, btnclrrep;
+
     public static bool bFindAll = false;
     QComboBox editFind, editRep, filetype, findscope;
 
     QCheckBox casematch, wholeword, regex, forward, warp;
-
+    XFinder.FindResult result_find = new XFinder.FindResult();
     public static bool findinOutput = false;
 
     static Map<String,int>
     findhistory = new Map<String,int>(),
     replacehistory = new Map<String,int>(),
     filepattern = new Map<String,int>();
-
-    public XFindDlg(XWorkspace _w)
+    bool findInWorking = false;
+    public XFindDlg()
     {
-        _workspace = _w;
+        _finddlg = this;
     }
 
     public void setDefaultFindText(String text)
     {
-        editFind.setText(text);
+        if (text != nilptr){
+            editFind.setText(text);
+        }
+        this.setActive(true);
+        editFind.setActive(true);
+        editFind.setFocus();
     }
 
     public void flushHistory(@NotNilptr Map<String,int> his, @NotNilptr QComboBox comb)
@@ -39,9 +45,11 @@ class XFindDlg : QDialog
     }
     public void addFindHistory(String text)
     {
+        findInWorking = true;
         findhistory.put(text, 0);
         flushHistory(findhistory, editFind);
         editFind.setText(text);
+        findInWorking = false;
     }
 
     public void addReplaceHistory(String text)
@@ -85,10 +93,55 @@ class XFindDlg : QDialog
         warp.setCheck(s_warp);
     }
 
+    onClickListener __updatelis = new onClickListener(){
+        public void onClick(QObject obj, bool checked) {
+            previewFind();
+        }
+    };
+    
+    onComboBoxEventListener _cmbupdatelis = new onComboBoxEventListener(){
+        public void onCurrentTextChange(QObject obj, String text) {
+            previewFind();
+        }
+        public void onItemSelected(QObject obj, int id) {
+            previewFind();
+        }
+    };
+    
+    public void updateSetting(){
+        bool bregex = regex.getCheck();
+        bool bcase = casematch.getCheck();
+        bool bforward = forward.getCheck();
+        bool bwholewd = wholeword.getCheck();
+        
+        if (bregex){
+            forward.setCheck(false);
+            forward.setEnabled(false);
+            
+            wholeword.setCheck(false);
+            wholeword.setEnabled(false);
+        }else{
+            forward.setEnabled(true);
+            wholeword.setEnabled(true);
+        }
+        
+        if (bforward){
+            regex.setCheck(false);
+            regex.setEnabled(false);
+        }else{
+            regex.setEnabled(true);
+        }
+        
+        int ns = findscope.getCurrentIndex();
+        filetype.setEnabled(ns == XFinder.SCOPE_ALLOPENED || ns == XFinder.SCOPE_PROJECT);
+        btnFind.setEnabled(ns == XFinder.SCOPE_CURRENT || ns == XFinder.SCOPE_SELECTED);
+        btnFindAgain.setEnabled(ns == XFinder.SCOPE_CURRENT || ns == XFinder.SCOPE_SELECTED);
+        btnReplace.setEnabled(ns == XFinder.SCOPE_CURRENT || ns == XFinder.SCOPE_SELECTED);
+    }
     public void onAttach()
     {
-        setWindowFlags(Constant.CustomizeWindowHint | Constant.WindowCloseButtonHint  | Constant.Dialog  | Constant.WindowTitleHint);
-        setFixedSize(width(), height());
+        /*setWindowFlags(Constant.CustomizeWindowHint | Constant.WindowCloseButtonHint  | Constant.Dialog  | Constant.WindowTitleHint);
+        setFixedSize(width(), height());*/
         editFind = (QComboBox)attachByName(new QComboBox(), "combFind");
         editRep = (QComboBox)attachByName(new QComboBox(), "combRep");
         filetype = (QComboBox)attachByName(new QComboBox(), "filetype");
@@ -102,9 +155,15 @@ class XFindDlg : QDialog
         warp.setCheck(true);
         btnReplace = (QPushButton)attachByName(new QPushButton(), "btnReplace");
         btnReplaceAll = (QPushButton)attachByName(new QPushButton(), "btnReplaceAll");
+        
+        btnclrfind = (QPushButton)attachByName(new QPushButton(), "btnclrfind");
+        btnclrrep = (QPushButton)attachByName(new QPushButton(), "btnclrrep");
 
-        String [] items = {"当前文档", "打开的文件", "整个项目"};
+        String [] items = {"当前文档", "打开的文件", "整个项目", "选中部分"};
 
+        editFind.setOnComboBoxEventListener(_cmbupdatelis);
+        findscope.setOnComboBoxEventListener(_cmbupdatelis);
+        
         findscope.addItems(items);
         findscope.setCurrentIndex(0);
         btnClose = (QPushButton)attachByName(new QPushButton(), "btnClose");
@@ -122,105 +181,55 @@ class XFindDlg : QDialog
         btnFind.setOnClickListener(
         new onClickListener() {
             void onClick(QObject obj, bool checked)override {
-                String str = editFind.getCurrentText();
-                if (str.length() == 0) {
-                    QMessageBox.Critical("提示", "请输入要查找的内容", QMessageBox.Ok, QMessageBox.Ok);
-                    return ;
-                }
-
-                QScintilla sci = nilptr;
-
-                if (findinOutput == false) {
-                    XSourceEditor wnd = (XSourceEditor)_workspace.currentSubWindow();
-
-                    if (wnd == nilptr) {
-                        QMessageBox.Critical("提示", "当前没有正在编辑的文件", QMessageBox.Ok, QMessageBox.Ok);
-                        return ;
-                    }
-                    sci = wnd._sci;
-                } else {
-                    sci = XWndOutput.outputWnd.getCurrentSci();
-                }
-
-                if (sci != nilptr) {
-                    addFindHistory(str);
-
-                    bool bfound = sci.findFirst(str, regex.getCheck(), casematch.getCheck(), wholeword.getCheck(), warp.getCheck(), !forward.getCheck(), -1, -1,false, false);
-                    bFindAll = false;
-                    if (bfound == false) {
-                        StatusBarMgr.showStatusMessage("找不到指定文本.");
-                    }
-                }
+                findOnce();
             }
         });
 
         btnReplace.setOnClickListener(
         new onClickListener() {
             void onClick(QObject obj, bool checked)override {
-
-                if (findinOutput) {
-                    return ;
-                }
-
-                String str = editFind.getCurrentText();
-                String replaceStr = editRep.getCurrentText();
-
-                if (str.length() == 0) {
-                    QMessageBox.Critical("提示", "请输入要查找的内容", QMessageBox.Ok, QMessageBox.Ok);
-                    return ;
-                }
-
-                QScintilla sci = nilptr;
-
-                if (findinOutput == false) {
-                    XSourceEditor wnd = (XSourceEditor)_workspace.currentSubWindow();
-
-                    if (wnd == nilptr) {
-                        QMessageBox.Critical("提示", "当前没有正在编辑的文件", QMessageBox.Ok, QMessageBox.Ok);
-                        return ;
-                    }
-                    sci = wnd._sci;
-                }
-
-                if (sci != nilptr) {
-                    addFindHistory(str);
-                    addReplaceHistory(replaceStr);
-                    bool bfound = sci.replace(str, regex.getCheck(), casematch.getCheck(), wholeword.getCheck(), warp.getCheck(), !forward.getCheck(), -1, -1,false, false, replaceStr);
-                    bFindAll = false;
-
-                    if (bfound == false) {
-                        StatusBarMgr.showStatusMessage("找不到指定文本.");
-                    }
-                }
+                onReplace();
             }
         });
-
-
-
+        
+        btnclrfind.setOnClickListener(
+        new onClickListener() {
+            void onClick(QObject obj, bool checked)override {
+                editFind.clear();
+            }
+        });
+        
+        btnclrrep.setOnClickListener(
+        new onClickListener() {
+            void onClick(QObject obj, bool checked)override {
+                editRep.clear();
+            }
+        });
+        onKeyEventListener enterListener = new onKeyEventListener(){
+            bool onKeyPress(QObject obj,int key,bool repeat,int count,String text,int scanCode,int virtualKey,int modifier)override{
+                if (key == Constant.Key_Enter || key == Constant.Key_Return){
+                    findOnce();
+                }else
+                if (key == Constant.Key_Escape){
+                    String txt = ((QComboBox)obj).getCurrentText();
+                    if (txt.length() == 0){
+                        XFindDlg.this.close();
+                    }else{
+                        ((QComboBox)obj).setText("");
+                    }
+                }
+                return true;
+            }
+        };
+        
+        editFind.setOnKeyEventListener(enterListener);
+        editRep.setOnKeyEventListener(enterListener);
+        
         btnFindAgain= (QPushButton)attachByName(new QPushButton(), "btnFindAgain");
         btnFindAgain.setOnClickListener(
         new onClickListener() {
             void onClick(QObject obj, bool checked)override {
-                QScintilla sci = nilptr;
-
-                if (findinOutput == false) {
-                    XSourceEditor wnd = (XSourceEditor)_workspace.currentSubWindow();
-
-                    if (wnd == nilptr) {
-                        QMessageBox.Critical("提示", "当前没有正在编辑的文件", QMessageBox.Ok, QMessageBox.Ok);
-                        return ;
-                    }
-                    sci = wnd._sci;
-                } else {
-                    sci = XWndOutput.outputWnd.getCurrentSci();
-                }
-
-                if (sci != nilptr) {
-                    bool bfound = sci.findNext();
-                    if (bfound == false) {
-                        StatusBarMgr.showStatusMessage("找不到指定文本.");
-                    }
-                }
+                findNext();
             }
         });
 
@@ -228,55 +237,7 @@ class XFindDlg : QDialog
         btnReplaceAll.setOnClickListener(
         new onClickListener() {
             void onClick(QObject obj, bool checked)override {
-
-                int scope = findscope.getCurrentIndex();
-                String replaceStr = editRep.getCurrentText();
-
-                if (scope > 0) {
-                    XFinder.FindResult result = findAll();
-                    
-                    
-                    XFindresWnd.ShowResult(result);
-
-                    if (result != nilptr && result.size() > 0) {
-
-                        int rt = QMessageBox.Yes;
-
-                        if (Setting.repallconfirm()) {
-                            rt = QMessageBox.Question("提示","将在已打开的文档视图或者磁盘文件中替换整个项目中查找到的 " + result.size() + " 处内容,磁盘文件更改将无法撤消,确定继续?",  QMessageBox.Yes | QMessageBox.No, QMessageBox.No);
-                        }
-
-                        if (rt == QMessageBox.Yes) {
-                            addReplaceHistory(replaceStr);
-                            XFinder.replace(result, replaceStr);
-                            StatusBarMgr.showStatusMessage("已替换 " + result.size() + "处.");
-                        } else {
-                            StatusBarMgr.showStatusMessage("已放弃替换");
-                        }
-                    }
-                } else if (findinOutput == false) {
-
-                    String str = editFind.getCurrentText();
-
-                    if (str.length() == 0) {
-                        QMessageBox.Critical("提示", "请输入要查找的内容", QMessageBox.Ok, QMessageBox.Ok);
-                        return ;
-                    }
-                    XSourceEditor wnd = (XSourceEditor)_workspace.currentSubWindow();
-
-                    if (wnd == nilptr) {
-                        QMessageBox.Critical("提示", "当前没有正在编辑的文件", QMessageBox.Ok, QMessageBox.Ok);
-                        return ;
-                    }
-                    wnd._sci.gotoPos(0);
-
-                    addFindHistory(str);
-                    addReplaceHistory(replaceStr);
-                    
-                    while (wnd._sci.replace(str, regex.getCheck(), casematch.getCheck(), wholeword.getCheck(), false, !forward.getCheck(), -1, -1,false, false, replaceStr)) {
-                        wnd.setModified();
-                    }
-                }
+                replaceAll();
             }
         });
 
@@ -284,13 +245,7 @@ class XFindDlg : QDialog
         benFindall.setOnClickListener(
         new onClickListener() {
             void onClick(QObject obj, bool checked)override {
-                //Map<String,long> result, Project project, bool bcase, bool wholeWord, bool regex, String [] extsions, int scope, String findTxt
-                int scope = findscope.getCurrentIndex();
-
-                if (scope > 0) {
-                    XFinder.FindResult result = findAll();
-                    XFindresWnd.ShowResult(result);
-                }
+                findAll();
             }
         });
         setWindowTitle("查找替换");
@@ -299,62 +254,325 @@ class XFindDlg : QDialog
         flushHistory(replacehistory, editRep);
         flushHistory(filepattern, filetype);
 
+        wholeword.setOnClickListener(__updatelis);
+        casematch.setOnClickListener(__updatelis);
+        regex.setOnClickListener(__updatelis);
+        forward.setOnClickListener(__updatelis);
+        warp.setOnClickListener(__updatelis);
+        
         //setModal(true);
         setWindowIcon("./res/toolbar/find.png");
         show();
         editFind.setFocus();
     }
+    
+    public void previewFind(){
+        if (isVisible() == false){
+            return;
+        }
+        updateSetting();
+        if (findInWorking){
+            return;
+        }
+        XFinder.FindResult result = new XFinder.FindResult();
+        doFind(result, true, false, false);
+        
+        DocumentView editor = XWorkspace.CurrentDocumentView();
+        clearFoundMarked();
+        if (editor != nilptr){
+            editor.clearFoundMark();
+            if (result == nilptr){
+                return;
+            }
+            for (int i = 0 , c = result.size(); i < c; i++){
+                XFinder.FindItem res = result[i];
+                editor.markFound(res.position, res.findlen);
+            }
+        }
+    }
+    
+    public void onReplace(){
+        if (findinOutput) {
+            return ;
+        }
+        int scope = findscope.getCurrentIndex();
+        bool bforward = forward.getCheck();
+        String replaceStr = editRep.getCurrentText();
+        result_find = new XFinder.FindResult();
+        doFind(result_find, false, true, true);
+        XFindresWnd.ShowResult(result_find);
+        if (result_find != nilptr && result_find.size() > 0) {
+            int rt = QMessageBox.Yes;
+            if (rt == QMessageBox.Yes) {
+                addReplaceHistory(replaceStr);
+                if (regex.getCheck()){
+                    replaceStr = replaceStr.escape();
+                }
+                XFinder.replace(result_find, replaceStr, bforward);
+                StatusBarMgr.showStatusMessage("已替换 " + result_find.size() + "处.");
+            } else {
+                StatusBarMgr.showStatusMessage("已放弃替换");
+            }
+        }
+    }
+    
+    public void findAll(){
+        //Map<String,long> result, Project project, bool bcase, bool wholeWord, bool regex, String [] extsions, int scope, String findTxt
+        result_find = new XFinder.FindResult();
+        doFind(result_find, false , false, false);
+        XFindresWnd.ShowResult(result_find);
+    }
+    
+    public void replaceAll(){
+        int scope = findscope.getCurrentIndex();
+        String replaceStr = editRep.getCurrentText();
+        result_find = new XFinder.FindResult();
+        bool bforward = forward.getCheck();
+        doFind(result_find, false, false, false);
+        XFindresWnd.ShowResult(result_find);
+        if (result_find != nilptr && result_find.size() > 0) {
+            int rt = QMessageBox.Yes;
+            if (scope == XFinder.SCOPE_ALLOPENED || scope == XFinder.SCOPE_PROJECT && Setting.repallconfirm()) {
+                rt = QMessageBox.Question("提示","将在已打开的文档视图或者磁盘文件中替换整个项目中查找到的 " + result_find.size() + " 处内容,磁盘文件更改将无法撤消,确定继续?",  QMessageBox.Yes | QMessageBox.No, QMessageBox.No);
+            }
+            if (rt == QMessageBox.Yes) {
+                addReplaceHistory(replaceStr);
+                if (regex.getCheck()){
+                    replaceStr = replaceStr.escape();
+                }
+                XFinder.replace(result_find, replaceStr, bforward);
+                StatusBarMgr.showStatusMessage("已替换 " + result_find.size() + "处.");
+            } else {
+                StatusBarMgr.showStatusMessage("已放弃替换");
+            }
+        }
+    }
+    
+    public void findNext(){
+        if (result_find.size() == 0){
+            if (warp.getCheck()){
+                result_find.add(new XFinder.FindItem(nilptr, 0, 0, nilptr));
+            }else{
+                StatusBarMgr.showStatusMessage("找不到指定文本.");
+                return;
+            }
+        }
+        
+        String str = editFind.getCurrentText();
+        if (str.length() == 0) {
+            QMessageBox.Critical("提示", "请输入要查找的内容", QMessageBox.Ok, QMessageBox.Ok);
+            return ;
+        }
 
-    public XFinder.FindResult findAll()
+        if (findinOutput == false) {
+            doFind(result_find, false, true, true);
+            if (result_find.size() > 0 && result_find[0].file != nilptr){
+                XSourceEditor.locateForPosition(XWorkspace.workspace, result_find[0].file, result_find[0].position, result_find[0].findlen);
+                /*DocumentView docview = (DocumentView)XWorkspace.workspace.currentSubWindow();
+                if (docview != nilptr){
+                    docview.setSelection(result_find[0].position, result_find[0].findlen);
+                }*/
+            }
+        } else {
+            QScintilla sci = XWndOutput.outputWnd.getCurrentSci();
+            if (sci != nilptr) {
+                addFindHistory(str);
+
+                bool bfound = sci.findFirst(str, regex.getCheck(), casematch.getCheck(), wholeword.getCheck(), warp.getCheck(), !forward.getCheck(), -1, -1,false, false);
+                bFindAll = false;
+                if (bfound == false) {
+                    StatusBarMgr.showStatusMessage("找不到指定文本.");
+                }
+            }
+        }
+    }
+    
+    public void findOnce(){
+        String str = editFind.getCurrentText();
+        if (str.length() == 0) {
+            QMessageBox.Critical("提示", "请输入要查找的内容", QMessageBox.Ok, QMessageBox.Ok);
+            return ;
+        }
+
+        if (findinOutput == false) {
+            result_find = new XFinder.FindResult();
+            doFind(result_find, false, true, false);
+            if (result_find.size() > 0 && result_find[0].file != nilptr){
+                XSourceEditor.locateForPosition(XWorkspace.workspace, result_find[0].file, result_find[0].position, result_find[0].findlen);
+                /*DocumentView docview = (DocumentView)XWorkspace.workspace.currentSubWindow();
+                if (docview != nilptr){
+                    docview.setSelection(result_find[0].position, result_find[0].findlen);
+                }*/
+            }
+        } else {
+            QScintilla sci = XWndOutput.outputWnd.getCurrentSci();
+            if (sci != nilptr) {
+                addFindHistory(str);
+                bool bfound = sci.findFirst(str, regex.getCheck(), casematch.getCheck(), wholeword.getCheck(), warp.getCheck(), !forward.getCheck(), -1, -1,false, false);
+                bFindAll = false;
+                if (bfound == false) {
+                    StatusBarMgr.showStatusMessage("找不到指定文本.");
+                }
+            }
+        }
+    }
+    
+    public void doFind(XFinder.FindResult result, bool quite, bool bOnce, bool bNext)
     {
-        bFindAll = true;
-
+        if (quite == false){
+            bFindAll = !bOnce;
+        }
+        if (bNext && result.size() == 0){
+            return;
+        }
         String str = editFind.getCurrentText();
 
         if (str.length() == 0) {
-            QMessageBox.Critical("提示", "请输入要查找的内容", QMessageBox.Ok, QMessageBox.Ok);
-            return nilptr;
+            if (quite == false){
+                QMessageBox.Critical("提示", "请输入要查找的内容", QMessageBox.Ok, QMessageBox.Ok);
+            }
+            return ;
         }
 
-        String ft = filetype.getCurrentText();
-        String []extions = ft.split(';');
-        if (extions.length == 0) {
-            extions = nilptr;
+        String ft = "";
+        String []extions = nilptr;
+        if (filetype.isEnabled()){
+            ft = filetype.getCurrentText();
+            extions = ft.split(';');
+            if (extions.length == 0) {
+                extions = nilptr;
+            }
         }
-
+        
         bool bregex = regex.getCheck();
-
+        bool bcase = casematch.getCheck();
+        bool bforward = forward.getCheck();
+        bool bwholewd = wholeword.getCheck();
         Pattern pattern = nilptr;
 
         if (bregex) {
             try {
-                pattern = new Pattern(str);
+                pattern = new Pattern(str,Pattern.MULTILINE | (bcase ? 0: Pattern.CASELESS));
             } catch(Exception e) {
-                QMessageBox.Critical("提示", "正则表达式不正确", QMessageBox.Ok, QMessageBox.Ok);
-                return nilptr;
+                if (quite == false){
+                    QMessageBox.Critical("提示", "正则表达式不正确", QMessageBox.Ok, QMessageBox.Ok);
+                }
+                return;
             }
         }
 
-        bool bcase = casematch.getCheck();
-        bool bwholewd = wholeword.getCheck();
-
-        addFindHistory(str);
-
-        XFinder.FindResult result = new XFinder.FindResult();
-
-        StatusBarMgr.showStatusMessage("正在查找...[匹配大小写=" + bcase + ",全字匹配=" + bwholewd+ ",正则表达式=" + bregex + " ]");
-
-        XFinder.find(result, XWorkspace.workspace.getCurrentProject(), bcase, bwholewd, bregex, extions, findscope.getCurrentIndex(), str, pattern);
-
-
-        StatusBarMgr.showStatusMessage("查找结束.[匹配大小写=" + bcase + ",全字匹配=" + bwholewd+ ",正则表达式=" + bregex + " ]");
-
-        return result;
+        if (bOnce == false && quite == false){
+            StatusBarMgr.showStatusMessage("正在查找...[匹配大小写=" + bcase + ",全字匹配=" + bwholewd+ ",正则表达式=" + bregex + " ]");
+        }
+        
+        int scope = findscope.getCurrentIndex();
+        String specTxt = nilptr;
+        String sid = nilptr;
+        int selofst = 0;
+        if (scope == XFinder.SCOPE_SELECTED){
+            DocumentView docview = (DocumentView)XWorkspace.workspace.currentSubWindow();
+            if (docview != nilptr){
+                sid = docview.getFilePath();
+                if (bNext == false){
+                    clearSelectedMarked();
+                    int sels = docview.getSelectStart(), sele = docview.getSelectEnd();
+                    if (sels > sele){
+                        int sw = sele;
+                        sele = sels;
+                        sels = sw;
+                    }
+                    if (sels == sele){
+                        StatusBarMgr.showStatusMessage("没有选中文本.");
+                        return ;
+                    }
+                    selofst = sels;
+                    docview.markSelected(sels,sele - sels);
+                    specTxt = docview.getSelectedText();
+                }else{
+                    QPoint range = docview.getSelectMarkRange();
+                    if (range == nilptr){
+                        StatusBarMgr.showStatusMessage("请先进行一次查找.");
+                        return;
+                    }
+                    int sels = range.x, sele = range.y;
+                    
+                    if (result != nilptr && result.size() > 0){
+                        if (!bforward){
+                            sels = result[0].position + result[0].findlen;
+                            if (sels < range.x){
+                                sels = range.x;
+                            }
+                        }else{
+                            sele = result[0].position;
+                            if (sele < range.x){
+                                sele = range.y;
+                            }
+                        }
+                    }
+                    selofst = sels;
+                    specTxt = docview.getText(sels, sele);
+                }
+            }
+        }else{
+            clearSelectedMarked();
+        }
+        
+        if (quite == true){
+            XFinder.find(result, XWorkspace.workspace.getCurrentProject(), bcase, bwholewd, bregex, sid, specTxt, extions, scope == XFinder.SCOPE_SELECTED ? XFinder.SCOPE_SELECTED : XFinder.SCOPE_CURRENT, str, pattern, bforward, false, bNext);
+        }else{
+            XFinder.find(result, XWorkspace.workspace.getCurrentProject(), bcase, bwholewd, bregex, sid, specTxt, extions, scope, str, pattern, bforward, bOnce, bNext);
+        }
+        
+        if (selofst != 0){
+            result.offset(selofst);
+        }
+        if (quite == false){
+            addFindHistory(str);
+        }
+        if (bOnce == false && quite == false){
+            StatusBarMgr.showStatusMessage("查找结束.[匹配大小写=" + bcase + ",全字匹配=" + bwholewd+ ",正则表达式=" + bregex + " ]");
+        }else
+        if (quite == false){
+            if (result.size() == 0){
+                StatusBarMgr.showStatusMessage("找不到指定文本.");
+            }else{
+                StatusBarMgr.showStatusMessage("查找结束.[匹配大小写=" + bcase + ",全字匹配=" + bwholewd+ ",正则表达式=" + bregex + " ]");
+            }
+        }
+        return ;
     }
     
     public void onFinish( int res)
     {
+
+    }
+    
+    
+    public void onHide(){
         saveStatus();
-        XWorkspace.findDlg = nilptr;
+        clearFoundMarked();
+        clearSelectedMarked();
+    }
+    
+    public void clearSelectedMarked(){
+        Map.Iterator<String, DocumentView> iter = DocumentView.editorMgr.iterator();
+        while (iter.hasNext()){
+            DocumentView view = iter.getValue();
+            if (view != nilptr){
+                view.clearSelectedMark();
+            }
+            iter.next();
+        }
+    }
+    
+    public void clearFoundMarked(){
+        Map.Iterator<String, DocumentView> iter = DocumentView.editorMgr.iterator();
+        while (iter.hasNext()){
+            DocumentView view = iter.getValue();
+            if (view != nilptr){
+                view.clearFoundMark();
+            }
+            iter.next();
+        }
     }
 };

@@ -121,6 +121,9 @@ class DocumentView : QMdiSubWindow{
     public void findAgain() {}
     public void saveFileAs(){}
     public String getSelectedText(){return "";}
+    public String getText(int ,int ){return "";}
+    public int getSelectStart(){return -1;}
+    public int getSelectEnd(){return -1;}
     public void matchBrace(){}
     public void overrideObject() {}
     public void setUpper(){}
@@ -134,8 +137,14 @@ class DocumentView : QMdiSubWindow{
     public void CursorLineEnd() {}
     public void CursorPrevPage() {}
     public void CursorNextPage() {}
+    public int getContentLength (){return 0;}
     public void CursortoTop() {}
     public void CursortoBottom() {}
+    public void clearFoundMark(){}
+    public void markFound(int pos, int length){}
+    public void clearSelectedMark(){}
+    public void markSelected(int pos, int length){}
+    public QPoint getSelectMarkRange(){return nilptr;}
     public void doPrint(){}
     public static String getCharsetCache(String file){
         if (file != nilptr){
@@ -151,12 +160,19 @@ class DocumentView : QMdiSubWindow{
     public static bool findSaveFile(@NotNilptr String file) {
         DocumentView wnd =  findDocumentWindow(nilptr, file, false);
         if (wnd != nilptr) {
+        
+            wnd.resetErrorPoint();
+            
             if (wnd.isModified()) {
                 return wnd.saveFile();
             }
             return false;
         }
         return false;
+    }
+    
+    public void resetErrorPoint(){
+        
     }
     
     public String getFilePath(){
@@ -288,6 +304,7 @@ class DocumentView : QMdiSubWindow{
         return true;
     }
     
+    public String contentToString(){return nilptr;}
     public @NotNilptr static DocumentView createView(XWorkspace parent, @NotNilptr String file){
         String ext = "";
         if (file != nilptr ){
@@ -332,6 +349,9 @@ class DocumentView : QMdiSubWindow{
     
     }
     
+    public void updateErrorPoint(){
+        
+    }
     public void gotoAndSelect(int line, int column) {
     }
     

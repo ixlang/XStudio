@@ -6,6 +6,7 @@ class XAndroid : IXPlugin{
     static String AIDLNAME = (_system_.getPlatformId()== 0 ?  "aidl.exe" : "aidl");
     static String AAPTNAME = (_system_.getPlatformId()== 0 ?  "aapt.exe" : "aapt");
     static String DXTNAME = (_system_.getPlatformId()== 0 ?  "dx.bat" : "dx");
+    static String APKSIGNER = (_system_.getPlatformId()== 0 ?  "apksigner.bat" : "apksigner"); 
     static String ANDROID_NAME = (_system_.getPlatformId()== 0 ?  "android.bat" : "android");
     static String JARSIGNER = (_system_.getPlatformId()== 0 ?  "jarsigner.exe" : "jarsigner");
     static String NDKBUILDNAME = (_system_.getPlatformId()== 0 ?  "ndk-build.cmd" : "ndk-build");
@@ -349,7 +350,7 @@ class XAndroid : IXPlugin{
         if (extartToDir(apputemp, destDir, projectName, appName, packageName)){
             IProject project = loader.loadProject(xprojName);
             if (project != nilptr){
-                String packsimport =  uuid.equals(cocosandroid) ? "cocos2dx":"Qt5.9.1";
+                String packsimport =  uuid.equals(cocosandroid) ? "cocos2dx":"Qt";
                 project.setOption("uuid", uuid);
                 if (false == project.importPackage(packsimport, nilptr)){
                     workspace.output("没有找到包[" + packsimport + "], 请前往[工具]->[包管理]查看并安装.", 0);
@@ -379,7 +380,7 @@ class XAndroid : IXPlugin{
         return true;
     }
     long getVersion(){
-        return 1000;
+        return 1001;
     }
     String getDescrition(){
         return "用于安卓平台应用和基于Cocos-2dx安卓游戏的开发扩展.";
@@ -576,7 +577,11 @@ class XAndroid : IXPlugin{
                             return;
                         }
                         
+                        
+                        project.addSource(jniPath.appendPath("Application.mk"));
+                        project.addSource(jniPath.appendPath("Android.mk"));
                         project.addSource(jniPath.appendPath(projName + ".cpp"));
+                        
                         workspace.output("已增加jni支持", 0);
                     }else{
                         workspace.output("无法建立目录" + jniPath, 0);
@@ -1255,38 +1260,42 @@ class XAndroid : IXPlugin{
     }
     
     static bool decompressZip(String zipFile, String dir){
-		ZipArchive zs = new ZipArchive();        
-		FileInputStream fis = new FileInputStream(zipFile);
-		if (zs.open(fis)){
-			int compress_total = zs.getEntriesCount();
-			for (int compress_prog = 0; compress_prog < compress_total; compress_prog ++){
-				ZipEntry entry = zs.getEntry(compress_prog);
-  
-                String name = entry.getName();
-                         
-                String destPath = String.formatPath(dir.appendPath(name), false);
-                
-				if (entry.isDirectory()){  
-                    mkdirs(destPath);
-                }else{
-					mkdirs(destPath.findVolumePath());
+        try{
+        ZipArchive zs = new ZipArchive();        
+            FileInputStream fis = new FileInputStream(zipFile);
+            if (zs.open(fis)){
+                int compress_total = zs.getEntriesCount();
+                for (int compress_prog = 0; compress_prog < compress_total; compress_prog ++){
+                    ZipEntry entry = zs.getEntry(compress_prog);
+      
+                    String name = entry.getName();
+                             
+                    String destPath = String.formatPath(dir.appendPath(name), false);
                     
-					ZipFile file = entry.getFile();
-					byte []buf = new byte[1024];
-					int rd = 0;
-					if (file.open()){
-						FileOutputStream fos = new FileOutputStream(destPath);
-						while ((rd = file.read(buf, 0, 1024)) != 0){
-							fos.write(buf, 0, rd);
-						}
-						fos.close();
-						file.close();
-					}
+                    if (entry.isDirectory()){  
+                        mkdirs(destPath);
+                    }else{
+                        mkdirs(destPath.findVolumePath());
+                        
+                        ZipFile file = entry.getFile();
+                        byte []buf = new byte[1024];
+                        int rd = 0;
+                        if (file.open()){
+                            FileOutputStream fos = new FileOutputStream(destPath);
+                            while ((rd = file.read(buf, 0, 1024)) != 0){
+                                fos.write(buf, 0, rd);
+                            }
+                            fos.close();
+                            file.close();
+                        }
+                    }
+                    
                 }
-                
-			}
-            return true;
-		}
+                return true;
+            }
+        }catch(Exception e){
+            
+        }
         return false;
     }
     
@@ -1302,7 +1311,7 @@ class XAndroid : IXPlugin{
         }
         
         if (api_int < 28){
-            workspace.output("警告:使用的 Android SDK Platform 版本过低, 为避免生成出现问题,建议至少使用 API级别28 进行编译",0);
+            workspace.output("警告:使用的 Android SDK Platform 版本过低, 为避免生成出现问题,建议至少使用 API级别28 进行编译\n",0);
         }
         
         bool bgame = false;
@@ -1363,6 +1372,27 @@ class XAndroid : IXPlugin{
             }
         }
         return true;
+    }
+    
+    bool buildLibsList(String dest, String abi){
+        try{
+            String content = "";
+            String apputemp = String.formatPath(XPlatform.getAppDirectory().appendPath("plugins").appendPath("xandroid").appendPath("libs.list"), false);
+            FileInputStream fis = new FileInputStream(apputemp);
+            byte [] data  = fis.read();
+            content = new String(data);
+            fis.close();
+            
+            content = content.replace("${ANDROID_ABI}", abi);
+            
+            FileOutputStream fos = new FileOutputStream(dest);
+            fos.write(content.getBytes());
+            fos.close();
+            return true;
+        }catch(Exception e){
+            
+        }
+        return false;
     }
     
     bool compileApk(IProject project, String projName, String configName, String projectDir, bool buildDebug){
@@ -1449,7 +1479,10 @@ class XAndroid : IXPlugin{
         String aapt_path = String.formatPath(android_sdk_root.appendPath("build-tools").appendPath(build_tools).appendPath(AAPTNAME), false);
         String aidl_path = String.formatPath(android_sdk_root.appendPath("build-tools").appendPath(build_tools).appendPath(AIDLNAME), false);
         String zipalign_path = String.formatPath(android_sdk_root.appendPath("build-tools").appendPath(build_tools).appendPath(ZIPALIGNNAME), false);
+        
         String dx_path = formatPath(android_sdk_root.appendPath("build-tools").appendPath(build_tools).appendPath(DXTNAME));
+        String apksigner = formatPath(android_sdk_root.appendPath("build-tools").appendPath(build_tools).appendPath(APKSIGNER));
+        
         String javac_path = String.formatPath(java_sdk_root.appendPath("bin").appendPath(JAVACNAME), false);
         String java_path = String.formatPath(java_sdk_root.appendPath("bin").appendPath(JAVANAME), false);
         String jarsigner_path = String.formatPath(java_sdk_root.appendPath("bin").appendPath(JARSIGNER), false);
@@ -1529,14 +1562,30 @@ class XAndroid : IXPlugin{
             return false;
         }
         
+        Configure cfg = project.getCurrentConfig();
+        String uuid = project.getOption("uuid");
+        
+        if (uuid.equals(qxappuuid))
+        {
+            String key = cfg.getOption("wtype");
+            if (key != nilptr){
+                if (key.equals("-arch:armv7a")){
+                    buildLibsList(projectDir.appendPath("res").appendPath("values").appendPath("libs.xml"), "armeabi-v7a");
+                }else
+                if (key.equals("-arch:x86")){
+                    buildLibsList(projectDir.appendPath("res").appendPath("values").appendPath("libs.xml"), "x86");
+                }
+            }
+        }
+        
         List<String> javas = new List<String>();
         javas.add("javac");
         javas.add("-encoding");
         javas.add("UTF-8");
         javas.add("-source");
-        javas.add("1.6");
+        javas.add("7");
         javas.add("-target");
-        javas.add("1.6");
+        javas.add("7");
         javas.add("-bootclasspath");
         javas.add(android_jar);
         javas.add("-d");
@@ -1618,6 +1667,11 @@ class XAndroid : IXPlugin{
                                 "androiddebugkey"};       
                                          
         executeDisplay(jarsigner_path, projectDir, js_args, true);
+        
+        /*if (false){
+            String [] sig_args = {"sign", "--ks", jks_key_store, apk_outpath};
+            exec(apksigner, projectDir, sig_args, true);
+        }*/
         
         XPlatform.deleteFile(projectDir.appendPath(configName).appendPath(projName + "_.apk"));
         

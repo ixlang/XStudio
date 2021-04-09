@@ -8,7 +8,8 @@ class XWndInfor : QDockWidget
     public static XWndInfor infoWnd;
     static const int COMPILE_INFO_NOTIFY = 2;
     int current_click_item = 0;
-
+    int serial = 0;
+    
     onTreeViewItemEvent listlistener = new onTreeViewItemEvent()
     {
         void onItemClicked(@NotNilptr QTreeWidget tree,long item, int column)override {
@@ -146,7 +147,7 @@ class XWndInfor : QDockWidget
     public void loadInfo(Vector<ICompileInfo> infos)
     {
         String [] columns = {"提示", "警告", "错误"};
-        String [] icons = {"res/toolbar/tips.png", "res/toolbar/warning_out.png", "res/toolbar/error.png"};
+        String [] icons = {"res/toolbar/info.png", "res/toolbar/warning.png", "res/toolbar/errr.png"};
         //int []colors = {0xff00ff00, 0xffffff00, 0xffff0000};
         bool bFilter = false;
         
@@ -198,6 +199,48 @@ class XWndInfor : QDockWidget
         }
     }
 
+    Map<String,int> getInfoDocuments(int type){
+        Map<String,int> filemap = new Map<String,int>();
+        synchronized(infoLock) {
+            for (int i = 0; i < infoList.size(); i++){
+                ICompileInfo ci = infoList[i];
+                if (ci.getType() == type){
+                    String f = ci.getFile();
+                    filemap.put(String.formatPath(f,false), 1);
+                }
+            }
+        }
+        return filemap;
+    }
+    
+    Vector<ICompileInfo> getDocumentPoint(String path, int type){
+        Vector<ICompileInfo> ii = new Vector<ICompileInfo>();
+        synchronized(infoLock) {
+            for (int i = 0; i < infoList.size(); i++){
+                ICompileInfo ci = infoList[i];
+                if (ci.getType() == type){
+                    String f = ci.getFile();
+                    if (String.formatPath(f,false).equals(String.formatPath(path,false))){
+                        ii.add(ci);
+                    }
+                }
+            }
+        }
+        return ii;
+    }
+    
+    public static int getSerial(){
+        return infoWnd.serial;
+    }
+    
+    public static Map<String,int> GetInfoDocuments(int type){
+        return infoWnd.getInfoDocuments(type);
+    }
+    
+    public static Vector<ICompileInfo> GetDocumentPoint(String path, int type){
+        return infoWnd.getDocumentPoint(path, type);
+    }
+    
     public void onComplete()
     {
         if (Setting.isSwitchToInfo()) {
@@ -206,5 +249,8 @@ class XWndInfor : QDockWidget
         XWndOutput.Output(String.format("\n (%d 建议, %d 警告, %d 错误.)\n", getCountOfTips(), getCountOfWarning(), getCountOfError()), 0);
 
         XWndOutput.Output("[" + String.formatDate("%c", _system_.currentTimeMillis()) + "] 编译完成.\n", 0);
+        serial++;
+        XWorkspace.workspace.updateAllDocumentErrorPoint();
+        XWndSln._slnView.updateDocumentsStatus();
     }
 };

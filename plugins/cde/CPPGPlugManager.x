@@ -554,6 +554,37 @@ class CPPGPlugManager{
                         asm_editor.setWindowTitle("反汇编");
                     }
                     asm_editor.removeFromMap(disasm_wnd.getPath());
+                    asm_editor.setOverviewListener(new XSourceEditor.onOverviewListener(){
+                        public bool isOverviewEnabled()override{
+                            return true;
+                        }
+                        public String preprocessKeyword(String keyword)override{
+                            switch (keyword) {
+                            	case "rax":case "eax":case "ah":case "ax":
+                                case "rbx":case "ebx":case "bh":case "bx":
+                                case "rcx":case "ecx":case "ch":case "cx":
+                                case "rdx":case "edx":case "dh":case "dx":
+                                case "rsi":case "esi":case "si":case "sx":
+                                case "rdi":case "edi":case "di":
+                                case "rbp":case "ebp":case "bp":
+                                case "rsp":case "esp":case "sp":
+                                case "r8":case "r9":case "r10":case "r11":case "r12":case "r13":case "r14":case "r15":
+                                case "rip":case "eip":case "ip":
+                                case "eflags":
+                                case "cs":case "ss":case "ds":case "es":case "fs":case "gs":
+                                case "st0":case "st1":case "st2":case "st3":case "st4":case "st5":case "st6":case "st7":
+                                case "fctrl":case "fstat":case "ftag":case "fiseg":case "fioff":case "foseg":case "fooff":case "fop":
+                                case "xmm0":case "xmm1":case "xmm2":case "xmm3":case "xmm4":case "xmm5":
+                                case "xmm6":case "xmm7":case "xmm8":case "xmm9":case "xmm10":case "xmm11":
+                                case "xmm12":case "xmm13":case "xmm14":case "xmm15":case "mxcsr":
+                                    return "$" + keyword;
+                            	break;
+                            	default:
+                            	break;
+                            }
+                            return keyword;
+                        }
+                    });
                     asm_editor.setFilePath(disassemble_pipe);
                     asm_editor.addToMap(disassemble_pipe);
                 }else{

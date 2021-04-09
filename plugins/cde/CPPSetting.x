@@ -561,7 +561,7 @@ class CPPSetting : QDialog{
             execute = String.formatPath( CDEProjectPropInterface.appendPath(execute, "system32\\cmd.exe"), false);
             process = new Process(execute, args);
         }else{
-            String [] args = {"bash", "-c", "\"" + String.formatPath(cc,false) + "\" -posix -dM -E -x c++ - </dev/null"};
+            String [] args = {"bash", "-c", "\"" + String.formatPath(cc,false) + "\" -dM -E -x c++ - </dev/null"};//-posix 
             execute = "/bin/bash";
             process = new Process(execute, args);
         }

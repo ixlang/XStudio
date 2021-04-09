@@ -203,6 +203,11 @@ class DarkStyleSyntax : SyntaxHighlighting{
 		return 0xff222827;
     }
     
+    /** 折叠边栏颜色*/
+    int getFoldHIColor()override{
+		return 0xffffffff;
+    }
+    
     /** 折叠边高亮色*/
     int getFoldMarginHIColor()override{
 		return 0xff404142;

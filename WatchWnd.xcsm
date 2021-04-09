@@ -4,10 +4,6 @@
 class WatchWnd : ListDockWidget{
 
 	Map<String, long> watchs = new Map<String, long>();
-    
-    static const int REFRESH_WATCH = 1, QUERYOBJECT = 2;
-    
-    Vector<JsonObject> queriedObjects = new Vector<JsonObject>();
     JsonNode saveState;
     
 	long add_item = 0;
@@ -15,27 +11,9 @@ class WatchWnd : ListDockWidget{
     JsonObject root;
     Object rootLock = new Object();
     ContextMenu _contextMenu = new ContextMenu();
-	int serial = 0;
+    public DebugValueParser __dvp = new DebugValueParser("watch");    
     
-    Object serlock = new Object();
-    
-    public class Range{
-		public long start;
-        public long length;
-        public long object;
-        public long itemload;
-        public int unit;
-        
-        public Range(long s,long l,long o,int u, long load){
-			start = s ;
-            length = l;
-            object = o;
-            unit = u;
-            itemload = load;
-        }
-    };
-    
-    Map<long, Range> array_objects = new Map<long, Range>();
+
     
 	public void onListItemClicked(QTreeWidget tree,long item, int column)override{
     
@@ -44,6 +22,7 @@ class WatchWnd : ListDockWidget{
 	public void onListItemPressed(QTreeWidget tree,long item, int column)override{
 		_contextMenu.actions[0].setEnable(item != add_item);
 	}
+    
 	public void onListItemDoubleClicked(@NotNilptr QTreeWidget tree,long item, int column)override{
 		if (item == add_item){
 			return ;
@@ -58,7 +37,7 @@ class WatchWnd : ListDockWidget{
         String sztype = tree.getItemText(item, 1);
         
         if (objectId != 0 && sztype.equals("String")){
-			XWorkspace.workspace.debuggee.queryObject("detail:" + caption , "" + objectId, "watch" + serial, 0, 0);
+			XWorkspace.workspace.debuggee.queryObject("detail:" + caption , "" + objectId, __dvp.getIdentifier(), 0, 0, nilptr);
         }else{
 			String text = tree.getItemText(item, column);
             if (text.length() > 0){
@@ -70,61 +49,11 @@ class WatchWnd : ListDockWidget{
             }
         }
 	}
+    
     public void onListItemExpanded(@NotNilptr QTreeWidget tree,long item)override{
-        expandItem(tree, item);
+        __dvp.expandItem(tree, item, nilptr);
 	}
-    
-    public void expandItem(@NotNilptr QTreeWidget tree,long item){
-		if (expandArrays(item) == false){
-			long objectId = tree.getItemTag(item, 0);
-			if (objectId != 0){
-				tree.setItemTag(item, 0, 0);
-				synchronized(serlock){// UI线程使用
-					long start = tree.getItemTag(item, 2);
-					long end = tree.getItemTag(item, 3);
-					XWorkspace.workspace.debuggee.queryObject("" + item, "" + objectId, "watch" + serial, start, end);
-				}
-				
-				/*tree.removeItem(tree.getItemTag(item, 1));
-				try{
-					JsonObject object = objectsMap.get(objectId);
-					if (object != nilptr){
-						displayValue(tree, item, object);
-					}
-				}catch(Exception e){
-				
-				}*/
-			}else{
-                querySaveState(item);
-            }
-		}else{
-            querySaveState(item);
-        }
-    }
-    
-    public bool expandArrays(long item){
-		
-		Map.Iterator<long, Range> iter = array_objects.find(item);
-		
-		if (iter != nilptr){
-			QTreeWidget list = getList();
-			Range rg = iter.getValue();
-            array_objects.remove(iter);
-            list.setItemTag(item, 0, 0);
-            
-			if (rg != nilptr){
-				if (rg.itemload != 0){
-					list.removeItem(rg.itemload);
-                    rg.itemload = 0;
-                }
-				//void splitArray(QTreeWidget list, long newitem , long object,long start, long length, int unit, bool recursion){
-				splitArray(list, item, rg.object, rg.start, rg.length, rg.unit, true);
-			}
-            return true;
-		}
-		return false;
-    }
-    
+
     public void onListItemChanged(@NotNilptr QTreeWidget tree,long item, int column){
 		if (item == add_item){
 			add_item = 0;
@@ -159,91 +88,7 @@ class WatchWnd : ListDockWidget{
         }
     }
     
-    
-    Map<long, JsonNode> expandTask = new Map<long, JsonNode>();
-    
-    public void querySaveState(long item){
-        try{
-            JsonNode node = expandTask.get(item);
-            if (node != nilptr){
-                expandTask.remove(item);
-                QTreeWidget list = getList();
-                long [] items = list.getItemChildren(item);
-                if (items != nilptr){
-                    applyStateEx(items, (JsonArray)node);
-                }
-            }
-        }catch(Exception e){
-            
-        }
-    }
-    
-    public void expandItem(long item,@NotNilptr  JsonNode child){
-        QTreeWidget list = getList();
-        expandTask.put(item, child);
-        list.setExpand(item,true);
-        //expandItem(list, item);
-    }
-    
-    public void applyState(){
-        if (saveState == nilptr){
-            return;
-        }
-        
-        QTreeWidget list = getList();
-        JsonArray state = (JsonArray)saveState;
-        if (state != nilptr){
-            long [] items = list.getTopItems();
-            
-            if (items != nilptr){
-                if (items.length != state.length()){
-                    saveState = nilptr;
-                    return ;
-                }
-                
-                for (int i =0; i < items.length; i++){
-                    String text = list.getItemText(items[i], 0);
-                    JsonObject item = (JsonObject)state.get(i);
-                    if (item != nilptr){
-                        String slab = item.getString("label");
-                        if (slab != nilptr && slab.equals(text) == false){
-                            saveState = nilptr;
-                            return ;
-                        }
-                    }
-                }
-                
-                applyStateEx(items, state);
-            }
-        }
-    }
-    
-    public void applyStateEx(@NotNilptr long [] items,@NotNilptr  JsonArray state){
-        QTreeWidget list = getList();
-        int stlen = state.length();
-        for (int i = 0; i < items.length; i++){
-            if (i < stlen){
-                JsonObject item = (JsonObject)state.get(i);
-                if (item != nilptr){
-                    bool exp = item.getBool("exp");
-                    if (exp){
-                        expandItem(items[i], item.get("child"));
-                    }else{
-                        String text = list.getItemText(items[i], 2);
-                        String sval = item.getString("value");
-                        if (sval != nilptr && sval.equals(text) == false){
-                            list.setItemColor(items[i],0,0xffff0000);
-                            list.setItemColor(items[i],2,0xffff0000);
-                        }
-                    }
-                }
-            }else{
-                list.setItemColor(items[i],0,0xffff0000);
-                list.setItemColor(items[i],2,0xffff0000);
-            }
-        }
-    }
-    
+
     
     public static void UpdateWatch(){
 		watchesWnd.updateWatch();
@@ -264,351 +109,29 @@ class WatchWnd : ListDockWidget{
     }
     
     public void onQueryObject(JsonObject object){
-		synchronized(queriedObjects){
-			queriedObjects.add(object);
-            Notify(QUERYOBJECT);
-        }
+        runOnUi(new Runnable(){
+            void run(){
+                __dvp.sendCommand(new Object[]{DebugValueParser.COMMAND.CMD_LOADOBJECT, getList(), object});
+            }
+        });
     }
     
     public 
     void showInfo(JsonObject infos){
-		synchronized(rootLock){
-			root = infos;
-			this.Notify(REFRESH_WATCH);
-        }
-    }
-    
-    public 
-	void onNotification(long id){
-		if (id == REFRESH_WATCH){
-			JsonObject infos;
-			synchronized(rootLock){
-				infos = root;
-				root = nilptr;
-			}
-			if (infos != nilptr){
-				parseWatchInfo(infos);
-			}
-        }else
-		if (id == QUERYOBJECT){
-			synchronized(queriedObjects){
-				for (int i = 0,c = queriedObjects.size(); i < c; i++){
-                    JsonObject jobj = queriedObjects.get(i);
-                    if (jobj != nilptr){
-                        loadObject(jobj);
-                    }
-				}
-				queriedObjects.clear();
-			}
-        }
-	}
-    
-    public 
-    void loadObject(@NotNilptr JsonObject json){
-		synchronized(serlock){
-			QTreeWidget list = getList();
-			
-			//long id = json.getString("id").parseLong();
-            
-            String qid = json.getString("queryid");
-            
-            if (qid != nilptr){
-            
-				if (qid.startWith("detail:")){
-					try{
-						TextDetail td = new TextDetail();
-						String text = json.getString("value"); 
-						JsonObject text_root = new JsonObject(text);
-						String content = text_root.getString("value");
-						String caption = qid.substring(7, qid.length());
-                        if (content != nilptr){
-                            caption = caption + " : length=" + content.length();
-                            td.create(caption, content, nilptr, false);
-                        }
-					}catch(Exception e){
-					
-					}
-                    return ;
+        runOnUi(new Runnable(){
+            void run(){
+                if (infos != nilptr){
+                    parseWatchInfo(infos);
                 }
-                
-				long item = qid.parseLong();
-				
-				if (item != 0){
-					String param = json.getString("param");
-                    if (param != nilptr){
-                        long seri = param.substring(5, param.length()).parseLong();
-                        String szType  = json.getString("type");
-                        
-                        if (seri == serial){
-                            String values = json.getString("value"); 
-                            long loaditem = list.getItemTag(item, 1);
-                            
-                            if (loaditem != 0){
-                                list.removeItem(loaditem);
-                                list.setItemTag(item, 1, 0);
-                            }
-                            
-                            if (values != nilptr && values.length() > 0){
-                                try{
-                                    JsonObject valueroot = new JsonObject(values);
-                                    if (szType != nilptr){
-                                        list.setItemText(item,1 , szType);
-                                    }
-                                    displayValue(list, item, valueroot);
-                                }catch(Exception e){
-                                    //_system_.consoleWrite("parse error:[" + values + "]\n");
-                                }
-                            }else{
-                                list.setItemText(item, 2, "<找不到调试数据>");
-                            }
-                        }
-                        
-                        querySaveState(item);
-                    }
-				}
             }
-        }
-    }
-    
-    /*static void clear(){
-		synchronized(watchesWnd.serial){
-			watchesWnd.serial++;
-			synchronized(watchesWnd.root){
-				watchesWnd.listReset();
-				watchesWnd.root = nilptr;
-			}
-		}
-    }*/
+        });
+    } 
     
     public 
     void parseWatchInfo(@NotNilptr JsonObject json){
-    
-		//_system_.consoleWrite(json.toString(false));        
-		parseWatchInfoCore(json);
+		__dvp.sendCommand(new Object[]{DebugValueParser.COMMAND.CMD_PARSEWATCH, getList(), watchs, json});
     }
-    
-    public 
-    void parseWatchInfoCore(@NotNilptr JsonObject json){
-            
-        JsonArray watches;
-        try{
-			watches = (JsonArray)json.get("watch");
-        }catch(Exception e){
         
-        }
-        
-		if (watches != nilptr){
-			QTreeWidget list = getList();
-            saveState = TreeStateSaver.saveState(list,0);
-            expandTask.clear();
-			for (int i = 0, c = watches.length(); i < c; i++){
-				JsonObject obj = (JsonObject)watches.get(i);
-				if (obj != nilptr){
-					long item = 0;
-                    String name = obj.getString("name");
-                    int error = obj.getInt("error");
-					try{
-						item = watchs.get(name);
-						if (item != 0){
-							list.removeAllchild(item);
-                            if (error == 0){
-								list.setItemText(item, 2, "");
-								list.setExpand(item, false);
-								String stype = obj.getString("type");
-								if (stype != nilptr){
-									list.setItemText(item, 1, stype);                
-								}
-								String values = obj.getString("value"); 
-								
-								if (values != nilptr && values.length() > 0){
-									try{
-										JsonObject valueroot = new JsonObject(values);
-										
-								 
-										displayValue(list, item, valueroot);
-										
-									}catch(Exception e){
-										//_system_.consoleWrite("error:" + e.getMessage());
-									}
-								}else{
-									list.setItemText(item, 2, "<找不到调试数据>");
-								}
-                            }else{
-								list.setItemText(item, 2, "<找不到调试数据>");
-                            }
-						}
-                    }catch(Exception e){
-                    
-                    }
-				}
-			}
-        }
-        
-        applyState();
-    }
-    
-    public 
-    long getSplit(long length){
-		long i = 100;
-        while (i < length){
-			i *= 10;
-        }
-        return i / 10;
-    }
-    
-    public 
-    void displayArray(@NotNilptr QTreeWidget list, long item , long object,long start, long length, int unit, bool recursion){
-		long newitem = list.insertItem(item, nilptr, String.format("[%d~%d]", start, start + length - 1));
-        splitArray(list, newitem, object, start, length, unit, recursion);
-    }
-    
-    public 
-    void splitArray(@NotNilptr QTreeWidget list, long newitem , long object,long start, long length, int unit, bool recursion){
-		
-        
-        if (unit >= 100){
-            if (recursion == false){
-				long iditem = list.insertItem(newitem, nilptr, "array");
-				list.setItemText(iditem, 2, "loading");
-                Range rg = new Range(start, length, object, unit, iditem);
-                array_objects.put(newitem, rg);
-            }else{
-				int c = length / unit;
-				long pos = start;
-				for (int i =0; i < c; i ++){
-					displayArray(list, newitem, object, pos, unit, unit / 10, false);
-					pos += unit;
-				}
-				if (pos != start + length){
-					displayArray(list, newitem, object, pos, start + length - pos, unit / 10, false);
-				}
-            }
-        }else{
-			list.setItemText(newitem, 3, "" + object);
-        
-			long iditem = list.insertItem(newitem, nilptr, "array");
-			list.setItemText(iditem, 2, "loading");
-            
-			list.setItemTag(newitem, 0, object);
-			list.setItemTag(newitem, 1, iditem);
-            list.setItemTag(newitem, 2, start);
-            list.setItemTag(newitem, 3, start + length);
-        }
-        
-    }
-    
-    public void displayValue(@NotNilptr QTreeWidget list, long item ,@NotNilptr JsonObject valueroot){
-		if (valueroot.has("object_id")){
-			String objectId = valueroot.getString("object_id");
-            
-            if (objectId == nilptr){
-                return;
-            }
-        	if (valueroot.has("length")){
-				String address = valueroot.getString("address");
-				String slength = valueroot.getString("length");
-				long lenitem = list.insertItem(item, nilptr, "length");
-				list.setItemText(lenitem, 1, "int");
-				list.setItemText(lenitem, 2, slength);
-                if (address != nilptr && (address.length() > 0)){
-					list.setItemText(item,2,address);
-                }
-                if (slength != nilptr){
-                    long length = slength.parseLong();
-                    displayArray(list, item, objectId.parseLong(), 0,  length, getSplit(length), false);
-                }
-            }else
-            if (valueroot.has("thumb")){
-				String text = valueroot.getString("thumb");
-                if (text != nilptr){
-                    text = text.replace("\n", " ↩ ")
-                                .replace("\r", " ↵ ")
-                                .replace("\t", " ⇥ ")
-                                .replace("\b", " ⇤ ") + " ...";
-                                
-                    list.setItemText(item, 2, text);
-                    list.setItemText(item, 1, "String");    
-                    list.setItemTag(item, 2, objectId.parseLong());
-                }
-            }else{
-				long iditem = list.insertItem(item, nilptr, "id");
-				list.setItemText(item, 3, objectId);
-				list.setItemText(iditem, 2, "loading");
-				list.setItemTag(item, 0, objectId.parseLong());
-				list.setItemTag(item, 1, iditem);
-            }
-			return ;
-		}
-        
-		int valueType = valueroot.getInt("valuetype");
-		
-		switch(valueType){
-		case 0:
-        {
-            String values = valueroot.getString("value"); 
-            
-            if (values == nilptr){
-                values = "nilptr";
-            }else{
-                values = values.replace("\n", " ↩ ")
-                                .replace("\r", " ↵ ")
-                                .replace("\t", " ⇥ ")
-                                .replace("\b", " ⇤ ");
-            }
-			list.setItemText(item, 2, values);
-        }
-		break;
-        
-		case 1:
-			parseMember(list, item, valueroot);
-		break;
-        
-		case 2:
-			parseArrayValue(list, item, valueroot);
-		break;
-		
-		}
-    }
-    
-    public 
-	void parseArrayValue(@NotNilptr QTreeWidget list, long item ,@NotNilptr JsonObject valueroot){
-        long dataitem = list.insertItem(item, nilptr, "data");
-
-        JsonArray valarr = (JsonArray)valueroot.get("value");
-        if (valarr != nilptr){
-			for (int i = 0, c = valarr.length(); i < c; i++ ){
-				JsonObject valroot = (JsonObject)valarr.get(i);
-                if (valroot != nilptr){
-					long datitem = list.insertItem(dataitem, nilptr, "[" + valroot.getString("index") + "]");
-                    String stype = valroot.getString("type");
-                    if (stype != nilptr){
-						list.setItemText(datitem, 1, stype);                
-                    }
-					displayValue(list, datitem, valroot);
-                }
-            }
-        }
-        
-    }
-    
-    public 
-    void parseMember(@NotNilptr QTreeWidget list, long item ,@NotNilptr JsonObject valueroot){
-        JsonArray valarr = (JsonArray)valueroot.get("value");
-        if (valarr != nilptr){
-			for (int i = 0, c = valarr.length(); i < c; i++ ){
-				JsonObject valroot = (JsonObject)valarr.get(i);
-                if (valroot != nilptr){
-					long datitem = list.insertItem(item, nilptr, ((JsonObject)valarr.get(i)).getString("name"));
-                    String stype = valroot.getString("type");
-                    if (stype != nilptr){
-						list.setItemText(datitem, 1, stype);                
-                    }
-					displayValue(list, datitem, valroot);
-                }
-            }
-        } 
-    }
-    
    public  String [] getColumn()override{
 		String [] columns = {"名称", "类型", "值", "ID"};
         return columns;
@@ -623,11 +146,9 @@ class WatchWnd : ListDockWidget{
     public void listReset(){
 		QTreeWidget list = getList();
         //UI线程使用
-		synchronized(serlock){
-			serial++;
-			list.clear();
+		synchronized(__dvp){
+            __dvp.sendCommand(new Object[]{DebugValueParser.COMMAND.CMD_CLEAR,list});
             watchs.clear();
-            array_objects.clear();
 		}
         add_item = list.addItem(nilptr, "<添加监视>");
         list.modifyItemFlags(add_item, QTreeWidget.ItemIsEditable, 0);
@@ -649,7 +170,7 @@ class WatchWnd : ListDockWidget{
 		   void onTrigger(QObject obj) override{
 				if (obj == _contextMenu.actions[0]){
                 
-					synchronized(serlock){//UI线程使用
+					synchronized(__dvp){//UI线程使用
 						long [] items = list.getSelectedItems();
 						
 						JsonArray array = new JsonArray();
@@ -665,15 +186,11 @@ class WatchWnd : ListDockWidget{
                             }
                         }
 						XWorkspace.workspace.debuggee.updateWatch(array,ThreadManager.currentThreadId,ThreadManager.currentFrameId, true);
-                        
-                        serial++;
+                        __dvp.incserial();
                     }
                 }
 		   }
-		};
-        
-		
-		
+		}; 
 		String []acts = {"删除"};
 		_contextMenu.create(list, acts, menuListener, nilptr);
 	}

@@ -1,6 +1,11 @@
 //xlang Source, Name:XDebuggee.xcsm 
 //Date: Mon Aug 16:07:23 2018 
 
+class QOCallback{
+    public void callback(JsonObject){
+        
+    }
+};
 
 class XDebuggee{
 	
@@ -195,8 +200,8 @@ class XDebuggee{
     public bool isDebuging(){
 		return isDebugging;
     }
-    
-    public void queryObject(String queryId, String objectid, String param, long start, long end){
+    Map<String, QOCallback> __queryCallback = new Map<String, QOCallback>();
+    public void queryObject(String queryId, String objectid, String param, long start, long end, QOCallback r){
         JsonObject json = new JsonObject();
         json.put("queryid", queryId);
         json.put("param", param);
@@ -204,6 +209,12 @@ class XDebuggee{
         
         json.put("offset", "" + start);
         json.put("end", "" + end);
+        
+        if (r != nilptr){
+            synchronized(__queryCallback){
+                __queryCallback.put(param, r);
+            }
+        }
         
         String text = json.toString(false);
         if (text.length() > 0){
@@ -243,6 +254,20 @@ class XDebuggee{
             }else
             if (param.startWith("watch")){
                 WatchWnd.watchesWnd.onQueryObject(json);
+            }else{
+                QOCallback r = nilptr;
+                
+                synchronized(__queryCallback){
+                    Map.Iterator<String, QOCallback> iter = __queryCallback.find(param);
+                    if (iter != nilptr){
+                        r = iter.getValue();
+                        __queryCallback.remove(iter);
+                    }
+                }
+                
+                if (r != nilptr){
+                    r.callback(json);
+                }
             }
         }
     }

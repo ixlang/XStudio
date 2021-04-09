@@ -1180,6 +1180,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         public int row;
         public int type;
         public String tip;
+        public int length;
         public CPPCompileInfo(){
             
         }
@@ -1194,7 +1195,9 @@ class CDEProjectPropInterface : ProjectPropInterface{
             type = t;
             tip = _tips;
         }
-
+        public int getLength()override {
+            return length;
+        }
         public int getType()override {
             return type;
         }

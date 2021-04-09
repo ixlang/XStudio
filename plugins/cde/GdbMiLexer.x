@@ -24,10 +24,10 @@ class GdbMiLexer
 	};
 
 	// State of the lexer FSM
-	FsmState m_state = FsmState.Idle;
+	FsmState m_state = FsmState.Idle; 
 
 	// Temporary store for partially read tokens
-	StringBuilder m_partialToken;
+	StringBuilder m_partialToken; 
 
 	// List of unprocessed tokens
 	List<GdbMiToken> m_tokens = new List<GdbMiToken>();

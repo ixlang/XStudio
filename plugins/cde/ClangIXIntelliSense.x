@@ -425,8 +425,11 @@ class ClangIXIntelliSense : IXIntelliSense{
             int p = content.lastIndexOf("#", pos);
             if (p != -1){
                 String line = content.substring(p, pos);
-                line = line.replace(" ","").replace("\t","").replace("\r","").replace("\n","");
+                line = line.replace(" ","").replace("\t","").replace("\\\r\n","").replace("\\\r","").replace("\\\n","");
                 
+                if (line.countChar('\n') > 0 || line.countChar('\r') > 0){
+                    return 0;
+                }
                 int endsub = 0;
                 if (line.endWith("\"") || line.endWith(">")){
                     endsub ++;
@@ -488,6 +491,8 @@ class ClangIXIntelliSense : IXIntelliSense{
                         }
                     });
                 }
+            }else{
+                super.accept();
             }
         }
         
@@ -556,7 +561,7 @@ class ClangIXIntelliSense : IXIntelliSense{
     
     public class CDEXIntelliResult : XIntelliResult{
         JsonObject item;
-        bool parsed = false;
+        public bool parsed = false;
         public String name;
         public int type;
         public String prop;
@@ -568,8 +573,98 @@ class ClangIXIntelliSense : IXIntelliSense{
         public int get_visibility(){
             return 0x40;
         }
+
+        public CDEXIntelliResult(String _name){
+            name = _name;
+            parsed = true;
+            type = 31;
+            prop = "";
+            _class = new CDEXIntelliResult();
+            _class.parsed = true;
+            _class.name = _name;
+        }
+        
         public void accept(){
-            
+            if (name.equals("try") || name.equals("__try")){
+                XSourceEditor editor = XWorkspace.CurrentSourceEditorView();
+                if (editor != nilptr){
+                    QScintilla sci = editor._sci;
+                    int pos = sci.getCurrentPosition();
+                    int curline = sci.positionToLine(pos);
+                    int column = pos - sci.getPosition(curline);
+                    int indent = column - name.length();
+                    
+                    String szindent = String.fill(' ', indent);
+                    String append = nilptr;
+                    if (name.equals("try")){
+                        append = "{\n$INDENT\t\n$INDENT}catch(...){\n$INDENT\t\n$INDENT}\n".replace("$INDENT", szindent);
+                    }else{
+                        append = "{\n$INDENT\t\n$INDENT}__except(EXCEPTION_EXECUTE_HANDLER ){\n$INDENT\t\n$INDENT}\n".replace("$INDENT", szindent);
+                    }
+                    sci.insertText(pos, append);
+                    sci.gotoPos(pos + indent + 3);
+                }
+            }else
+            if (name.equals("if") || name.equals("while")){
+                XSourceEditor editor = XWorkspace.CurrentSourceEditorView();
+                if (editor != nilptr){
+                    QScintilla sci = editor._sci;
+                    int pos = sci.getCurrentPosition();
+                    int curline = sci.positionToLine(pos);
+                    int column = pos - sci.getPosition(curline);
+                    int indent = column - name.length();
+                    
+                    String szindent = String.fill(' ', indent);
+                    String append = " () {\n$INDENT\t\n$INDENT}".replace("$INDENT", szindent);
+                    sci.insertText(pos, append);
+                    sci.gotoPos(pos + 2);
+                }
+            }else
+            if (name.equals("__finally") || name.equals("else")){
+                XSourceEditor editor = XWorkspace.CurrentSourceEditorView();
+                if (editor != nilptr){
+                    QScintilla sci = editor._sci;
+                    int pos = sci.getCurrentPosition();
+                    int curline = sci.positionToLine(pos);
+                    int column = pos - sci.getPosition(curline);
+                    int indent = column - name.length();
+                    
+                    String szindent = String.fill(' ', indent);
+                    String append = "{\n$INDENT\t\n$INDENT}".replace("$INDENT", szindent);
+                    sci.insertText(pos, append);
+                    sci.gotoPos(pos + indent + 3);
+                }
+            }else
+            if (name.equals("switch")){
+                XSourceEditor editor = XWorkspace.CurrentSourceEditorView();
+                if (editor != nilptr){
+                    QScintilla sci = editor._sci;
+                    int pos = sci.getCurrentPosition();
+                    int curline = sci.positionToLine(pos);
+                    int column = pos - sci.getPosition(curline);
+                    int indent = column - name.length();
+                    
+                    String szindent = String.fill(' ', indent);
+                    String append = " () {\n$INDENT\tcase 0: /*TODO*/\n$INDENT\tbreak;\n$INDENT\tdefault:\n$INDENT\tbreak;\n$INDENT}".replace("$INDENT", szindent);
+                    sci.insertText(pos, append);
+                    sci.gotoPos(pos + 2);
+                }
+            }else
+            if (name.equals("do")){
+                XSourceEditor editor = XWorkspace.CurrentSourceEditorView();
+                if (editor != nilptr){
+                    QScintilla sci = editor._sci;
+                    int pos = sci.getCurrentPosition();
+                    int curline = sci.positionToLine(pos);
+                    int column = pos - sci.getPosition(curline);
+                    int indent = column - name.length();
+                    
+                    String szindent = String.fill(' ', indent);
+                    String append = "{\n$INDENT\t\n$INDENT}while(true /*TODO*/);".replace("$INDENT", szindent);
+                    sci.insertText(pos, append);
+                    sci.gotoPos(pos + indent + 3);
+                }
+            }
         }
         public CDEXIntelliResult [] processParams(@NotNilptr String args) {
             byte []data = args.getBytes();
@@ -611,7 +706,7 @@ class ClangIXIntelliSense : IXIntelliSense{
         }
         
         void parse(){
-            if (parsed){
+            if (parsed || (item == nilptr)){
                 return;
             }
             parsed = true;
@@ -695,7 +790,10 @@ class ClangIXIntelliSense : IXIntelliSense{
         }
         bool hasProp(char c){
             parse();
-            return prop.indexOf(c) != -1;
+            if (prop != nilptr){
+                return prop.indexOf(c) != -1;
+            }
+            return false;
         }
         XIntelliResult get_class(){
             parse();
@@ -787,44 +885,47 @@ class ClangIXIntelliSense : IXIntelliSense{
     };
     
     XIntelliResult [] parseResult(String result){
+        String [] keys = {
+            "if", "while", "do", "try", "__try", "catch", "__finally", "__except", "else", "switch"
+        };
+        
         if (result == nilptr){
             return nilptr;
         }
         
         JsonObject jres = new JsonObject(result);
 
-        if (false == jres.has("result")){
-            return nilptr;
-        }
-
-        JsonObject restuls = (JsonObject)jres.get("result");
+        JsonObject restuls = nilptr;
         
-        if (restuls == nilptr || false == restuls.has("items")){
-            return nilptr;
+        if (jres.has("result")){
+            restuls = (JsonObject)jres.get("result");
         }
-        JsonArray jarrs = (JsonArray)restuls.get("items");
+        
+        int rsc = keys.length;
+        JsonArray jarrs = nilptr;
+        if (restuls.has("items")){
+            jarrs = (JsonArray)restuls.get("items");
+            if (jarrs != nilptr){
+                rsc += jarrs.length();
+            }
+        }
+        
+        int pos = 0;
+        
+        CDEXIntelliResult [] outs = new CDEXIntelliResult[rsc];
+        
+        for (int i = 0; i < keys.length; i++){
+            outs[pos++] = new CDEXIntelliResult(keys[i]);
+        }
         
         if (jarrs != nilptr){
-            //Vector<XIntelliResult> xrs = new Vector<XIntelliResult>();
-            
-            //_system_.output("\n start:" + _system_.currentTimeMillis() + "\n");
-            
-
-            //for (int i = 0, c = jarrs.length(); i < c; i++)
-            CDEXIntelliResult [] outs = new CDEXIntelliResult[jarrs.length()];
-            int pos = 0;
             JsonObject item = (JsonObject)jarrs.child();
-            
             while(item != nilptr) {
                 outs[pos++] = new CDEXIntelliResult(item);
                 item = (JsonObject)item.next();
             }
-        
-        //_system_.output("\n end:" + _system_.currentTimeMillis() + "\n");
-        
-            return outs;//xrs.toArray(new XIntelliResult[0]);
         }
-        return nilptr;
+        return outs;
     }
     
     

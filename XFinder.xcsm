@@ -3,7 +3,6 @@
 
 
 class XFinder{
-
 	public static class FindItem{
 		public String file;
 		public int position;
@@ -32,7 +31,14 @@ class XFinder{
         }
     };
     
-    public static class FindResult : Vector<FindItem>{};
+    public static class FindResult : Vector<FindItem>{
+        public void offset(int ofst){
+            for (int i = 0 , c = size(); i < c ; i++){
+                FindItem fi = operator[](i);
+                fi.position += ofst;
+            }
+        }
+    };
     
     public static String readFileContent(@NotNilptr String file){
 		FileInputStream fis = nilptr;
@@ -82,27 +88,88 @@ class XFinder{
 	public static const int 
 		SCOPE_CURRENT = 0,
 		SCOPE_ALLOPENED = 1,
-		SCOPE_PROJECT = 2;
+		SCOPE_PROJECT = 2,
+        SCOPE_SELECTED = 3,
+        SCOPE_OUTPUT = 4;
         
-	public static void find(@NotNilptr FindResult result, Project project, bool bcase, bool wholeWord, bool regex,@NotNilptr  String [] extsions, int scope,@NotNilptr  String findTxt, Pattern pattern){
+	public static void find(@NotNilptr FindResult result, Project project, bool bcase, bool wholeWord, bool regex,String id, String specText, @NotNilptr  String [] extsions, int scope,@NotNilptr  String findTxt, Pattern pattern, bool forward, bool bOnce, bool bNext){
 		if (scope == SCOPE_PROJECT && project != nilptr){
+            if (bNext){
+                result.clear();
+            }
 			for (int i = 0, c = project.getSourceFileCount(); i < c; i++){
 				String path = project.getSourcePath(i);
                 if (path != nilptr){
-                    findInFile(result, path, bcase, wholeWord, regex, extsions, findTxt, pattern);
+                    if (findInFile(result, path, bcase, wholeWord, regex, extsions, findTxt, pattern, forward, bOnce) && bOnce){
+                        return;
+                    }
                 }
             }
         }else
 		if (scope == SCOPE_ALLOPENED){
+            if (bNext){
+                result.clear();
+            }
 			Map.Iterator<String, DocumentView> iter = DocumentView.editorMgr.iterator();
             while (iter.hasNext()){
 				String file = iter.getKey();
                 if (file != nilptr){
-                    findInFile(result, file, bcase, wholeWord, regex, extsions, findTxt, pattern);
+                    if (findInFile(result, file, bcase, wholeWord, regex, extsions, findTxt, pattern,  forward, bOnce) && bOnce){
+                        return;
+                    }
                 }
                 iter.next();
             }
+        }else
+		if (scope == SCOPE_CURRENT){
+            DocumentView docview = (DocumentView)XWorkspace.workspace.currentSubWindow();
+            if (docview != nilptr){
+                String fileContent = "";
+                int ofst = 0;
+                if (bNext == false){
+                    fileContent = docview.contentToString();
+                }else{
+                    if (forward){
+                        ofst = result[0].position;
+                        if (ofst == 0){
+                            ofst = docview.getContentLength();
+                        }
+                        fileContent = docview.getText(0, ofst);
+                        ofst = 0;
+                    }else{
+                        ofst = result[0].position + result[0].findlen;
+                        fileContent = docview.getText(ofst, docview.getContentLength());
+                    }
+                    result.clear();
+                }
+                if (fileContent != nilptr){
+                    findInText(result,  docview.getFilePath(), fileContent,  bcase,  wholeWord,  regex, findTxt, pattern, forward, bOnce);
+                    if (ofst != 0){
+                        result.offset(ofst);
+                    }
+                }
+            }else
+            if (bNext){
+                result.clear();
+            }
+        }else
+        if (scope == SCOPE_SELECTED){
+            result.clear();
+            findInText(result,  id, specText,  bcase,  wholeWord,  regex, findTxt, pattern, forward, bOnce);
+        }else
+		if (scope == SCOPE_OUTPUT){
+            if (bNext){
+                result.clear();
+            }
+            QScintilla sci = XWndOutput.outputWnd.getCurrentSci();
+            if (sci != nilptr){
+                String fileContent = sci.getText();
+                if (fileContent != nilptr){
+                    findInText(result,  "输出", fileContent,  bcase,  wholeWord,  regex, findTxt, pattern, forward, bOnce);
+                }
+            }
         }
+        
     }
     
     public static bool testExtsion(@NotNilptr String file , @NotNilptr String [] extsions){
@@ -114,49 +181,90 @@ class XFinder{
         return false;
     }
     
-    public static void findInFile(@NotNilptr FindResult result,@NotNilptr  String file, bool bcase, bool wholeWord, bool regex, String [] extsions,@NotNilptr  String findTxt, Pattern pattern){
+    public static bool findInFile(@NotNilptr FindResult result,@NotNilptr  String file, bool bcase, bool wholeWord, bool regex, String [] extsions,@NotNilptr  String findTxt, Pattern pattern,bool forward,   bool bOnce){
 		if (extsions != nilptr && testExtsion(file, extsions) == false){
-			return ;
+			return false;
         }
         
         String fileContent = getFileContent(file);
         
         if (fileContent != nilptr){
-			findInText(result,  file, fileContent,  bcase,  wholeWord,  regex, findTxt, pattern);
+			return findInText(result,  file, fileContent,  bcase,  wholeWord,  regex, findTxt, pattern, forward, bOnce);
         }
+        return false;
     }
     
     
-    public static void findInText(@NotNilptr FindResult result, String file, @NotNilptr String text, bool bcase, bool wholeWord, bool regex,@NotNilptr  String findTxt, Pattern pattern){
-		if (regex ){
+    public static bool findInText(@NotNilptr FindResult result, String file, @NotNilptr String text, bool bcase, bool wholeWord, bool regex,@NotNilptr  String findTxt, Pattern pattern, bool forward,  bool bOnce){
+		if (text.length() == 0){
+            return false;
+        }
+        if (regex ){
             if (pattern != nilptr){
-                findRegex(result, file, text, pattern);
+                if (bOnce){
+                    return findRegexOnce(result, file, text, pattern);
+                }else{
+                    return findRegex(result, file, text, pattern);
+                }
             }
         }else
         if (bcase){
 			if (wholeWord){
-				findTextWholeWord(result, file, text, text, findTxt);
+				return findTextWholeWord(result, file, text, text, findTxt, forward, bOnce);
             }else{
-				findText(result, file, text, text, findTxt);
+				return findText(result, file, text, text, findTxt, forward, bOnce);
             }
         }else{
 			if (wholeWord){
-				findTextWholeWord(result, file, text, text.lower(), findTxt.lower());
+				return findTextWholeWord(result, file, text, text.lower(), findTxt.lower(), forward, bOnce);
             }else{
-				findText(result, file, text, text.lower(), findTxt.lower());
+				return findText(result, file, text, text.lower(), findTxt.lower(), forward, bOnce);
             }
         }
+        return false;
     }
     
-    public static void findRegex(@NotNilptr FindResult result,String file,@NotNilptr  String text,@NotNilptr  Pattern findTxt){
-		Pattern.Result 
-			rt = findTxt.match(text, Pattern.NOTEMPTY);
+    /*public static String replaceInText(@NotNilptr FindResult result, String file, @NotNilptr String text, bool bcase, bool wholeWord, bool regex,@NotNilptr  String findTxt,@NotNilptr  String replaceTxt,  Pattern pattern){
+        findInText(result, file, text, bcase, wholeWord, regex, findTxt, pattern, true);
+        if (result != nilptr){
+            if (pattern != nilptr){
+                replaceTxt = replaceTxt.escape();
+            }
             
+            for(int i = result.size() - 1; i >= 0; i--){
+                FindItem fi = result[i];
+                replaceOnFile(fi, replaceTxt);
+            }
+        }
+        return text;
+    }*/
+    
+    
+    public static bool findRegex(@NotNilptr FindResult result,String file,@NotNilptr  String text,@NotNilptr  Pattern findTxt){
+		Pattern.Result 
+			rt = findTxt.matchAll(text,0, -1, Pattern.NOTEMPTY);
+        bool rst = false;    
         for (int i = 0, c = rt.length(); i < c; i++){
             int sl = rt.get(i).start();
             int el = rt.get(i).end();
             result.add(new FindItem(file, sl, el - sl, text.substring(sl,el)));
+            rst = true;
         }
+        return rst;
+    }
+    
+    public static bool findRegexOnce(@NotNilptr FindResult result,String file,@NotNilptr  String text,@NotNilptr  Pattern findTxt){
+        bool rst = false;  
+        Pattern.Result patres = new Pattern.Result();
+		if (0 <= findTxt.match(text, patres, 0, -1, Pattern.NOTEMPTY)){
+            for (int i = 0, c = patres.length(); i < c; i++){
+                int sl = patres.get(i).start();
+                int el = patres.get(i).end();
+                result.add(new FindItem(file, sl, el - sl, text.substring(sl,el)));
+                rst = true;
+            }
+        }
+        return rst;
     }
     
     public static String cutString(@NotNilptr String text, int sl, int el){
@@ -170,50 +278,117 @@ class XFinder{
     }
     
     public static bool isWordChar(char c){
-		return !(c >=0 && c < 48);
-    }
-    
-    public static void findText(@NotNilptr FindResult result,String file,@NotNilptr  String originalText ,@NotNilptr String text,@NotNilptr  String findTxt){
-		int findpos = -1;
-        int findlen = findTxt.length();
-        
-        while ((findpos = text.indexOf(findTxt, findpos + 1)) != -1){
-            result.add(new FindItem(file, findpos, findlen, cutString(originalText, findpos, findpos + findlen - 1)));
+        if (c == '_' || (c >='a' && c <= 'z') || (c >='A' && c <= 'Z') || (c >='0' && c <= '9')){
+            return true;
         }
+		return false;
     }
     
-    public static void findTextWholeWord(@NotNilptr FindResult result,String file,@NotNilptr  String originalText ,@NotNilptr String text,@NotNilptr  String findTxt){
-		int findpos = -1;
-        int findlen = findTxt.length();
-        
-        while ((findpos = text.indexOf(findTxt, findpos + 1)) != -1){
-	
-            if (findpos > 0){
-				char s = text.charAt(findpos - 1);
-                if (isWordChar(s)){
-					continue;
+    public static bool findText(@NotNilptr FindResult result,String file,@NotNilptr  String originalText ,@NotNilptr String text,@NotNilptr  String findTxt, bool forward, bool bOnce){
+        bool rst = false;  
+        if (forward == false){
+            int findpos = -1;
+            int findlen = findTxt.length();
+            
+            while ((findpos = text.indexOf(findTxt, findpos + 1)) != -1){
+                result.add(new FindItem(file, findpos, findlen, cutString(originalText, findpos, findpos + findlen - 1)));
+                rst = true;
+                if (bOnce){
+                    break;
                 }
             }
-            if ((findpos + findlen) < text.length()){
-				char e = text.charAt(findpos + findlen);
-                if (isWordChar(e)){
-					continue;
-                }
-            }
+        }else{
+            int findlen = findTxt.length();
+            int findpos = text.length();
 
-            result.add(new FindItem(file, findpos, findTxt.length(), cutString(originalText, findpos, findpos + findTxt.length() - 1)));
+            while ((findpos = text.lastIndexOf(findTxt, findpos - 1)) != -1){
+                result.add(new FindItem(file, findpos, findlen, cutString(originalText, findpos, findpos + findlen - 1)));
+                rst = true;
+                if (bOnce){
+                    break;
+                }
+            }
         }
+        return rst;
+    }
+        
+    public static bool findTextWholeWord(@NotNilptr FindResult result,String file,@NotNilptr  String originalText ,@NotNilptr String text,@NotNilptr  String findTxt, bool forward, bool bOnce){
+        bool rst = false;  
+        
+        if (forward == false){
+            int findpos = -1;
+            int findlen = findTxt.length();
+            
+            while ((findpos = text.indexOf(findTxt, findpos + 1)) != -1){
+        
+                if (findpos > 0){
+                    char s = text.charAt(findpos - 1);
+                    if (isWordChar(s)){
+                        continue;
+                    }
+                }
+                if ((findpos + findlen) < text.length()){
+                    char e = text.charAt(findpos + findlen);
+                    if (isWordChar(e)){
+                        continue;
+                    }
+                }
+
+                result.add(new FindItem(file, findpos, findTxt.length(), cutString(originalText, findpos, findpos + findTxt.length() - 1)));
+                rst = true;
+                if (bOnce){
+                    break;
+                }
+            }
+        }
+        else{
+            
+            int findlen = findTxt.length();
+            int findpos = text.length();
+            
+            while ((findpos = text.lastIndexOf(findTxt, findpos - 1)) != -1){
+        
+                if (findpos > 0){
+                    char s = text.charAt(findpos - 1);
+                    if (isWordChar(s)){
+                        continue;
+                    }
+                }
+                if ((findpos + findlen) < text.length()){
+                    char e = text.charAt(findpos + findlen);
+                    if (isWordChar(e)){
+                        continue;
+                    }
+                }
+
+                result.add(new FindItem(file, findpos, findTxt.length(), cutString(originalText, findpos, findpos + findTxt.length() - 1)));
+                rst = true;
+                if (bOnce){
+                    break;
+                }
+            }
+        }
+        return rst;
     }
     
-    public static void replace(@NotNilptr FindResult result,@NotNilptr  String replaceStr){
-		for (int i = result.size() - 1; i >= 0; i--){
-			FindItem item = result.get(i);
-            if (item != nilptr){
-				replaceOnFile(item, replaceStr);
+    public static void replace(@NotNilptr FindResult result,@NotNilptr  String replaceStr, bool bforward){
+        if (bforward){
+            for (int i = 0 ; i < result.size(); i++){
+                FindItem item = result.get(i);
+                if (item != nilptr){
+                    replaceOnFile(item, replaceStr);
+                }
+            }
+        }else{
+            for (int i = result.size() - 1; i >= 0; i--){
+                FindItem item = result.get(i);
+                if (item != nilptr){
+                    replaceOnFile(item, replaceStr);
+                }
             }
         }
     }
-    
+        
     public static void replaceOnFile(@NotNilptr FindItem item,@NotNilptr  String replaceStr){
 		DocumentView wnd = DocumentView.findDocumentWindow(nilptr, item.file, false);
         

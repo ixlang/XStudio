@@ -204,7 +204,7 @@ class XWndOutput: QDockWidget
             cutcountline = _sci.countOfLine();
             if (cutcountline > 50000){
                 long del_end_pos = _sci.getEndOfLine(10000);
-                _sci.replaceRange(0,del_end_pos,"");
+                _sci.selectAndReplace(0,del_end_pos,"");
             }
             if (tobottom) {
                 _sci.setFirstVisibleLine(cutcountline - scrlines);
@@ -216,7 +216,7 @@ class XWndOutput: QDockWidget
             cutcountline = _sci.countOfLine();
             if (cutcountline > 50000){
                 long del_end_pos = _sci.getEndOfLine(10000);
-                _sci.replaceRange(0,del_end_pos,"");
+                _sci.selectAndReplace(0,del_end_pos,"");
                 cutcountline = _sci.countOfLine();
             }
             
@@ -629,7 +629,7 @@ class XWndOutput: QDockWidget
             _sci.setIndicCurrent(1);
 
             if (text.length() > 0) {
-                Pattern.Result rt = url_match.match(text, 0);
+                Pattern.Result rt = url_match.matchAll(text, 0, -1, 0);
 
                 for (int i = 0, c = rt.length(); i < c; i++) {
                     int start = rt.get(i).start();

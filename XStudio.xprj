@@ -2,7 +2,7 @@
 	"XStudio":	{
 		"version":	"1.2",
 		"language":	"xlang",
-		"sources":	[".\\XStudioApplication.xcs", "XSourceEditor.xcsm", "XWorkspace.xcsm", "XWndSln.xcsm", "XWndClass.xcsm", "XWndOutput.xcsm", "XWndInfo.xcsm", "XMenuManager.xcsm", "Configure.xcsm", "Project.xcsm", "Wizard.xcsm", "Builder.xcsm", "Windows.xcsm", "XFindDlg.xcsm", "Variable.xcsm", "ProjectPropManager.xcsm", "XProperites.xcsm", "IBuilder.xcsm", "props/XlangProjectProp.xcsm", "ProjectPropInterface.xcsm", "file/FileInputStream.xcs", "file/FileOutputStream.xcs", "StatusBarMgr.xcs", "XIntelliSense.xcs", "XDebuggee.xcsm", ".\\stackWnd.xcsm", ".\\ListWidget.xcsm", ".\\AutoWnd.xcsm", ".\\WatchWnd.xcsm", ".\\BreakPointWnd.xcsm", ".\\memorywnd.xcsm", ".\\XFindresWnd.xcsm", ".\\XFinder.xcsm", ".\\XDebugPort.xcsm", ".\\XLogcat.xcsm", ".\\FilterEdit.xcsm", ".\\TextDetail.xcsm", ".\\inputdlg.xcsm", ".\\Setting.xcsm", ".\\XIndex.xcsm", ".\\Recently.xcsm", ".\\AddObject.xcsm", ".\\ThreadManager.xcsm", ".\\XWndObjectDump.xcsm", ".\\ConfigMgr.xcsm", ".\\FirstPrepare.xcsm", ".\\ActionRecorder.xcsm", ".\\CPlusplusProp.xcsm", ".\\Utils.xcsm", ".\\ExportTool.xcsm", ".\\PackageManager.xcsm", ".\\PackageViewer.xcsm", ".\\xstudio.version", ".\\XPlatform.xcsm", ".\\OverrideDlg.xcsm", ".\\IXPlugin.xcsm", ".\\MemoryLookupWnd.xcsm", ".\\HexEditor.xcsm", ".\\TreeStateSaver.xcsm", ".\\ExtensionManager.xcsm", ".\\DownloadCenter.xcsm", ".\\DownloadManager.xcsm", ".\\IXIntelliSense.x", ".\\MultiSelectDialog.x", ".\\DocumentView.x", ".\\XUIEditor.x", ".\\XVersionEditor.x", ".\\ContextMenu.x", ".\\Backuper.x", ".\\XStringMapView.x", ".\\UIManager.x", ".\\ui\\addobj.ui", ".\\ui\\configure.ui", ".\\ui\\dlmgr.ui", ".\\ui\\exportxp.ui", ".\\ui\\extmgr.ui", ".\\ui\\findreplace.ui", ".\\ui\\first.ui", ".\\ui\\goto.ui", ".\\ui\\index.ui", ".\\ui\\logfilter.ui", ".\\ui\\mainwindow.ui", ".\\ui\\mulsel.ui", ".\\ui\\newproj.ui", ".\\ui\\override.ui", ".\\ui\\packagemgr.ui", ".\\ui\\properites.ui", ".\\ui\\setting.ui", ".\\ui\\stringmap.ui", ".\\ui\\welcome.ui", ".\\ui\\windows.ui"],
+		"sources":	[".\\XStudioApplication.xcs", "XSourceEditor.xcsm", "XWorkspace.xcsm", "XWndSln.xcsm", "XWndClass.xcsm", "XWndOutput.xcsm", "XWndInfo.xcsm", "XMenuManager.xcsm", "Configure.xcsm", "Project.xcsm", "Wizard.xcsm", "Builder.xcsm", "Windows.xcsm", "XFindDlg.xcsm", "Variable.xcsm", "ProjectPropManager.xcsm", "XProperites.xcsm", "IBuilder.xcsm", "props/XlangProjectProp.xcsm", "ProjectPropInterface.xcsm", "file/FileInputStream.xcs", "file/FileOutputStream.xcs", "StatusBarMgr.xcs", "XIntelliSense.xcs", "XDebuggee.xcsm", ".\\stackWnd.xcsm", ".\\ListWidget.xcsm", ".\\AutoWnd.xcsm", ".\\WatchWnd.xcsm", ".\\BreakPointWnd.xcsm", ".\\memorywnd.xcsm", ".\\XFindresWnd.xcsm", ".\\XFinder.xcsm", ".\\XDebugPort.xcsm", ".\\XLogcat.xcsm", ".\\FilterEdit.xcsm", ".\\TextDetail.xcsm", ".\\inputdlg.xcsm", ".\\Setting.xcsm", ".\\XIndex.xcsm", ".\\Recently.xcsm", ".\\AddObject.xcsm", ".\\ThreadManager.xcsm", ".\\XWndObjectDump.xcsm", ".\\ConfigMgr.xcsm", ".\\FirstPrepare.xcsm", ".\\ActionRecorder.xcsm", ".\\CPlusplusProp.xcsm", ".\\Utils.xcsm", ".\\ExportTool.xcsm", ".\\PackageManager.xcsm", ".\\PackageViewer.xcsm", ".\\xstudio.version", ".\\XPlatform.xcsm", ".\\OverrideDlg.xcsm", ".\\IXPlugin.xcsm", ".\\MemoryLookupWnd.xcsm", ".\\HexEditor.xcsm", ".\\TreeStateSaver.xcsm", ".\\ExtensionManager.xcsm", ".\\DownloadCenter.xcsm", ".\\DownloadManager.xcsm", ".\\IXIntelliSense.x", ".\\MultiSelectDialog.x", ".\\DocumentView.x", ".\\XUIEditor.x", ".\\XVersionEditor.x", ".\\ContextMenu.x", ".\\Backuper.x", ".\\XStringMapView.x", ".\\UIManager.x", ".\\ui\\addobj.ui", ".\\ui\\configure.ui", ".\\ui\\dlmgr.ui", ".\\ui\\exportxp.ui", ".\\ui\\extmgr.ui", ".\\ui\\first.ui", ".\\ui\\goto.ui", ".\\ui\\index.ui", ".\\ui\\logfilter.ui", ".\\ui\\mainwindow.ui", ".\\ui\\mulsel.ui", ".\\ui\\newproj.ui", ".\\ui\\override.ui", ".\\ui\\packagemgr.ui", ".\\ui\\properites.ui", ".\\ui\\setting.ui", ".\\ui\\stringmap.ui", ".\\ui\\welcome.ui", ".\\ui\\windows.ui", ".\\DebugValueParser.x"],
 		"configures":	{
 			"debug":	{
 				"path":	{
@@ -16,14 +16,14 @@
 				"makeclean":	"",
 				"afterbuild":	"",
 				"afterclean":	"",
-				"cmd":	"$(Output)",
-				"args":	"$(Output)",
-				"workdir":	"D:\\Programs\\windows_x64",
 				"libs":	["QXLibrary.lix"],
 				"links":	[],
 				"depends":	[],
+				"cmd":	"$(Output)",
+				"args":	"$(Output)",
+				"workdir":	"D:\\Programs\\windows_x64",
 				"ignorewarning":	"",
-				"warexcp":	"-we",
+				"warexcp":	"",
 				"compdest":	"-z",
 				"ignorewl":	"204;164;135;200;298;324;323;322",
 				"debugable":	"-dbg",
@@ -32,8 +32,8 @@
 				"strlistfile":	"",
 				"languagefile":	"",
 				"stringoutput":	"",
-				"wtype":	"-arch:x86_64",
-				"ostype":	"-xcross-linux",
+				"wtype":	"",
+				"ostype":	"",
 				"sstype":	"",
 				"outname":	"$(ProjectName)$(Ext)",
 				"outpath":	"D:\\Programs\\windows_x64",
@@ -73,7 +73,7 @@
 			}
 		},
 		"comment":	"\r此项目为 XStudio 的源代码\r\r使用了QT 界面库作为XNL的底层调用,\r\rQTdll的代码在example文件夹中可以找到, \r\r该项目约有25000行代码.\r\r可以使用编译好的xide打开此项目进行修改编辑以及调试等.\r\r因为有部分第三方XNL调用以及资源文件依赖,所以编译生成\r\r的可执行文件需要放在与此ide相同目录下才可以正常运行.\r\r版本控制系统暂未处理\r\remail:3.vc@163.com  你也可以向此邮件发送你的建议.",
-		"versioninc":	"0",
+		"versioninc":	"1",
 		"icofile":	"xide.ico"
 	}
 }

@@ -16,6 +16,9 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QTreeWidget" name="devlist">
+     <property name="whatsThis">
+      <string>联机的设备列表</string>
+     </property>
      <attribute name="headerVisible">
       <bool>true</bool>
      </attribute>
@@ -30,6 +33,9 @@
     <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0,0,1,0,0">
      <item>
       <widget class="QPushButton" name="btnref">
+       <property name="whatsThis">
+        <string>刷新设备列表</string>
+       </property>
        <property name="text">
         <string>刷新</string>
        </property>
@@ -37,19 +43,29 @@
      </item>
      <item>
       <widget class="QCheckBox" name="chklogcat">
+       <property name="whatsThis">
+        <string>是否输出logcat</string>
+       </property>
        <property name="text">
         <string>输出logcat</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="cbbloglvl"/>
+      <widget class="QComboBox" name="cbbloglvl">
+       <property name="whatsThis">
+        <string>选择输出logcat的等级</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QWidget" name="widget" native="true"/>
      </item>
      <item>
       <widget class="QPushButton" name="btndef">
+       <property name="whatsThis">
+        <string>设置为默认调试设备</string>
+       </property>
        <property name="text">
         <string>设为默认</string>
        </property>

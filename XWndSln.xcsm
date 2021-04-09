@@ -204,6 +204,61 @@ class XWndSln : QDockWidget
         return arg;
     }
 
+    Vector<long> errlist = new Vector<long>();
+    
+    public void updateDocumentsStatus(){
+        resetDocumentsStatus();
+        
+        Map<long,int> parents = new Map<long,int>();
+        Map<String,int> filelist = XWndInfor.GetInfoDocuments(ICompileInfo.ERROR);
+        for (Map.Iterator<long, ProjectSource> iter = sourceItem.iterator(); iter.hasNext(); iter.next()){
+            if (filelist.containsKey(iter.getValue().getSourcePath())){
+                long pitem = iter.getKey();
+                _treesln.setItemIcon(pitem,0,"res/toolbar/source_err.png");
+                errlist.add(iter.getKey());
+                
+                while ((pitem = _treesln.getParentItem(pitem)) != 0){
+                    parents.put(pitem,1);
+                }
+            }
+        }
+        Project _pro = currentProject;
+        for (Map.Iterator<long,int> iter = parents.iterator(); iter.hasNext(); iter.next()){
+            long item = iter.getKey();
+            if (item == _pro.viewItem){
+                _treesln.setItemIcon(item,0,"res/toolbar/project_err.png");
+            }else{
+                _treesln.setItemIcon(item,0,"res/toolbar/sources_err.png");
+            }
+        }
+        parents.clear();
+    }
+    
+    public void resetDocumentsStatus(){
+        Map<long,int> parents = new Map<long,int>();
+        Project _pro = currentProject;
+        for (int i = 0 ; i < errlist.size(); i++){
+            long item = errlist[i];
+            
+            _treesln.setItemIcon(item,0,"res/toolbar/source.png");
+            
+            while ((item = _treesln.getParentItem(item)) != 0){
+                parents.put(item,1);
+            }
+        }
+        
+        for (Map.Iterator<long,int> iter = parents.iterator(); iter.hasNext(); iter.next()){
+            long item = iter.getKey();
+            if (item == _pro.viewItem){
+                _treesln.setItemIcon(item,0,"res/toolbar/project.png");
+            }else{
+                _treesln.setItemIcon(item,0,"res/toolbar/sources.png");
+            }
+        }
+        errlist.clear();
+        parents.clear();
+    }
+    
     public String generateArgs (@NotNilptr String arg)
     {
         if (_system_.getPlatformId() == 0) {
@@ -409,6 +464,7 @@ class XWndSln : QDockWidget
     public void clear()
     {
         current_ps = nilptr;
+        errlist.clear();
         _treesln.clear();
         sourceItem.clear();
     }

@@ -264,7 +264,96 @@ class XIntelliSense : IXIntelliSense{
         }
         
         void accept(){
-            
+            if (name.equals("try")){
+                XSourceEditor editor = XWorkspace.CurrentSourceEditorView();
+                if (editor != nilptr){
+                    QScintilla sci = editor._sci;
+                    int pos = sci.getCurrentPosition();
+                    int curline = sci.positionToLine(pos);
+                    int column = pos - sci.getPosition(curline);
+                    int indent = column - name.length();
+                    
+                    String szindent = String.fill(' ', indent);
+                    String append = "{\n$INDENT\t\n$INDENT}catch(Exception e){\n$INDENT\t\n$INDENT}\n".replace("$INDENT", szindent);
+                    sci.insertText(pos, append);
+                    sci.gotoPos(pos + indent + 3);
+                }
+            }else
+            if (name.equals("if") || name.equals("while") || name.equals("synchronized") || name.equals("synchronized_read") || name.equals("synchronized_write")){
+                XSourceEditor editor = XWorkspace.CurrentSourceEditorView();
+                if (editor != nilptr){
+                    QScintilla sci = editor._sci;
+                    int pos = sci.getCurrentPosition();
+                    int curline = sci.positionToLine(pos);
+                    int column = pos - sci.getPosition(curline);
+                    int indent = column - name.length();
+                    
+                    String szindent = String.fill(' ', indent);
+                    String append = " () {\n$INDENT\t\n$INDENT}".replace("$INDENT", szindent);
+                    sci.insertText(pos, append);
+                    sci.gotoPos(pos + 2);
+                }
+            }else
+            if (name.equals("finally") || name.equals("else")){
+                XSourceEditor editor = XWorkspace.CurrentSourceEditorView();
+                if (editor != nilptr){
+                    QScintilla sci = editor._sci;
+                    int pos = sci.getCurrentPosition();
+                    int curline = sci.positionToLine(pos);
+                    int column = pos - sci.getPosition(curline);
+                    int indent = column - name.length();
+                    
+                    String szindent = String.fill(' ', indent);
+                    String append = "{\n$INDENT\t\n$INDENT}".replace("$INDENT", szindent);
+                    sci.insertText(pos, append);
+                    sci.gotoPos(pos + indent + 3);
+                }
+            }else
+            if (name.equals("switch")){
+                XSourceEditor editor = XWorkspace.CurrentSourceEditorView();
+                if (editor != nilptr){
+                    QScintilla sci = editor._sci;
+                    int pos = sci.getCurrentPosition();
+                    int curline = sci.positionToLine(pos);
+                    int column = pos - sci.getPosition(curline);
+                    int indent = column - name.length();
+                    
+                    String szindent = String.fill(' ', indent);
+                    String append = " () {\n$INDENT\tcase 0: /*TODO*/\n$INDENT\tbreak;\n$INDENT\tdefault:\n$INDENT\tbreak;\n$INDENT}".replace("$INDENT", szindent);
+                    sci.insertText(pos, append);
+                    sci.gotoPos(pos + 2);
+                }
+            }else
+            if (name.equals("do")){
+                XSourceEditor editor = XWorkspace.CurrentSourceEditorView();
+                if (editor != nilptr){
+                    QScintilla sci = editor._sci;
+                    int pos = sci.getCurrentPosition();
+                    int curline = sci.positionToLine(pos);
+                    int column = pos - sci.getPosition(curline);
+                    int indent = column - name.length();
+                    
+                    String szindent = String.fill(' ', indent);
+                    String append = "{\n$INDENT\t\n$INDENT}while(true /*TODO*/);".replace("$INDENT", szindent);
+                    sci.insertText(pos, append);
+                    sci.gotoPos(pos + indent + 3);
+                }
+            }else
+            if (name.equals("enum") || name.equals("interface") || name.equals("package")  || name.equals("class") || name.equals("import")){
+                XSourceEditor editor = XWorkspace.CurrentSourceEditorView();
+                if (editor != nilptr){
+                    QScintilla sci = editor._sci;
+                    int pos = sci.getCurrentPosition();
+                    int curline = sci.positionToLine(pos);
+                    int column = pos - sci.getPosition(curline);
+                    int indent = column - name.length();
+                    
+                    String szindent = String.fill(' ', indent);
+                    String append = " {\n$INDENT\t\n$INDENT};".replace("$INDENT", szindent);
+                    sci.insertText(pos, append);
+                    sci.gotoPos(pos + 1);
+                }
+            }
         }
         IXIntelliSense.InputDescription  inputsesc;
         
@@ -275,7 +364,6 @@ class XIntelliSense : IXIntelliSense{
             String descr ;
             int [][] current_idincs ;
             if (inputsesc == nilptr){
-                
                 //XIntelliSense.XIntelliResult [] params = get_params();
                 if (params != nilptr && params.length > 0) {
                     current_idincs = new int[params.length][2];

@@ -3,7 +3,7 @@ class XWorkspace : QMdiArea
 {
     public QMainWindow mainWindow;
     XWndSln slnView;
-    public static XFindDlg findDlg;
+
     static Thread _debugThread;
     Builder _builder = new Builder();
     Project currentProject;
@@ -134,7 +134,7 @@ class XWorkspace : QMdiArea
         }
         
         public TextEditorController currentTextEditor() override{
-            DocumentView wnd = (DocumentView)currentSubWindow();
+            DocumentView wnd = currentDocumentView();
             if (wnd != nilptr && wnd.instanceOf(XSourceEditor)) {
                 return ((XSourceEditor)wnd).getController();
             }
@@ -436,12 +436,13 @@ class XWorkspace : QMdiArea
         XStudioApp._theApp.memoryWnd.setVisible(bs[i++]);
         XStudioApp._theApp.logcatWnd.setVisible(bs[i++]);
         XStudioApp._theApp.xDumpWnd.setVisible(bs[i++]);
+        XStudioApp._theApp.finddlg.setVisible(bs[i++]);
         PluginsController.showPluginsDocks(true);
     }
 
     public static Object hideDocks()
     {
-        bool []bs = new bool[13];
+        bool []bs = new bool[14];
         int i = 0;
 
         bs[i++] = XStudioApp._theApp.wndclass.isVisible();
@@ -457,7 +458,8 @@ class XWorkspace : QMdiArea
         bs[i++] = XStudioApp._theApp.memoryWnd.isVisible();
         bs[i++] = XStudioApp._theApp.logcatWnd.isVisible();
         bs[i++] = XStudioApp._theApp.xDumpWnd.isVisible();
-
+        bs[i++] = XStudioApp._theApp.finddlg.isVisible();
+        
         XStudioApp._theApp.wndclass.setVisible(false);
         XStudioApp._theApp.wndsln.setVisible(false);
         XStudioApp._theApp.wndOutput.setVisible(false);
@@ -471,6 +473,7 @@ class XWorkspace : QMdiArea
         XStudioApp._theApp.logcatWnd.setVisible(false);
         XStudioApp._theApp.xDumpWnd.setVisible(false);
         XStudioApp._theApp.memlookupWnd.setVisible(false);
+        XStudioApp._theApp.finddlg.setVisible(false);
         PluginsController.showPluginsDocks(false);
         return bs;
     }
@@ -880,7 +883,7 @@ class XWorkspace : QMdiArea
 
     public void gotoDef()
     {
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.gotoCursordef();
         }
@@ -888,7 +891,7 @@ class XWorkspace : QMdiArea
 
     public void closeCurrentDocument()
     {
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.close();
         }
@@ -902,11 +905,39 @@ class XWorkspace : QMdiArea
         }
         return win;
     }
+    
+    public static DocumentView CurrentDocumentView(){
+        return workspace.currentDocumentView();
+    }
+    
+    public static XSourceEditor CurrentSourceEditorView(){
+        return workspace.currentSourceEditorView();
+    }
+    
+    public  XSourceEditor currentSourceEditorView()
+    {
+        try {
+            return (XSourceEditor)(currentSubWindow());
+        } catch(Exception e) {
 
+        }
+        return nilptr;
+    }
+    
+    public  DocumentView currentDocumentView()
+    {
+        try {
+            return (DocumentView)(currentSubWindow());
+        } catch(Exception e) {
+
+        }
+        return nilptr;
+    }
+    
     public void saveFile()
     {
         try {
-            DocumentView wnd = (DocumentView)currentSubWindow();
+            DocumentView wnd = currentDocumentView();
             if (wnd != nilptr) {
                 wnd.saveFile();
             }
@@ -917,7 +948,7 @@ class XWorkspace : QMdiArea
 
     public void saveFileAs()
     {
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.saveFileAs();
         }
@@ -1005,7 +1036,7 @@ class XWorkspace : QMdiArea
     public bool showAllWindows()
     {
         QDialog newDlg = new QDialog();
-        if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/Windows.ui"))) == false) {
+        if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/windows.ui"))) == false) {
             return false;
         }
         Windows winlist = new Windows();
@@ -1027,9 +1058,18 @@ class XWorkspace : QMdiArea
             for (int i =0, c = currentProject.getSourceFileCount(); i < c; i++) {
                 String file = currentProject.getSourcePath(i);
                 
-                if (file != nilptr && DocumentView.findSaveFile(file)) {
-                    XStudioApp.statusBar.showStatusMessage(file + "已保存.");
-                    bSaveModified = true;
+                if (file != nilptr ) {
+                    DocumentView wnd =  DocumentView.findDocumentWindow(nilptr, file, false);
+                    if (wnd != nilptr) {
+                        //wnd.resetErrorPoint();
+                        
+                        if (wnd.isModified()) {
+                            if (  wnd.saveFile()){
+                                XStudioApp.statusBar.showStatusMessage(file + "已保存.");
+                                bSaveModified = true;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1516,14 +1556,14 @@ class XWorkspace : QMdiArea
 
     public void toggleBreakpoint()
     {
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.toggleBreakpoint();
         }
     }
     public void UnDo()
     {
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.UnDo();
         }
@@ -1531,7 +1571,7 @@ class XWorkspace : QMdiArea
 
     public void ReDo()
     {
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.ReDo();
         }
@@ -1539,7 +1579,7 @@ class XWorkspace : QMdiArea
 
     public void insertNewLine()
     {
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.insertNewLine();
         }
@@ -1547,21 +1587,21 @@ class XWorkspace : QMdiArea
     
     public void appendNewLine()
     {
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.appendNewLine();
         }
     }
 
     public void convertCharset(){
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.convertCharset();
         }
     }
     
     public void UpdateCodepage(){
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.UpdateCodepage();
         }
@@ -1573,7 +1613,7 @@ class XWorkspace : QMdiArea
             XWndOutput.outputWnd.Copy();
             return;
         }
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.Copy();
         }
@@ -1581,7 +1621,7 @@ class XWorkspace : QMdiArea
 
     public void Paste()
     {
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.Paste();
         }
@@ -1589,7 +1629,7 @@ class XWorkspace : QMdiArea
 
     public void Cut()
     {
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.Cut();
         }
@@ -1597,7 +1637,7 @@ class XWorkspace : QMdiArea
 
     public void Delete()
     {
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.Delete();
         }
@@ -1605,7 +1645,7 @@ class XWorkspace : QMdiArea
 
     public void DeleteCurLine()
     {
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.DeleteCurLine();
         }
@@ -1619,10 +1659,7 @@ class XWorkspace : QMdiArea
     public void findAgain()
     {
         if (XFindDlg.bFindAll == false) {
-            DocumentView wnd = (DocumentView)currentSubWindow();
-            if (wnd != nilptr) {
-                wnd.findAgain();
-            }
+            XFindDlg._finddlg.findNext();
         } else {
             XFindresWnd.findWnd.nextFind();
         }
@@ -1665,24 +1702,15 @@ class XWorkspace : QMdiArea
     public void FindReplace()
     {
         QMainWindow mwin = mainWindow;
-        
-        if (mwin != nilptr){
-            if (findDlg == nilptr) {
-                QDialog newDlg = new QDialog();
-                
-                if (newDlg.load(UIManager.getUIData(__xPackageResource("ui/findreplace.ui")), mwin) == false) {
-                    return ;
-                }
-                findDlg = new XFindDlg(this);
-                findDlg.attach(newDlg);
-            }
-            DocumentView wnd = (DocumentView)currentSubWindow();
-            if (wnd != nilptr) {
-                String text = wnd.getSelectedText();
-                findDlg.setDefaultFindText(text);
-            }
-            findDlg.setActive(true);
+        XFindDlg findDlg = XFindDlg._finddlg;
+        findDlg.show();
+        findDlg.raise();
+        String text = nilptr;
+        DocumentView wnd = currentDocumentView();
+        if (wnd != nilptr) {
+            text = wnd.getSelectedText();
         }
+        findDlg.setDefaultFindText(text);
     }
 
     public void stopRun()
@@ -2171,14 +2199,14 @@ class XWorkspace : QMdiArea
 
     public void matchbrace()
     {
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.matchBrace();
         }
     }
     public void overrideFunction()
     {
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.overrideObject();
         }
@@ -2437,84 +2465,84 @@ class XWorkspace : QMdiArea
     }
     
     public void setUpper(){
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.setUpper();
         }
     }
     
     public void setLower(){
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.setLower();
         }
     }
     
     public void CursorUp(){
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.CursorUp();
         }
     }
 
     public void CursorLeft(){
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.CursorLeft();
         }
     }
     
     public void CursorRight(){
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.CursorRight();
         }
     }
 
     public void CursorDown(){
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.CursorDown();
         }
     }
  
     public void CursorLineBegin(){
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.CursorLineBegin();
         }
     } 
  
     public void CursorLineEnd(){
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.CursorLineEnd();
         }
     }
 
     public void CursorPrevPage(){
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.CursorPrevPage();
         }
     }
 
     public void CursorNextPage(){
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.CursorNextPage();
         }
     }
 
     public void CursortoTop(){
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.CursortoTop();
         }
     }
 
     public void CursortoBottom(){
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.CursortoBottom();
         }
@@ -2522,7 +2550,7 @@ class XWorkspace : QMdiArea
     
     
     public void doPrint(){
-        DocumentView wnd = (DocumentView)currentSubWindow();
+        DocumentView wnd = currentDocumentView();
         if (wnd != nilptr) {
             wnd.doPrint();
         }
@@ -2532,6 +2560,14 @@ class XWorkspace : QMdiArea
         Project project = currentProject;
         if (project != nilptr) {
             project.deploy();
+        }
+    }
+    
+    
+    public void updateAllDocumentErrorPoint(){
+        DocumentView wnd = currentDocumentView();
+        if (wnd != nilptr){
+            wnd.updateErrorPoint();
         }
     }
     

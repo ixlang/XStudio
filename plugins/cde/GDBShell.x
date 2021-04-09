@@ -900,7 +900,8 @@ class GDBShell{
                 name = "__unnamed";
                 value = text.trim(true);
                 text = name + " = " + value;
-            }else{
+            }else
+            if (equ + 1 < text.length()){
                 name = text.substring(0, equ).trim(true);
                 value = text.substring(equ + 1, text.length()).trim(true);
             }
@@ -911,7 +912,7 @@ class GDBShell{
         object.put("name", name);
         if (value.startWith("@")){
             int op = value.indexOf(':');
-            if (op != -1){
+            if (op != -1 && (op + 1 < value.length())){
                 value = value.substring(op + 1,value.length()).trim(true);
             }
         }
@@ -928,7 +929,14 @@ class GDBShell{
                 object.put("valuetype", 0);
                 object.put("value", value);
             }
-            return value.parseHex();
+            
+            int rb = value.lastIndexOf(')');
+            if (rb != -1){
+                if (rb + 1 < value.length()){
+                    value = value.substring(rb + 1, value.length());
+                }
+            }
+            return value.trim(true).parseHex();
         }
     }
 
@@ -999,7 +1007,7 @@ class GDBShell{
             bool showInDisam = CPPGPlugManager.isInDisassemble();
             
             for (int i = 0 ;i < frmpattern.length; i++){
-                rt = frmpattern[i].match(item, Pattern.NOTEMPTY);
+                rt = frmpattern[i].matchAll(item, 0, -1, Pattern.NOTEMPTY);
                 if (rt.length() > 0){
                     matchedId = i;
                     rt = rt.get(0);
@@ -1387,6 +1395,7 @@ class GDBShell{
                         hasString = true;
                     }
                 }
+                
                 if (hasString == false && ((gvs.type.sztype.endWith("*") || gvs.type.sztype.endWith("* const")) && gvs.parseRet != 0 && gvs.jsonValue != nilptr)){
                     putStanby(gvs.parseRet,"p *" + gvs.name);
                     gvs.jsonValue.put("object_id", "" + gvs.parseRet);
@@ -1503,13 +1512,13 @@ class GDBShell{
     }
     
     class Watcher: GdbRequest{
-        WatchRequest _parent;
+        UpdateRequest _parent;
         
         TypeRequest _type;
         String typeName = nilptr;
         String objname;
         
-        public Watcher(String name, WatchRequest _p){
+        public Watcher(String name, UpdateRequest _p){
             objname = name;
             _parent = _p;
         }
@@ -1639,8 +1648,97 @@ class GDBShell{
         }
     };
     
+    void onQueryByName(String queryId, String name, String param){
+        new QueryByNameRequest(name, param, queryId).exec();
+    }
+    
+    class UpdateRequest : GdbRequest{
+        public void update(@NotNilptr String name,@NotNilptr  String typename, @NotNilptr GdbMiRecord [] _records,int offset, int end, bool bDone);
+    };
+    
+    class QueryByNameRequest 
+        : UpdateRequest
+    {
+        GdbRequest parentReq = nilptr;
+        String objname, paramtag, queryid;
+        JsonObject object = nilptr;
+        
+        public QueryByNameRequest(String name, String param, String qid){
+            objname = name;
+            paramtag = param;
+            queryid = qid;
+        }
+        
+        public void update(@NotNilptr String name,@NotNilptr  String typename, @NotNilptr GdbMiRecord [] _records,int offset, int end, bool bDone){
+            
+            String content = "";
+            for (int i = offset; i < end; i ++){
+                content = content + ((GdbMiStreamRecord)_records[i]).message;
+            }
+            object = new JsonObject();
+            long rt = parseValue(content, object,  '=', true);
+            object.remove("name");
+            object.put("name", name);
+            object.put("type", typename);
+            
+            bool hasString = false;
+            String value_str = object.getString("value");
+            if (value_str != nilptr){
+                try{
+                    JsonObject in_value = new JsonObject(value_str);
+                    value_str = in_value.getString("value");
+                    if (value_str.indexOf("\"") != -1){
+                        hasString = true;
+                    }
+                    if (hasString == false && ((typename.endWith("*") || typename.endWith("* const")) && rt != 0)){
+                        putStanby(rt,"p *" + name);
+                        in_value.put("object_id", "" + rt);
+                        while (object.has("value")){
+                            object.remove("value");
+                        }
+                        object.put("value", in_value.toString(false));
+                    }
+                }catch(Exception e){
+                    
+                }
+            }
+            
+            docomplete();
+        }
+        
+        bool next(@NotNilptr GdbMiRecord [] _records,int,  int offset, bool bDone){
+            return false;
+        }
+        
+        @NotNilptr JsonObject getWatch(){
+            JsonObject json = new JsonObject();
+            JsonArray jarr = new JsonArray();
+            jarr.put(object);
+
+            json.put("param", paramtag);
+            json.put("queryid", queryid);
+            json.put("watch", jarr);
+            return json;
+        }
+        
+        void docomplete(){
+            if (parentReq != nilptr){
+                
+            }else{
+                JsonObject resobject = getWatch();
+                byte [] data = resobject.toString(false).getBytes();
+                sendCommand(QueryByName, -1, data, data.length);
+            }
+        }
+        
+        public void exec(){
+            Watcher w = new Watcher(objname, this);
+            w.exec();
+        }
+    };
+    
     class WatchRequest 
-        : GdbRequest
+        : UpdateRequest
     {
         
         GdbRequest parentReq = nilptr;
@@ -1665,10 +1763,33 @@ class GDBShell{
             }
             
             JsonObject object = new JsonObject();
-            int rt = parseValue(content, object,  '=', true);
+            long rt = parseValue(content, object,  '=', true);
             object.remove("name");
             object.put("name", name);
             object.put("type", typename);
+            
+            bool hasString = false;
+            String value_str = object.getString("value");
+            if (value_str != nilptr){
+                try{
+                    JsonObject in_value = new JsonObject(value_str);
+                    value_str = in_value.getString("value");
+                    if (value_str.indexOf("\"") != -1){
+                        hasString = true;
+                    }
+                    if (hasString == false && ((typename.endWith("*") || typename.endWith("* const")) && rt != 0)){
+                        putStanby(rt,"p *" + name);
+                        in_value.put("object_id", "" + rt);
+                        while (object.has("value")){
+                            object.remove("value");
+                        }
+                        object.put("value", in_value.toString(false));
+                    }
+                }catch(Exception e){
+                    
+                }
+            }
+            
             _objects.put(name,object);
 
             if (request_cnt == _objects.size()){
@@ -1927,6 +2048,7 @@ class GDBShell{
 
 	case QueryByName:
 	{
+        onQueryByName(json.getString("queryid"), json.getString("name"), json.getString("param"));
 		/*int _tid = root.root().get_int_value("tid");
 		int frame = root.root().get_int_value("frame");
 		const char * qid = root.root().value("queryid");
@@ -2000,7 +2122,7 @@ class GDBShell{
             Pattern.Result rt = nilptr;
             
             for (int i =0; i < threadprt.length; i++){
-               rt = threadprt[i].match(text, Pattern.NOTEMPTY);  
+               rt = threadprt[i].matchAll(text, 0, -1, Pattern.NOTEMPTY);  
                if (rt.length() > 0){
                    t_type = i;
                }
@@ -2053,7 +2175,7 @@ class GDBShell{
         }
         ThreadTag(String _name, @NotNilptr String nameid,@NotNilptr  String crt_text){
              
-            Pattern.Result rt = createthreadprt.match(crt_text, Pattern.NOTEMPTY);
+            Pattern.Result rt = createthreadprt.matchAll(crt_text, 0, -1, Pattern.NOTEMPTY);
             if (rt.length() > 0){
                Pattern.Result item = rt.get(0);
                String proId = crt_text.substring(item.get(2).start(),item.get(2).end());

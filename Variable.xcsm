@@ -73,20 +73,21 @@ class Variables
         setVariable("$(uname_s)", uname_s);
         setVariable("$(arch)", arch);
         setVariable("$(XStudioRoot)", XPlatform.getAppDirectory());
+        int platformId = _system_.getPlatformId();
         
-        if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
+        if (platformId == _system_.PLATFORM_WINDOWS){
             setVariable("$(ExecuteExt)", ".exe");
             setVariable("$(SharedExt)", ".dll");
             setVariable("$(StaticExt)", ".lib");
             setVariable("$(DriverExt)", ".sys");
         }else
-        if (_system_.getPlatformId() == _system_.PLATFORM_LINUX){
+        if (platformId == _system_.PLATFORM_LINUX){
             setVariable("$(ExecuteExt)", "");
             setVariable("$(SharedExt)", ".so");
             setVariable("$(StaticExt)", ".a");
             setVariable("$(DriverExt)", ".ko");
         }else
-        if (_system_.getPlatformId() == _system_.PLATFORM_MACOSX){
+        if (platformId == _system_.PLATFORM_MACOSX){
             setVariable("$(ExecuteExt)", "");
             setVariable("$(SharedExt)", ".dylib");
             setVariable("$(StaticExt)", ".a");

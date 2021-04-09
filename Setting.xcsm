@@ -1206,7 +1206,7 @@ class Setting : QDialog {
         _sci.sendEditor(QScintilla.SCI_SETEOLMODE, QScintilla.SC_EOL_LF, 0);
 
         _sci.setIndicForeColor(1, getColorRef("indicforecolor"));
-        _sci.setIndicUnderColor(1, getColorRef("indicbackcolor"));
+        _sci.setIndicUnder(1, true);
 
 
         _sci.sendEditor(QScintilla.SCI_SETPROPERTY,"fold","1");
@@ -1217,7 +1217,8 @@ class Setting : QDialog {
 
         _sci.sendEditor(QScintilla.SCI_SETFOLDMARGINCOLOUR, 1, getColorRef("foldmargincolor"));
         _sci.sendEditor(QScintilla.SCI_SETFOLDMARGINHICOLOUR, 1, getColorRef("foldmarginhicolor"));
-
+        setFoldHighLight(Setting.getColorRef("foldhicolor"));
+        
         _sci.sendEditor(QScintilla.SCI_SETMARGINWIDTHN, MARGIN_FOLD_INDEX, 11); //页边宽度
         _sci.sendEditor(QScintilla.SCI_SETMARGINSENSITIVEN, MARGIN_FOLD_INDEX, 1); //响应鼠标消息
 
@@ -1254,6 +1255,17 @@ class Setting : QDialog {
         _sci.sendEditor(QScintilla.SCI_MARKERADD, 4, 13);
     }
 
+    public void setFoldHighLight(int color){
+        _sci.sendEditor(QScintilla.SCI_MARKERENABLEHIGHLIGHT,1);
+        _sci.sendEditor(QScintilla.SCI_MARKERSETBACKSELECTED, QScintilla.SC_MARKNUM_FOLDER, color);
+        _sci.sendEditor(QScintilla.SCI_MARKERSETBACKSELECTED, QScintilla.SC_MARKNUM_FOLDEROPEN, color);
+        _sci.sendEditor(QScintilla.SCI_MARKERSETBACKSELECTED, QScintilla.SC_MARKNUM_FOLDEREND, color);
+        _sci.sendEditor(QScintilla.SCI_MARKERSETBACKSELECTED, QScintilla.SC_MARKNUM_FOLDEROPENMID, color);
+        _sci.sendEditor(QScintilla.SCI_MARKERSETBACKSELECTED, QScintilla.SC_MARKNUM_FOLDERMIDTAIL, color);
+        _sci.sendEditor(QScintilla.SCI_MARKERSETBACKSELECTED, QScintilla.SC_MARKNUM_FOLDERSUB, color);
+        _sci.sendEditor(QScintilla.SCI_MARKERSETBACKSELECTED, QScintilla.SC_MARKNUM_FOLDERTAIL, color);
+    }
+    
     public void setMarginColor(int id, int fore, int back) {
         _sci.sendEditor(QScintilla.SCI_MARKERSETFORE, id, fore);
         _sci.sendEditor(QScintilla.SCI_MARKERSETBACK, id, back);

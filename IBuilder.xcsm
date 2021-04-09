@@ -7,6 +7,7 @@ class ICompileInfo{
     public int getType();
     public String getFile();
     public int getLine();
+    public int getLength();
     public int getRow();
     public @NotNilptr String getTips();
 };

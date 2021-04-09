@@ -14,7 +14,7 @@ class XTextEditor : TextEditorPlugin{
 		//TODO:	
 		return 
 			"break case catch char class " +
-        "const continue default do double else final finally cdecl for " +
+        "const continue default do float double else final finally cdecl for " +
         "if import interface stdcall fastcall pascal operator " +
         "new package include using require synchronized_read synchronized_write " +
         "return static super switch synchronized this throws throw " +

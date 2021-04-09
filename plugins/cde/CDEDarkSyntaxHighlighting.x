@@ -208,6 +208,11 @@ class CDEDarkSyntaxHighlighting : SyntaxHighlighting{
 		return 0xff404142;
     }
     
+    /** 折叠边高亮色*/
+    int getFoldHIColor()override{
+		return 0xffffffff;
+    }
+    
     /** 折叠标记背景颜色*/
     int getFolderBackColor()override{
 		return 0xff7f7f7f;

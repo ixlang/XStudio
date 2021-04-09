@@ -20,6 +20,7 @@ class XlangProjectProp : ProjectPropInterface {
         int row;
         int type;
         String tip;
+        int length;
         
         public CompileInfo(String f, int l,int r, String i) {
             file = f;
@@ -37,7 +38,7 @@ class XlangProjectProp : ProjectPropInterface {
                 String linerow = text.substring(pos + 1, rpos);
 
                 String []lr = linerow.split(',');
-                if (lr.length == 2) {
+                if (lr.length >= 2) {
 
                     int m = lr[0].indexOf(':');
 
@@ -49,6 +50,14 @@ class XlangProjectProp : ProjectPropInterface {
 
                     if (m != -1) {
                         row = lr[1].substring(m + 1, lr[1].length()).parseInt();
+                    }
+                    
+                    if (lr.length > 2) {
+                        m = lr[2].indexOf(':');
+
+                        if (m != -1) {
+                            length = lr[2].substring(m + 1, lr[2].length()).parseInt();
+                        }
                     }
                 }
 
@@ -65,7 +74,9 @@ class XlangProjectProp : ProjectPropInterface {
                 type = -1;
             }
         }
-        
+        int getLength()override {
+            return length;
+        }
         int getType()override {
             return type;
         }
@@ -1908,7 +1919,7 @@ class XlangProjectProp : ProjectPropInterface {
         IProject _project = loader.loadProject(destProj);
         if (uuid.equals("0ef0fe5d-5ab9-4d62-ab6a-ee78f059ad1e") || uuid.equals("5e5ab583-973f-41cd-98cb-ac5208557f8b")){
             if (_project != nilptr){
-                _project.importPackage("Qt5.9.1", nilptr);
+                _project.importPackage("Qt", nilptr);
             }
         }
         return true;
