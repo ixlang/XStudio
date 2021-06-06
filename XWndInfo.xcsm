@@ -32,13 +32,13 @@ class XWndInfor : QDockWidget
         int tag = tree.getItemTag(item, 0);
         String infotips = nilptr;
         if (tag >= 0 && tag < infoList.size()) {
-            infotips = "问题" + tag + ":\n";
+            infotips = "";
             ICompileInfo cii = infoList.get(tag);
             if (cii != nilptr){
                 infotips = infotips + cii.getTips();
             }
         }
-        XSourceEditor.openForFileInfo(XWndInfor.this._mdi_area, file, line.parseInt(), row.parseInt(), infotips);
+        XSourceEditor.openForFileInfo(XWndInfor.this._mdi_area, file, line.parseInt(), row.parseInt(), "问题" + tag + ":", infotips);
     }
 
     onClickListener buttonListener =
@@ -147,7 +147,7 @@ class XWndInfor : QDockWidget
     public void loadInfo(Vector<ICompileInfo> infos)
     {
         String [] columns = {"提示", "警告", "错误"};
-        String [] icons = {"res/toolbar/info.png", "res/toolbar/warning.png", "res/toolbar/errr.png"};
+        String [] icons = {"res/toolbar/StatusInfor.png", "res/toolbar/StatusWarning.png", "res/toolbar/StatusError.png"};
         //int []colors = {0xff00ff00, 0xffffff00, 0xffff0000};
         bool bFilter = false;
         
@@ -213,14 +213,16 @@ class XWndInfor : QDockWidget
         return filemap;
     }
     
-    Vector<ICompileInfo> getDocumentPoint(String path, int type){
+    Vector<ICompileInfo> getDocumentPoint(Project project, String path, int type){
         Vector<ICompileInfo> ii = new Vector<ICompileInfo>();
         synchronized(infoLock) {
             for (int i = 0; i < infoList.size(); i++){
                 ICompileInfo ci = infoList[i];
                 if (ci.getType() == type){
                     String f = ci.getFile();
-                    if (String.formatPath(f,false).equals(String.formatPath(path,false))){
+                    String fp = project.getFullPath(f);
+                    path = String.formatPath(path,false);
+                    if (String.formatPath(f,false) == path || fp == path){
                         ii.add(ci);
                     }
                 }
@@ -237,8 +239,8 @@ class XWndInfor : QDockWidget
         return infoWnd.getInfoDocuments(type);
     }
     
-    public static Vector<ICompileInfo> GetDocumentPoint(String path, int type){
-        return infoWnd.getDocumentPoint(path, type);
+    public static Vector<ICompileInfo> GetDocumentPoint(Project project, String path, int type){
+        return infoWnd.getDocumentPoint(project, path, type);
     }
     
     public void onComplete()

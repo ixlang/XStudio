@@ -17,7 +17,33 @@ class XWorkspace : QMdiArea
     public static XWorkspace workspace;
     QComboBox cfgSel = new QComboBox();
     bool bExternModifyAutoload = false;
+    public Map<String, DiagnosisInformation[]> _diagnlist = new Map<String, DiagnosisInformation[]>();
     
+    public DiagnosisInformation[] getDiagnosisInformation(String file){
+        synchronized (_diagnlist) {
+            try{
+                return _diagnlist.get(file);
+            }catch(Exception e){
+                
+            }
+        }
+        return nilptr;
+    }
+    public IXIntelliSense.IntelliClient inteliclient = new IXIntelliSense.IntelliClient (){
+        void diagnosis(String file, DiagnosisInformation[] diags){
+            synchronized (_diagnlist) {
+            	_diagnlist.put(file,diags);
+                DocumentView.notifyDiagnosis(file);
+            }
+            
+        }
+        void showMessage(String message){
+            
+        }
+        void notify(String , String){
+            
+        }
+    };
     static ActionRecorder ar = new ActionRecorder();
 
     static String strAppTitle = "XStudio " + Utils.getVersion() + " build:" + Utils.getAppBuildVersion() + " (" + _system_.getAppVersion() + ")";
@@ -551,7 +577,7 @@ class XWorkspace : QMdiArea
     }
     public bool openTextFileInfo(@NotNilptr String file, int line,int column)
     {
-        return XSourceEditor.openForFileInfo(this, file, line, column, nilptr);
+        return XSourceEditor.openForFileInfo(this, file, line, column,nilptr, nilptr);
     }
     public bool closeFor(String file)
     {
@@ -670,6 +696,15 @@ class XWorkspace : QMdiArea
         }
         return bclose;
     }
+    
+    public void findReference(){
+        
+    }
+    
+    public void renameObject(){
+        
+    }
+    
     public void openOutput()
     {
         if (currentProject != nilptr) {
@@ -991,6 +1026,9 @@ class XWorkspace : QMdiArea
 
             int c = currentProject.getSourceFileCount();
             for (int i =0; i < c; i++) {
+                if (DocumentView.editorMgr.size() == 0){
+                    break;
+                }
                 closeFor(currentProject.getSourcePath(i));
             }
 
@@ -2218,7 +2256,7 @@ class XWorkspace : QMdiArea
             if (currentProject != nilptr) {
                 IXIntelliSense inters = currentProject.getIntelliSense() ;
                 if (inters != nilptr) {
-                    return inters.getIntelliSenseObjectM(sourcePath, line);
+                    return inters.getDomain(sourcePath, line);
                 }
             }
         }
@@ -2231,7 +2269,7 @@ class XWorkspace : QMdiArea
             if (currentProject != nilptr) {
                 IXIntelliSense inters = currentProject.getIntelliSense() ;
                 if (inters != nilptr) {
-                    return inters.getIntelliSenseObject(sourcePath, line, column, keyWord);
+                    return inters.getSpecialObjects(sourcePath, line, column, keyWord);
                 }
             }
         }
@@ -2250,28 +2288,81 @@ class XWorkspace : QMdiArea
             }
         });
     }
+    
+    class InteliSenseTask{
+        public DocumentView editor;
+        public String originalName;
+        public String content;
+        public long position;
+        public int line;
+        public int column;
+        public InteliSenseTask(){
+            
+        }
+        public InteliSenseTask(DocumentView d, String o, String c, long p, int l, int co){
+            editor = d;
+            originalName = o;
+            content = c;
+            position = p;
+            line = l;
+            column = co;
+        }
+    };
+    
+    List<InteliSenseTask> __inteliSenseList = new List<InteliSenseTask>();
+    
+    
+    public void InteliSenseProc(Project project){
+        InteliSenseTask task = nilptr;
+        synchronized(xintellisencelock) {
+            if (__inteliSenseList.size() > 0){
+                task = __inteliSenseList.pollLast();  
+                __inteliSenseList.clear();
+            }
+        }
+        
+        while (task != nilptr){
+            DocumentView view = task.editor;
+            XIntelliSense.XIntelliResult [] result = XWorkspace.this.getXIntelliSense(project, task.originalName, task.content, task.position, task.line, task.column);
+            task = nilptr;
+            
+            synchronized(xintellisencelock) {
+                if (__inteliSenseList.size() > 0){
+                    task = __inteliSenseList.pollLast();  
+                    __inteliSenseList.clear();
+                }
+            }
+            
+            if (task == nilptr){
+                XWorkspace.this.autocomp = result;
+                view.setIntellisense(XWorkspace.this.autocomp);
+                showXintellisenceComplete();
+            }
+        }
+        
+        synchronized(xintellisencelock) {
+            XWorkspace.this._autoComp_thread = nilptr;
+        }
+    }
+    
     public bool XIntelliSense(DocumentView editor, String originalName,String content,long position, int line, int column)
     {
         XStudioApp.statusBar.showStatusMessage("正在运行 XIntelliSense...");
         synchronized(xintellisencelock) {
+            __inteliSenseList.add(new InteliSenseTask(editor, originalName, content, position, line, column));
             Project project = currentProject;
             if ((_autoComp_thread == nilptr) && (project != nilptr)) {
                 updateAllOpenedFile(project, originalName);
                 _autoComp_thread = new Thread() {
                     void run()override {
-                        XWorkspace.this.autocomp = XWorkspace.this.getXIntelliSense(project, originalName, content, position, line, column);
-                        editor.setIntellisense(XWorkspace.this.autocomp);
-                        XWorkspace.this._autoComp_thread = nilptr;
-                        showXintellisenceComplete();
+                        InteliSenseProc(project);
                     }
                 };
                 _autoComp_thread.start();
-                return true;
             }
         }
         //XStudioApp.statusBar.showStatusMessage("XIntelliSense 失败");
-        return false;
-
+        return true;
     }
 
 
@@ -2338,6 +2429,45 @@ class XWorkspace : QMdiArea
         return false;
     }
 
+    public bool hoverDocument(DocumentView editor, String originalName,String content, int pos, int line, int column)
+    {
+        synchronized(xintellisencelock) {
+            if (_autoComp_thread == nilptr) {
+                _autoComp_thread = new Thread() {
+                    void run()override {
+                        String infor = XWorkspace.this.getInformation(originalName, content, pos, line, column);
+                        editor.showHoverInformation(infor, pos);
+                        XWorkspace.this._autoComp_thread = nilptr;
+                    }
+                };
+                _autoComp_thread.start();
+                return true;
+            }
+        }
+        //XStudioApp.statusBar.showStatusMessage("XIntelliSense 失败");
+        return false;
+    }
+    public bool XIntelliSenseFile(DocumentView editor, String originalName, String content)
+    {
+        synchronized(xintellisencelock) {
+            if (_autoComp_thread == nilptr) {
+                _autoComp_thread = new Thread() {
+                    void run()override {
+                        XIntelliSense.XIntelliResult  []  fileSymbols = XWorkspace.this.getXIntelliSenseFile(originalName, content);
+                        if (fileSymbols != nilptr){
+                            editor.setFileSymbols(fileSymbols);
+                        }
+                        XWorkspace.this._autoComp_thread = nilptr;
+                    }
+                };
+                _autoComp_thread.start();
+                return true;
+            }
+        }
+        //XStudioApp.statusBar.showStatusMessage("XIntelliSense 失败");
+        return false;
+    }
+    
     Map<String, String > source_update_list = new Map<String, String > ();
 
     public bool XIntelliSense()
@@ -2354,6 +2484,9 @@ class XWorkspace : QMdiArea
                                     if (smap != nilptr){
                                         Map.Iterator<String, String > iter = source_update_list.iterator();
                                         while (iter.hasNext()) {
+                                            synchronized (_diagnlist) {
+                                            	_diagnlist.remove(iter.getKey());
+                                            }
                                             smap.update(iter.getKey(), iter.getValue());
                                             iter.next();
                                         }
@@ -2424,7 +2557,7 @@ class XWorkspace : QMdiArea
         if (project != nilptr) {
             IXIntelliSense  _intelliSense = project.getIntelliSense();
             if (_intelliSense != nilptr) {
-                return _intelliSense.getIntelliSense(sourcePath, content, position,  line,  column);
+                return _intelliSense.getCompletion(sourcePath, content, position,  line,  column);
             }
         }
         return nilptr;
@@ -2435,7 +2568,29 @@ class XWorkspace : QMdiArea
         if (currentProject != nilptr) {
             IXIntelliSense  _intelliSense = currentProject.getIntelliSense();
             if (_intelliSense != nilptr) {
-                return _intelliSense.getIntelliSenseL(sourcePath, content, line, column);
+                return _intelliSense.getObjectList(sourcePath, content, line, column);
+            }
+        }
+        return nilptr;
+    }
+    
+    public String getInformation(String sourcePath,String content,int pos, int line, int column)
+    {
+        if (currentProject != nilptr) {
+            IXIntelliSense  _intelliSense = currentProject.getIntelliSense();
+            if (_intelliSense != nilptr) {
+                return _intelliSense.getInformation(sourcePath, content, pos, line, column);
+            }
+        }
+        return nilptr;
+    }
+    
+    public XIntelliSense.XIntelliResult [] getXIntelliSenseFile(String sourcePath,String content)
+    {
+        if (currentProject != nilptr) {
+            IXIntelliSense  _intelliSense = currentProject.getIntelliSense();
+            if (_intelliSense != nilptr) {
+                return _intelliSense.getObjectListInFile(sourcePath, content);
             }
         }
         return nilptr;
@@ -2567,7 +2722,7 @@ class XWorkspace : QMdiArea
     public void updateAllDocumentErrorPoint(){
         DocumentView wnd = currentDocumentView();
         if (wnd != nilptr){
-            wnd.updateErrorPoint();
+            wnd.updateInformationPoint();
         }
     }
     

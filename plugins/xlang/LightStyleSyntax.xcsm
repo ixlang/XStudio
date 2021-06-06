@@ -135,7 +135,7 @@ class LightStyleSyntax : SyntaxHighlighting{
     
     /** 动态关键字背景色*/
     int getWord2BackColor()override{
-		return 0xff6f3d11;
+		return 0xffE4D5CB;
     }
     
     /** 动态关键字色*/
@@ -155,7 +155,7 @@ class LightStyleSyntax : SyntaxHighlighting{
     
     /** 字符颜色*/
     int getCharForeColor()override{
-		return 0xff73DBE6;
+		return 0xffc56cbd;
     }
     
     /** 预处理器颜色*/

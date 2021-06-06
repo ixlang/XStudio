@@ -129,6 +129,9 @@ class DocumentView : QMdiSubWindow{
     public void setUpper(){}
     public void setLower(){}
     public void setIntellisense(XIntelliSense.XIntelliResult [] names) {}
+    public void showHoverInformation(String texts, int pos) {}
+    public void setFileSymbols(XIntelliSense.XIntelliResult [] names) {}
+        
     public void CursorUp() {}
     public void CursorLeft() {}
     public void CursorRight() {}
@@ -161,7 +164,7 @@ class DocumentView : QMdiSubWindow{
         DocumentView wnd =  findDocumentWindow(nilptr, file, false);
         if (wnd != nilptr) {
         
-            wnd.resetErrorPoint();
+            wnd.resetInformationPoint();
             
             if (wnd.isModified()) {
                 return wnd.saveFile();
@@ -171,7 +174,7 @@ class DocumentView : QMdiSubWindow{
         return false;
     }
     
-    public void resetErrorPoint(){
+    public void resetInformationPoint(){
         
     }
     
@@ -254,7 +257,38 @@ class DocumentView : QMdiSubWindow{
             editor.notifyFileChange(autoLoad);
         }
     }
+    
+    public static bool notifyDiagnosis(String file){
+        DocumentView wnd =  findDocumentWindow(nilptr, file, true);
+        if (wnd != nilptr) {
+            wnd.updateInformationPoint();
+            return true;
+        }
+        return false;
+    }
+    
+    public static bool locateForPosition(@NotNilptr XWorkspace parent,@NotNilptr String source,int position, int len) {
+        DocumentView wnd =  findDocumentWindow(parent, source, true);
 
+        if (wnd != nilptr) {
+            parent.setActiveSubWindow(wnd);
+            wnd.setSelection(position, len);
+            return true;
+        }
+        return false;
+    }
+
+    public static bool locateForLineRow(@NotNilptr XWorkspace parent,@NotNilptr String source,int line, int column, int len) {
+        DocumentView wnd =  findDocumentWindow(parent, source, true);
+
+        if (wnd != nilptr) {
+            parent.setActiveSubWindow(wnd);
+            wnd.gotoAndSelect(line,column);
+            return true;
+        }
+        return false;
+    }
+    
     public void notifyFileChange(bool autoLoad) {
         if (Setting.getBoolean("changeautoload")){
             reload();
@@ -342,14 +376,16 @@ class DocumentView : QMdiSubWindow{
     public void goto(int line, int column) {
     }
     
-    public void showTips(int line, int column, String content) {
+    public void showTips(int line, int column, String title, String content) {
     }
     
+    public void showTips(int position, String title, String content){
+        
+    }
     public void setSelection(int pos, int len) {
     
     }
-    
-    public void updateErrorPoint(){
+    public void updateInformationPoint(){
         
     }
     public void gotoAndSelect(int line, int column) {

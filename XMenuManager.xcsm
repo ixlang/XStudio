@@ -24,6 +24,8 @@ class XMenuManager
     {
         String []names = {"actioncloseproject",
                           "actiongotodef",
+                          "actionfindreference",
+                          "actionrename",
                           "actionoverride",
                           "actionautocomplete",
                           "actioncompile_project",
@@ -412,6 +414,14 @@ class XMenuManager
                     app._mdispace.openOutput();
                 }
                 break;
+                case ("actionfindreference"):{
+                    app._mdispace.findReference();
+                }
+                break;
+                case ("actionrename"):{
+                    app._mdispace.renameObject();
+                }
+                break;
                 case ("actiongotodef"): {
                     app._mdispace.gotoDef();
                 }
@@ -554,9 +564,9 @@ class XMenuManager
                     String buildtime = String.formatDate("%Y年%m月%d日", _system_.getAppTimestamp());
                     app.mainWindow.About("关于",
                                          "<Strong>XStudio(Xlang 集成开发环境) Release " + Utils.getAppVersion() + " </Strong><br /><br />" +
-                                         "开发语言: Xlang v3.5<br /><br />" +
+                                         "开发语言: Xlang v3.6<br /><br />" +
                                          "编译时间: " + buildtime + "<br /><br />" +
-                                         "<b>该软件使用xlang 3.5 开发, 软件全部源代码可在xlang的example中找到," +
+                                         "<b>该软件使用xlang 3.6 开发, 软件全部源代码可在xlang的example中找到," +
                                          "native部分为C++与Xlang的XNL项目(同样在example代码中), native项目仅有软件使用的部分调用," +
                                          "如需要用于其它开发需要修改native项目增加接口.</b><br /><br />" +
                                          "该软件的使用不受任何限制,可用于任意用途的修改或者发布.<br /><br />" +
@@ -571,7 +581,8 @@ class XMenuManager
                                          "<em>	libffi</em><br />" +
                                          "<em>	libmicrohttpd</em><br />" +
                                          "<em>	rapidxml</em><br />" +
-                                         "<em>	lzma</em><br /><br />" +
+                                         "<em>	lzma</em><br />" +
+                                         "<em>	md4c</em><br /><br />" +
                                          "官方主页:<a href=\"http://xlang.link/\">http://xlang.link/</a><br />" +
                                          "官方博客:<a href=\"http://blog.xlang.link/\">http://blog.xlang.link/</a><br /><br />" +
                                          "github项目首页:<a href=\"https://ixlang.github.io/\">https://ixlang.github.io/</a><br />" +
@@ -683,7 +694,7 @@ class XMenuManager
         String [] actions = {
             "actionsetting","actionOpen","actionProject_P","actionsave","actionsaveas","actionsaveastemp","actionsaveproject","actionclose","actioncloseproject","actionexit",
             "actionfile","actionclass","actionpackmgr","menuaddition","actionundo","actionredo","actioncut","actioncopy","actionnewlineup",
-            "actionnewlinedown","actionpaste","actiondelete","actiondelcurline","actiongotodef","actionfind","actiongoto","actionreplace","actionfindagain","actionoverride",
+            "actionnewlinedown","actionpaste","actiondelete","actiondelcurline","actiongotodef","actionfindreference","actionrename","actionfind","actiongoto","actionreplace","actionfindagain","actionoverride",
             "actionautocomplete","actionopenoutput","actioncompile_project","actionprocstop","actionclean","actiongenerateNativeSrc","actiongenmake","actionprop","actionfunction","actiondata",
             "actionlocalProblem","actionstartup","actionmatchbrace","actiondebug","actionremotedbg","actionattachdbg","actionrun","actionstepin","actionstepover","actionstepout","actionbreakpoint",
             "menunewbreakpoint","actionbreak","actionstoprun","actiontest","actioncomment","actionexporttools","actionQTCreator","actionhelp","actionextmgr","actionsendfeedback","actionsamples",

@@ -106,7 +106,7 @@ class NewMember : QDialog{
         SourceContent sc_head = CPPGPlugManager.workspace.getSourceContent(headFile);
         if (sc_head != nilptr){
             String headcontent = sc_head.getContent();
-            int prop_pos = headcontent.indexOf("//XAMH Properities End");
+            int prop_pos = headcontent.indexOf("//XAMH Fields End");
             if (prop_pos != -1){
             
                 String declare = "";

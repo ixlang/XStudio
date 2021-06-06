@@ -195,7 +195,7 @@ class CDEDarkSyntaxHighlighting : SyntaxHighlighting{
     
     /** 光标所在行背景色*/
     int getCaretLineBackColor()override{
-		return 0xff202020;
+		return 0xff555657;
     }
     
     /** 折叠边栏颜色*/

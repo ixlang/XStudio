@@ -3,7 +3,7 @@
 
 class ClangIXIntelliSense : IXIntelliSense{
     LspClient clangdlsp;
-    
+    IXIntelliSense.IntelliClient _iclient = nilptr;
     Map<String, String> _compargs = new Map<String, String>();
     // 各个扩展名对应的编译参数
     
@@ -26,15 +26,70 @@ class ClangIXIntelliSense : IXIntelliSense{
     String initResp = nilptr;
     char [] trigge_chars = nilptr;
     
+    static class ClangdDisgnostic : DiagnosisInformation{
+        JsonObject object;
+        
+        public ClangdDisgnostic(JsonObject o){
+            object = o;
+        }
+        String getCode(){
+            try{
+            	return object.getString("code");
+            }catch(Exception e){
+            	
+            }
+            return "";
+        }
+        String getMessage(){
+            try{
+            	return object.getString("message");
+            }catch(Exception e){
+            	
+            }
+            return "";
+        }
+        int getLine(bool end){
+            try{
+            	return ((JsonObject)((JsonObject)object.get("range")).get(end ? "end" : "start")).getInt("line") + 1;
+            }catch(Exception e){
+            	
+            }
+            return 0;
+        }
+        int getCharacter(bool end){
+            try{
+            	return ((JsonObject)((JsonObject)object.get("range")).get(end ? "end" : "start")).getInt("character") + 1;
+            }catch(Exception e){
+            	
+            }
+            return 0;
+        }
+        int getType(){
+            try{
+            	return object.getInt("severity");
+            }catch(Exception e){
+            	
+            }
+            return 0;
+        }
+    };
     class LspCallback : LspClient.LspListener{
         void onCallBack(@NotNilptr JsonObject resp){
             String st = resp.toString(true);
            // _system_.output("\n" + st + "\n");
         }
+        void onDiagnostics(String file, JsonArray msg){
+            ClangdDisgnostic [] cd = new ClangdDisgnostic[msg.length()];
+            for (int i =0; i < cd.length; i++){
+                cd [i] = new ClangdDisgnostic((JsonObject)msg.get(i));
+            }
+            _iclient.diagnosis(file, cd);
+        }
     };
     
-    bool initializ()override{
+    bool initializ(IXIntelliSense.IntelliClient client)override{
         String clangd = nilptr;
+        _iclient = client;
         if (Setting.get("usbuiltinlsp").equals("False")){
             clangd = Setting.get("lsppath");
         }else{ 
@@ -136,7 +191,7 @@ class ClangIXIntelliSense : IXIntelliSense{
         
         String windows_att_flag = "";
         if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
-            windows_att_flag = " -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-ssse3 -mno-sse4.1 -mno-sse4.2 "/* --target=i686-pc-mingw32  x86_64-pc-mingw64  i686-pc-mingw32*/;
+            windows_att_flag = " -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-ssse3 -mno-sse4.1 -mno-sse4.2"/* --target=i686-pc-mingw32  x86_64-pc-mingw64  i686-pc-mingw32*/;
         }
         
         if (sources != nilptr){
@@ -167,6 +222,19 @@ class ClangIXIntelliSense : IXIntelliSense{
                                         ccmd = ccmd + arg[x];
                                     }
                                 }
+                                
+                                String targetoptions = cur_cfig.getOption("targetoptions");
+                                if (targetoptions.length() > 0){
+                                    ccmd = ccmd + " " + targetoptions;
+                                }else{
+                                    ccmd = ccmd + " --target=i686-pc-mingw32";
+                                }
+                                
+                                String lspoptions = cur_cfig.getOption("lspoptions");
+                                if (lspoptions.length() > 0){
+                                    ccmd = ccmd + " " + lspoptions;
+                                }
+                                
                                 avaiable = true;
                                 sourceList.add(fullsourcePath);
                                 if (!ext.equalsIgnoreCase(".h") && !ext.equalsIgnoreCase(".hpp")){
@@ -236,7 +304,36 @@ class ClangIXIntelliSense : IXIntelliSense{
         cur_project = project;
         cur_cfig = cfig;
     }
+    /**文档已经被打开**/
+    public void documentDidOpen(String filePath){
+        String sc = CPPGPlugManager.getSourceContent(filePath);
+        if (sc != nilptr){
+            clangdlsp.openfile(filePath, sc);
+        }
+    }
     
+    /** 文档已关闭**/
+    public void documentDidClose(String filePath){
+        String sc = CPPGPlugManager.getSourceContent(filePath);
+        if (sc != nilptr){
+            clangdlsp.closefile(filePath, sc);
+        }
+    }
+    
+    public void reconfigure(){
+        
+    }
+    
+    public XIntelliResult [] findReferences(String source, String content, long pos){
+        return nilptr;
+    }
+    
+    public String getProperity(String key){
+        if (key == "completion_filter"){
+            return "yes";
+        }
+        return "no";
+    }
     void setCommand(String cmd, String value)override{
         switch(cmd){
             case "compilationArgs":
@@ -323,20 +420,26 @@ class ClangIXIntelliSense : IXIntelliSense{
         }
     }
     
-    XIntelliResult [] getIntelliSenseL(String source, String content, int line, int column)override{
+    XIntelliResult [] getObjectList(String source, String content, int line, int column)override{
+        long start = _system_.currentTimeMillis();
         String complete_res = nilptr;
         synchronized(this){
             __completion_result = nilptr;
             if (content != nilptr){
                 clangdlsp.filechange(source, content);
             }
-            complete_res = clangdlsp.completion(source, line, 1);
+            complete_res = clangdlsp.completion(source, line, column);
         }
-        return parseResult(complete_res);
+        XIntelliResult [] xres = parseResult(complete_res);
+        return xres;
     }
     
+    XIntelliResult [] getObjectListInFile(String source, String content)override{
+        String szsymbols = clangdlsp.getDocumentSymbols(source);
+        return parseDocumentSymbols(szsymbols);
+    }
     
-    XIntelliResult [] getIntelliSenseObject(String source,int line, int column, String name)override{
+    XIntelliResult [] getSpecialObjects(String source,int line, int column, String name)override{
         String complete_res = nilptr, complete_are, complete_impl;
         synchronized(this){
             __completion_result = nilptr;
@@ -386,6 +489,50 @@ class ClangIXIntelliSense : IXIntelliSense{
             }
         }
     }
+    
+    XIntelliResult [] parseDocumentSymbols(String result){
+        if (result == nilptr){
+            return nilptr;
+        }
+        Vector<XIntelliResult> xrs = new Vector<XIntelliResult>();
+        JsonObject jres = new JsonObject(result);
+
+        if (false == jres.has("result")){
+            return nilptr;
+        }
+
+        JsonArray jarrs = (JsonArray)jres.get("result");
+        
+        if (jarrs != nilptr){
+            for (int i = 0; i < jarrs.length(); i++){
+                JsonObject item = (JsonObject)jarrs.get(i);
+                if (item != nilptr){
+                    JsonObject location = (JsonObject)item.get("location");
+                    if (location != nilptr){
+                        JsonObject range = (JsonObject)location.get("range");
+                        if (range != nilptr){
+                            JsonObject start = (JsonObject)range.get("start");
+                            JsonObject end = (JsonObject)range.get("end");
+                            __nilptr_safe(start, end);
+                            
+                            String uri = URIConvertFilePath(location.getString("uri"));
+                            
+                            CDEXIntelliResult xr = new CDEXIntelliResult();
+                            xr.line = start.getInt("line");
+                            xr.row = start.getInt("character") + 1;
+                            xr.source = uri;
+                            xr.type = kind2type(item.getInt("kind"));
+                            xr.name = item.getString("name");
+                            xrs.add(xr);
+                        }
+                    }
+                }
+            }
+        }
+        
+        return xrs.toArray(new XIntelliResult[0]);
+    }
+    
     XIntelliResult [] parseDefinitionAndDelare(String result, String dlar){
         Vector<XIntelliResult> xrs = new Vector<XIntelliResult>();
         
@@ -411,7 +558,7 @@ class ClangIXIntelliSense : IXIntelliSense{
         return uri;
     }
     
-    XIntelliResult [] getIntelliSenseObjectM(String source,int line)override{
+    XIntelliResult [] getDomain(String source,int line)override{
         String complete_res = nilptr;
         synchronized(this){
             __completion_result = nilptr;
@@ -521,7 +668,17 @@ class ClangIXIntelliSense : IXIntelliSense{
         }
     }
     
-    XIntelliResult [] getIntelliSense(String source,String content, long pos, int line, int column)override{
+    String getInformation(String source,String content, long pos, int line, int column)override{
+        String complete_res = nilptr;
+        synchronized(this){
+            __completion_result = nilptr;
+            clangdlsp.filechange(source, content);
+            complete_res = clangdlsp.hover(source, line, column);
+        }
+        return parseInformation(complete_res);
+    }
+    
+    XIntelliResult [] getCompletion(String source,String content, long pos, int line, int column)override{
         if (_continuePath != nilptr){
             return _continuePath.getIntelliSense();
         }
@@ -903,7 +1060,7 @@ class ClangIXIntelliSense : IXIntelliSense{
         
         int rsc = keys.length;
         JsonArray jarrs = nilptr;
-        if (restuls.has("items")){
+        if (restuls != nilptr && restuls.has("items")){
             jarrs = (JsonArray)restuls.get("items");
             if (jarrs != nilptr){
                 rsc += jarrs.length();
@@ -928,6 +1085,24 @@ class ClangIXIntelliSense : IXIntelliSense{
         return outs;
     }
     
+    String parseInformation(String result){
+        if (result == nilptr){
+            return nilptr;
+        }
+        try{
+        	JsonObject jres = new JsonObject(result);
+            JsonObject results = nilptr;
+            if (jres.has("result")){
+                results = (JsonObject)jres.get("result");
+            }
+            if (results != nilptr){
+                return results.toString(false);
+            }
+        }catch(Exception e){
+        	
+        }
+        return nilptr;
+    }
     
     enum SymbolKind {
         File = 1,
@@ -971,6 +1146,7 @@ class ClangIXIntelliSense : IXIntelliSense{
             
             case SymbolKind.Method:
             case SymbolKind.Function:
+            case SymbolKind.Constructor:
             return 23;
             case SymbolKind.Property:
             return 1800;
@@ -1009,9 +1185,10 @@ class ClangIXIntelliSense : IXIntelliSense{
         }
     };
     
-    String getIntelliSenseMap()override{
     
-        updateDocumentSymbols();
+    String getSymbols(String filepath)override{
+
+        updateDocumentSymbols(filepath);
         
         Map.Iterator<String, Document> iter = _filelist.iterator();
         
@@ -1138,10 +1315,7 @@ class ClangIXIntelliSense : IXIntelliSense{
                         if (minor_obj == false){
                             if (my_iter == nilptr){
                                 object = new JsonObject();
-                                
                                 object.put("name", name);
-                                
-                                
                                 object.put("type", type);
                                 //typeobj String 类型
                                 //interface bool 接口
@@ -1213,9 +1387,7 @@ class ClangIXIntelliSense : IXIntelliSense{
                                 
                                 if (bAdded == false && containerName != nilptr && containerName.length() != 0){
                                     Map.Iterator<String, JsonObject> parent_iter = structmap.find(containerName);
-                                    
                                     JsonObject _parent;
-                                    
                                     if (parent_iter == nilptr){
                                         _parent = makeParent(containerName, object, type, bStatic);
                                         structmap.put(containerName, _parent);
@@ -1320,7 +1492,22 @@ class ClangIXIntelliSense : IXIntelliSense{
     }
     
     
-    bool updateDocumentSymbols(){
+    bool updateDocumentSymbols(String filepath){
+        if (filepath != nilptr){
+            Document doc = nilptr; 
+            try{
+                doc = _filelist.get(filepath);
+            }catch(Exception e){
+                
+            }
+            if (doc != nilptr && doc.isEnabled){
+                if (nilptr == (doc.symbols = clangdlsp.getDocumentSymbols(filepath))){
+                    return false;
+                }
+            }
+            return true;
+        }
+        
         try{
             Map.Iterator<String, Document> iter = _filelist.iterator();
             while (iter.hasNext()){
@@ -1375,14 +1562,11 @@ class ClangIXIntelliSense : IXIntelliSense{
             }
         };
     }
-    void updateSource(String sourcePath, String newFile)override{
+    
+    void renamefile(String sourcePath, String newFile)override{
         
     }
-    
-    XIntelliResult [] getResult()override{
-        return nilptr;
-    }
-    
+        
     void close()override{
         clangdlsp.quit();
     }

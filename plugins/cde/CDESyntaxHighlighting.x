@@ -135,7 +135,7 @@ class CDESyntaxHighlighting : SyntaxHighlighting{
     
     /** 动态关键字背景色*/
     int getWord2BackColor()override{
-		return 0xff6f3d11;
+		return 0xFFE8CC;
     }
     
     /** 动态关键字色*/

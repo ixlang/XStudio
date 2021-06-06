@@ -7,11 +7,13 @@ class XSourceEditor : DocumentView {
     MARK_POINTER = 8,
     MARK_MODIFIED = 12,
     MARK_SAVED = 13,
-    ERRORPOINT_INDEX = 14;
-    
+    ERRORPOINT_INDEX = 14,
+    WARNING_INDEX = 15;
+    QComboBox domaincmb = new QComboBox(), objectscmb = new QComboBox();
     bool intellisense_modified = false;
     QTreeWidget autoWnd;
     QTreeWidget debugWnd;
+    CodeTips __tipsWnd = XStudioApp._theApp.__tipsWnd;
     Map<String, long> watchs = new Map<String, long>();
     bool bClosed = false;
     XIntelliSense.XIntelliResult[] current_autocmp;
@@ -28,8 +30,8 @@ class XSourceEditor : DocumentView {
     DebugValueParser __dvp = new DebugValueParser("debug");
     static QScintilla.QSciPrinter g_printer;
     QLabel statbar;
-    static const  int INDIC_TIPS = 1, INDIC_ERROR = 2;
-    static const  int INDIC_FIND = 3, INDIC_SELECTED = 4;
+    static const int INDIC_TIPS = 1, INDIC_ERROR = 2, INDIC_WARNING = 5;
+    static const int INDIC_FIND = 3, INDIC_SELECTED = 4;
     XIntelliSense.XIntelliResult  []lastxis;
     public String defaultCharset = nilptr;
     String loadAsCharset = nilptr;
@@ -140,6 +142,7 @@ class XSourceEditor : DocumentView {
 
     void setHighlightKeyWord(String keyword) {
         _sci.sendEditor(QScintilla.SCI_SETKEYWORDS, 1, keyword);
+        _sci.update();
     }
 
     public TextEditorPlugin _textplugins;
@@ -237,21 +240,7 @@ class XSourceEditor : DocumentView {
         return nilptr;
     }
 
-    /*static bool breakOnPoint(XWorkspace parent, String source,int line, int row, int tid){
-    	XSourceEditor wnd =  findDocumentWindow(parent, source, true);
-
-        if (wnd != nilptr){
-            parent.setActiveSubWindow(wnd);
-            wnd.breakOn(line -1, row, tid);
-    		wnd.setFocus();
-            return true;
-        }
-        return false;
-    }*/
-
-    
-    
-    public static bool openForFileInfo(@NotNilptr XWorkspace parent,@NotNilptr String source,int line, int column, String Tips) {
+    public static bool openForFileInfo(@NotNilptr XWorkspace parent,@NotNilptr String source,int line, int column, String title, String Tips) {
         DocumentView wnd =  findDocumentWindow(parent, source, true);
 
         if (wnd != nilptr) {
@@ -259,7 +248,7 @@ class XSourceEditor : DocumentView {
             wnd.goto(line -1, column);
             wnd.setFocus();
             if (Tips != nilptr) {
-                wnd.showTips(line - 1,  column, Tips);
+                wnd.showTips(line - 1,  column, title,Tips);
             }
             return true;
         }else
@@ -276,7 +265,7 @@ class XSourceEditor : DocumentView {
                         wnd.goto(line -1, column);
                         wnd.setFocus();
                         if (Tips != nilptr) {
-                            wnd.showTips(line - 1,  column, Tips);
+                            wnd.showTips(line - 1,  column, title, Tips);
                         }
                         return true;
                     }
@@ -284,29 +273,6 @@ class XSourceEditor : DocumentView {
             }
         return false;
     }
-
-    public static bool locateForPosition(@NotNilptr XWorkspace parent,@NotNilptr String source,int position, int len) {
-        DocumentView wnd =  findDocumentWindow(parent, source, true);
-
-        if (wnd != nilptr) {
-            parent.setActiveSubWindow(wnd);
-            wnd.setSelection(position, len);
-            return true;
-        }
-        return false;
-    }
-
-    public static bool locateForLineRow(@NotNilptr XWorkspace parent,@NotNilptr String source,int line, int column, int len) {
-        DocumentView wnd =  findDocumentWindow(parent, source, true);
-
-        if (wnd != nilptr) {
-            parent.setActiveSubWindow(wnd);
-            wnd.gotoAndSelect(line,column);
-            return true;
-        }
-        return false;
-    }
-
 
     public void setSelection(int pos, int len) {
         _sci.gotoPos(pos);
@@ -323,9 +289,6 @@ class XSourceEditor : DocumentView {
         }
         return false;
     }
-
-
-
 
     public static bool closeAllWindows() {
 
@@ -344,9 +307,25 @@ class XSourceEditor : DocumentView {
         return true;
     }
 
-    public void showTips(int line, int column, String content) {
+    public bool isTipsShow(){
+        return __tipsWnd.isVisible();
+    }
+    
+    public void showTips(int line, int column,String title, String content) override{
         int position = _sci.getPosition(line) + column;
-        _sci.showTips(position, content);
+        QPoint qt = _sci.positionToPoint(position);
+        qt.y += /*domaincmb.height() +*/ _sci.getLineHeight();
+        qt = _sci.mapToGlobal(qt.x,qt.y);
+        qt = _mdi_area.mainWindow.mapFromGlobal(qt.x,qt.y);
+        __tipsWnd.showTips(getFilePath(), qt/*_sci.mapToGlobal(qt.x,qt.y)*/, title, content);
+    }
+    
+    public void showTips(int position, String title, String content) override {
+        QPoint qt = _sci.positionToPoint(position);
+        qt.y += /*domaincmb.height() +*/ _sci.getLineHeight();
+        qt = _sci.mapToGlobal(qt.x,qt.y);
+        qt = _mdi_area.mainWindow.mapFromGlobal(qt.x,qt.y);
+        __tipsWnd.showTips(getFilePath(),qt/*_sci.mapToGlobal(qt.x,qt.y)*/, title, content);
     }
 
     public bool requestClose() override{
@@ -421,6 +400,69 @@ class XSourceEditor : DocumentView {
         preProcessXIntellisense();
     }
 
+    public void setFileSymbols(XIntelliSense.XIntelliResult [] names) {
+        Vector<String> domains = new Vector<String>();
+        Vector<String> objects = new Vector<String>();
+       
+        Vector<XIntelliSense.XIntelliResult> domains_link = new Vector<XIntelliSense.XIntelliResult>();
+        Vector<XIntelliSense.XIntelliResult> objects_link = new Vector<XIntelliSense.XIntelliResult>();
+        
+        for (int i = 0, c = names.length; i < c; i++){
+            XIntelliSense.XIntelliResult it = names[i];
+            String label = it.get_name();
+            int line = it.get_line(), row = it.get_row();
+            if (it.get_type() == 31 || it.get_type() == 28) {
+                domains.add(label);
+                domains_link.add(it);
+            }else
+            if (it.get_type() == 23){
+                String descr = "";
+                XIntelliSense.XIntelliResult classtype = it.get_class();
+                if (classtype != nilptr){
+                    descr = descr + classtype.get_name() + " ";
+                }
+                descr = descr + label + "(";
+                XIntelliSense.XIntelliResult[] params = it.get_params();
+                if (params != nilptr){
+                    for (int x = 0; x < params.length; x ++) {
+                        XIntelliSense.XIntelliResult param = params[x];
+                        if (param != nilptr){
+                            XIntelliSense.XIntelliResult param_class = param.get_class();
+                            if (param_class != nilptr){
+                                descr = descr + param_class.get_name() + " " + param.get_name();
+                            }else{
+                                descr = descr + "? " + param.get_name();
+                            }
+                            if (x + 1 < params.length) {
+                                descr = descr + ", ";
+                            }
+                        }
+                    }
+                }
+                descr = descr + ")";
+                objects.add(descr);
+                objects_link.add(it);
+            }else
+            if (it.get_type() != 18){
+                objects.add(label);
+                objects_link.add(it);
+            }
+         
+        }
+
+        runOnUi(new Runnable(){
+           void run() override{
+               if (bClosed) {
+                    return ;
+                }
+               domaincmb.setTag(domains_link);
+               objectscmb.setTag(objects_link);
+               domaincmb.addItems(domains.toArray(new String[0]));
+               objectscmb.addItems(objects.toArray(new String[0]));
+           }
+        });
+    }
+    
     public void preProcessXIntellisense() {
         XIntelliSense.XIntelliResult[] _lastis = lastxis;
         if (_lastis == nilptr || _lastis.length == 0) {
@@ -460,6 +502,9 @@ class XSourceEditor : DocumentView {
         if (count > 0) {
             runOnUi(new Runnable() {
                 void run()override {
+                    if (bClosed) {
+                        return ;
+                    }
                     showComplete(names, count);
                 }
             });
@@ -560,6 +605,7 @@ class XSourceEditor : DocumentView {
         autoCompMap.clear();
         long curpos = _sci.currentPosition();
         String entenedText = _sci.getText(auto_position, curpos).upper();
+        
         bool bMore = false;
 
         if (c > 100) {
@@ -697,6 +743,7 @@ class XSourceEditor : DocumentView {
             }
         }
     }
+    
     public void hideAutoWnd() {
         if (autoCompShow) {
             autoWnd.hide();
@@ -749,6 +796,9 @@ class XSourceEditor : DocumentView {
              void callback(JsonObject obj){
                 runOnUi(new Runnable(){
                     void run(){
+                        if (bClosed) {
+                            return ;
+                        }
                          synchronized(__dvp){
                             if (debugWndShow){
                                 __dvp.sendCommand(new Object[]{DebugValueParser.COMMAND.CMD_LOADOBJECT, debugWnd, obj});
@@ -835,120 +885,213 @@ class XSourceEditor : DocumentView {
         });
     }
 
+    public void showHoverInformation(String texts, int position) {
+        if (texts != nilptr){
+            JsonObject root = new JsonObject(texts);
+            if (root.has("contents")){
+                JsonObject content = (JsonObject)root.get("contents");
+                if (content != nilptr){
+                    if (content.has("value")){
+                        String kind = nilptr;
+                        if (content.has("value")){
+                            kind = content.getString("kind");
+                        }
+                        String value = content.getString("value");
+                        
+                        if (value != nilptr){
+                            if (kind == "markdown"){
+                                value = value.parseMarkdown();
+                            }
+                            runOnUi(new Runnable(){
+                               void run() override{
+                                    if (bClosed) {
+                                        return ;
+                                    }
+                                   showTips(position,"提示:", value);
+                               }
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    int mouse_wait_loop = 0;
+    
+    void breakHover(){
+        mouse_wait_loop = -2;
+    }
+    
     public void setSciEvent() {
         QWidget viewport = _sci.viewPort();
         if (viewport != nilptr){
             viewport.setOnMouseEventListener(new onMouseEventListener() {
-
+                ICompileInfo tipsci = nilptr;
+                long __coord = 0;
+                int __curpos = 0;
+                Thread tips_thread = nilptr;
+                Object tips_lock = new Object();
+                bool button_pressed = false;
                 void onMouseButtonPress(QObject obj, int Button, int x, int y, int flags, int source)override {
+                    button_pressed = true;
                     XSourceEditor.this.hideAutoWnd();
                 }
+                
                 void onMouseButtonRelease(QObject obj, int Button, int x, int y, int flags, int source)override {
+                    button_pressed = false;
                     onSciMouseButtonPress(Button, x, y, flags, source);
                 }
+                
                 void onMouseMove(QObject obj, int Button, int _x, int _y, int flags, int source)override {
-                    if (XWorkspace.workspace.isDebugging()) {
-                        if (ThreadManager.isCurrentInterrupt()) {
-                            if (disableOverview != nilptr){
-                                if (disableOverview.isOverviewEnabled() == false){
-                                    return ;
-                                }
-                            }
-                            if (debugWndShow == false){
-                                int pos = _sci.positionFromPoint(_x, _y);
-                                showRuntimeInfo(pos);
-                            }
+                    if (button_pressed ){
+                        return;
+                    }
+                    mouse_wait_loop = 0;
+                    __coord = _x;
+                    __coord <<= 32;
+                    __coord |= _y;
+                    
+                    synchronized (tips_lock) {
+                        if (tips_thread != nilptr){
+                            return;
                         }
-                    }else{
-                        int pos = _sci.positionFromPoint(_x, _y);
-                        int indic = _sci.IndicForPosition(pos);
-                        if ((indic & (1 << INDIC_ERROR) )!= 0){
-                            int line = _sci.positionToLine(pos);
-                            int row = pos - _sci.getPosition(line);
-                            String keys = String.format("%d:%d", line, row);
-                            try{
-                                ICompileInfo iif = __overhelps.get(keys);
-                                if (iif != nilptr){
-                                    _sci.showTips(pos,iif.getTips());
-                                }
-                            }catch(Exception e){
+                        
+                        tips_thread = new Thread(){
+                            void run()override{
+                                long coords = __coord;
                                 
+                                while (mouse_wait_loop++ < 10){
+                                    _system_.sleep(100);
+                                    if (mouse_wait_loop < 0){
+                                        break;
+                                    }
+                                    if (coords != __coord){
+                                        coords = __coord;
+                                        mouse_wait_loop = 0;
+                                    }
+                                }
+                                if (mouse_wait_loop >= 10){
+                                    runOnUi(new Runnable(){
+                                       void run() {
+                                            if (bClosed) {
+                                                return ;
+                                            }
+                                            onMouseHover((coords >> 32) & 0xffffffff, coords & 0xffffffff);
+                                       }
+                                    });
+                                }
+                                synchronized (tips_lock) {
+                                    tips_thread = nilptr;
+                                }
                             }
-                        }
+                        };
+                        
+                        tips_thread.start();
                     }
                 }
             });
         }
     }
 
-    Object rtLock = new Object();
-    Thread rtThread = nilptr;
-    String lastKey = "";
-    int lastpos = 0;
-
+    public void onMouseHover(int _x, int _y){
+        if (XWorkspace.workspace.isDebugging()) {
+            if (ThreadManager.isCurrentInterrupt()) {
+                if (disableOverview != nilptr){
+                    if (disableOverview.isOverviewEnabled() == false){
+                        return ;
+                    }
+                }
+                if (debugWndShow == false){
+                    int pos = _sci.positionFromPoint(_x, _y);
+                    showRuntimeInfo(pos);
+                }
+            }
+        }else
+        if(isTipsShow() == false){
+            int pos = _sci.positionFromPoint(_x, _y);
+            int indic = _sci.IndicForPosition(pos);
+            int _line = _sci.positionToLine(pos);
+            int _column = pos - _sci.getPosition(_line);
+            if (((indic & (1 << INDIC_ERROR) )!= 0) || ((indic & (1 << INDIC_WARNING) )!= 0)){
+                Map.Iterator<long, ICompileInfo> iter = __hoverhelps.findLower(pos,false);
+                if (iter != nilptr){
+                    ICompileInfo tipsci = iter.getValue();
+                    if (tipsci != nilptr){
+                        new Thread(){
+                            void run()override{
+                                runOnUi(new Runnable(){
+                                   void run() {
+                                        if (bClosed) {
+                                            return ;
+                                        }
+                                        int line = tipsci.getLine() - 1;
+                                        int ipos = _sci.getPosition(line) + tipsci.getRow() - 1;
+                                        int iclen = tipsci.getLength();
+                                        if (iclen < 1){
+                                            iclen = 1;
+                                        }
+                                        if (pos >= ipos && pos < (ipos + iclen)){
+                                            showTips(pos,"诊断信息:",tipsci.getTips());
+                                        }
+                                   }
+                                });
+                            }
+                        }.start();
+                    }
+                }else{
+                    showHoverInfor(pos, _line, _column);
+                }
+            }else{
+                showHoverInfor(pos, _line, _column);
+            }
+        }
+    }
+    
+    public void showHoverInfor(int pos, int _line, int _column){
+        new Thread(){
+            void run(){
+                 _mdi_area.hoverDocument(XSourceEditor.this,  getFilePath(), getTextContent(), pos, _line, _column);
+            }
+        }.start();
+    }
+    
     public void showRuntimeInfo(int pos) {
         if (pos < 0){
             return;
         }
+        
         int start = _sci.sendEditor(QScintilla.SCI_WORDSTARTPOSITION, pos, 0);
         int end = _sci.sendEditor(QScintilla.SCI_WORDENDPOSITION, pos, 0);
-        //int line = _sci.positionToLine(pos);
-        String curKeyWord = _sci.getText(start, end).trim(true);
-    
-        if (curKeyWord.length() > 0) {
-            if (lastKey.equals(curKeyWord)) {
-                return ;
-            }
-            if (Pattern.test(curKeyWord, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true) == false) {
-                lastKey = "";
-                return ;
-            }
-            lastKey = curKeyWord;
-            lastpos = pos;
-        } else {
-            lastKey = "";
-        }
+ 
+        String thekey = _sci.getText(start, end).trim(true);
 
-        if (lastKey != nilptr ){
-                synchronized(rtLock) {
-                    if (rtThread == nilptr) {
-                        rtThread = new Thread() {
-                            void run()override {
-                                _system_.sleep(800);
-                                String thekey = lastKey.trim(true);
-                                if (thekey.length() > 0) {
-                                    if (disableOverview != nilptr){
-                                        thekey = disableOverview.preprocessKeyword(thekey);
-                                    }
-                                    if (thekey != nilptr && thekey.length() > 0){
-                                        watchs.clear();
-                                        watchs.put(thekey,debugWnd.addItem(nilptr,thekey));
-                                        JsonObject json = XWorkspace.workspace.debuggee.queryObjectByName(ThreadManager.currentThreadId, ThreadManager.currentFrameId, thekey);
-                                        if (json != nilptr) {
-                                            JsonArray watches;
-                                            try {
-                                                watches = (JsonArray)json.get("watch");
-                                            } catch(Exception e) {
-                                            }
-                                            if (watches != nilptr) {
-                                                if (watches.length() > 0) {
-                                                    showRtInfos(lastpos, watches);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                // _system_.output(obj.toString(true));
-                                synchronized(rtLock) {
-                                    rtThread = nilptr;
+        if (thekey.length() > 0) {
+            if (disableOverview != nilptr){
+                thekey = disableOverview.preprocessKeyword(thekey);
+            }
+            if (thekey != nilptr && thekey.length() > 0){
+                new Thread(){
+                    void run(){
+                        watchs.clear();
+                        watchs.put(thekey,debugWnd.addItem(nilptr,thekey));
+                        JsonObject json = XWorkspace.workspace.debuggee.queryObjectByName(ThreadManager.currentThreadId, ThreadManager.currentFrameId, thekey);
+                        if (json != nilptr) {
+                            JsonArray watches;
+                            try {
+                                watches = (JsonArray)json.get("watch");
+                            } catch(Exception e) {
+                            }
+                            if (watches != nilptr) {
+                                if (watches.length() > 0) {
+                                    showRtInfos(pos, watches);
                                 }
                             }
-                        };
-                        rtThread.start();
+                        }
                     }
-                }
-            
-        }
+                }.start();
+            }
+        } 
     }
 
 
@@ -959,6 +1102,9 @@ class XSourceEditor : DocumentView {
         if (obj != nilptr) {
             runOnUi(new Runnable() {
                 void run() {
+                    if (bClosed) {
+                        return ;
+                    }
                     showDebugWnd(pos, obj);
                 }
             });
@@ -1019,6 +1165,8 @@ class XSourceEditor : DocumentView {
                 "actionbreakpoint",
                 "-",
                 "actiongotodef",
+                "actionfindreference",
+                "actionrename",
                 "-",
                 "actionupper",
                 "actionlower",
@@ -1061,37 +1209,52 @@ class XSourceEditor : DocumentView {
             _sci.gotoPos(lEnd + 1);
         }
     }
-
+    
+    void optimizeCompletion(@NotNilptr QScintilla sci, long position){
+        String content = sci.getText();
+        int cur_line = _sci.positionToLine(position);
+        int column = position - sci.getPosition(cur_line);
+        _mdi_area.XIntelliSenseL(XSourceEditor.this, getFilePath(), content, cur_line, column);
+    }
+        
     public void continueAutocomp(int pos) {
+        
         if (autoCompShow) {
+            if (pos < auto_position){
+                hideAutoWnd();
+                return;
+            }
+            Project  proj = _mdi_area.getCurrentProject();
+            if (proj != nilptr) {
+                if (proj.hasCompletionFilter()){
+                    optimizeCompletion(_sci, pos);
+                    return;
+                }
+            }
+            
             if (pos != last_autopos) {
                 last_autopos = pos;
             } else {
-                //XSourceEditor.this.autoCompleteChange();
                 return ;
             }
             if (lastxis != nilptr && strpretext != nilptr) {
-                if (pos >= auto_position) {
-                    String content = _sci.getText();
-                    long tl = content.length();
-                    if (auto_position < tl && pos <= tl) {
-                        strpretext = content.substring(auto_position, pos);
-                        if  (strpretext.length() == 0 || Pattern.test(strpretext, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true)) {
-                            synchronized(XSourceEditor.this) {
-                                if (autoThread == nilptr) {
-                                    autoThread = new Thread() {
-                                        void run() {
-                                            preProcessXIntellisense();
-                                            synchronized(XSourceEditor.this) {
-                                                autoThread = nilptr;
-                                            }
+                String content = _sci.getText();
+                long tl = content.length();
+                if (auto_position < tl && pos <= tl) {
+                    strpretext = content.substring(auto_position, pos);
+                    if  (strpretext.length() == 0 || Pattern.test(strpretext, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true)) {
+                        synchronized(XSourceEditor.this) {
+                            if (autoThread == nilptr) {
+                                autoThread = new Thread() {
+                                    void run() {
+                                        preProcessXIntellisense();
+                                        synchronized(XSourceEditor.this) {
+                                            autoThread = nilptr;
                                         }
-                                    };
-                                    autoThread.start();
-                                }
+                                    }
+                                };
+                                autoThread.start();
                             }
-                        } else {
-                            hideAutoWnd();
                         }
                     } else {
                         hideAutoWnd();
@@ -1196,9 +1359,8 @@ class XSourceEditor : DocumentView {
     
     SciEventListener sci_listener = new SciEventListener() {
         int lastAddedChar;
-
-
         void ON_MARGINCLICK(@NotNilptr QScintilla sci, int position, int modifiers, int margin)override {
+            breakHover();
             if (margin == BREAKPOINT_INDEX) {
                 int line = _sci.positionToLine(position);
                 BreakPointWnd.toggleBreakPoint(XSourceEditor.this, getFilePath(), line, testMark(line, MARK_BREAKPOINT) == false);
@@ -1210,7 +1372,7 @@ class XSourceEditor : DocumentView {
                 try{
                     ICompileInfo iif = __marginhelps.get(line);
                     if (iif != nilptr){
-                        _sci.showTips(position,iif.getTips());
+                        showTips(position,"诊断信息:",iif.getTips());
                     }
                 }catch(Exception e){
                     
@@ -1240,8 +1402,8 @@ class XSourceEditor : DocumentView {
                     sci.sendEditor(QScintilla.SCI_BRACEHIGHLIGHT, -1, -1);
                 }
 
-                int start = sci.sendEditor(QScintilla.SCI_WORDSTARTPOSITION, oppos, 0);
-                int end = sci.sendEditor(QScintilla.SCI_WORDENDPOSITION, oppos, 0);
+                int start = sci.sendEditor(QScintilla.SCI_WORDSTARTPOSITION, position, 0);
+                int end = sci.sendEditor(QScintilla.SCI_WORDENDPOSITION, position, 0);
                 String curKeyWord = _sci.getText(start, end);
                 XSourceEditor.this.setHighlightKeyWord(curKeyWord.trim(true));
             }
@@ -1276,16 +1438,31 @@ class XSourceEditor : DocumentView {
                 /*|| cstyle == QScintilla.SCE_C_STRING*/ || cstyle == QScintilla.SCE_C_CHARACTER) {
                 return ;
             }
-            if ((modType & (QScintilla.SC_MOD_CHANGEINDICATOR | QScintilla.SC_MOD_CHANGEMARKER | QScintilla.SC_MOD_CHANGESTYLE | QScintilla.SC_MOD_CHANGEFOLD)) == 0) {
+
+            if ((modType & (QScintilla.SC_MOD_INSERTTEXT | QScintilla.SC_MOD_DELETETEXT | QScintilla.SC_PERFORMED_UNDO | QScintilla.SC_PERFORMED_REDO | QScintilla.SC_MULTISTEPUNDOREDO | QScintilla.SC_LASTSTEPINUNDOREDO | QScintilla.SC_MULTILINEUNDOREDO)) != 0) {
                 int linep = sci.positionToLine(position);
-                sci.sendEditor(QScintilla.SCI_MARKERDELETE, linep, reserve_modify_mark);
-                sci.sendEditor(QScintilla.SCI_MARKERADD, linep, current_modify_mark);
-                if ((modType & QScintilla.SC_MOD_BEFOREDELETE) == QScintilla.SC_MOD_BEFOREDELETE) {
-                    continueAutocomp(position);
+
+                breakHover();
+                
+                if ((modType & QScintilla.SC_MOD_INSERTTEXT) != 0){
+                    int lineto = sci.positionToLine(position + length);
+                    for (int i = linep; i < lineto + 1; i++){
+                        sci.sendEditor(QScintilla.SCI_MARKERDELETE, i, reserve_modify_mark);
+                        sci.sendEditor(QScintilla.SCI_MARKERADD, i, current_modify_mark);
+                    }
+                }else{
+                    sci.sendEditor(QScintilla.SCI_MARKERDELETE, linep, reserve_modify_mark);
+                    sci.sendEditor(QScintilla.SCI_MARKERADD, linep, current_modify_mark);
+                }
+                //if (pos >= auto_position) {
+                if (position > 0 && (modType & QScintilla.SC_MOD_DELETETEXT) == QScintilla.SC_MOD_DELETETEXT) {
+                    continueAutocomp(position - 1);
                 }
                 XSourceEditor.this.intellisense_modified = true;
             }
         }
+        
+
         
         void ON_CHARADDED(@NotNilptr QScintilla sci,int charadded)override {
             lastAddedChar = charadded;
@@ -1452,6 +1629,42 @@ class XSourceEditor : DocumentView {
         if (super.create(parent)) {
             QWidget frame = new QWidget();
             frame.create();
+            frame.setName("editorframe");
+            QWidget domainframe = new QWidget();
+            domainframe.create();
+            
+            QHBoxLayout globalarea = new QHBoxLayout();
+            globalarea.create(domainframe);
+            
+            onComboBoxEventListener _cmb_listener = new onComboBoxEventListener(){
+                public void onItemSelected(QObject obj, int id) {
+                    try{
+                        QComboBox qc = (QComboBox)obj;
+                        Vector<XIntelliSense.XIntelliResult> _link_list = (Vector<XIntelliSense.XIntelliResult>)qc.getTag();
+                        if (_link_list != nilptr){
+                            XIntelliSense.XIntelliResult it = _link_list.get(id);
+                            if (it != nilptr){
+                                goto(it.get_line(),it.get_row());
+                                _sci.setFocus();
+                            }
+                        }
+                    }catch(Exception e){
+                        
+                    }
+                }
+            };
+            
+            domaincmb.create(domainframe);
+            objectscmb.create(domainframe);
+                        
+            domaincmb.setOnComboBoxEventListener(_cmb_listener);
+            objectscmb.setOnComboBoxEventListener(_cmb_listener);
+            
+            globalarea.addWidget(domaincmb);
+            globalarea.addWidget(objectscmb);
+            globalarea.setContentsMargins(0,0,0,0);
+            globalarea.setSpacing(0);
+            domainframe.setLayout(globalarea);
             
             QVBoxLayout qhl = new QVBoxLayout();
             qhl.create(frame);
@@ -1467,6 +1680,7 @@ class XSourceEditor : DocumentView {
             statbar.show();
             statbar.setAlignment(Constant.AlignRight);
             statbar.setText("状态栏");
+            qhl.addWidget(domainframe);
             qhl.addWidget(_sci);
             qhl.addWidget(statbar);
             frame.setLayout(qhl);
@@ -1495,7 +1709,7 @@ class XSourceEditor : DocumentView {
             setOnStatusListener(new onStatusListener(){
                 public void onWindowStateChange(QObject obj, int oldState, int state) {
                     if ((state & Constant.WindowActive) == Constant.WindowActive){
-                        updateErrorPoint();
+                        updateInformationPoint();
                     }else{
                         hideAutoWnd();
                         hideDebugWnd();
@@ -1633,10 +1847,12 @@ class XSourceEditor : DocumentView {
                         }
                     }
                 }
+                
+                
                 void onFocusAboutToChange(QObject obj, bool focus, int reson) {
                 }
             });
-
+            
             return true;
         }
         return false;
@@ -1724,10 +1940,12 @@ class XSourceEditor : DocumentView {
         return ret;
     }
 
-    public void clearErrorPoint(){
-        __overhelps.clear();
+    public void clearInformationPoint(){
+        __hoverhelps.clear();
         __marginhelps.clear();
         _sci.setIndicCurrent(INDIC_ERROR);
+        _sci.clearIndic(0,_sci.getLength());
+        _sci.setIndicCurrent(INDIC_WARNING);
         _sci.clearIndic(0,_sci.getLength());
     }
     
@@ -1937,7 +2155,11 @@ class XSourceEditor : DocumentView {
             }
         }
 
-
+        Project proj =  XWorkspace.workspace.getCurrentProject();
+        if (proj != nilptr){
+            proj.didCloseFile(getFilePath());
+        }
+        
         bClosed = true;
         onTextEditorClosed();
         return true;
@@ -2019,7 +2241,7 @@ class XSourceEditor : DocumentView {
                     _sci.selectAndReplace(auto_position, curpos, text);
                 }
                 if (tips.length() != 0) {
-                    _sci.showTips(auto_position, autoWnd.getItemText(item, 1) + " " + tips);
+                    showTips(auto_position, "助手:",autoWnd.getItemText(item, 1) + " " + tips);
                 }
 
             }
@@ -2082,6 +2304,7 @@ class XSourceEditor : DocumentView {
         
         _sci.setIndicStyle(INDIC_TIPS, QScintilla.INDIC_BOX);
         _sci.setIndicStyle(INDIC_ERROR, QScintilla.INDIC_SQUIGGLE);
+        _sci.setIndicStyle(INDIC_WARNING, QScintilla.INDIC_SQUIGGLE);
         _sci.setIndicStyle(INDIC_FIND, QScintilla.INDIC_ROUNDBOX);
         _sci.setIndicStyle(INDIC_SELECTED, QScintilla.INDIC_CONTAINER);
         
@@ -2190,8 +2413,8 @@ class XSourceEditor : DocumentView {
                 _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.SCE_C_STRINGEOL, Setting.getColorRef("stringeolcolor"));
                 _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_WORD, Setting.getColorRef("wordforecolor"));
 
-                _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_WORD2, Setting.getColorRef("word2forecolor"));
-                _sci.sendEditor(QScintilla.SCI_STYLESETBOLD, QScintilla.SCE_C_WORD2, 1);
+                //_sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_WORD2, Setting.getColorRef("word2forecolor"));
+                //_sci.sendEditor(QScintilla.SCI_STYLESETBOLD, QScintilla.SCE_C_WORD2, 1);
                 _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.SCE_C_WORD2, Setting.getColorRef("word2backcolor"));
                 _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_STRING, Setting.getColorRef("stringforecolor"));
                 _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_NUMBER, Setting.getColorRef("numberforecolor"));
@@ -2210,7 +2433,7 @@ class XSourceEditor : DocumentView {
 
                 _sci.sendEditor(QScintilla.SCI_SETCARETLINEVISIBLE, 1);
                 _sci.sendEditor(QScintilla.SCI_SETCARETLINEBACK, Setting.getColorRef("caretlinebackcolor"));
-
+                _sci.sendEditor(QScintilla.SCI_SETCARETLINEFRAME, 2);
                 _sci.sendEditor(QScintilla.SCI_SETTABWIDTH, 4);
                 _sci.sendEditor(QScintilla.SCI_SETEOLMODE, QScintilla.SC_EOL_LF, 0);
 
@@ -2358,9 +2581,9 @@ class XSourceEditor : DocumentView {
                     _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_WORD, colorConfig.getWordForeColor());
                     
                     _sci.sendEditor(QScintilla.SCI_STYLESETBOLD, QScintilla.SCE_C_WORD, 1);
-                    _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_WORD2, colorConfig.getWord2ForeColor());
+                    //_sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_WORD2, colorConfig.getWord2ForeColor());
                     
-                    _sci.sendEditor(QScintilla.SCI_STYLESETBOLD, QScintilla.SCE_C_WORD2, 1);
+                    //_sci.sendEditor(QScintilla.SCI_STYLESETBOLD, QScintilla.SCE_C_WORD2, 1);
                     _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.SCE_C_WORD2, colorConfig.getWord2BackColor());
                     _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_STRING, colorConfig.getStringForeColor());
                     _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_NUMBER, colorConfig.getNumberForeColor());
@@ -2379,7 +2602,7 @@ class XSourceEditor : DocumentView {
 
                     _sci.sendEditor(QScintilla.SCI_SETCARETLINEVISIBLE, 1);
                     _sci.sendEditor(QScintilla.SCI_SETCARETLINEBACK, colorConfig.getCaretLineBackColor());
-
+                    _sci.sendEditor(QScintilla.SCI_SETCARETLINEFRAME, 2);
                     _sci.sendEditor(QScintilla.SCI_SETTABWIDTH, 4);
                     _sci.sendEditor(QScintilla.SCI_SETEOLMODE, QScintilla.SC_EOL_LF, 0);
 
@@ -2435,8 +2658,13 @@ class XSourceEditor : DocumentView {
         _sci.sendEditor(QScintilla.SCI_MARKERDEFINE,ERRORPOINT_INDEX,23);
         _sci.sendEditor(QScintilla.SCI_MARKERSETFORE,ERRORPOINT_INDEX,0xff0000ff);
         _sci.sendEditor(QScintilla.SCI_MARKERSETBACK,ERRORPOINT_INDEX,0xff0000ff);
-
-        _sci.sendEditor(QScintilla.SCI_SETMARGINMASKN, DEBUGPOINT_INDEX, (1 << MARK_POINTER) | (1 << ERRORPOINT_INDEX));
+        
+        _sci.sendEditor(QScintilla.SCI_MARKERDEFINE,WARNING_INDEX,23);
+        _sci.sendEditor(QScintilla.SCI_MARKERSETFORE,WARNING_INDEX,0xff0088ff);
+        _sci.sendEditor(QScintilla.SCI_MARKERSETBACK,WARNING_INDEX,0xff0088ff);
+        _sci.sendEditor(QScintilla.SCI_SETMARGINMASKN, DEBUGPOINT_INDEX, (1 << MARK_POINTER) | (1 << WARNING_INDEX)  | (1 << ERRORPOINT_INDEX));
+        
+        _sci.setIndicForeColor(INDIC_WARNING, 0x0088FF);
         
         _sci.setIndicForeColor(INDIC_FIND, 0xffff00);
         _sci.setIndicUnder(INDIC_FIND, true);
@@ -2467,6 +2695,7 @@ class XSourceEditor : DocumentView {
         _sci.setScrollBarMarker(MARK_MODIFIED, 0, 0xffffd800);
         _sci.setScrollBarMarker(MARK_SAVED, 0, 0xff15c23c);
         _sci.setScrollBarMarker(ERRORPOINT_INDEX, 1, 0xffff0000);
+        _sci.setScrollBarMarker(WARNING_INDEX, 1, 0xffff8800);
         _sci.setScrollBarMarker(MARK_BREAKPOINT, 2, 0xff8B4C79);
         /*_sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_COMMENT | 64,0xffeeeeee);
         _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_COMMENTLINE | 64,0xffeeeeee);
@@ -2477,36 +2706,97 @@ class XSourceEditor : DocumentView {
         scintilla.Styles[Style.Cpp.Default + 64].BackColor = Color.LightGray;
         scintilla.Styles[Style.Cpp.Comment + 64].BackColor = Color.LightGray;
         */
+        updateInformationPoint();
     }
     
-    int infoSerial = 0;
-    Map<String, ICompileInfo> __overhelps = new Map<String, ICompileInfo>();
+   
+ 
+    Map<long, ICompileInfo> __hoverhelps = new Map<long,ICompileInfo>();
     Map<long, ICompileInfo> __marginhelps = new Map<long, ICompileInfo>();
     
-    public void updateErrorPoint(){
-        if (infoSerial != XWndInfor.getSerial()){
-            resetErrorPoint();
-            Vector<ICompileInfo> ii = XWndInfor.GetDocumentPoint(getFilePath(), ICompileInfo.ERROR);
-            for (int i = 0; i < ii.size(); i++){
-                ICompileInfo ci = ii[i];
-                __overhelps.put(String.format("%d:%d",ci.getLine() - 1, ci.getRow() - 1), ci);
-                if (__marginhelps.containsKey(ci.getLine()) == false){
-                    __marginhelps.put(ci.getLine() - 1, ci);
-                }
-                updateErrorPoint(ci.getLine() - 1, ci.getRow() - 1, ci.getLength());
+    public void updateInformationPoint(){
+        resetInformationPoint();
+        Vector<ICompileInfo> ii = XWndInfor.GetDocumentPoint(_mdi_area.getCurrentProject(), getFilePath(), ICompileInfo.ERROR);
+        mergeDiagnosis(ii);
+        processDiagnosisInfor(ii.toArray(new ICompileInfo[ii.size()]));
+    }
+        
+    public void processDiagnosisInfor(ICompileInfo [] ii){
+        for (int i = 0; i < ii.length; i++){
+            ICompileInfo ci = ii[i];
+            int line = ci.getLine() - 1;
+            int pos = _sci.getPosition(line) + ci.getRow() - 1;
+            __hoverhelps.put(pos,ci);
+            if (ci.getType() == ICompileInfo.ERROR){
+                updateErrorPoint(pos, ci.getLength());
+            }else
+            if (ci.getType() == ICompileInfo.WARNING){
+                updateWarningPoint(pos, ci.getLength());
             }
-            infoSerial == XWndInfor.getSerial();
         }
     }
     
-    public void updateErrorPoint(int line, int column, int length){
+    static class DocumentICompileInfo  : ICompileInfo{
+        DiagnosisInformation di;
+        String file;
+        int length;
+        public DocumentICompileInfo(String f, DiagnosisInformation d, int len){
+            file = f;
+            length = len;
+            di = d;
+        }
+        public int getType(){
+            return di.getType();
+        }
+        public String getFile(){
+            return file;
+        }
+        public int getLine(){
+            return di.getLine(false);
+        }
+        public int getLength(){
+            return length;
+        }
+        public int getRow(){
+            return di.getCharacter(false);
+        }
+        public @NotNilptr String getTips(){
+            return di.getMessage();
+        }
+        public @NotNilptr String getTitle(){
+            return "诊断信息:";
+        }
+    };
+    
+    public void mergeDiagnosis(Vector<ICompileInfo> list){
+        String file = getFilePath();
+        DiagnosisInformation [] info = _mdi_area.getDiagnosisInformation(file);
+        if (info != nilptr){
+            for (int i = 0; i < info.length ; i++){
+                int startline = info[i].getLine(false);
+                int startcolumn = info[i].getCharacter(false);
+                int endline = info[i].getLine(true);
+                int endcolumn = info[i].getCharacter(true);
+                int startpos = _sci.getPosition(startline) + startcolumn;
+                int endpos = _sci.getPosition(endline) + endcolumn;
+                list.add(new DocumentICompileInfo(file, info[i], endpos - startpos + 1));
+            }
+        }
+    }
+    
+    public void updateErrorPoint(int pos, int length){
+        int line = _sci.positionToLine(pos);
         _sci.sendEditor(QScintilla.SCI_MARKERADD, line, ERRORPOINT_INDEX);
-        int pos = _sci.getPosition(line) + column;
         _sci.setIndicCurrent(INDIC_ERROR);
         _sci.applyIndic(pos, length > 0 ? length : 1);
     }
-    
-    
+    public void updateWarningPoint(int pos, int length){
+        int line = _sci.positionToLine(pos);
+        _sci.sendEditor(QScintilla.SCI_MARKERADD, line, WARNING_INDEX);
+        _sci.setIndicCurrent(INDIC_WARNING);
+        _sci.applyIndic(pos, length > 0 ? length : 1);
+    }
+        
     public void markSelected(int pos, int length){
         _sci.setIndicCurrent(INDIC_SELECTED);
         _sci.applyIndic(pos, length > 0 ? length : 1);
@@ -2625,8 +2915,8 @@ class XSourceEditor : DocumentView {
         _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.SCE_C_STRINGEOL, 0xffE0C0E0);
         _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_WORD, 0xffF0D964);
 
-        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_WORD2, 0xff2ae27f);
-        _sci.sendEditor(QScintilla.SCI_STYLESETBOLD, QScintilla.SCE_C_WORD2, 1);
+        //_sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_WORD2, 0xff2ae27f);
+        //_sci.sendEditor(QScintilla.SCI_STYLESETBOLD, QScintilla.SCE_C_WORD2, 1);
         _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.SCE_C_WORD2, 0xff6f3d11);
         _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_STRING, 0xff73DBE6);
         _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_NUMBER, 0xffc563bd/*0xffA8CEB5*/);
@@ -2645,7 +2935,7 @@ class XSourceEditor : DocumentView {
 
         _sci.sendEditor(QScintilla.SCI_SETCARETLINEVISIBLE, 1);
         _sci.sendEditor(QScintilla.SCI_SETCARETLINEBACK, 0xff202020);
-
+        _sci.sendEditor(QScintilla.SCI_SETCARETLINEFRAME, 2);
         _sci.sendEditor(QScintilla.SCI_SETTABWIDTH, 4);
         _sci.sendEditor(QScintilla.SCI_SETEOLMODE, QScintilla.SC_EOL_LF, 0);
 
@@ -2804,9 +3094,9 @@ class XSourceEditor : DocumentView {
         _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.SCE_C_STRINGEOL, 0xffE0C0E0);
         _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_WORD, 0xffd69c56);
 
-        _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_WORD2, 0xff2ae27f);
-        _sci.sendEditor(QScintilla.SCI_STYLESETBOLD, QScintilla.SCE_C_WORD2, 1);
-        _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.SCE_C_WORD2, 0xff6f3d11);
+        //_sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_WORD2, 0xff2ae27f);
+        //_sci.sendEditor(QScintilla.SCI_STYLESETBOLD, QScintilla.SCE_C_WORD2, 1);
+        _sci.sendEditor(QScintilla.SCI_STYLESETBACK, QScintilla.SCE_C_WORD2, 0xffE4D5CB);
         _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_STRING, 0xffc56cbd);
         _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_NUMBER, 0xff6e28ed/*0xffA8CEB5*/);
         _sci.sendEditor(QScintilla.SCI_STYLESETFORE, QScintilla.SCE_C_CHARACTER, 0xff73DBE6);
@@ -2824,7 +3114,7 @@ class XSourceEditor : DocumentView {
 
         _sci.sendEditor(QScintilla.SCI_SETCARETLINEVISIBLE, 1);
         _sci.sendEditor(QScintilla.SCI_SETCARETLINEBACK, 0xffefefef);
-
+        _sci.sendEditor(QScintilla.SCI_SETCARETLINEFRAME, 2);
         _sci.sendEditor(QScintilla.SCI_SETTABWIDTH, 4);
         _sci.sendEditor(QScintilla.SCI_SETEOLMODE, QScintilla.SC_EOL_LF, 0);
 
@@ -3082,7 +3372,7 @@ class XSourceEditor : DocumentView {
             } catch(Exception e) {
 
             }
-            updateErrorPoint();
+            updateInformationPoint();
         } catch(Exception e) {
             Critical("注意", "找不到该文件或者文件正被其他程序使用:" + getFilePath(), QMessageBox.Ok, QMessageBox.Ok);
         }
@@ -3106,25 +3396,33 @@ class XSourceEditor : DocumentView {
                 resetAllModified();
                 _mdi_area.updateDocumentStatus();
                 XWorkspace.workspace.closeIndexPage();
-                
+                Project proj =  XWorkspace.workspace.getCurrentProject();
+                if (proj != nilptr){
+                    proj.didOpenFile(file);
+                }
                 if (_textplugins != nilptr) {
                     _textplugins.configEditor(_mdi_area.getCurrentProject(), filePath, _sci, Setting.isDarkStyle());
                 }
-                updateErrorPoint();
+                updateInformationPoint();
+                _mdi_area.XIntelliSenseFile(XSourceEditor.this, getFilePath(), "");
                 return true;
             } catch(Exception e) {
                 Critical("注意", "载入文件时发生错误:" + file, QMessageBox.Ok, QMessageBox.Ok);
+            } finally {
+                fis.close();
             }
         } catch(Exception e) {
             Critical("注意", "找不到该文件或者文件正被其他程序使用:" + file, QMessageBox.Ok, QMessageBox.Ok);
-        }
+        } 
         return false;
     }
 
-    void resetErrorPoint(){
-        clearErrorPoint();
+    void resetInformationPoint(){
+        clearInformationPoint();
         _sci.sendEditor(QScintilla.SCI_MARKERDELETEALL,ERRORPOINT_INDEX);
+        _sci.sendEditor(QScintilla.SCI_MARKERDELETEALL,WARNING_INDEX);
     }
+
     
     public bool saveFile() {
         if (isModified() == false) {
@@ -3137,7 +3435,7 @@ class XSourceEditor : DocumentView {
         }
                             
         clearIndic();
-        clearErrorPoint();
+        resetInformationPoint();
         String savepath = getFilePath();
         bool saved = false;
         while (saved == false) {

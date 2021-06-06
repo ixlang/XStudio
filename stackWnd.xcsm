@@ -61,7 +61,7 @@ class XStackInfor : QDockWidget{
                 String []lrs = lr.split(',');
                 
                 if (lrs.length == 2 && filepath.length() > 0){
-					XSourceEditor.openForFileInfo(XWorkspace.workspace, filepath, lrs[0].parseInt() + 1, lrs[1].parseInt(), nilptr);
+					XSourceEditor.openForFileInfo(XWorkspace.workspace, filepath, lrs[0].parseInt() + 1, lrs[1].parseInt(),nilptr,  nilptr);
                 }
             }
         }else{

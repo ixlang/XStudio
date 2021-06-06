@@ -196,7 +196,7 @@ class XFinder{
     
     
     public static bool findInText(@NotNilptr FindResult result, String file, @NotNilptr String text, bool bcase, bool wholeWord, bool regex,@NotNilptr  String findTxt, Pattern pattern, bool forward,  bool bOnce){
-		if (text.length() == 0){
+		if ((text == nilptr) || (text.length() == 0)){
             return false;
         }
         if (regex ){

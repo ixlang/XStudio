@@ -124,7 +124,7 @@ class BreakPointWnd : ListDockWidget{
 		String sfile = tree.getItemText(item, 2);
 		String sline = tree.getItemText(item, 3);
         
-        XSourceEditor.openForFileInfo(XWorkspace.workspace, sfile, sline.parseInt(), 1, nilptr);
+        XSourceEditor.openForFileInfo(XWorkspace.workspace, sfile, sline.parseInt(), 1, nilptr, nilptr);
     }
         
         

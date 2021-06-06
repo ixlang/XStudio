@@ -4,6 +4,7 @@
 class LspClient{
     public interface LspListener {
         void onCallBack(JsonObject);
+        void onDiagnostics(String file, JsonArray msg);
     };
     
     LspListener _ls = nilptr;
@@ -145,7 +146,7 @@ class LspClient{
                     
                 try{
                     while (0 < (n = lsp_process.read(buf,0,4096))){
-                        //_system_.consoleWrite(new String(buf, 0, n));
+                        //_system_.output(new String(buf, 0, n));
                         jsonp.append(buf, 0, n);
                         processText(jctx);
                     }
@@ -193,7 +194,33 @@ class LspClient{
                     }
                     
                     if (lsq == nilptr){
-                        _ls.onCallBack(json);
+                        bool bcallback = true;
+                        if (json.has("method")){
+                            String method= json.getString("method");
+                            if (method == NotifyDiagnostics){
+                                bcallback = false;
+                                JsonArray diagnostics = nilptr;
+                                String file = nilptr;
+                                try{
+                                    
+                                	JsonObject param = (JsonObject)json.get("params");
+                                    file = param.getString("uri");
+                                    diagnostics = (JsonArray)param.get("diagnostics");
+                                }catch(Exception e){
+                                	
+                                }
+
+                                if (file != nilptr && diagnostics != nilptr && (diagnostics.length() > 0)){
+                                    if (file.startWith("file:///")){
+                                        file = file.substring(8, file.length());
+                                    }
+                                    _ls.onDiagnostics(file, diagnostics);
+                                }
+                            }
+                        }
+                        if (bcallback){
+                            _ls.onCallBack(json);
+                        }
                     }else{
                         synchronized(lsq){
                             lsq.result = content;
@@ -221,7 +248,9 @@ class LspClient{
     
     static const String MethodInitializ = "initialize", 
         MethodDidOpen = "textDocument/didOpen",
+        MethodDidClose = "textDocument/didClose",
         MethodCompletion = "textDocument/completion",
+        MethodHover = "textDocument/hover",
         didChangeConfiguration = "workspace/didChangeConfiguration",
         didChangeContent = "textDocument/didChange",
         MethodDefinition = "textDocument/definition",
@@ -230,7 +259,8 @@ class LspClient{
         MethodDocumentSymbol = "textDocument/documentSymbol", //{"jsonrpc":"2.0","id":2,"method":"textDocument/documentSymbol","params":{"textDocument":{"uri":"test:///main.cpp"}}}
         MethodWorkspaceSymbol = "workspace/symbol",//{"jsonrpc":"2.0","id":1,"method":"workspace/symbol","params":{"query":"vector"}}
         MethodImplementation = "textDocument/implementation",
-        MethodReferences = "textDocument/references";
+        MethodReferences = "textDocument/references",
+        NotifyDiagnostics = "textDocument/publishDiagnostics";
     
     void notify(@NotNilptr String method, JsonNode params){
         JsonObject json = new JsonObject();
@@ -293,7 +323,87 @@ class LspClient{
         return nilptr;
     }
 
+    JsonObject initworkspaceEdit(){
+        JsonObject workspaceEdit = new JsonObject();
+        workspaceEdit.put("documentChanges",true);
+        workspaceEdit.put("normalizesLineEndings",true);
+            JsonArray resourceOperations = new JsonArray();
+            resourceOperations.put("create");
+            resourceOperations.put("rename");
+            resourceOperations.put("delete");
+        workspaceEdit.put("resourceOperations", resourceOperations);
+            JsonObject changeAnnotationSupport = new JsonObject();
+            changeAnnotationSupport.put("groupsOnLabel", true);
+        workspaceEdit.put("changeAnnotationSupport", changeAnnotationSupport);
+        return workspaceEdit;
+    }
+    
+    public JsonObject inittextDocument(){
+        JsonObject textDocument = new JsonObject();
+        textDocument.put("completion", initCompletion());
+        textDocument.put("hover", initHoverClientCapabilities());
+        return textDocument;
+    }
+    
+    public JsonObject initHoverClientCapabilities(){
+        JsonObject completion = new JsonObject();
+        JsonArray jar = new JsonArray();
+        //jar.put("markdown");
+        jar.put("plaintext");
+        completion.put("contentFormat", jar);
+        completion.put("dynamicRegistration", true);
+        return completion;
+    }
+    
+    public JsonObject initCompletion(){
+        JsonObject completion = new JsonObject();
+        completion.put("contextSupport", true);
+        completion.put("dynamicRegistration", true);
+        return completion;
+    }
+    
+    public JsonObject initworkspacesymbol(){
+        JsonObject workspacesymbol = new JsonObject();
+        workspacesymbol.put("dynamicRegistration", true);
+        
+        JsonArray symbolKind = new JsonArray();
+        for (int i =1; i < 27; i++)
+            symbolKind.put(i);
+        workspacesymbol.put("symbolKind", symbolKind);
+        
+        symbolKind = new JsonArray();
+        symbolKind.put(1);
+        workspacesymbol.put("tagSupport", symbolKind);
+        
+        return workspacesymbol;
+    }
+    
+    public JsonObject initworkspace(){
+        JsonObject workspace = new JsonObject();
+        workspace.put("applyEdit",true);
+        workspace.put("configuration",true);
+        
+        JsonObject didChangeConfiguration = new JsonObject();
+        didChangeConfiguration.put("dynamicRegistration", true);
+        workspace.put("didChangeConfiguration", didChangeConfiguration);
+        
+        JsonObject didChangeWatchedFiles = new JsonObject();
+        didChangeWatchedFiles.put("dynamicRegistration", true);
+        workspace.put("didChangeWatchedFiles", didChangeWatchedFiles);
+        workspace.put("workspaceEdit",initworkspaceEdit());
+        workspace.put("symbol",initworkspacesymbol());
+        return workspace;
+    }
+    
+    public JsonObject initcapabilities(){
+        JsonObject capabilities = new JsonObject();
+        capabilities.put("workspace", initworkspace());
+        capabilities.put("textDocument", inittextDocument());
+        return capabilities;
+    }
+    
     public String initializ(){
+        
         JsonObject param = new JsonObject();
         param.put("trace", "off");
         param.put("rootPath", workdir);
@@ -303,12 +413,7 @@ class LspClient{
         compilationDatabasePath.put("compilationDatabasePath", workdir);
         param.put("initializationOptions", compilationDatabasePath);
         
-        JsonObject workspace = new JsonObject();
-        workspace.put("applyEdit",true);
-        workspace.put("configuration",true);
-        param.put("workspace", workspace);
-        
-        
+        param.put("capabilities", initcapabilities());
         /*JsonObject workspaceFolders = new JsonObject();
         workspaceFolders.put("name", "");
         workspaceFolders.put("uri", "file:///" + workdir);
@@ -319,6 +424,26 @@ class LspClient{
     
     
     public void openfile(String filename, String text){
+        JsonObject param = new JsonObject();
+        param.put("uri", "file:///" + filename);
+        
+        if (text == nilptr){
+            text = readFileUTF8(filename);
+        }
+        
+        if (text == nilptr){
+            return ;
+        }
+        param.put("languageId", "cpp");
+        param.put("version", 2);
+        param.put("text", text);
+        
+        JsonObject doc = new JsonObject();
+        doc.put("textDocument",param);
+        notify(MethodDidOpen, doc);
+    }
+    
+    public void closefile(String filename, String text){
         JsonObject param = new JsonObject();
         param.put("uri", "file:///" + filename);
         
@@ -418,6 +543,12 @@ class LspClient{
         return request(0, MethodImplementation, doc);
     }
     
+    public String getWorkspaceSymbols(){
+        JsonObject doc = new JsonObject();
+        doc.put("query","");
+        return request(0, MethodWorkspaceSymbol, doc);
+    }
+    
     public String getDocumentSymbols(String filename){
         JsonObject param = new JsonObject();
         param.put("uri", "file:///" + filename);
@@ -433,11 +564,30 @@ class LspClient{
         JsonObject position = new JsonObject();
         position.put("line", line);
         position.put("character", col);
-            
+        
+        JsonObject context = new JsonObject();
+        context.put("triggerKind", 1);
+        //context.put("TriggerCharacter", "w");
+        param.put("context",context);
+        
         JsonObject doc = new JsonObject();
         doc.put("textDocument",param);
         doc.put("position", position);
         return request(0, MethodCompletion, doc);
+    }
+    
+    public String hover(String filename, int line, int col){
+        JsonObject param = new JsonObject();
+        param.put("uri", "file:///" + filename);
+        
+        JsonObject position = new JsonObject();
+        position.put("line", line);
+        position.put("character", col);
+                
+        JsonObject doc = new JsonObject();
+        doc.put("textDocument",param);
+        doc.put("position", position);
+        return request(0, MethodHover, doc);
     }
     
     String readFileUTF8(@NotNilptr String file){

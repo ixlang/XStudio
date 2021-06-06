@@ -19,7 +19,8 @@
 			"type":"options",
 			"list":[
 				"未设置",
-				"启用(-make)"
+				"生成Makefile并构建(-make)",
+                "使用现有makefile文件构建(-umake)"
 			]
 		},
 		"目标位数:dbits":{
@@ -583,6 +584,17 @@
 				"未设置",
 				"启用(-verinc)"
 			]
+		},
+		"LSP目标预设:targetoptions":{
+			"type":"options",
+			"list":[
+				"未设置",
+				"i686PE(--target=i686-pc-mingw32)",
+				"x86_64(--target=x86_64-pc-mingw64)"
+			]
+		},
+        "LSP选项:lspoptions":{
+			"type":"params"
 		},
 		"其他选项:otheroptions":{
 			"type":"params"

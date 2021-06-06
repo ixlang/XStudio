@@ -10,6 +10,7 @@ class ICompileInfo{
     public int getLength();
     public int getRow();
     public @NotNilptr String getTips();
+    public @NotNilptr String getTitle();
 };
 
 class InformationParser{

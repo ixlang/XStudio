@@ -11,6 +11,7 @@ class PackageViewer : QDialog{
     PackageManager.PackageInfo [] net_cache_pis;
     PackageManager pm = new PackageManager();
     
+    bool loadingInProgress = false;
     static PackageViewer _viewer = nilptr;
     static Object prog_lock = new Object();
     
@@ -45,7 +46,6 @@ class PackageViewer : QDialog{
     }
     
     public void loadPackages(){
-        
         JsonObject root;
         try{
             HttpRequest req = new HttpRequest();
@@ -57,8 +57,6 @@ class PackageViewer : QDialog{
                         int readlen = req.readData(data,0,data.length);
                         jsondata = jsondata + new String(data, 0, readlen);
                     }
-                    
-                    
                     root = new JsonObject(jsondata);
                 }
             }
@@ -71,6 +69,7 @@ class PackageViewer : QDialog{
                 void run() override{
                     QMessageBox.Critical("错误","从网络加载时发生错误!",QMessageBox.Ok,QMessageBox.Ok);
                     labstatus.setText("加载 " + pkgSource + " 失败!");
+                    loadingInProgress = false;
                 }
             });
             return ;
@@ -97,6 +96,7 @@ class PackageViewer : QDialog{
                 runOnUi( new Runnable(){
                     void run() override{
                         labstatus.setText("加载 " + pkgSource + " 成功!");
+                        loadingInProgress = false;
                     }
                 });
             }else{
@@ -104,9 +104,9 @@ class PackageViewer : QDialog{
                     void run() override{
                         QMessageBox.Critical("错误","包数据错误!",QMessageBox.Ok,QMessageBox.Ok);
                         labstatus.setText("加载 " + pkgSource + " 失败!");
+                        loadingInProgress = false;
                     }
                 });
-                return ;
             }    
         }
     }
@@ -276,9 +276,11 @@ class PackageViewer : QDialog{
 	}
     
     public void loadNetinfo(){
+        loadingInProgress = true;
+        labstatus.setText("正在从 " + pkgSource + " 加载包信息...");
+        
         new Thread(){
                 void run()override{
-                    labstatus.setText("正在从 " + pkgSource + " 加载包信息...");
                     loadPackages();
                 }
         }.start();
@@ -720,6 +722,10 @@ class PackageViewer : QDialog{
     public bool onClose()override{
         synchronized(prog_lock){
             _viewer = nilptr;
+        }
+        if (loadingInProgress){
+            QMessageBox.Information("提示", "请稍候, 正在从远程仓库加载可用的包信息...", QMessageBox.Ok, QMessageBox.Ok);
+            return false;
         }
         return true;
     }

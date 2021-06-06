@@ -12,7 +12,7 @@ class CPPGPlugManager{
     static QScintilla __gdb_command = nilptr;
     public static bool bATTDisasmMode = Setting.get("cde_gdb_disasm").equals("True");
     static QDockWidget __cde_dock = nilptr;
-    static bool __cde_dock_visible = false;
+    static bool __cde_dock_visible = false; 
     
     public static String disassemble_pipe = "#/XStudio/DisassemblePipe" + (int)(Math.random() * 100000);
     
@@ -516,6 +516,12 @@ class CPPGPlugManager{
                         Setting.setSetting("cde_gdb_params", "-e bash -c $(arg)");
                     }
                 }
+                new Thread(){
+                    void run(){
+                        CDEProjectPropInterface.updateAllconfigures();
+                    }
+                }.start();
+                
                 new FileOutputStream(initfile).close();
             }
             

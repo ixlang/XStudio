@@ -95,6 +95,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
             text = jconfig.getString("dbg");
         }
         if (text != nilptr && text.length() > 0){
+            text = XEnvironment.MapVariable(nilptr, nilptr, text);
             text = String.formatPath(text,isUnixPath());
         }
         return text;
@@ -107,6 +108,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
             text = jconfig.getString("dbg");
         }
         if (text != nilptr && text.length() > 0){
+            text = XEnvironment.MapVariable(nilptr, nilptr, text);
             text = String.formatPath(text,isUnixPath());
         }
         return text;
@@ -119,6 +121,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
             text = jconfig.getString("cc");
         }
         if (text != nilptr && text.length() > 0){
+            text = XEnvironment.MapVariable(nilptr, nilptr, text);
             text = String.formatPath(text,isUnixPath());
         }
         return text;
@@ -131,6 +134,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
             text = jconfig.getString("make");
         }
         if (text != nilptr && text.length() > 0){
+            text = XEnvironment.MapVariable(nilptr, nilptr, text);
             text = String.formatPath(text,isUnixPath());
         }
         return text;
@@ -166,7 +170,9 @@ class CDEProjectPropInterface : ProjectPropInterface{
             bool bReslash = isUnixPath();
             try{
                 for (int i = 0, c = array.length(); i < c; i++){
-                    jsarray.put(String.formatPath(array.getString(i),bReslash));
+                    String text = array.getString(i);
+                    text = XEnvironment.MapVariable(nilptr, nilptr, text);
+                    jsarray.put(String.formatPath(text,bReslash));
                 }
             }catch(Exception e){
                 
@@ -191,6 +197,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
             text = jconfig.getString("ld");
         }
         if (text != nilptr && text.length() > 0){
+            text = XEnvironment.MapVariable(nilptr, nilptr, text);
             text = String.formatPath(text,isUnixPath());
         }
         return text;
@@ -203,6 +210,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
             text = jconfig.getString("ar");
         }
         if (text != nilptr && text.length() > 0){
+            text = XEnvironment.MapVariable(nilptr, nilptr, text);
             text = String.formatPath(text,isUnixPath());
         }
         return text;
@@ -922,16 +930,17 @@ class CDEProjectPropInterface : ProjectPropInterface{
         }
     }
     
-    bool cleanByMake(@NotNilptr IBuilder builder,@NotNilptr  Project object,@NotNilptr  Configure configure, Object param)  {
-        String makecont = generateMake(object, configure);
+    bool cleanByMake(@NotNilptr IBuilder builder,@NotNilptr  Project object,@NotNilptr  Configure configure, Object param, String makecmd)  {
         
         String projectdir = object.getProjectDir();
-
-        String makefile = appendPath(projectdir, "Makefile");
         
-        if (writeFileContent(makefile, makecont) == false){
-            builder.OutputText("无法写入文件:" + makefile,0);
-            return false;
+        if (makecmd.equals("-make")){
+            String makefile = appendPath(projectdir, "Makefile");
+            String makecont = generateMake(object, configure);
+            if (writeFileContent(makefile, makecont) == false){
+                builder.OutputText("无法写入文件:" + makefile,0);
+                return false;
+            }
         }
         
         String makepath = getMakePath(configure);
@@ -939,11 +948,15 @@ class CDEProjectPropInterface : ProjectPropInterface{
             builder.OutputText("未设置make程序路径或编译套件.",0);
             return false;
         }
-        makepath = makepath + " clean";
+        
         Vector<String> args_list = new Vector<String>();
      
         String execute = "";
         if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
+            if (-1 != makepath.indexOf(' ')){
+                makepath = "\"" + makepath + "\"";
+            }
+            makepath = makepath + " clean";
             processArgs(makepath, args_list);
 
             String make = args_list[0];
@@ -952,7 +965,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
                 make = make.substring(1, make.length() - 1);
             }
 
-            String batch = "@echo off\nset PATH=\""  +  make.findVolumePath() + "\";%PATH%\n@echo on\n" + makepath;
+            String batch = "@echo off\nset PATH=\""  +  make.findVolumePath() + "\";%PATH%\n" + makepath + "\n@echo on";
             String batchfile = appendPath(projectdir, "clean.cmd");
             
             if (writeFileContent(batchfile, batch) == false){
@@ -971,6 +984,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
             }
             execute = appendPath(execute, "system32\\cmd.exe");
         }else{
+            makepath = makepath + " clean";
             processArgs(makepath, args_list);
             execute = args_list[0];
         }
@@ -1006,17 +1020,17 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return false;
     }
      
-    bool buildByMake(@NotNilptr IBuilder builder, @NotNilptr Project object, @NotNilptr Configure configure, Object param)  {
-        String makecont = generateMake(object, configure);
-        String projectdir = object.getProjectDir();
-
-
-
-        String makefile = appendPath(projectdir, "Makefile");
+    bool buildByMake(@NotNilptr IBuilder builder, @NotNilptr Project object, @NotNilptr Configure configure, Object param, String namecmd)  {
         
-        if (writeFileContent(makefile, makecont) == false){
-            builder.OutputText("无法写入文件:" + makefile,0);
-            return false;
+        String projectdir = object.getProjectDir();
+        
+        if (namecmd.equals("-make")){
+            String makefile = appendPath(projectdir, "Makefile");
+            String makecont = generateMake(object, configure);
+            if (writeFileContent(makefile, makecont) == false){
+                builder.OutputText("无法写入文件:" + makefile,0);
+                return false;
+            }
         }
         
         String makepath = getMakePath(configure);
@@ -1029,6 +1043,9 @@ class CDEProjectPropInterface : ProjectPropInterface{
 
         String execute = "";
         if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
+            if (-1 != makepath.indexOf(' ')){
+                makepath = "\"" + makepath + "\"";
+            }
             processArgs(makepath, args_list);
 
             String make = args_list[0]; __nilptr_safe(make);
@@ -1036,7 +1053,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
                 make = make.substring(1, make.length() - 1);
             }
 
-            String batch = "@echo off\nset PATH=\""  +  make.findVolumePath() + "\";%PATH%\n@echo on\n" + makepath;
+            String batch = "@echo off\nset PATH=\""  +  make.findVolumePath() + "\";%PATH%\n" + makepath + "\n@echo on";
             String batchfile = appendPath(projectdir, "build.cmd");
             
             if (writeFileContent(batchfile, batch) == false){
@@ -1113,14 +1130,12 @@ class CDEProjectPropInterface : ProjectPropInterface{
         String cmd = configure.getOption("command");
         String usemake = configure.getOption("usemake");
         if (usemake.length() > 0 || cmd.equals("-driver")){
-            return buildByMake(builder, object, configure, param);
+            return buildByMake(builder, object, configure, param, usemake);
         }
         
         XlangProjectProp.batchbuild(builder, object, configure, "prebuild");
 
         String workdir = object.projpath.findVolumePath();
-        
-        
         
         Vector<String> _args = getSourceArgs(builder, object, configure, workdir, nilptr);
 
@@ -1203,6 +1218,12 @@ class CDEProjectPropInterface : ProjectPropInterface{
         }
         public String getFile()override {
             return file;
+        }
+        @NotNilptr String getTitle() {
+            if (type >= 0 && type < 3){
+                return (new String[]{"提示:", "警告:", "错误:"})[type];
+            }
+            return "信息:";
         }
         public int getLine()override {
             return line;
@@ -1334,7 +1355,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         String cmd = configure.getOption("command");
         String usemake = configure.getOption("usemake");
         if (usemake.length() > 0 || cmd.equals("-driver")){
-            cleanByMake(builder, object, configure, nilptr);
+            cleanByMake(builder, object, configure, nilptr, usemake);
         }else{
             clearObjectFile(builder, object, configure);
         }
@@ -1831,7 +1852,6 @@ class CDEProjectPropInterface : ProjectPropInterface{
         
         if (target != nilptr){
             target = String.formatPath(target.toRelativePath(projdir, false, true), isUnixPath());
-            
             if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
                 target = "\"" + target +  "\"";
             }
@@ -1977,8 +1997,15 @@ class CDEProjectPropInterface : ProjectPropInterface{
         return kits.toArray(new String[0]);
     }
     
+    static bool isNotSet(String name){
+        if (name == nilptr || name.length() == 0 || name.equals("未配置") || name.equals("未设置")){
+            return true;
+        }
+        return false;
+    }
+    
     static JsonObject getCCConfigure(String name){
-        if (name == nilptr || name.length() == 0){
+        if (isNotSet(name)){
             name = Setting.get("default_kit");
         }
         if (name.length() == 0){
@@ -1996,6 +2023,22 @@ class CDEProjectPropInterface : ProjectPropInterface{
             }
         }
         return nilptr;
+    }
+    
+    public static void updateAllconfigures(){
+        JsonArray ccc = loadConfigures();
+        if (ccc != nilptr){
+            for (int i = 0; i < ccc.length(); i++){
+                JsonObject cconf = (JsonObject)ccc.get(i);
+                if (cconf != nilptr){
+                    String cc = cconf.getString("cc");
+                    if (cc != nilptr && cc.length() != 0){
+                        CPPSetting.detectIncludeSearchDir(cconf, cc);
+                    }
+                }
+            }
+            CPPSetting.saveConfigures(ccc);
+        }
     }
     
     JsonObject getProperitiesConfigure() override {

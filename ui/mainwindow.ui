@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1644</width>
-    <height>1033</height>
+    <width>1419</width>
+    <height>912</height>
    </rect>
   </property>
   <property name="acceptDrops">
@@ -44,6 +44,9 @@
      <widget class="QMdiArea" name="mdiArea">
       <property name="acceptDrops">
        <bool>true</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
       </property>
       <property name="sizeAdjustPolicy">
        <enum>QAbstractScrollArea::AdjustToContents</enum>
@@ -104,13 +107,13 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="separator"/>
    <addaction name="actionOpen"/>
    <addaction name="separator"/>
    <addaction name="actionProject_P"/>
    <addaction name="separator"/>
    <addaction name="actionsave"/>
    <addaction name="actionsaveproject"/>
+   <addaction name="actionprint"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QMenuBar" name="menuBar">
@@ -118,7 +121,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1644</width>
+     <width>1419</width>
      <height>23</height>
     </rect>
    </property>
@@ -196,6 +199,8 @@
     <addaction name="actiondelcurline"/>
     <addaction name="separator"/>
     <addaction name="actiongotodef"/>
+    <addaction name="actionfindreference"/>
+    <addaction name="actionrename"/>
     <addaction name="separator"/>
     <addaction name="actionupper"/>
     <addaction name="actionlower"/>
@@ -975,6 +980,7 @@
    <addaction name="actionpaste"/>
    <addaction name="actiondelete"/>
    <addaction name="separator"/>
+   <addaction name="actiongoto"/>
    <addaction name="actionfind"/>
    <addaction name="actiongotodef"/>
    <addaction name="actionoverride"/>
@@ -1020,7 +1026,6 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="separator"/>
    <addaction name="actioncompile_project"/>
    <addaction name="actionopenoutput"/>
    <addaction name="separator"/>
@@ -1059,9 +1064,12 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionpackmgr"/>
+   <addaction name="actionextmgr"/>
    <addaction name="actionstartup"/>
    <addaction name="allwindows"/>
    <addaction name="actionhelp"/>
+   <addaction name="actionabout"/>
   </widget>
   <widget class="QDockWidget" name="wnd_info">
    <property name="features">
@@ -1203,6 +1211,12 @@
    </widget>
   </widget>
   <widget class="QDockWidget" name="wnd_log">
+   <property name="minimumSize">
+    <size>
+     <width>237</width>
+     <height>147</height>
+    </size>
+   </property>
    <property name="features">
     <set>QDockWidget::DockWidgetClosable|QDockWidget::DockWidgetMovable</set>
    </property>
@@ -2804,6 +2818,16 @@
   <action name="actioncovcharset">
    <property name="text">
     <string>编码转为...</string>
+   </property>
+  </action>
+  <action name="actionfindreference">
+   <property name="text">
+    <string>查找引用</string>
+   </property>
+  </action>
+  <action name="actionrename">
+   <property name="text">
+    <string>重命名</string>
    </property>
   </action>
  </widget>

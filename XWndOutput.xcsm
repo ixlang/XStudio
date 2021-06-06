@@ -527,7 +527,7 @@ class XWndOutput: QDockWidget
                                         int tarrow = icf.getRow();
                                         String tarinfo = icf.getTips();
                                         if (tarfile != nilptr && tarfile.length() > 0){
-                                            XSourceEditor.openForFileInfo(XWorkspace.workspace, tarfile, tarline, tarrow, tarinfo);
+                                            XSourceEditor.openForFileInfo(XWorkspace.workspace, tarfile, tarline, tarrow, icf.getTitle(), tarinfo);
                                         }
                                     }
                                 }

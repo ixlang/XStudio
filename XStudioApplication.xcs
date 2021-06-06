@@ -89,7 +89,7 @@ class XStudioApp : QApplication {
     public XWndObjectDump xDumpWnd;
     public MemoryLookupWnd memlookupWnd;
     public XFindDlg finddlg;
-
+    public CodeTips __tipsWnd;
     static String [] _appargs;
     public static XStudioApp _theApp;
     public static String lastTask = nilptr;
@@ -150,12 +150,14 @@ class XStudioApp : QApplication {
     public void loadConfig() {
         if (Setting.isDarkStyle()) {
             setStyleSheet("res/qss/black.qss");
+//            __tipsWnd.setStyleSheetString("#tipsForm {background: #e0e0e0 ;border: 1px solid #c3c3c3; }");
         } else {
             String style = Setting.getStyle();
             if (style.equals("浅色")){
                 setStyleSheet("res/qss/light.qss");
+ //               __tipsWnd.setStyleSheetString("#tipsForm {background: #e0e0e0 ;border: 1px solid #c3c3c3; }");
             }else{
-                setStyleSheetString("#indexForm {background: #f0f0f0 }");
+                setStyleSheetString("#indexForm {background: #f0f0f0 }\n#tipsForm {background: #f5f7fe ;border: 1px solid #9ba7b7; border-radius: 5px;}");
             }
         }
     }
@@ -198,10 +200,10 @@ class XStudioApp : QApplication {
         if (_mdispace == nilptr){
             return false;
         }
-        
         createDocks();
 
-        
+        __tipsWnd = CodeTips.createTips(mainWindow);
+        __tipsWnd.hide();
         __nilptr_safe(_mdispace);
         _mdispace.setMainWindow(mainWindow);
         _mdispace.setSlnView(wndsln);
@@ -224,7 +226,7 @@ class XStudioApp : QApplication {
         mainWindow.show();
 
         Utils.chechUpdate(0);
-        
+        //setStyle("Fusion");
         mainWindow.setOnStatusListener(new onStatusListener() {
             bool onClose(QObject obj) {
                 if (XSourceEditor.closeAllWindows()) {

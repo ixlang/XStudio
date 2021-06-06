@@ -2,7 +2,7 @@
 	"cde":	{
 		"version":	"1.2",
 		"language":	"xlang",
-		"sources":	["cde.x", ".\\CPPGPlugManager.x", ".\\CPPTextEditor.x", ".\\CDEProjectPropInterface.x", ".\\CPPProjectPlugin.x", ".\\cppsetting.ui", ".\\CPPSetting.x", ".\\GDBShell.x", ".\\EchoBuffer.x", ".\\GdbMiLexer.x", ".\\GdbMiToken.x", ".\\GdbMiParser.x", ".\\GdbMiRecord.x", ".\\GdbMiResultRecord.x", ".\\GdbMiValue.x", ".\\GdbMiList.x", ".\\GdbMiResult.x", ".\\GdbMiStreamRecord.x", ".\\StringBuilder.x", ".\\Stack.x", ".\\VirtualPipe.x", ".\\ClangIXIntelliSense.x", ".\\LspClient.x", ".\\JsonRPC.x", ".\\DebuggeeSelector.x", ".\\CDESyntaxHighlighting.x", ".\\CDEDarkSyntaxHighlighting.x", ".\\EnvironmentMgr.x", "./cde.prop", ".\\NewMember.x", ".\\NewMethod.x", ".\\GeterSeter.x"],
+		"sources":	["cde.x", ".\\CPPGPlugManager.x", ".\\CPPTextEditor.x", ".\\CDEProjectPropInterface.x", ".\\CPPProjectPlugin.x", ".\\cppsetting.ui", ".\\CPPSetting.x", ".\\GDBShell.x", ".\\GdbMiLexer.x", ".\\GdbMiToken.x", ".\\GdbMiParser.x", ".\\GdbMiRecord.x", ".\\GdbMiResultRecord.x", ".\\GdbMiValue.x", ".\\GdbMiList.x", ".\\GdbMiResult.x", ".\\GdbMiStreamRecord.x", ".\\StringBuilder.x", ".\\Stack.x", ".\\VirtualPipe.x", ".\\ClangIXIntelliSense.x", ".\\LspClient.x", ".\\JsonRPC.x", ".\\DebuggeeSelector.x", ".\\CDESyntaxHighlighting.x", ".\\CDEDarkSyntaxHighlighting.x", ".\\EnvironmentMgr.x", "./cde.prop", ".\\NewMember.x", ".\\NewMethod.x", ".\\GeterSeter.x", ".\\AddObjectProject.x", ".\\addfile.ui", ".\\EchoBuffer.x"],
 		"configures":	{
 			"debug":	{
 				"path":	{
@@ -19,20 +19,6 @@
 				"libs":	["Runtime.lix", "FileStream.lix"],
 				"links":	["XStudio.xl"],
 				"depends":	[],
-				"wtype":	"",
-				"ostype":	"",
-				"sstype":	"",
-				"outname":	"$(ProjectName)$(Ext)",
-				"outpath":	"D:\\Programs\\windows_x64\\plugins",
-				"command":	"-slx -c",
-				"uaclevel":	"默认",
-				"wtype":	"",
-				"ostype":	"",
-				"sstype":	"",
-				"outname":	"$(ProjectName)$(Ext)",
-				"outpath":	"D:\\Programs\\windows_x64\\plugins",
-				"command":	"-slx -c",
-				"uaclevel":	"默认",
 				"ignorewarning":	"",
 				"warexcp":	"",
 				"compdest":	"-z",
@@ -43,9 +29,23 @@
 				"strlistfile":	"",
 				"languagefile":	"",
 				"stringoutput":	"",
-				"cmd":	"D:\\Programs\\windows_x64\\XStudio.exe",
-				"args":	"D:\\Programs\\windows_x64\\XStudio.exe",
-				"workdir":	"D:\\Programs\\windows_x64"
+				"wtype":	"",
+				"ostype":	"",
+				"sstype":	"",
+				"outname":	"$(ProjectName)$(Ext)",
+				"outpath":	"D:\\Programs\\windows_x64_dev\\plugins",
+				"command":	"-slx -c",
+				"uaclevel":	"默认",
+				"wtype":	"",
+				"ostype":	"",
+				"sstype":	"",
+				"outname":	"$(ProjectName)$(Ext)",
+				"outpath":	"D:\\Programs\\windows_x64_dev\\plugins",
+				"command":	"-slx -c",
+				"uaclevel":	"默认",
+				"cmd":	"D:\\Programs\\windows_x64_dev\\XStudio1.exe",
+				"args":	"D:\\Programs\\windows_x64_dev\\XStudio1.exe",
+				"workdir":	"D:\\Programs\\windows_x64_dev"
 			},
 			"release":	{
 				"path":	{
@@ -63,7 +63,7 @@
 				"workdir":	"$(ProjectDir)"
 			}
 		},
-		"icofile":	"",
-		"versioninc":	"0"
+		"versioninc":	"0",
+		"icofile":	""
 	}
 }

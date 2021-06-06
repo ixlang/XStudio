@@ -124,7 +124,7 @@ class CPPProjectPlugin : IProjectPlugin{
             
             String header_content = ("//XAMH class " + projectName + " 定义,由 XStudio [https://xlang.link] 创建 \n//文件名: " + projectName + ".h" + " \n" + "//创建时间: " + date + " \n/**@caution 注意:不要删除或改动由XAMH开头的注释，它由XStudio自动生成并进行项目辅助管理**/\n#pragma once\n\n") + 
        
-            "class " + projectName + "{ \npublic:\n\t" + projectName + "();\n\t~" + projectName + "();\n\nprivate:\n\n\n\n\n\n//XAMH Properities End\n\npublic:\n\n\n\n\n\n//XAMH Method End\n};\n\n//XAMH Definition End";
+            "class " + projectName + "{ \npublic:\n\t" + projectName + "();\n\t~" + projectName + "();\n\nprivate:\n\n\n\n\n\n//XAMH Fields End\n\npublic:\n\n\n\n\n\n//XAMH Method End\n};\n\n//XAMH Definition End";
             
             write2file(outcppFile, cpp_content);
             write2file(outhppFile, header_content);
@@ -158,7 +158,6 @@ class CPPProjectPlugin : IProjectPlugin{
     
 	bool createProject(@NotNilptr WizardLoader loader,@NotNilptr  String projectName,@NotNilptr  String projectDir,@NotNilptr  String uuid, IProject ownProject, bool addToProject) override {
 		//TODO:	
-
         if (Pattern.test(projectName, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true) == false) {
             QMessageBox.Critical("错误", "项目名称不合法", QMessageBox.Ok, QMessageBox.Ok);
             return false;
@@ -168,16 +167,19 @@ class CPPProjectPlugin : IProjectPlugin{
             return createAddition(loader, projectName, projectDir, uuid, ownProject, addToProject);
         }
         String priject_dir = CDEProjectPropInterface.appendPath(projectDir, projectName);
-        if (XPlatform.existsSystemFile(priject_dir)) {
-            QMessageBox.Critical("错误", "该位置已存在同名项目, 请重新选择路径或者改变项目名", QMessageBox.Ok, QMessageBox.Ok);
-            return false;
-        } else {
-            if (mkdirs(priject_dir) == false) {
-                QMessageBox.Critical("错误", "无法在此位置建立新目录, 请重新选择路径", QMessageBox.Ok, QMessageBox.Ok);
+        
+        if (uuid.equals(cpp_existid) == false){
+            if (XPlatform.existsSystemFile(priject_dir)) {
+                QMessageBox.Critical("错误", "该位置已存在同名项目, 请重新选择路径或者改变项目名", QMessageBox.Ok, QMessageBox.Ok);
                 return false;
+            } else {
+                if (mkdirs(priject_dir) == false) {
+                    QMessageBox.Critical("错误", "无法在此位置建立新目录, 请重新选择路径", QMessageBox.Ok, QMessageBox.Ok);
+                    return false;
+                }
             }
         }
-            
+        
         String configure = CDEProjectPropInterface.appendPath(XPlatform.getAppDirectory(), "plugins/cde");
         
         String tempfile = nilptr;
@@ -290,6 +292,29 @@ class CPPProjectPlugin : IProjectPlugin{
                 }
                 
             }
+        }else
+        if (cpp_existid.equals(uuid)){
+            projfile = CDEProjectPropInterface.appendPath(configure, "cdextc.temp");
+            String project_file = CPPGPlugManager.CPPLangPlugin.readFileContent(projfile);
+            if (project_file != nilptr){
+                project_file = project_file.replace("${ProjectName}", projectName);
+                String outFile = CDEProjectPropInterface.appendPath(projectDir, projectName + ".xprj");
+                JsonArray srcs = AddObjectProject.showAddFiles(projectDir);
+                String srcstr = "[]";
+                if (srcs != nilptr){
+                    srcstr = srcs.toString(false);
+                }
+                project_file = project_file.replace("${ADDSOURCES}", srcstr);
+                try{
+                    FileOutputStream fos = new FileOutputStream(outFile);
+                    fos.write(project_file.getBytes());
+                    fos.close();
+                    loader.loadProject(outFile);
+                    return true;
+                }catch(Exception e){
+                    
+                }
+            }
         }
         return false;
 	}
@@ -323,6 +348,7 @@ class CPPProjectPlugin : IProjectPlugin{
     public static const String cpp_stauuid = "661c2c22-5cca-4556-a01c-f2c9ca0495b6";
     public static const String cpp_dynuuid = "8f75b511-8c85-4a7d-8951-9f5e8735cf7b";
     public static const String cpp_drvuuid = "19f532bc-a23d-4e23-ae65-3a420374aa7a";
+    public static const String cpp_existid = "517bd252-b78d-07c9-467b-4ec579f9b929";
     
     public static const String cpp_clsuuid = "c3890f0e-ef56-4c41-acfd-e09a30d839eb";
     public static const String cpp_ifcuuid = "5456d902-540e-4ce0-a455-a4b7175cab91";
@@ -380,6 +406,15 @@ class CPPProjectPlugin : IProjectPlugin{
         mobile.put("icon", "config/xlang.png");
         mobile.put("platform", "支持C/C++开发的目的平台");
         mobile.put("details", "适用于windows linux macos等任何特定的支持平台");
+        Xlang.put(mobile);
+        
+        mobile = new JsonObject();
+        mobile.put("name", "从现有Makefile创建项目");
+        mobile.put("uuid", cpp_existid);
+        mobile.put("language", "C/C++");
+        mobile.put("icon", "config/xlang.png");
+        mobile.put("platform", "支持C/C++开发的目的平台");
+        mobile.put("details", "仅创建项目到现有Makefile目录");
         Xlang.put(mobile);
         
         if (_system_.getPlatformId() == _system_.PLATFORM_LINUX){

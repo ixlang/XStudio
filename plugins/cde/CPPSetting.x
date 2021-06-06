@@ -239,20 +239,7 @@ class CPPSetting : QDialog{
             void onClick(QObject obj, bool checked) {
                 if (cpp_configures != nilptr){
                     saveconfig();
-                    FileOutputStream fos = nilptr;
-                    try{
-                        fos = new FileOutputStream(CDEProjectPropInterface.appendPath(XPlatform.getAppDirectory(), "plugins/cde/configures.cfg"));
-                        JsonObject jroot = new JsonObject();
-                        jroot.put("configures", cpp_configures);
-                        String content = jroot.toString(true);
-                        fos.write(content.getBytes());
-                    }catch(Exception e){
-                        
-                    }finally{
-                        if (fos != nilptr){
-                            fos.close();
-                        }
-                    }
+                    saveConfigures(cpp_configures);
                 }
                 close();
             }
@@ -270,6 +257,25 @@ class CPPSetting : QDialog{
         setModal(true);
         show();
         loadConfigures();
+    }
+    
+    public static bool saveConfigures(JsonArray cpp_cfg){
+        FileOutputStream fos = nilptr;
+        try{
+            fos = new FileOutputStream(CDEProjectPropInterface.appendPath(XPlatform.getAppDirectory(), "plugins/cde/configures.cfg"));
+            JsonObject jroot = new JsonObject();
+            jroot.put("configures", cpp_cfg);
+            String content = jroot.toString(true);
+            fos.write(content.getBytes());
+            return true;
+        }catch(Exception e){
+            
+        }finally{
+            if (fos != nilptr){
+                fos.close();
+            }
+        }
+        return false;
     }
     
     bool removeConfig(@NotNilptr String name){
@@ -494,7 +500,9 @@ class CPPSetting : QDialog{
             
             if ((oldcc == nilptr || oldcc.equals(ccpath) == false) && ccpath.length() > 0){
                 setWindowTitle("C/C++ 套件设置 - 正在处理...");
-                detectIncludeSearchDir(ccpath);
+                ccpath = XEnvironment.MapVariable(nilptr, nilptr, ccpath);
+                detectIncludeSearchDir(current_config, ccpath);
+                detectDefaultMacro(current_config, ccpath);
                 setWindowTitle("C/C++ 套件设置");
             }
         }
@@ -549,7 +557,7 @@ class CPPSetting : QDialog{
         return true;
     }
     
-    void detectDefaultMacro(@NotNilptr String cc){
+    public static void detectDefaultMacro(JsonObject jcfg, @NotNilptr String cc){
         Process process = nilptr;
         String execute = "";
         if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
@@ -569,7 +577,7 @@ class CPPSetting : QDialog{
         try{
             process.setWorkDirectory(cc.findVolumePath());
             if (process.create(Process.StdOut | Process.RedirectStdErr)){
-                EchoBuffer ebuf = new EchoBuffer();
+                StringBuffer ebuf = new StringBuffer(4096);
                 int rd = 0;
                 byte [] buffer = new byte[4096];
                 try{
@@ -578,13 +586,13 @@ class CPPSetting : QDialog{
                     }
                 }catch(Exception e){
                 }
-                parseMacroList(ebuf.toString());
+                parseMacroList(jcfg, ebuf.toString());
             }
         }catch(Exception e){
         }
     }
     
-    void parseMacroList(@NotNilptr String lists){
+    public static void parseMacroList(JsonObject jcfg, @NotNilptr String lists){
         String macroarr = "";
         
         String [] macros = lists.split('\n');
@@ -604,14 +612,14 @@ class CPPSetting : QDialog{
             }
         }
         
-        while (current_config.has("macros")){
-            current_config.remove("macros");
+        while (jcfg.has("macros")){
+            jcfg.remove("macros");
         }
-        current_config.put("macros", macroarr);
+        jcfg.put("macros", macroarr);
     }
     
     
-    void detectIncludeSearchDir_linux(@NotNilptr String cc){
+    public static void detectIncludeSearchDir_linux(JsonObject jcfg,  @NotNilptr String cc){
         String dbg_script = CDEProjectPropInterface.appendPath(CDEProjectPropInterface.appendPath(_system_.getAppDirectory(), "plugins/cde"), "test.sh");
       
         String ress = dbg_script + ".res";
@@ -640,7 +648,7 @@ class CPPSetting : QDialog{
         Process process = new Process("/bin/bash", args);
         try{
             if (process.create(Process.StdOut | Process.RedirectStdErr)){
-                EchoBuffer ebuf = new EchoBuffer();
+                StringBuffer ebuf = new StringBuffer(4096);
                 int rd = 0;
                 byte [] buffer = new byte[4096];
                 
@@ -655,17 +663,16 @@ class CPPSetting : QDialog{
                 }catch(Exception e){
     
                 }
-                parseSearchList(ebuf.toString());
+                parseSearchList(jcfg, ebuf.toString());
             }
         }catch(Exception e){
             
         }
-        detectDefaultMacro(cc);
     }
     
-    void detectIncludeSearchDir(@NotNilptr String cc){
+    public static void detectIncludeSearchDir(JsonObject jcfg, @NotNilptr String cc){
         if (_system_.getPlatformId() == _system_.PLATFORM_LINUX){
-            detectIncludeSearchDir_linux(cc);
+            detectIncludeSearchDir_linux(jcfg, cc);
             return;
         }
         
@@ -676,7 +683,7 @@ class CPPSetting : QDialog{
         try{
             process.setWorkDirectory(ccdir);
             if (process.create(Process.StdOut | Process.RedirectStdErr)){
-                EchoBuffer ebuf = new EchoBuffer();
+                StringBuffer ebuf = new StringBuffer(4096);
                 int rd = 0;
                 byte [] buffer = new byte[4096];
                 
@@ -691,16 +698,15 @@ class CPPSetting : QDialog{
                 }catch(Exception e){
     
                 }
-                parseSearchList(ebuf.toString());
+                parseSearchList(jcfg, ebuf.toString());
             }
         }catch(Exception e){
             
         }
-        detectDefaultMacro(cc);
     }
     
         
-    void parseSearchList(@NotNilptr String lists){
+    public static void parseSearchList(JsonObject jcfg, @NotNilptr String lists){
         String [] items = lists.split('\n');
         Vector<String> searchs = new Vector<String>();
         int step = 0;
@@ -720,9 +726,9 @@ class CPPSetting : QDialog{
         for (int i =0; i < searchs.size(); i++){
             jarray.put(String.formatPath(searchs[i], false));
         }
-        while (current_config.has("searchs")){
-            current_config.remove("searchs");
+        while (jcfg.has("searchs")){
+            jcfg.remove("searchs");
         }
-        current_config.put("searchs", jarray);
+        jcfg.put("searchs", jarray);
     }
 };

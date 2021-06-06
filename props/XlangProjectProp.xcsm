@@ -96,6 +96,12 @@ class XlangProjectProp : ProjectPropInterface {
             }
             return tip;
         }
+        @NotNilptr String getTitle() {
+            if (type >= 0 && type < 3){
+                return (new String[]{"提示:", "警告:", "错误:"})[type];
+            }
+            return "信息:";
+        }
     };
 
      
@@ -2246,6 +2252,8 @@ class XlangProjectProp : ProjectPropInterface {
     public IXIntelliSense allocIntelliSense(@NotNilptr Project project,@NotNilptr  Configure cfg){
         return new XIntelliSense(project, cfg);
     }
+    
+
     
     public bool createNormalFileToProject(@NotNilptr WizardLoader loader,@NotNilptr String projectName, @NotNilptr String projectDir, @NotNilptr String uuid, Project ownProject, bool addToProject, String ext) {
         XPlatform.mkdir(projectDir);

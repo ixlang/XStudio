@@ -4,15 +4,7 @@ class XIntelliSense : IXIntelliSense{
 	long handle;
 	Project project;
     
-	const int XIS_NAME = 0,
-				XIS_TYPE  = 1,
-				XIS_CLAS = 2,
-				XIS_PROP = 3,
-                XIS_BACL = 4,
-                XIS_SRC = 5,
-                XIS_LINE = 6,
-                XIS_ROW = 7,
-                XIS_VISIBILITY = 8;
+
                 
                                 
 	public XIntelliSense(@NotNilptr Project proj,@NotNilptr  Configure configure){
@@ -112,7 +104,7 @@ class XIntelliSense : IXIntelliSense{
     }
     
 
-	public XIntelliResult [] getIntelliSenseL(@NotNilptr String source, String content, int line, int column){
+	public XIntelliResult [] getObjectList(@NotNilptr String source, String content, int line, int column){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -123,7 +115,18 @@ class XIntelliSense : IXIntelliSense{
 		return getResult();
 	}
     
-    public XIntelliResult [] getIntelliSenseObject(@NotNilptr String source,int line, int column, String name){
+    public XIntelliResult [] getObjectListInFile(@NotNilptr String source, String content){
+		if (Setting.isIntellisense()){
+			synchronized(this){
+				if (handle != 0){
+					IntelliSenseFile(handle, XPlatform.converToPlatformCharSet(source), content);
+				}
+			}
+        }
+		return getResult();
+	}
+    
+    public XIntelliResult [] getSpecialObjects(@NotNilptr String source,int line, int column, String name){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -134,7 +137,7 @@ class XIntelliSense : IXIntelliSense{
 		return getResult();
 	}
      
-    public XIntelliResult [] getIntelliSenseObjectM(@NotNilptr String source,int line){
+    public XIntelliResult [] getDomain(@NotNilptr String source,int line){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -145,7 +148,7 @@ class XIntelliSense : IXIntelliSense{
 		return getResult();
 	}
     
-	public XIntelliResult [] getIntelliSense(@NotNilptr String source,String content, long pos, int line, int column){
+	public XIntelliResult [] getCompletion(@NotNilptr String source,String content, long pos, int line, int column){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -158,11 +161,39 @@ class XIntelliSense : IXIntelliSense{
 		return getResult();
 	}
     
-	public bool initializ()override{
+    public String getInformation(@NotNilptr String source,String content, long pos, int line, int column){
+		return nilptr;
+	}
+    
+	public bool initializ(IntelliClient client)override{
         return true;
     }
     
-	public String getIntelliSenseMap(){
+    public XIntelliResult [] findReferences(String source, String content, long pos){
+        return nilptr;
+    }
+    
+    public void documentDidOpen(String filePath){
+        
+    }
+ 
+    public void documentDidClose(String filePath){
+        
+    }
+    
+    public void reconfigure(){
+        
+    }
+    
+    public String getProperity(String key){
+        /** 语言服务器的自动完成功能是否支持过滤关键字**/
+        if (key == "completion_filter"){
+            return "no";
+        }
+        return "no";
+    }
+    
+	public String getSymbols(String file){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -182,7 +213,7 @@ class XIntelliSense : IXIntelliSense{
 			}
 		}
 	}
-    public void updateSource(@NotNilptr String sourcePath, @NotNilptr String newFile){
+    public void renamefile(@NotNilptr String sourcePath, @NotNilptr String newFile){
 		if (Setting.isIntellisense()){
 			synchronized(this){
 				if (handle != 0){
@@ -498,6 +529,7 @@ class XIntelliSense : IXIntelliSense{
         bool cdecl XISQueryObject(long _sc, String sourceFile, int line, String name);
         bool cdecl XISQueryObjectM(long _sc, String sourceFile, int line);
         bool cdecl IntelliSenseL(long h, String file, String content, int line); 
+        bool cdecl IntelliSenseFile(long h, String file, String content);
 		int cdecl getXIntelliSenseCount(long h); 
 		String cdecl getIntelliSenseItemInfo(long h, int id, int prop);
 		int cdecl getIntelliSenseFunctionParamCount(long h, int id);

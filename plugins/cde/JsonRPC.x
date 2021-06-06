@@ -1,86 +1,119 @@
 //xlang Source, Name:JsonRPC.x 
 //Date: Sat Apr 02:31:25 2020 
 
-class JsonRPC : EchoBuffer{
+class JsonRPC{
 
-    int findstart = 0;
+    protected StringBuffer data = new StringBuffer(1024);
     
-    public bool memcmp(int ofst, @NotNilptr byte [] pb){
-        for (int i = 0; i < pb.length; i++){
-            if (data[i + ofst] != pb[i]){
-                return false;
-            }
-        }
-        return true;
+    public void append(byte[] buffer, int pos, int len){
+        data.append(buffer,pos,len);
     }
     
-    public bool memcmp_r(int ofst,@NotNilptr byte [] pb){
-        for (int i = pb.length - 1; i >= 0; i--){
-            if (data[i + ofst] != pb[i]){
-                return false;
-            }
-        }
-        return true;
+    public byte [] getData(){
+        return data.getBytes();
     }
     
-    public int indexOf(@NotNilptr byte [] pb){
-        for (int i = 0; i < length; i++){
-            if (memcmp(i, pb)){
-                return i;
+    public void clear(){
+        data.clear();
+    }
+    
+    public int getLength(){
+        return data.length();
+    }
+    
+    public void remove(int size){
+        data.replace(0,size,"");
+    }
+    
+    public bool endWith(@NotNilptr byte [] cdata){
+        return data.endWith(new String(cdata));
+    }
+    
+    public bool endWithLine(@NotNilptr String line){
+        int length = data.length();
+        int offset = length - line.length();
+        if (offset > 0){
+            int pos = data.lastIndexOf('\n', offset);
+            if (pos != -1){
+                String lastline = data.substring(pos + 1,length - (offset + 1)).trim(true);
+                return lastline.equals(line);
             }
+        }
+        return false;
+    }
+    
+    public String getLine(){
+        String out;
+        int pos = data.indexOf('\n');
+        if (pos != -1){
+            pos++;
+            out = data.substring(0,pos);
+            try{
+                if (_system_.getPlatformId() == 0){
+                    out = new String(out.getBytes(), "GB18030//IGNORE");
+                }
+            }catch(Exception e){
+            }
+            data.replace(0,pos,"");
+            return out;
+        }
+        return out;
+    }
+    
+    int indexOf(char c){
+        return data.indexOf(c);
+    }
+    
+    public @NotNilptr  String toString(){
+        try{
+            if (_system_.getPlatformId() == 0){
+                return new String(data.getBytes(), "GB18030//IGNORE");
+            }else{
+                return data.toString();
+            }
+        }catch(Exception e){
+            
+        }
+        return data.toString();
+    }
+    
+    public @NotNilptr  String toRawString(int start, int len){
+        return data.substring(start, start + len);
+    }
+    
+    public @NotNilptr  String toRawString(){
+        return data.toString();
+    }
+    
+    public @NotNilptr int match(@NotNilptr Pattern pattern){
+        Pattern.Result res = pattern.matchAll(data.toString(),0, -1, Pattern.NOTEMPTY);
+        if (res.length() != 0){
+            return res.get(res.length() - 1).end();
         }
         return -1;
     }
-    
-    public int indexOf(@NotNilptr byte [] pb, int ofst){
-        for (int i = ofst; i < length; i++){
-            if (memcmp(i, pb)){
-                return i;
-            }
-        }
-        return -1;
-    }
-    
-    public int lastIndexOf(@NotNilptr byte [] pb){
-        for (int i = length - 1; i >= 0; i--){
-            if (memcmp_r(i, pb)){
-                return i;
-            }
-        }
-        return -1;
-    }
-    
-    public int lastIndexOf(@NotNilptr byte [] pb, int ofst){
-        for (int i = ofst - 1; i >= 0; i--){
-            if (memcmp_r(i, pb)){
-                return i;
-            }
-        }
-        return -1;
-    }
-    
     
     public int indexOf(@NotNilptr String pb){
-        return indexOf(pb.getBytes());
+        return data.indexOf(pb);
     }
     
     public int indexOf(@NotNilptr String pb, int ofst){
-        return indexOf(pb.getBytes(), ofst);
+        return data.indexOf(pb, ofst);
     }
     
     public int lastIndexOf(@NotNilptr String pb){
-        return lastIndexOf(pb.getBytes());
+        return data.lastIndexOf(pb);
     }
     
     public int lastIndexOf(@NotNilptr String pb, int ofst){
-        return lastIndexOf(pb.getBytes(), ofst);
+        return data.lastIndexOf(pb, ofst);
     }
     
     public @NotNilptr String substring(int start, int end){
-        return new String(data, start, end - start);
+        return data.substring(start, end);
     }
     
     public int length(){
-        return length;
+        return data.length();
     }
 };

@@ -19,7 +19,7 @@ class Project : IProject
     Object buildlock = new Object();
     public Thread build_thread;
     bool bModified = false;
-    
+    bool completion_filter = false;
 
     public Configure getCurrentConfig()override{
         return currentConfig;
@@ -861,7 +861,7 @@ class Project : IProject
     {
         String szFile = getSourcePath(id);
         if (intelliSense != nilptr) {
-            intelliSense.updateSource(szFile, nilptr);
+            intelliSense.renamefile(szFile, nilptr);
         }
         try {
             JsonArray sources = root.getArray("sources");
@@ -881,7 +881,7 @@ class Project : IProject
         
         if (path != nilptr && _system_.rename(path, newname)) {
             if (intelliSense != nilptr) {
-                intelliSense.updateSource(path, newname);
+                intelliSense.renamefile(path, newname);
             }
             String shortname =  replaceSource(sourceID, newname);
             if (shortname != nilptr) {
@@ -939,7 +939,7 @@ class Project : IProject
     public void updateXintelliSense()
     {
         if (intelliSense != nilptr){
-            String content = intelliSense.getIntelliSenseMap();
+            String content = intelliSense.getSymbols(nilptr);
             //_system_.consoleWrite(content);
             try {
                 xintelliSenseMap = new JsonObject(content);
@@ -1054,7 +1054,7 @@ class Project : IProject
                 }
                 
                 if (_intellsence != nilptr){
-                    bool succeed = _intellsence.initializ();
+                    bool succeed = _intellsence.initializ(XWorkspace.workspace.inteliclient);
                     
                     if (succeed){
                         synchronized(intellock){
@@ -1076,6 +1076,31 @@ class Project : IProject
                 }
             }
         }.start();
+    }
+    
+    public bool hasCompletionFilter(){
+        synchronized(intellock){
+            if (intelliSense != nilptr){
+                return intelliSense.getProperity("completion_filter") == "yes";
+            }
+        }
+        return false;
+    }
+    
+    public void didCloseFile(String path){
+        synchronized(intellock){
+            if (intelliSense != nilptr){
+                intelliSense.documentDidClose(path);
+            }
+        }
+    }
+    
+    public void didOpenFile(String path){
+        synchronized(intellock){
+            if (intelliSense != nilptr){
+                intelliSense.documentDidOpen(path);
+            }
+        }
     }
     
     public IXPlugin getProjectPlugin(){

@@ -2,8 +2,8 @@
 	"ProductName":	"X-Studio",
 	"InternalName":	"XStudio.exe",
 	"CompanyName":	"XStudio",
-	"LegalCopyright":	"Copyright Cadaqs (C) 2018 X-Studio",
-	"FileDescription":	"Integrated Development Environment for Xlang",
-	"FileVersion":	"1.0.18.10130",
-	"ProductVersion":	"1.0.18.10130"
+	"LegalCopyright":	"Copyright Cadaqs (C) 2021 X-Studio",
+	"FileDescription":	"Cross-platform\nIntegrated Development Environment",
+	"FileVersion":	"1.1.21.10657",
+	"ProductVersion":	"1.1.21.10657"
 }
