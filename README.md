@@ -1,4 +1,4 @@
-# XStudio
+# XStudio 官方主页地址:https://xlang.link/
 XStudio 是 xlang 语言的御用集成开发环境, 此项目使用 xlang 开发, 支持各种平台(windows, linux, mac), 并且具有高度扩展和可定制性, 另外已经支持用作 C/C++ 项目的开发, 未来将会支持更多其他语言和类型的开发.
 
 ![11](https://xlang.link/ide.jpg)
@@ -59,6 +59,7 @@ F5 即可运行;
 ## 已支持的其他语言类型的开发
 
 ### CDE (C/C++ Develop Extends)：多平台的 C/C++ 项目开发支持(扩展组件下载地址:http://release.xlang.link/extensions/xstudio/cde.xsp)
+### XStudio CDE With MINGW (x86)：已集成mingw 并包含boost, gtk3 等多种开发库,(下载地址:https://release.xlang.link/supports/windows_x86_mingw32.7z)
 ### CDE 扩展已支持的细节:
  从新建项目向导中建立C/C++项目
  代码高亮
