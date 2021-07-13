@@ -80,7 +80,7 @@ class XIndexWindow : QMdiSubWindow
                     }
                 }
             });
-
+            XStudioApp._theApp.reconfig();
             return true;
         }
         return false;
@@ -107,6 +107,7 @@ class XIndexWindow : QMdiSubWindow
     {
         XWorkspace.workspace.indexPage = nilptr;
         restore();
+        XStudioApp._theApp.reconfig();
         return true;
     }
 

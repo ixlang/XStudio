@@ -452,7 +452,7 @@ class AddObjectDlg : QDialog {
                 bool checked = _treeview.isItemCheck(children[i], 0);
                 if (checked){
                     String text = _treeview.getItemText(children[i], 0);
-                    if (text.startWith(parentName + "(")){
+                    if (text.startsWith(parentName + "(")){
                         text = destName + text.substring(parentName.length(), text.length());
                         text = "	" + text + " {//构造\n		//TODO:	\n	\n	}\n\n";
                     }else{

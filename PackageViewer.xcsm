@@ -49,7 +49,7 @@ class PackageViewer : QDialog{
         JsonObject root;
         try{
             HttpRequest req = new HttpRequest();
-            if (req.get(pkgSource, 300000, pkgSource.upper().startWith("HTTPS://"))){
+            if (req.get(pkgSource, 300000, pkgSource.upper().startsWith("HTTPS://"))){
                 if (req.getResponseCode() >= 200){
                     byte [] data = new byte[4096];
                     String jsondata = "";
@@ -165,7 +165,7 @@ class PackageViewer : QDialog{
 			void onItemClicked(@NotNilptr QTreeWidget tree,long item, int column){
 				if (column == 4){
 					String txt = tree.getItemText(item, column);
-                    if (txt.upper().startWith("HTTP")){
+                    if (txt.upper().startsWith("HTTP")){
 						if (QMessageBox.Question("提示","是否转到发布者网站: <b>" + txt + "</b> ?",QMessageBox.Ok | QMessageBox.No,QMessageBox.Ok) == QMessageBox.Ok){
 							openUrl(txt);
                         }

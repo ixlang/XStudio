@@ -16,7 +16,6 @@ class CodeTips : QWidget{
         lblcopy = (QLabel)attachByName(new QLabel(), "lblcopy");
         pushpin = (QLabel)attachByName(new QLabel(), "pushpin");
         
-        pushpin.setStyleSheetString(pushpin_qss_unpush);
         
         lbltitle.setOnMouseEventListener(new onMouseEventListener(){
             bool bpressed = false;
@@ -143,14 +142,19 @@ class CodeTips : QWidget{
         return wizard;
     }
     
-	void onFocusOut(bool focus,int reson)override{
+    public void hide(bool bForce){
         if (!pushed){
             hide();
         }
+    }
+	void onFocusOut(bool focus,int reson)override{
+        hide(false);
 	}
 
     public void showTips(String _defaultPath,  QPoint pt, String title, String content){
         setWindowFlags(Constant.WindowStaysOnTopHint);
+        pushed = false;
+        pushpin.setStyleSheetString(pushed? pushpin_qss_push : pushpin_qss_unpush);
         if (title != nilptr){
             lbltitle.setText(title);
         }else{
@@ -164,7 +168,6 @@ class CodeTips : QWidget{
         adjustSize();
         show();
         raise();
-        setFocus();
-        
+        //setFocus();
     }
 };

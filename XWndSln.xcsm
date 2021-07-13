@@ -169,8 +169,6 @@ class XWndSln : QDockWidget
             } catch(Exception e) {
                 current_ps = nilptr;
             }
-
-            
             
             enableFileOp(current_ps != nilptr);
             enableProjOp(workspace.isCurrentProjectEmpty() == false);
@@ -179,7 +177,7 @@ class XWndSln : QDockWidget
 
             if (current_ps != nilptr) {
                 String file = current_ps.getSourcePath();
-                PluginsController.updateSolutionActionState(file);
+                PluginsController.updateSolutionActionState(currentProject, file);
                 if (file != nilptr){
                     String ext = file.findExtension();
                     if (ext.upper().equals(".UI")) {
@@ -187,7 +185,7 @@ class XWndSln : QDockWidget
                     }
                 }
             }else{
-                PluginsController.updateSolutionActionState(nilptr);
+                PluginsController.updateSolutionActionState(currentProject, nilptr);
             }
 
             enableDesigner(designer_enable);
@@ -394,7 +392,7 @@ class XWndSln : QDockWidget
         name = String.formatPath(name,false);
 
         name = name.replace("\\","/");
-        if (name.startWith("./")) {
+        if (name.startsWith("./")) {
             name = name.substring(2,name.length());
         }
         String [] namesp = name.split('/');
@@ -446,7 +444,7 @@ class XWndSln : QDockWidget
                 String pathfile = sources.getString(i);
                 
                 if (pathfile != nilptr){
-                    if (pathfile.startWith("./") || pathfile.startWith(".\\")) {
+                    if (pathfile.startsWith("./") || pathfile.startsWith(".\\")) {
                         pathfile = pathfile.substring(2,pathfile.length());
                     }
 

@@ -36,6 +36,8 @@ class XSourceEditor : DocumentView {
     public String defaultCharset = nilptr;
     String loadAsCharset = nilptr;
     onOverviewListener disableOverview = nilptr;
+    bool bCmbInit = false;
+    
     enum ReadResp{
         NO_READONLY = 0,
         NO_CHARSET = 1
@@ -457,8 +459,10 @@ class XSourceEditor : DocumentView {
                 }
                domaincmb.setTag(domains_link);
                objectscmb.setTag(objects_link);
+               bCmbInit = true;
                domaincmb.addItems(domains.toArray(new String[0]));
                objectscmb.addItems(objects.toArray(new String[0]));
+               bCmbInit = false;
            }
         });
     }
@@ -683,7 +687,7 @@ class XSourceEditor : DocumentView {
 
             String uname = names.get_name().upper();
             if (selitem == 0) {
-                if (uname.startWith(entenedText)) {
+                if (uname.startsWith(entenedText)) {
                     selitem = item;
                 }
             }
@@ -737,7 +741,7 @@ class XSourceEditor : DocumentView {
         synchronized(__dvp){
             if (debugWndShow) {
                 debugWnd.hide();
-                debugWnd.clear();
+                __dvp.clear(debugWnd);
                 watchs.clear();
                 debugWndShow = false;
             }
@@ -761,6 +765,7 @@ class XSourceEditor : DocumentView {
                 isFocused = true;
             }
         }
+        
         void onFocusOut(QObject obj, bool focus, int reson) {
             if (blocked == false){
                 if (isFocused) {
@@ -936,6 +941,7 @@ class XSourceEditor : DocumentView {
                 void onMouseButtonPress(QObject obj, int Button, int x, int y, int flags, int source)override {
                     button_pressed = true;
                     XSourceEditor.this.hideAutoWnd();
+                    __tipsWnd.hide(false);
                 }
                 
                 void onMouseButtonRelease(QObject obj, int Button, int x, int y, int flags, int source)override {
@@ -1067,6 +1073,9 @@ class XSourceEditor : DocumentView {
         String thekey = _sci.getText(start, end).trim(true);
 
         if (thekey.length() > 0) {
+            if (isKeyWord(thekey) == false && isDebugWord(thekey) == false){
+                return;
+            }
             if (disableOverview != nilptr){
                 thekey = disableOverview.preprocessKeyword(thekey);
             }
@@ -1342,6 +1351,27 @@ class XSourceEditor : DocumentView {
         }
         
         return false;
+    }
+    
+    public bool isDebugWord(String word){
+        if (word == nilptr || word.length() == 0){
+            return false;
+        }
+        if (word.startsWith("$") || word.isDigit()){
+            return true;
+        }
+        return false;
+    }
+    public bool isKeyWord(String word){
+        if (word == nilptr || word.length() == 0){
+            return false;
+        }
+        for (int i = 0, c = word.length(); i < c; i++){
+            if (isInWord(word.charAt(i),i == 0) == false){
+                return false;
+            }
+        }
+        return true;
     }
     
     public bool isInWord(char c, bool b){
@@ -1625,6 +1655,7 @@ class XSourceEditor : DocumentView {
         }
         return true;
     }
+    
     public bool create(@NotNilptr QWidget parent) {
         if (super.create(parent)) {
             QWidget frame = new QWidget();
@@ -1638,6 +1669,9 @@ class XSourceEditor : DocumentView {
             
             onComboBoxEventListener _cmb_listener = new onComboBoxEventListener(){
                 public void onItemSelected(QObject obj, int id) {
+                    if (bCmbInit){
+                        return;
+                    }
                     try{
                         QComboBox qc = (QComboBox)obj;
                         Vector<XIntelliSense.XIntelliResult> _link_list = (Vector<XIntelliSense.XIntelliResult>)qc.getTag();
@@ -1678,6 +1712,7 @@ class XSourceEditor : DocumentView {
             statbar.create(frame);
             statbar.setName("editstatus");
             statbar.show();
+            
             statbar.setAlignment(Constant.AlignRight);
             statbar.setText("状态栏");
             qhl.addWidget(domainframe);
@@ -1751,6 +1786,10 @@ class XSourceEditor : DocumentView {
                         }
                         if (key == Constant.Key_Escape || key == Constant.Key_Delete || key == Constant.Key_Home || key == Constant.Key_End|| key == Constant.Key_PageUp|| key == Constant.Key_PageDown || key == Constant.Key_HomePage) {
                             XSourceEditor.this.hideAutoWnd();
+                            hideDebugWnd();
+                            if (key != Constant.Key_Delete){
+                                __tipsWnd.hide();
+                            }
                             return true;
                         }
                     }
@@ -2088,7 +2127,7 @@ class XSourceEditor : DocumentView {
     public void onSciMouseButtonPress(int Button, int x, int y,int flags, int source) {
         if (sciisHand && Button == 1) {
             String filePath = getFilePath();
-            if (filePath.length() > 0 && filePath.startWith("#") == false) {
+            if (filePath.length() > 0 && filePath.startsWith("#") == false) {
                 int pos = _sci.positionFromPoint(x, y);
                 locationObject(pos);
             }
@@ -2261,7 +2300,7 @@ class XSourceEditor : DocumentView {
                 long selItem = 0;
                 while (iter.hasNext()) {
                     String key = iter.getKey();
-                    if (key != nilptr && key.startWith(entenedText)) {
+                    if (key != nilptr && key.startsWith(entenedText)) {
                         selItem = iter.getValue();
                         break;
                     }
@@ -3368,6 +3407,7 @@ class XSourceEditor : DocumentView {
                 resetAllModified();
                 fis.close();
                 _sci.setFirstVisibleLine(line);
+                _sci.update();
                 _sci.gotoPos(pos);
             } catch(Exception e) {
 
@@ -3392,6 +3432,7 @@ class XSourceEditor : DocumentView {
                 setFilePath(filePath);
                 _sci.setSavePoint();
                 _sci.clearUndo();
+                _sci.update();
                 updateTitle();
                 resetAllModified();
                 _mdi_area.updateDocumentStatus();
@@ -3439,7 +3480,7 @@ class XSourceEditor : DocumentView {
         String savepath = getFilePath();
         bool saved = false;
         while (saved == false) {
-            if (savepath != nilptr && savepath.startWith("#")) {
+            if (savepath != nilptr && savepath.startsWith("#")) {
                 while (saved == false) {
                     String file = QFileDialog.getSaveFileName("保存文件", savepath,  getDocumentExtension(), this);
                     if (file != nilptr && file.length() > 0) {

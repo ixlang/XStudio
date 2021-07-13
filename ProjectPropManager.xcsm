@@ -86,7 +86,7 @@ class ProjectPropManager{
                 }
                 if (szf != nilptr && szf.length() > 0){
                     if (output.length() > 0){
-                        if (output.endWith(";;")){
+                        if (output.endsWith(";;")){
                             output = output + szf;
                         }else{
                             output = output + ";;" + szf;

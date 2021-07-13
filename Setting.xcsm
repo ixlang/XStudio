@@ -775,7 +775,7 @@ class Setting : QDialog {
                 for (int i = 0; i < list.length(); i++){
                     String szItem = list.getString(i);
                     if (szItem != nilptr){
-                        if (szItem.endWith(ends) || szItem.equals(selvalue)){
+                        if (szItem.endsWith(ends) || szItem.equals(selvalue)){
                             selvalue = "" + i;
                             bfound = true;
                             break;
@@ -818,7 +818,7 @@ class Setting : QDialog {
     }
     
     public static String splitColor(@NotNilptr String text){
-        if (text.startWith("#")){
+        if (text.startsWith("#")){
             if (text.length() == 7){
                 return "ff" + text.substring(5,7) + text.substring(3,5) + text.substring(1,3);
             }
@@ -827,24 +827,24 @@ class Setting : QDialog {
             }
             
         }else
-        if (text.startWith("0x")){
+        if (text.startsWith("0x")){
             return text.substring(2,text.length());
         }
         return "ff000000";
     }
     
     public static String getColor(@NotNilptr String text,@NotNilptr  String prefix){
-        if (text.startWith(prefix)){
+        if (text.startsWith(prefix)){
             return text;
         }
         
-        if (text.startWith("#")){
+        if (text.startsWith("#")){
             if (prefix.equals("0x")){
                 return prefix + splitColor(text);
             }
             return "0xff000000";
         }
-        if (text.startWith("0x")){
+        if (text.startsWith("0x")){
             if (prefix.equals("#")){
                 return prefix + splitColor(text.replace("0x", prefix));
             }
@@ -908,7 +908,7 @@ class Setting : QDialog {
             String [] options = new String[list.length()];
             for (int i = 0;i < options.length; i++){
                 options[i] = list.getString(i);
-                if (options[i].startWith("$(")){
+                if (options[i].startsWith("$(")){
                     String svalue = options[i].substring(2,options[i].length() - 1);
                     options[i] = getSetting(nilptr, svalue);
                 }

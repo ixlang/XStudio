@@ -110,7 +110,7 @@ class AddObjectProject : QDialog{
         Map<String, int> extmap = new Map<String, int>();
         
         for (int i = 0; i < extlist.length; i++){
-            if (extlist[i].startWith(".") == false){
+            if (extlist[i].startsWith(".") == false){
                 QMessageBox.Information("注意","扩展名填写错误:" + extlist[i],QMessageBox.Ok,QMessageBox.Ok);
                 return;
             }

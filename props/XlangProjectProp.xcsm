@@ -1387,13 +1387,13 @@ class XlangProjectProp : ProjectPropInterface {
     }
 
     public int detectInfo(@NotNilptr String line) {
-        if (line.endWith(warning)) {
+        if (line.endsWith(warning)) {
             return ICompileInfo.WARNING;
         }
-        if (line.endWith(error)) {
+        if (line.endsWith(error)) {
             return ICompileInfo.ERROR;
         }
-        if (line.endWith(tips)) {
+        if (line.endsWith(tips)) {
             return ICompileInfo.TIPS;
         }
         return -1;
@@ -1410,7 +1410,7 @@ class XlangProjectProp : ProjectPropInterface {
                 String tips_block = message;
                 i++;
                 for (; i < list.length; i++) {
-                    if (list[i].startWith(" ")) {
+                    if (list[i].startsWith(" ")) {
                         tips_block = tips_block + "\n" + list[i];
                     } else {
                         i--;
@@ -1426,7 +1426,7 @@ class XlangProjectProp : ProjectPropInterface {
 
     public static String formatArgs(@NotNilptr String param) {
         if (_system_.getPlatformId() == 0) {
-            if (param.indexOf(" ") != -1 && param.startWith("\"") == false && param.endWith("\"") == false ) {
+            if (param.indexOf(" ") != -1 && param.startsWith("\"") == false && param.endsWith("\"") == false ) {
                 return "\"" + param + "\"";
             }
         }
@@ -2313,7 +2313,7 @@ class XlangProjectProp : ProjectPropInterface {
                             for (int c = sci.countOfLine(); i < c; i++) {
                                 String linestr = sci.getText(i);
 
-                                if (linestr.startWith(" ") == false) {
+                                if (linestr.startsWith(" ") == false) {
                                     break;
                                 } else {
                                     infos = infos + "\n" + linestr ;
@@ -2343,7 +2343,7 @@ class XlangProjectProp : ProjectPropInterface {
                     for (int c = sci.countOfLine(); i < c; i++) {
                         String linestr = sci.getText(i);
 
-                        if (linestr.startWith(" ") == false) {
+                        if (linestr.startsWith(" ") == false) {
                             break;
                         } else {
                             infos = infos + "\n" + linestr ;

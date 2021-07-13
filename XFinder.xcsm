@@ -174,7 +174,7 @@ class XFinder{
     
     public static bool testExtsion(@NotNilptr String file , @NotNilptr String [] extsions){
 		for (int i = 0; i < extsions.length; i++){
-			if (file.lower().endWith(extsions[i].lower())){
+			if (file.lower().endsWith(extsions[i].lower())){
 				return true;
 			}
         }

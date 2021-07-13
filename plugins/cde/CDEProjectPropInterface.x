@@ -513,12 +513,24 @@ class CDEProjectPropInterface : ProjectPropInterface{
         
         out_path = String.formatPath(XEnvironment.MapVariable(object, configure, out_path), isUnixPath());
         
+        String ife = ".o";
+        String comp_sec = configure.getOption("genasm");
+        if (comp_sec.equals("-S")){
+            ife = ".S";
+        }else if (comp_sec.equals("-E")){
+            ife = ".E";
+        }else{
+            if (_system_.getPlatformId() == 0){
+                ife = ".obj";
+            }
+        }
+        
         for (int i = 0; i < __args.size(); i++) {
             String sourfile = __args.get(i);
             __nilptr_safe(sourfile);
             String destfile = sourfile.toRelativePath(projdir,false,true);
             destfile = String.formatPath(destfile.toAbsolutePath(out_path), isUnixPath());
-            destfile = destfile.replaceExtension(".o");
+            destfile = destfile.replaceExtension(ife);
             
             if (XPlatform.existsSystemFile(destfile)) {
                 if (false == XPlatform.deleteFile(destfile)) {
@@ -807,7 +819,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         checkOptions(args, nilptr, configure, options);
         
         for (int i =0; i < args.size(); i++){
-            if (args[i].startWith("-fsanitize=")){
+            if (args[i].startsWith("-fsanitize=")){
                 args.add("-static-libasan");
                 break;
             }
@@ -961,7 +973,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
 
             String make = args_list[0];
             __nilptr_safe(make);
-            if (make.startWith("\"" ) && make.endWith("\"" )){
+            if (make.startsWith("\"" ) && make.endsWith("\"" )){
                 make = make.substring(1, make.length() - 1);
             }
 
@@ -1049,7 +1061,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
             processArgs(makepath, args_list);
 
             String make = args_list[0]; __nilptr_safe(make);
-            if (make.startWith("\"" ) && make.endWith("\"" )){
+            if (make.startsWith("\"" ) && make.endsWith("\"" )){
                 make = make.substring(1, make.length() - 1);
             }
 
@@ -1250,7 +1262,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
                 String tips_block = message;
                 i++;
                 for (; i < list.length; i++) {
-                    if (list[i].startWith(" ")) {
+                    if (list[i].startsWith(" ")) {
                         tips_block = tips_block + "\n" + list[i];
                     } else {
                         i--;
@@ -1737,7 +1749,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
         checkOptions(ldArgs, nilptr, configure, options);
         
         for (int i =0; i < ldArgs.size(); i++){
-            if (ldArgs[i].startWith("-fsanitize=")){
+            if (ldArgs[i].startsWith("-fsanitize=")){
                 ldArgs.add("-static-libasan");
                 break;
             }
@@ -1896,63 +1908,6 @@ class CDEProjectPropInterface : ProjectPropInterface{
     }
     
     
-    
-    bool extartToDir(@NotNilptr String zfile, @NotNilptr String dir, @NotNilptr String projName) {
-
-        FileInputStream fis;
-
-        try {
-            fis = new FileInputStream(zfile);
-        } catch(Exception e) {
-            return false;
-        }
-
-        bool bSuccess = true;
-        ZipArchive zs = new ZipArchive();
-        if (zs.open(fis)) {
-            int c = zs.getEntriesCount();
-            
-            for (int i =0; i < c; i ++) {
-                ZipEntry entry = zs.getEntry(i);
-                if (bSuccess == false || entry == nilptr) {
-                    break;
-                }
-                
-                String entryName = entry.getName();
-                entryName = entryName.replace("${ProjectName}", projName);
-
-                String path = appendPath(dir, entryName);
-
-                if (entry.isDirectory() == false) {
-                    ZipFile file = entry.getFile();
-
-                    byte []buf = new byte[1024];
-                    int rd = 0;
-                    if (file.open()) {
-                        long filehandler = XPlatform.openSystemFile(path, "w");
-                        if (filehandler != 0) {
-                            while ((rd = file.read(buf, 0, 1024)) != 0) {
-                                _system_.writeFile(filehandler, buf, 0, rd);
-                            }
-                            _system_.closeFile(filehandler);
-                        } else {
-                            bSuccess = false;
-                        }
-                        file.close();
-                    } else {
-                        bSuccess = false;
-                    }
-                } else {
-                    XPlatform.mkdir(path);
-                }
-            }
-            zs.close();
-        } else {
-            bSuccess = false;
-        }
-
-        return bSuccess;
-    }
     
 	bool create(@NotNilptr WizardLoader loader,@NotNilptr  String projectName, String projectDir,@NotNilptr  String uuid, Project object, bool isAddToProject, String userType) override {
         if (uuid.equals(CPPProjectPlugin.cpp_guiuuid)){
@@ -2194,7 +2149,7 @@ class CDEProjectPropInterface : ProjectPropInterface{
                             for (int c = sci.countOfLine(); i < c; i++) {
                                 String linestr = sci.getText(i);
 
-                                if (linestr.startWith(" ") == false) {
+                                if (linestr.startsWith(" ") == false) {
                                     break;
                                 } else {
                                     infos = infos + "\n" + linestr ;

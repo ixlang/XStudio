@@ -211,7 +211,7 @@ class LspClient{
                                 }
 
                                 if (file != nilptr && diagnostics != nilptr && (diagnostics.length() > 0)){
-                                    if (file.startWith("file:///")){
+                                    if (file.startsWith("file:///")){
                                         file = file.substring(8, file.length());
                                     }
                                     _ls.onDiagnostics(file, diagnostics);

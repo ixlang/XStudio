@@ -39,15 +39,15 @@ class ArgsProcessor {
         if (cmd == CMD_BUILD) {
             if (args[1].equals("-build")) {
                 for (int i = 2; i < args.length; i++) {
-                    if (args[i].startWith("--config=")) {
+                    if (args[i].startsWith("--config=")) {
                         configure = args[i].substring(9, args[i].length());
-                    } else if (args[i].startWith("--targetdir=")) {
+                    } else if (args[i].startsWith("--targetdir=")) {
                         targetpath = args[i].substring(12, args[i].length());
-                    } else if (args[i].startWith("--xcross=")) {
+                    } else if (args[i].startsWith("--xcross=")) {
                         xcross = args[i].substring(9, args[i].length());
-                    } else if (args[i].startWith("--arch=")) {
+                    } else if (args[i].startsWith("--arch=")) {
                         arch = args[i].substring(7, args[i].length());
-                    } else if (args[i].startWith("--project=")) {
+                    } else if (args[i].startsWith("--project=")) {
                         project = args[i].substring(10, args[i].length());
                     } else {
                         _system_.consoleWrite("unknow args:" + args[i] + "\n");
@@ -145,6 +145,7 @@ class XStudioApp : QApplication {
         XSourceEditor.reconfig();
         XMemoryWnd.reconfig();
         memlookupWnd.reconfig();
+        mainWindow.setMinimumSize(0,0);
     }
 
     public void loadConfig() {
@@ -200,6 +201,7 @@ class XStudioApp : QApplication {
         if (_mdispace == nilptr){
             return false;
         }
+        
         createDocks();
 
         __tipsWnd = CodeTips.createTips(mainWindow);
@@ -323,7 +325,6 @@ class XStudioApp : QApplication {
                 });
             }
         });
-        
         return true;
     }
 

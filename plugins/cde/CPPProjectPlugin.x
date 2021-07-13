@@ -7,9 +7,23 @@ class CPPProjectPlugin : IProjectPlugin{
     String curslnfile = nilptr;
     ClassViewInfo curclsinfo = nilptr;
     ActionIdent [] __ais = nilptr;
-        
+    ActionIdent [] __sis = nilptr;
+    
     ActionIdent [] getSolutionContextActions()override{
-        return nilptr;
+        ActionIdent aip = new ActionIdent("Glade 界面设计器中打开", "glade_ui_designer", CPPGPlugManager.CPPLangPlugin.getInstance(), new onEventListener(){
+            public void onTrigger(@NotNilptr QObject obj)override
+            {
+                if(curslnfile != nilptr){
+                    openWithDesigner(curslnfile);
+                }
+            }
+        });
+
+        aip.setEnabled(false);
+
+        ActionIdent [] ais = {aip};
+        __sis = ais;
+        return ais;
     }
 
     ActionIdent [] getClassViewContextActions()override{
@@ -32,9 +46,60 @@ class CPPProjectPlugin : IProjectPlugin{
         __ais = ais;
         return ais;
     }
+    public static String quotePath(@NotNilptr String arg)
+    {
+        if (_system_.getPlatformId() == 0) {
+            if (arg.indexOf(' ') != -1) {
+                return "\"" + arg + "\"";
+            }
+        }
+        return arg;
+    }
+    public String generateArgs (@NotNilptr String arg)
+    {
+        if (_system_.getPlatformId() == 0) {
+            try {
+                arg = new String(arg.getBytes("GB18030//IGNORE"));
+            } catch(Exception e) {
 
-    void updateSolutionActionState(String files)override{
+            }
+        }
+        return quotePath(arg);
+    }
+    public void openWithDesigner(@NotNilptr String path)
+    {
+        String degpath = String.formatPath(_system_.getAppDirectory().appendPath("mingw").appendPath("usr").appendPath("bin").appendPath("glade"), false);
+        
+        if (_system_.getPlatformId() == 0) {
+            degpath = degpath + ".exe";
+        }else{
+            degpath = "/usr/bin/glade";
+        }
+        String []args = new String[2];
+        args[0] = quotePath(degpath);
+        args[1] = generateArgs(path);
+        Process designer = new Process(degpath, args);
 
+        try {
+            designer.create(Process.Default);
+        } catch(Exception e) {
+            QMessageBox.Critical("Error", e.getMessage(), QMessageBox.Ok, QMessageBox.Ok);
+        }
+    }
+    
+    void updateSolutionActionState(String file)override{
+        bool enabled = false;
+        
+        if (file != nilptr){
+            if (file.findExtension().lower().equals(".glade")){
+                enabled = true;
+                curslnfile = file;
+            }
+        }
+        
+        if (__sis != nilptr){
+            __sis[0].setEnabled(enabled);
+        }
     }
     
     void updateClassViewActionState(String file, ClassViewInfo info)override{
@@ -156,6 +221,96 @@ class CPPProjectPlugin : IProjectPlugin{
         return false;
     }
     
+    public bool generateProjectFile(@NotNilptr String destFile,@NotNilptr  String projectName) {
+        try {
+            FileInputStream fis = new FileInputStream(destFile);
+            byte [] data = fis.read();
+            String content = new String(data);
+            content = content.replace("${ProjectName}", projectName);
+            fis.close();
+
+            FileOutputStream fos = new FileOutputStream(destFile);
+            byte [] odata = content.getBytes();
+            fos.write(odata);
+            fos.close();
+        } catch(Exception e) {
+            return false;
+        }
+        return true;
+    }
+    
+    public bool createZTemplateProject(@NotNilptr WizardLoader loader,@NotNilptr String projectName,@NotNilptr  String projectDir,@NotNilptr  String uuid) {
+        XPlatform.mkdir(projectDir);
+
+        String confFile = XPlatform.getAppDirectory().appendPath("plugins").appendPath("cde").appendPath(uuid + ".utemp");
+
+        String destProj = projectDir.appendPath(projectName + ".xprj");
+
+        if (extartToDir(confFile, projectDir, projectName)) {
+            generateProjectFile(destProj, projectName);
+        }
+
+        IProject _project = loader.loadProject(destProj);
+        return true;
+    }
+    
+    bool extartToDir(@NotNilptr String zfile, @NotNilptr String dir, @NotNilptr String projName) {
+
+        FileInputStream fis;
+
+        try {
+            fis = new FileInputStream(zfile);
+        } catch(Exception e) {
+            return false;
+        }
+
+        bool bSuccess = true;
+        ZipArchive zs = new ZipArchive();
+        if (zs.open(fis)) {
+            int c = zs.getEntriesCount();
+            
+            for (int i =0; i < c; i ++) {
+                ZipEntry entry = zs.getEntry(i);
+                if (bSuccess == false || entry == nilptr) {
+                    break;
+                }
+                
+                String entryName = entry.getName();
+                entryName = entryName.replace("${ProjectName}", projName);
+
+                String path = CDEProjectPropInterface.appendPath(dir, entryName);
+
+                if (entry.isDirectory() == false) {
+                    ZipFile file = entry.getFile();
+
+                    byte []buf = new byte[1024];
+                    int rd = 0;
+                    if (file.open()) {
+                        long filehandler = XPlatform.openSystemFile(path, "w");
+                        if (filehandler != 0) {
+                            while ((rd = file.read(buf, 0, 1024)) != 0) {
+                                _system_.writeFile(filehandler, buf, 0, rd);
+                            }
+                            _system_.closeFile(filehandler);
+                        } else {
+                            bSuccess = false;
+                        }
+                        file.close();
+                    } else {
+                        bSuccess = false;
+                    }
+                } else {
+                    XPlatform.mkdir(path);
+                }
+            }
+            zs.close();
+        } else {
+            bSuccess = false;
+        }
+
+        return bSuccess;
+    }
+    
 	bool createProject(@NotNilptr WizardLoader loader,@NotNilptr  String projectName,@NotNilptr  String projectDir,@NotNilptr  String uuid, IProject ownProject, bool addToProject) override {
 		//TODO:	
         if (Pattern.test(projectName, "^[A-Za-z0-9_]+$", Pattern.NOTEMPTY, true) == false) {
@@ -253,6 +408,11 @@ class CPPProjectPlugin : IProjectPlugin{
             nostdinc__ = "-nostdinc++";
             nostdinc = "-nostdinc";
             break;
+            case gtk_formuid:
+            case cpp_boosuid:
+            createZTemplateProject(loader, projectName, priject_dir, uuid);
+            return true;
+            break;
         }
         
         if (tempfile != nilptr){
@@ -349,10 +509,13 @@ class CPPProjectPlugin : IProjectPlugin{
     public static const String cpp_dynuuid = "8f75b511-8c85-4a7d-8951-9f5e8735cf7b";
     public static const String cpp_drvuuid = "19f532bc-a23d-4e23-ae65-3a420374aa7a";
     public static const String cpp_existid = "517bd252-b78d-07c9-467b-4ec579f9b929";
+    public static const String gtk_formuid = "973dafc0-40d0-4826-bb46-74a56cde876b";
+    public static const String cpp_boosuid = "443eedb2-38be-4f47-8f3c-7d68838461a6";
     
     public static const String cpp_clsuuid = "c3890f0e-ef56-4c41-acfd-e09a30d839eb";
     public static const String cpp_ifcuuid = "5456d902-540e-4ce0-a455-a4b7175cab91";
 
+    
     public void createWizard(){
         wizard = new JsonObject();
         JsonObject Navigation = new JsonObject();
@@ -370,6 +533,15 @@ class CPPProjectPlugin : IProjectPlugin{
         mobile.put("details", "适用于windows linux macos等任何特定的支持平台");
         Xlang.put(mobile);
         
+        mobile = new JsonObject();
+        mobile.put("name", "GUI (Gtk Form)程序");
+        mobile.put("uuid", gtk_formuid);
+        mobile.put("language", "C/C++");
+        mobile.put("icon", "config/sys.png");
+        mobile.put("platform", "支持C/C++开发的目的平台");
+        mobile.put("details", "适用于windows linux macos等任何特定的支持平台");
+        Xlang.put(mobile);
+        
         if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
             mobile = new JsonObject();
             mobile.put("name", "GUI (WinSdk)程序");
@@ -380,6 +552,15 @@ class CPPProjectPlugin : IProjectPlugin{
             mobile.put("details", "适用于 windows 平台");
             Xlang.put(mobile);
         }
+        
+        mobile = new JsonObject();
+        mobile.put("name", "Boost asio程序");
+        mobile.put("uuid", cpp_boosuid);
+        mobile.put("language", "C/C++");
+        mobile.put("icon", "config/sys.png");
+        mobile.put("platform", "支持C/C++开发的目的平台");
+        mobile.put("details", "适用于windows linux macos等任何特定的支持平台");
+        Xlang.put(mobile);
         
         mobile = new JsonObject();
         mobile.put("name", "控制台程序");

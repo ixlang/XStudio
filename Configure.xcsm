@@ -772,7 +772,7 @@ class Configure : IConfigure
     				ZipEntry entry = zs.getEntry(i);
                     if (entry != nilptr){
                         String name =  String.formatPath(entry.getName(), false);
-                        if (name.startWith(match)){
+                        if (name.startsWith(match)){
                             ZipFile zf = entry.getFile();
                             
                             if (zf.open()){
@@ -872,7 +872,7 @@ class Configure : IConfigure
             ZipEntry entry = zs.getEntry(i);
             if (entry != nilptr){
                 String name =  String.formatPath(entry.getName(), false);
-                if (name.startWith(match)) {
+                if (name.startsWith(match)) {
                     ZipFile zf = entry.getFile();
                     if (zf.open()) {
 

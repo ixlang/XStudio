@@ -136,7 +136,7 @@ class Windows : QDialog
 
                 windows_list.put(item, val);
 
-                if (val.getFilePath().startWith("#")) {
+                if (val.getFilePath().startsWith("#")) {
                     _listview.setItemText(item, 1, "<未保存>");
                 } else {
                     _listview.setItemText(item, 1, val.getFilePath());

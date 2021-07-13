@@ -283,7 +283,7 @@ class Utils{
 				if (entry != nilptr &&  entry.isDirectory() == false){                                        
                     String apply_exe;
                     
-					if (entry.getName().startWith("xupgrade_apply")){
+					if (entry.getName().startsWith("xupgrade_apply")){
 
                         apply_exe = _system_.getAppDirectory().appendPath(entry.getName());
 

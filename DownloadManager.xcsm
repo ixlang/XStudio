@@ -65,7 +65,7 @@ class DownloadManager : QDialog{
 			void onItemClicked(@NotNilptr QTreeWidget tree,long item, int column){
 				if (column == 1){
 					String txt = tree.getItemText(item, column);
-                    if (txt.upper().startWith("HTTP")){
+                    if (txt.upper().startsWith("HTTP")){
 						if (QMessageBox.Question("提示","是否在浏览器中打开: <b>" + txt + "</b> ?",QMessageBox.Ok | QMessageBox.No,QMessageBox.Ok) == QMessageBox.Ok){
 							openUrl(txt);
                         }

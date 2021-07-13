@@ -125,7 +125,7 @@ class ExtensionManager : QDialog{
 			void onItemClicked(@NotNilptr QTreeWidget tree,long item, int column){
 				if (column == 4){
 					String txt = tree.getItemText(item, column);
-                    if (txt.upper().startWith("HTTP")){
+                    if (txt.upper().startsWith("HTTP")){
 						if (QMessageBox.Question("提示","是否转到发布者网站: <b>" + txt + "</b> ?",QMessageBox.Ok | QMessageBox.No,QMessageBox.Ok) == QMessageBox.Ok){
 							openUrl(txt);
                         }

@@ -139,7 +139,7 @@ class DebugValueParser{
             //long id = json.getString("id").parseLong();
             String qid = json.getString("queryid");
             if (qid != nilptr){
-                if (qid.startWith("detail:")){
+                if (qid.startsWith("detail:")){
                     try{
                         TextDetail td = new TextDetail();
                         String text = json.getString("value"); 
@@ -194,20 +194,22 @@ class DebugValueParser{
     }
     
     public void expandItem(@NotNilptr QTreeWidget tree,long item, QOCallback r){
-		if (expandArrays(tree, item) == false){
-			long objectId = tree.getItemTag(item, 0);
-			if (objectId != 0){
-				tree.setItemTag(item, 0, 0);
-				synchronized(this){
-					long start = tree.getItemTag(item, 2);
-					long end = tree.getItemTag(item, 3);
-					XWorkspace.workspace.debuggee.queryObject("" + item, "" + objectId, getIdentifier(), start, end, r);
-				}
-			}else{
+        synchronized(this){
+            if (expandArrays(tree, item) == false){
+                long objectId = tree.getItemTag(item, 0);
+                if (objectId != 0){
+                    tree.setItemTag(item, 0, 0);
+                    synchronized(this){
+                        long start = tree.getItemTag(item, 2);
+                        long end = tree.getItemTag(item, 3);
+                        XWorkspace.workspace.debuggee.queryObject("" + item, "" + objectId, getIdentifier(), start, end, r);
+                    }
+                }else{
+                    querySaveState(tree, item);
+                }
+            }else{
                 querySaveState(tree, item);
             }
-        }else{
-            querySaveState(tree, item);
         }
     }
     
@@ -534,7 +536,7 @@ class DebugValueParser{
         }
     }
     
-    void clear(QTreeWidget list){
+    public void clear(QTreeWidget list){
         synchronized(this){
             serial++;
             list.clear();

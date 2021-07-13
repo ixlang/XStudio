@@ -131,7 +131,7 @@ class DownloadCenter{
                     req.setProxy(proxy_host,proxy_port.parseInt(),proxytype,proxy_user,proxy_pwd);
                 }
                 
-                if (_url != nilptr && req.get(_url, 0, _url.upper().startWith("HTTPS://"))){
+                if (_url != nilptr && req.get(_url, 0, _url.upper().startsWith("HTTPS://"))){
                     if (req.getResponseCode() >= 200){
                         if (dltotalsize <= 0){
                             dltotalsize = req.getLength();

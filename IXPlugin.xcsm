@@ -607,7 +607,7 @@ class PluginsController
         return ais.toArray(new ActionIdent[0]);
     }
     
-    public static void updateSolutionActionState(String file){
+    public static void updateSolutionActionState(Project project, String file){
         Vector<ActionIdent > ais = new Vector<ActionIdent >();
         
         Map.Iterator<String, XPluginShell> iter = plugins_list.iterator();
@@ -617,6 +617,16 @@ class PluginsController
                 splug._plugin.updateSolutionActionState(file);
             }
             iter.next();
+        }
+        
+        if (project != nilptr){
+            IXPlugin ixplugin = project.getProjectPlugin();
+            if (ixplugin != nilptr){
+                IProjectPlugin ipp = ixplugin.getProjectPlugin();
+                if (ipp != nilptr){
+                    ipp.updateSolutionActionState(file);
+                }
+            }
         }
     }
     

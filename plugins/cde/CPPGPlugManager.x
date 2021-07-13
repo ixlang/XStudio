@@ -36,6 +36,7 @@ class CPPGPlugManager{
         String linetxt = _sci.getText(line);
         return linetxt.trim(true).parseHex() - addr;
     }
+    
     public int binarySearch(@NotNilptr QScintilla _sci, int cnt, long addr){//以int数组为例，aim为需要查找的数
         int start = 0;
         int end = cnt - 1;
@@ -86,7 +87,7 @@ class CPPGPlugManager{
         String [] asms = content.split('\n');
         for (int i = 0; i < asms.length; i++){
             String lineText = asms[i];
-            if (lineText != nilptr && lineText.startWith("=>")){
+            if (lineText != nilptr && lineText.startsWith("=>")){
                 line = i;
                 asms[i] = "  " + lineText.substring(2, lineText.length());
                 break;
@@ -533,6 +534,7 @@ class CPPGPlugManager{
             
             _projectplugin.createWizard();
             workspace.addMenu(4, "c_cpp_setting", "C/C++套件选项", "res/toolbar/class.png",nilptr, this);
+            workspace.addMenu(4, "cde_glade", "glade (GTK)界面设计器", "plugins/cde/glade.png",nilptr, this);
             workspace.addMenu(3, "disassem_wnd", "反汇编窗口", nilptr,nilptr, this);
             createMyDock();
             return true; 
@@ -546,12 +548,33 @@ class CPPGPlugManager{
 			return nilptr;
         }
         
+        void runGlade(){
+            String degpath = String.formatPath(_system_.getAppDirectory().appendPath("mingw").appendPath("usr").appendPath("bin").appendPath("glade"), false);
+            
+            if (_system_.getPlatformId() == 0) {
+                degpath = degpath + ".exe";
+            }else{
+                degpath = "/usr/bin/glade";
+            }
+            String []args = new String[1];
+            args[0] = CPPProjectPlugin.quotePath(degpath);
+            Process designer = new Process(degpath, args);
+            try {
+                designer.create(Process.Default);
+            } catch(Exception e) {
+                QMessageBox.Critical("Error", e.getMessage(), QMessageBox.Ok, QMessageBox.Ok);
+            }
+        }
         
         void onMenuTrigged(@NotNilptr String name){
             if (name.equals("c_cpp_setting")) {
                 CPPSetting.showCPPSetting();
+                return;
             }
-
+            if (name.equals("cde_glade")) {
+                runGlade();
+                return;
+            }
             if (name.equals("disassem_wnd")){
                 if (disasm_wnd == nilptr){
                     disasm_wnd = workspace.createTextEditor();
@@ -597,10 +620,12 @@ class CPPGPlugManager{
                     disasm_wnd.activeEditor();
                 }
                 updateDisassemble();
+                return;
             }
             
             if (name.equals("SYS_ADDOBJECT")){
                XWorkspace.workspace.createProject();
+               return;
             }
         }
         

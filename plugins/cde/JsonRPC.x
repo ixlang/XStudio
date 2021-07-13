@@ -25,8 +25,8 @@ class JsonRPC{
         data.replace(0,size,"");
     }
     
-    public bool endWith(@NotNilptr byte [] cdata){
-        return data.endWith(new String(cdata));
+    public bool endsWith(@NotNilptr byte [] cdata){
+        return data.endsWith(new String(cdata));
     }
     
     public bool endWithLine(@NotNilptr String line){

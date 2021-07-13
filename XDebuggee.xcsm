@@ -249,10 +249,10 @@ class XDebuggee{
     public void onQueryObject(@NotNilptr JsonObject json){
 		String param = json.getString("param");
         if (param != nilptr){
-            if (param.startWith("auto")){
+            if (param.startsWith("auto")){
                 AutoWnd.auto_wnd.onQueryObject(json);
             }else
-            if (param.startWith("watch")){
+            if (param.startsWith("watch")){
                 WatchWnd.watchesWnd.onQueryObject(json);
             }else{
                 QOCallback r = nilptr;

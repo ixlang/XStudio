@@ -14,7 +14,7 @@ class CPPTextEditor: TextEditorPlugin{
     static String parseMacros(@NotNilptr String [] macro){
         String str_text = "";
         for (int i =0; i < macro.length; i++){
-            if (macro[i] != nilptr && macro[i].startWith("-D")){
+            if (macro[i] != nilptr && macro[i].startsWith("-D")){
                 if (str_text.length() > 0){
                     str_text = str_text + " ";
                 }

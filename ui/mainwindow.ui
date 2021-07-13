@@ -20,6 +20,9 @@
    <iconset>
     <normaloff>res/xide.png</normaloff>res/xide.png</iconset>
   </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
   <widget class="QWidget" name="centralWidget">
    <property name="acceptDrops">
     <bool>true</bool>
@@ -863,7 +866,7 @@
    <property name="minimumSize">
     <size>
      <width>150</width>
-     <height>119</height>
+     <height>134</height>
     </size>
    </property>
    <property name="features">
@@ -1213,8 +1216,8 @@
   <widget class="QDockWidget" name="wnd_log">
    <property name="minimumSize">
     <size>
-     <width>237</width>
-     <height>147</height>
+     <width>246</width>
+     <height>150</height>
     </size>
    </property>
    <property name="features">

@@ -1216,12 +1216,15 @@ class XWorkspace : QMdiArea
         String []files = QFileDialog.getOpenFileNames("浏览文件", nilptr,  "XStudio 插件(*.xsp)", this);
         if (files != nilptr && files.length > 0) {
             closeIndexPage();
+            int succcnt = 0;
             for (int i = 0; i < files.length; i++) {
                 String file = String.formatPath(files[i], false);
                 _builder.OutputText("安装:" + file + " ...\n", 0);
-                installPlugin(file);
+                if (installPlugin(file)){
+                    succcnt++;
+                }
             }
-            _builder.OutputText("已安装:" + files.length + "插件\n", 0);
+            _builder.OutputText("已安装:" + succcnt + "插件\n", 0);
             PluginsController.initPlugins(XStudioApp._theApp._xstudio_controller);
         }
     }
@@ -1432,7 +1435,7 @@ class XWorkspace : QMdiArea
                         byte []buf = new byte[1024];
                         int rd = 0;
                         if (file.open()) {
-                            if (entryName.lower().endWith(".slx")){
+                            if (entryName.lower().endsWith(".slx")){
                                 plugins_path = path;
                             }
                             

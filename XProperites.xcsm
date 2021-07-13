@@ -297,7 +297,7 @@ class XProperites : QDialog {
                 for (int i = 0; i < list.length(); i++){
                     String szItem = list.getString(i);
                     if (szItem != nilptr){
-                        if (szItem.endWith(ends) || szItem.equals(selvalue)){
+                        if (szItem.endsWith(ends) || szItem.equals(selvalue)){
                             selvalue = "" + i;
                             bfound = true;
                             break;
@@ -629,7 +629,7 @@ class XProperites : QDialog {
                             value = "";
                         }
                     }else{
-                        while (value.endWith("(未安装)")){
+                        while (value.endsWith("(未安装)")){
                             value = value.substring(0, value.length() - "(未安装)".length());
                         } 
                     }

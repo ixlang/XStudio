@@ -587,7 +587,7 @@ class GDBShell{
                     GdbMiStreamRecord _rec = (GdbMiStreamRecord)_records[i];
                     String message  = _rec.message;
                     if (message != nilptr){
-                        if (message.startWith("type = ")){
+                        if (message.startsWith("type = ")){
                             sztype = message.substring(7, message.length()).trim(true);
                         }else{
                             sztype = "unknow" ;
@@ -672,7 +672,7 @@ class GDBShell{
             JsonObject json = new JsonObject();
             json.put("content", content);
             
-            if (szOffset.startWith("0x")){
+            if (szOffset.startsWith("0x")){
                 json.put("address", szOffset.parseHex());
             }else{
                 json.put("address", szOffset.parseLong());
@@ -830,7 +830,7 @@ class GDBShell{
         while (dp != -1){
             String txt = substr.substring(offset,dp).trim(true);
             offset = dp + 1; 
-            if (txt.startWith("{")){
+            if (txt.startsWith("{")){
                 txt = "__unnamed = " + txt;
             }
              
@@ -883,7 +883,7 @@ class GDBShell{
         }
         
         String substr = text.substring(st + 1,end);
-        if (substr.startWith("{")){
+        if (substr.startsWith("{")){
             parseComplexValue(substr, object, eq, bTop);
         }else{
             parseArrayValue(substr.trim(true), object, bTop);
@@ -896,7 +896,7 @@ class GDBShell{
         int equ = text.indexOf(eq);
         String name = "", value = "";
         if (equ != -1){
-            if (text.trim(true).startWith("{")){
+            if (text.trim(true).startsWith("{")){
                 name = "__unnamed";
                 value = text.trim(true);
                 text = name + " = " + value;
@@ -910,13 +910,13 @@ class GDBShell{
         }
         
         object.put("name", name);
-        if (value.startWith("@")){
+        if (value.startsWith("@")){
             int op = value.indexOf(':');
             if (op != -1 && (op + 1 < value.length())){
                 value = value.substring(op + 1,value.length()).trim(true);
             }
         }
-        if (value.startWith("{")){
+        if (value.startsWith("{")){
             parseComplexValue(text, object, eq, bTop);
             return 1;
         }else{
@@ -1092,7 +1092,7 @@ class GDBShell{
                 except_tid = attach_object.getInt("gid");
             }
             
-            if (ident.startWith("Thread ")){
+            if (ident.startsWith("Thread ")){
                 ThreadTag tt = parseThreadInfo(ident, thread);
                 
                 JsonArray frames = new JsonArray();
@@ -1104,10 +1104,10 @@ class GDBShell{
                         GdbMiStreamRecord _frame = (GdbMiStreamRecord)_records[p];
                         String strFrame = _frame.message.trim(true);
                         
-                        if (strFrame.startWith("#")){
+                        if (strFrame.startsWith("#")){
                             String[] frms = strFrame.split('\n');
                             for (int i = 0; i < frms.length; i++){
-                                if (frms[i].startWith("#")){
+                                if (frms[i].startsWith("#")){
                                     JsonObject frame = new JsonObject();
                                     parseFrame(frms[i], frame);
                                     frames.put(frame);
@@ -1116,7 +1116,7 @@ class GDBShell{
                                 }
                             }
                         }else
-                        if (strFrame.startWith("Thread ")){
+                        if (strFrame.startsWith("Thread ")){
                             break;
                         }
                     }
@@ -1396,7 +1396,7 @@ class GDBShell{
                     }
                 }
                 
-                if (hasString == false && ((gvs.type.sztype.endWith("*") || gvs.type.sztype.endWith("* const")) && gvs.parseRet != 0 && gvs.jsonValue != nilptr)){
+                if (hasString == false && ((gvs.type.sztype.endsWith("*") || gvs.type.sztype.endsWith("* const")) && gvs.parseRet != 0 && gvs.jsonValue != nilptr)){
                     putStanby(gvs.parseRet,"p *" + gvs.name);
                     gvs.jsonValue.put("object_id", "" + gvs.parseRet);
                 }
@@ -1690,7 +1690,7 @@ class GDBShell{
                     if (value_str.indexOf("\"") != -1){
                         hasString = true;
                     }
-                    if (hasString == false && ((typename.endWith("*") || typename.endWith("* const")) && rt != 0)){
+                    if (hasString == false && ((typename.endsWith("*") || typename.endsWith("* const")) && rt != 0)){
                         putStanby(rt,"p *" + name);
                         in_value.put("object_id", "" + rt);
                         while (object.has("value")){
@@ -1777,7 +1777,7 @@ class GDBShell{
                     if (value_str.indexOf("\"") != -1){
                         hasString = true;
                     }
-                    if (hasString == false && ((typename.endWith("*") || typename.endWith("* const")) && rt != 0)){
+                    if (hasString == false && ((typename.endsWith("*") || typename.endsWith("* const")) && rt != 0)){
                         putStanby(rt,"p *" + name);
                         in_value.put("object_id", "" + rt);
                         while (object.has("value")){
@@ -2383,7 +2383,7 @@ class GDBShell{
     }
     
     ThreadTag parseThreadInfo(@NotNilptr String item, @NotNilptr JsonObject jobj){
-        if (item.startWith("Thread")){
+        if (item.startsWith("Thread")){
             ThreadTag tg = new ThreadTag(item);
             jobj.put("name", tg.name);
             jobj.put("id", tg.gId);
@@ -2453,7 +2453,7 @@ class GDBShell{
                 case GdbMiRecord.Type.Log:
                 if (debuggee_type == 0 || debuggee_type == DEBUGGEE_LLDB){
                     GdbMiStreamRecord _rec = (GdbMiStreamRecord)_records[i];
-                    if (_rec.message.startWith("error: ")){
+                    if (_rec.message.startsWith("error: ")){
                         lastError = i + 1;
                     }
                 }
@@ -2487,7 +2487,7 @@ class GDBShell{
                 for (int i = offset; i < count; i++){
                     GdbMiStreamRecord _rec = (GdbMiStreamRecord)_records[i];
                     String message  = _rec.message;
-                    if (message.startWith("*")){
+                    if (message.startsWith("*")){
                         message = message.substring(1,message.length());
                     }
                     int tid = message.trim(true).parseInt();

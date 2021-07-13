@@ -537,7 +537,7 @@ class XStringMapView : DocumentView{
         String savepath = getFilePath();
         bool saved = false;
         while (saved == false) {
-            if (savepath != nilptr && savepath.startWith("#")) {
+            if (savepath != nilptr && savepath.startsWith("#")) {
                 while (saved == false) {
                     String file = QFileDialog.getSaveFileName("保存文件", savepath,  "Version Files(*.version)", this);
                     if (file != nilptr && file.length() > 0) {

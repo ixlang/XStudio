@@ -598,7 +598,7 @@ class CPPSetting : QDialog{
         String [] macros = lists.split('\n');
         for (int i = 0; i < macros.length; i++){
             String mitem = macros[i].trim(true);
-            if (mitem.startWith("#define ")){
+            if (mitem.startsWith("#define ")){
                 mitem = mitem.substring(8, mitem.length());
                 int pos = mitem.indexOf(' ');
                 if (pos != -1){
@@ -714,7 +714,7 @@ class CPPSetting : QDialog{
         for (int i = items.length - 1; i >= 0; i--){
             String item = items[i];
             __nilptr_safe(item);
-            if (item.startWith(" ")){
+            if (item.startsWith(" ")){
                 FSObject fso = new FSObject(item.trim(true));
                 if (fso.exists()){
                     searchs.insert(0, fso.getPath());

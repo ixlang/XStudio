@@ -38,7 +38,7 @@ class DocumentView : QMdiSubWindow{
             filter = "";
         }else
         if (filter.length() > 0){
-            if (filter.endWith(";;") == false){
+            if (filter.endsWith(";;") == false){
                 filter = filter + ";;";
             }
         }
@@ -204,7 +204,7 @@ class DocumentView : QMdiSubWindow{
         }
     }
     public void updateTitle() {
-        if (filePath.startWith("#") == false) {
+        if (filePath.startsWith("#") == false) {
             szTitle = filePath.findFilenameAndExtension();
         }
         if (bModified) {
@@ -228,7 +228,7 @@ class DocumentView : QMdiSubWindow{
     
     public void removeFromMap(@NotNilptr String file) {
         file = String.formatPath(file, _system_.getPlatformId() == _system_.PLATFORM_WINDOWS);
-        if (file.startWith("#") == false) {
+        if (file.startsWith("#") == false) {
             __mdiarea.qfsw.removePath(file);
         }
         editorMgr.remove(file);
@@ -236,7 +236,7 @@ class DocumentView : QMdiSubWindow{
 
     public void addToMap(@NotNilptr String file) {
         file = String.formatPath(file, _system_.getPlatformId() == _system_.PLATFORM_WINDOWS);
-        if (file.startWith("#") == false) {
+        if (file.startsWith("#") == false) {
             __mdiarea.qfsw.addPath(file);
         }
         editorMgr.put(filePath, this);

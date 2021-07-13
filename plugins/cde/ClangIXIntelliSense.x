@@ -5,6 +5,7 @@ class ClangIXIntelliSense : IXIntelliSense{
     LspClient clangdlsp;
     IXIntelliSense.IntelliClient _iclient = nilptr;
     Map<String, String> _compargs = new Map<String, String>();
+    bool bCompletionFilter = true;
     // 各个扩展名对应的编译参数
     
     static class Document{
@@ -271,11 +272,7 @@ class ClangIXIntelliSense : IXIntelliSense{
                     String sc = CPPGPlugManager.getSourceContent(sourceList[i]);
                     if (sc != nilptr){
                         clangdlsp.openfile(sourceList[i], sc);
-                        //_system_.output("didOpen:" + sourceList[i]);
-                    }else{
-                        //_system_.output("didn't Open:" + sourceList[i]);
                     }
-                    
                 }
                 return true;
             }
@@ -330,7 +327,7 @@ class ClangIXIntelliSense : IXIntelliSense{
     
     public String getProperity(String key){
         if (key == "completion_filter"){
-            return "yes";
+            return  bCompletionFilter ? "yes" : "no";
         }
         return "no";
     }
@@ -371,6 +368,7 @@ class ClangIXIntelliSense : IXIntelliSense{
             
         }
     }
+    
     void appendLibpath(String path)override{
         
     }
@@ -430,7 +428,7 @@ class ClangIXIntelliSense : IXIntelliSense{
             }
             complete_res = clangdlsp.completion(source, line, column);
         }
-        XIntelliResult [] xres = parseResult(complete_res);
+        XIntelliResult [] xres = parseResult(complete_res, true);
         return xres;
     }
     
@@ -547,7 +545,7 @@ class ClangIXIntelliSense : IXIntelliSense{
         if (uri != nilptr){
             uri = uri.decodeURI();
             
-            if (uri.startWith("file:///")){
+            if (uri.startsWith("file:///")){
                 if (_system_.getPlatformId() == _system_.PLATFORM_WINDOWS){
                     return uri.substring(8, uri.length());
                  }   else{
@@ -564,7 +562,7 @@ class ClangIXIntelliSense : IXIntelliSense{
             __completion_result = nilptr;
             complete_res = clangdlsp.completion(source, line, 1);
         }
-        return parseResult(complete_res);
+        return parseResult(complete_res, true);
     }
     
     int isAtInclude(String content, long pos, String  []szprefix){
@@ -578,7 +576,7 @@ class ClangIXIntelliSense : IXIntelliSense{
                     return 0;
                 }
                 int endsub = 0;
-                if (line.endWith("\"") || line.endWith(">")){
+                if (line.endsWith("\"") || line.endsWith(">")){
                     endsub ++;
                 }
                 if (line.length() > 9){
@@ -587,10 +585,10 @@ class ClangIXIntelliSense : IXIntelliSense{
                         szprefix[0] = prefix;
                     }
                 }
-                if (line.startWith("#include\"")){
+                if (line.startsWith("#include\"")){
                     return 1;
                 }else
-                if (line.startWith("#include<")){
+                if (line.startsWith("#include<")){
                     return 2;
                 }
                 
@@ -662,6 +660,9 @@ class ClangIXIntelliSense : IXIntelliSense{
         if (hf != 0){
             FSObject sub = new FSObject();
             while (fso.findObject(hf,sub)){
+                if (sub.getName().startsWith("boost")){
+                    _system_.output("boost");
+                }
                 cis.add(new CDEPathIntelliResult(dir, sub.getName(), sub.isDir()));
             }
             fso.closeDir(hf);
@@ -702,6 +703,7 @@ class ClangIXIntelliSense : IXIntelliSense{
                 for (int i =0; i < ja.length(); i++){
                     listSearchObject(cis, ja.getString(i), prefix[0]);
                 }
+                bCompletionFilter = false;
                 return cis.toArray(new CDEXIntelliResult[0]);
             }
             return nilptr;
@@ -712,7 +714,8 @@ class ClangIXIntelliSense : IXIntelliSense{
                 clangdlsp.filechange(source, content);
                 complete_res = clangdlsp.completion(source, line, column);
             }
-            return parseResult(complete_res);
+            bCompletionFilter = true;
+            return parseResult(complete_res, false);
         }
     }
     
@@ -1041,10 +1044,14 @@ class ClangIXIntelliSense : IXIntelliSense{
         }
     };
     
-    XIntelliResult [] parseResult(String result){
+    XIntelliResult [] parseResult(String result, bool hasSysKey){
         String [] keys = {
             "if", "while", "do", "try", "__try", "catch", "__finally", "__except", "else", "switch"
         };
+        
+        if (hasSysKey == false){
+          keys = new String[0];  
+        }
         
         if (result == nilptr){
             return nilptr;
@@ -1422,7 +1429,7 @@ class ClangIXIntelliSense : IXIntelliSense{
                                 
                                 if (bAdded == false){
                                     if (type == 31){
-                                        if (name.startWith("(") == false){
+                                        if (name.startsWith("(") == false){
                                             heap.put(object);
                                         }
                                     }else

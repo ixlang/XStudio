@@ -680,7 +680,7 @@ class Project : IProject
 
             }
 
-            if (filerelaPath.lower().endWith(".xprj") == false) {
+            if (filerelaPath.lower().endsWith(".xprj") == false) {
                 dirs.put(source, filerelaPath);
             }
 

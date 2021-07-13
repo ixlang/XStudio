@@ -34,7 +34,7 @@ class EchoBuffer{
         length -= size;
     }
     
-    public bool endWith(@NotNilptr byte [] cdata){
+    public bool endsWith(@NotNilptr byte [] cdata){
         if (length >= cdata.length){
             int start = length - cdata.length;
             for (int i =0; i < cdata.length; i++){
